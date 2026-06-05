@@ -1,0 +1,314 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'RagSans';
+  src: url('/RagSans-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NarkissBlock';
+  src: url('/NarkissBlock-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NarkissBlock';
+  src: url('/NarkissBlock-Semibold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* כותרות גדולות — RagSans Black */
+h1, h2 {
+  font-family: 'RagSans', sans-serif;
+}
+
+/* כל שאר הטקסט — NarkissBlock */
+body, h3, h4, h5, h6, p, span, button, input, textarea, a, li {
+  font-family: 'NarkissBlock', sans-serif;
+}
+
+/* Followup warning pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+/* ---------------------------------------------------------------------------
+   Creative Expert 3.0 — Dark Blue Theme
+   --------------------------------------------------------------------------- */
+:root {
+  /* Accent: yellow buttons with navy text */
+  --accent: 245 193 24;
+  --accent-foreground: 19 21 40;
+
+  /* Dark blue depth layers */
+  --bg-base:     14  16  33;   /* #0e1021 — page background   */
+  --bg-surface:  24  27  46;   /* #181b2e — cards & panels    */
+  --bg-elevated: 30  34  64;   /* #1e2240 — hover / inputs    */
+  --bg-chrome:   19  21  40;   /* #131528 — sidebar & header  */
+}
+
+html, body, #root { height: 100%; }
+
+html { font-size: 18px; }
+
+body {
+  @apply antialiased;
+  background: rgb(var(--bg-base));
+  color: rgba(255,255,255,0.92);
+}
+
+/* ── Recording button text color ────────────────────────────── */
+a.btn-recording { color: #13152A !important; }
+
+/* ── Global dark overrides so all existing Tailwind classes retheme ── */
+
+/* Backgrounds */
+.bg-white          { background: rgb(var(--bg-surface))  !important; }
+.bg-slate-50       { background: rgb(var(--bg-base))     !important; }
+.bg-slate-100      { background: rgb(var(--bg-elevated)) !important; }
+.bg-slate-200      { background: rgb(var(--bg-elevated)) !important; }
+
+/* Borders */
+.border-slate-200  { border-color: rgba(255,255,255,0.08) !important; }
+.border-slate-100  { border-color: rgba(255,255,255,0.06) !important; }
+.divide-slate-100 > * + * { border-color: rgba(255,255,255,0.06) !important; }
+
+/* Text */
+.text-slate-900    { color: rgba(255,255,255,0.95) !important; }
+.text-slate-800    { color: rgba(255,255,255,0.88) !important; }
+.text-slate-700    { color: rgba(255,255,255,0.78) !important; }
+.text-slate-600    { color: rgba(255,255,255,0.65) !important; }
+.text-slate-500    { color: rgba(255,255,255,0.50) !important; }
+.text-slate-400    { color: rgba(255,255,255,0.35) !important; }
+
+/* טקסטים מודגשים — לבן מלא (למעט כפתורים צהובים) */
+.font-bold:not(.bg-accent):not(.bg-accent *),
+.font-semibold:not(.bg-accent):not(.bg-accent *),
+.font-extrabold:not(.bg-accent):not(.bg-accent *),
+.font-black:not(.bg-accent):not(.bg-accent *) {
+  color: rgba(255,255,255,1) !important;
+}
+
+/* כפתורים צהובים — טקסט כחול תמיד */
+.bg-accent, .bg-accent * {
+  color: rgb(var(--accent-foreground)) !important;
+}
+
+/* Hover backgrounds */
+.hover\:bg-slate-50:hover  { background: rgb(var(--bg-elevated)) !important; }
+.hover\:bg-slate-100:hover { background: rgb(var(--bg-elevated)) !important; }
+
+/* Focus rings */
+.focus\:border-accent:focus { border-color: rgb(var(--accent)) !important; }
+
+/* Input fields */
+input[type="search"],
+input[type="text"],
+input[type="email"] {
+  background: rgb(var(--bg-elevated)) !important;
+  border-color: rgba(255,255,255,0.12) !important;
+  color: rgba(255,255,255,0.92) !important;
+}
+input::placeholder { color: rgba(255,255,255,0.35) !important; }
+
+/* Shadows — soften on dark bg */
+.shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
+
+/* ── Scrollbar — dark themed ─────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.22);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
+}
+
+/* ── Select / Dropdown — dark themed ────────────────────────── */
+select {
+  background: rgb(var(--bg-elevated)) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: rgba(255,255,255,0.92) !important;
+  border-radius: 8px;
+  padding: 8px 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: left 12px center !important;
+  padding-left: 36px !important;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+select:focus {
+  border-color: rgba(245,193,24,0.5) !important;
+}
+select option {
+  background: rgb(30, 34, 64);
+  color: rgba(255,255,255,0.92);
+}
+
+/* ── Date input — dark themed ───────────────────────────────── */
+input[type="date"],
+input[type="datetime-local"],
+input[type="time"],
+input[type="month"] {
+  background: rgb(var(--bg-elevated)) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: rgba(255,255,255,0.92) !important;
+  border-radius: 8px;
+  padding: 8px 12px;
+  outline: none;
+  cursor: pointer;
+  color-scheme: dark;
+}
+input[type="date"]:focus,
+input[type="datetime-local"]:focus {
+  border-color: rgba(245,193,24,0.5) !important;
+}
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
+  opacity: 0.6;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* ── Number input — hide arrows ─────────────────────────────── */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ── Textarea — dark themed ─────────────────────────────────── */
+textarea {
+  background: rgb(var(--bg-elevated)) !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: rgba(255,255,255,0.92) !important;
+  border-radius: 8px;
+}
+textarea:focus {
+  outline: none;
+  border-color: rgba(245,193,24,0.5) !important;
+}
+textarea::placeholder { color: rgba(255,255,255,0.3) !important; }
+
+/* ── All inputs focus ring ───────────────────────────────────── */
+input:focus,
+textarea:focus,
+select:focus {
+  box-shadow: 0 0 0 2px rgba(245,193,24,0.12);
+}
+
+/* ── Bell notification animations ──────────────────────────── */
+@keyframes bell-ring {
+  0%,100% { transform: rotate(0deg); }
+  8%       { transform: rotate(-18deg); }
+  16%      { transform: rotate(18deg); }
+  24%      { transform: rotate(-12deg); }
+  32%      { transform: rotate(12deg); }
+  40%      { transform: rotate(-6deg); }
+  48%      { transform: rotate(6deg); }
+  56%      { transform: rotate(0deg); }
+}
+.bell-ring {
+  transform-origin: top center;
+  animation: bell-ring 1.6s cubic-bezier(0.36,0.07,0.19,0.97) 0.4s both;
+}
+
+@keyframes badge-pulse {
+  0%,100% { transform: scale(1);    opacity: 1; }
+  50%      { transform: scale(1.18); opacity: 0.85; }
+}
+.badge-pulse {
+  animation: badge-pulse 1.8s ease-in-out infinite;
+}
+
+/* ── Installment next-payment animation ─────────────────────── */
+@keyframes next-inst-in {
+  0%   { opacity: 0; transform: translateY(7px) scale(0.98); }
+  60%  { opacity: 1; transform: translateY(-2px) scale(1.005); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-next-inst {
+  animation: next-inst-in 0.32s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+/* checkbox hover on card — can't do with inline styles */
+.inst-check-btn {
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.inst-check-btn:hover {
+  border-color: rgba(34,197,94,0.75) !important;
+  background:   rgba(34,197,94,0.12) !important;
+  transform: scale(1.1);
+}
+.inst-check-btn:active {
+  transform: scale(0.92);
+}
+
+/* ── Pipeline checkboxes ─────────────────────────────────── */
+.pipeline-cb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(255,255,255,0.25);
+  background: rgba(30,40,80,0.8);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.12s ease;
+  flex-shrink: 0;
+}
+.pipeline-cb:hover {
+  border-color: rgba(245,193,24,0.6);
+  background: rgba(245,193,24,0.1);
+}
+.pipeline-cb:checked {
+  background: #F5C118;
+  border-color: #F5C118;
+}
+.pipeline-cb:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid #13152A;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
