@@ -532,8 +532,26 @@ export default function Pipeline() {
 
     const dateVal = d => d ? new Date(d).getTime() : 0;
     switch (filters.sort) {
-      case 'oldest':           arr.sort((a,b) => dateVal(a.contact_date) - dateVal(b.contact_date)); break;
-      case 'newest':           arr.sort((a,b) => dateVal(b.contact_date) - dateVal(a.contact_date)); break;
+      case 'newest':
+        arr.sort((a, b) => {
+          // leads without contact_date float to the top (sorted by created_at among themselves)
+          if (!a.contact_date && !b.contact_date)
+            return new Date(b.created_at||0).getTime() - new Date(a.created_at||0).getTime();
+          if (!a.contact_date) return -1;
+          if (!b.contact_date) return 1;
+          return new Date(b.contact_date).getTime() - new Date(a.contact_date).getTime();
+        });
+        break;
+      case 'oldest':
+        arr.sort((a, b) => {
+          // leads without contact_date sink to the bottom
+          if (!a.contact_date && !b.contact_date)
+            return new Date(b.created_at||0).getTime() - new Date(a.created_at||0).getTime();
+          if (!a.contact_date) return 1;
+          if (!b.contact_date) return -1;
+          return new Date(a.contact_date).getTime() - new Date(b.contact_date).getTime();
+        });
+        break;
       case 'rating_high':      arr.sort((a,b) => (b.rating||0) - (a.rating||0)); break;
       case 'rating_low':       arr.sort((a,b) => (a.rating||0) - (b.rating||0)); break;
       case 'call_date_desc':   arr.sort((a,b) => dateVal(b.call_date)     - dateVal(a.call_date));     break;
