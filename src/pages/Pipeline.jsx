@@ -303,6 +303,7 @@ export default function Pipeline() {
   const [leads,          setLeads]          = useState([]);
   const [selected,       setSelected]       = useState(new Set());
   const [newLeadId,      setNewLeadId]      = useState(null);
+  const [editingLeadId,  setEditingLeadId]  = useState(null);
   const [loading,        setLoading]        = useState(true);
   const tableRef = useRef(null);
   const [dbError,        setDbError]        = useState(null);
@@ -442,7 +443,7 @@ export default function Pipeline() {
       setDbError(error.message);
     } else if (data) {
       setLeads(prev => [data, ...prev]);
-      setSelected(prev => new Set([...prev, data.id]));
+      setEditingLeadId(data.id);
       setNewLeadId(data.id);
       setTimeout(() => tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
     }
@@ -1062,16 +1063,16 @@ export default function Pipeline() {
                 const u = (f, v) => updateLead(lead.id, f, v);
                 return (
                   <tr key={lead.id} className="group"
-                    onClick={() => { if (!selected.has(lead.id)) setSelected(prev => new Set([...prev, lead.id])); }}
+                    onClick={() => setEditingLeadId(lead.id)}
                     style={{ cursor: 'default',
                       borderBottom: '1px solid rgba(255,255,255,0.05)',
-                      background: selected.has(lead.id)
+                      background: (selected.has(lead.id) || editingLeadId === lead.id)
                         ? 'rgba(245,193,24,0.07)'
                         : ri % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent',
                       transition: 'background 0.15s',
                     }}
-                    onMouseEnter={e => { if (!selected.has(lead.id)) e.currentTarget.style.background = 'rgba(255,255,255,0.035)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = selected.has(lead.id) ? 'rgba(245,193,24,0.07)' : ri % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent'; }}>
+                    onMouseEnter={e => { if (!selected.has(lead.id) && editingLeadId !== lead.id) e.currentTarget.style.background = 'rgba(255,255,255,0.035)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = (selected.has(lead.id) || editingLeadId === lead.id) ? 'rgba(245,193,24,0.07)' : ri % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent'; }}>
 
                     {/* Checkbox */}
                     <td style={{ ...td(), textAlign:'center', width:36, minWidth:36 }} onClick={e => e.stopPropagation()}>
