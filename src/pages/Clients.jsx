@@ -775,7 +775,7 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
             <div className="flex"
               style={{ borderTop: '1px solid rgba(255,255,255,0.07)', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
               <div className="flex-1 px-3 py-3 text-center">
-                <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(245,193,24,0.5)' }}>LTV</div>
+                <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(245,193,24,0.5)' }}>שווי לקוח כולל</div>
                 <div className="text-base font-bold leading-none" style={{ color: ltv > 0 ? '#F5C118' : 'rgba(245,193,24,0.25)' }}>
                   {ltv > 0 ? fmt(ltv) : '₪0'}
                 </div>
@@ -784,7 +784,7 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
               <div className="flex-1 px-3 py-3 text-center">
                 <div className="text-xs font-bold uppercase tracking-widest mb-1"
                   style={{ color: totalRemaining > 0 ? 'rgba(252,211,77,0.45)' : 'rgba(134,239,172,0.45)' }}>
-                  {totalRemaining > 0 ? 'נשאר' : 'שולם הכל'}
+                  {totalRemaining > 0 ? 'נותר לתשלום' : 'שולם הכל'}
                 </div>
                 <div className="text-base font-bold leading-none"
                   style={{ color: totalRemaining > 0 ? '#fcd34d' : '#86efac' }}>
@@ -799,147 +799,135 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
             </div>
           )}
 
-          {/* Project accordion rows */}
+          {/* Projects + installments — always visible, no extra click needed */}
           {linkedProjects.length > 0 && (
-            <div className="mx-4 mb-3 space-y-1.5" style={{ paddingTop: 12 }}>
+            <div className="mx-4 mb-3 space-y-2" style={{ paddingTop: 12 }}>
               {linkedProjects.map(proj => {
-                const plan         = proj.installment_plan || [];
-                const hasPlan      = plan.length > 0;
-                const isExpandable = hasPlan || proj.total_amount > 0;
-                const fullPaid     = !hasPlan && (proj.received_amount || 0) >= (proj.total_amount || 1) && proj.total_amount > 0;
-                const paidCount    = plan.filter(i => i.paid).length;
-                const paidPct      = hasPlan ? Math.round(paidCount / plan.length * 100) : fullPaid ? 100 : 0;
-                const allPaid      = hasPlan ? paidCount === plan.length : fullPaid;
-                const isProjOpen   = !!openAccordion[proj.id];
-                const pst          = PROJECT_STATUS[proj.status] || PROJECT_STATUS.not_started;
-                const isActive     = proj.status !== 'completed' && proj.status !== 'on_hold';
-                const paidItems    = plan.map((inst, idx) => ({ inst, idx })).filter(({ inst }) => inst.paid);
-                const nextIdx      = plan.findIndex(i => !i.paid);
-                const next         = nextIdx !== -1 ? plan[nextIdx] : null;
-                const iAmt         = inst => instAmt(inst, proj.total_amount);
+                const plan      = proj.installment_plan || [];
+                const hasPlan   = plan.length > 0;
+                const fullPaid  = !hasPlan && (proj.received_amount || 0) >= (proj.total_amount || 1) && proj.total_amount > 0;
+                const paidCount = plan.filter(i => i.paid).length;
+                const allPaid   = hasPlan ? paidCount === plan.length : fullPaid;
+                const nextIdx   = plan.findIndex(i => !i.paid);
+                const pst       = PROJECT_STATUS[proj.status] || PROJECT_STATUS.not_started;
+                const paidAmt   = projectPaid(proj);
+                const paidPct   = proj.total_amount > 0 ? Math.min(Math.round(paidAmt / proj.total_amount * 100), 100) : 0;
+                const iAmt      = inst => instAmt(inst, proj.total_amount);
 
                 return (
                   <div key={proj.id} className="rounded-xl overflow-hidden"
-                    style={{ border: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
-                    <div className="flex items-center transition hover:bg-white/5">
-                      <button
-                        onClick={() => isExpandable && toggleAccordion(proj.id)}
-                        className="flex-1 flex flex-col gap-1.5 px-3 py-2.5 min-w-0"
-                        style={{ cursor: isExpandable ? 'pointer' : 'default' }}>
+                    style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.015)' }}>
 
-                        {/* שורה 1: שם + סטטוס */}
-                        <div className="flex items-center gap-2 w-full">
-                          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                            <span className="text-xs font-semibold truncate"
-                              style={{ color: isActive ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.38)' }}>
-                              {proj.name}
-                            </span>
-                            <span className="flex-none text-[10px] font-semibold px-1 py-px rounded"
-                              style={{ color: pst.color, background: pst.bg, border: `1px solid ${pst.border}` }}>
-                              {pst.label}
-                            </span>
-                          </div>
-                          {isExpandable && (
-                            <ChevronDown size={12} className="flex-none transition-transform duration-200"
-                              style={{ color: 'rgba(255,255,255,0.2)', transform: isProjOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
-                          )}
-                        </div>
+                    {/* ── Project header ── */}
+                    <div className="flex items-center gap-2 px-3 py-2.5">
+                      {/* progress bar dot */}
+                      <div className="flex-none w-1.5 h-1.5 rounded-full"
+                        style={{ background: allPaid ? '#22c55e' : pst.color }} />
+                      <span className="flex-1 text-xs font-semibold truncate"
+                        style={{ color: 'rgba(255,255,255,0.85)' }}>
+                        {proj.name}
+                      </span>
+                      <span className="flex-none text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                        style={{ color: pst.color, background: pst.bg, border: `1px solid ${pst.border}` }}>
+                        {pst.label}
+                      </span>
+                      {proj.total_amount > 0 && (
+                        <span className="flex-none text-[10px] tabular-nums font-semibold"
+                          style={{ color: allPaid ? '#86efac' : '#fcd34d' }}>
+                          {fmt(paidAmt)}<span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 400 }}> / {fmt(proj.total_amount)}</span>
+                        </span>
+                      )}
+                      <button onClick={e => { e.stopPropagation(); onViewProjects(client.id); }}
+                        className="flex-none text-xs opacity-30 hover:opacity-70 transition-opacity"
+                        style={{ color: 'white' }} title="עבור לפרויקט">←</button>
+                    </div>
 
-                        {/* שורה 2: תשלום — פס ניטרלי, הסכומים נושאים את המשמעות */}
-                        {proj.total_amount > 0 && (
-                          <div className="flex items-center gap-2 w-full">
-                            <span className="text-[10px] flex-none"
-                              style={{ color: 'rgba(255,255,255,0.25)' }}>
-                              ₪
+                    {/* ── Payment progress bar ── */}
+                    {proj.total_amount > 0 && (
+                      <div className="h-[2px] w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-full transition-all duration-500"
+                          style={{ width: `${paidPct}%`, background: allPaid ? '#22c55e' : 'linear-gradient(to left, #fcd34d, #f59e0b)' }} />
+                      </div>
+                    )}
+
+                    {/* ── Installments — always visible ── */}
+                    {(hasPlan || proj.total_amount > 0) && (
+                      <div className="px-3 pt-2 pb-3 space-y-1">
+
+                        {/* No plan — single full payment */}
+                        {!hasPlan && proj.total_amount > 0 && (
+                          <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+                            style={{
+                              background: fullPaid ? 'rgba(34,197,94,0.07)' : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${fullPaid ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                            }}>
+                            <button onClick={() => onToggleFullPayment(proj.id)}
+                              className="h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center flex-none transition-all inst-check-btn"
+                              style={{ borderColor: fullPaid ? '#22c55e' : 'rgba(255,255,255,0.3)', background: fullPaid ? '#22c55e' : 'transparent' }}>
+                              {fullPaid && <Check size={8} strokeWidth={3.5} color="#fff" />}
+                            </button>
+                            <span className="flex-1 text-xs font-semibold"
+                              style={{ color: fullPaid ? '#86efac' : 'rgba(255,255,255,0.8)' }}>
+                              {fullPaid ? 'שולם במלואו ✓' : 'סמן כשולם'}
                             </span>
-                            <div className="flex-1 h-[3px] rounded-full overflow-hidden"
-                              style={{ background: 'rgba(255,255,255,0.08)' }}>
-                              <div className="h-full rounded-full transition-all duration-500"
-                                style={{ width: `${paidPct}%`, background: allPaid ? '#22c55e' : 'rgba(255,255,255,0.35)' }} />
-                            </div>
-                            <span className="text-[10px] tabular-nums flex-none"
-                              style={{ color: allPaid ? '#86efac' : 'rgba(255,255,255,0.35)' }}>
-                              {fmt(projectPaid(proj))}<span style={{ opacity: 0.45 }}> / {fmt(proj.total_amount)}</span>
+                            <span className="text-sm font-bold flex-none"
+                              style={{ color: fullPaid ? '#86efac' : '#fcd34d' }}>
+                              {fmt(proj.total_amount)}
                             </span>
                           </div>
                         )}
-                      </button>
-                      <button onClick={e => { e.stopPropagation(); onViewProjects(client.id); }}
-                        className="flex-none flex items-center justify-center px-3 transition hover:bg-white/10 self-stretch"
-                        title="עבור לפרויקט"
-                        style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-                        <span className="text-xs leading-none opacity-40 hover:opacity-80 transition-opacity"
-                          style={{ color: 'white' }}>←</span>
-                      </button>
-                    </div>
 
-                    {isExpandable && isProjOpen && (
-                      <div className="px-3 pb-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div className="pt-2.5">
-                          {!hasPlan && proj.total_amount > 0 && (fullPaid ? (
-                            <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-                              style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                              <button onClick={() => onToggleFullPayment(proj.id)}
-                                className="h-4 w-4 rounded-full border-2 flex items-center justify-center flex-none transition-all"
-                                style={{ borderColor: '#22c55e', background: '#22c55e', flexShrink: 0 }}>
-                                <Check size={8} strokeWidth={3.5} color="#fff" />
-                              </button>
-                              <span className="flex-1 text-xs font-semibold" style={{ color: '#86efac' }}>שולם במלואו</span>
-                              <span className="text-sm font-bold flex-none" style={{ color: '#86efac' }}>{fmt(proj.total_amount)}</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-                              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                              <button onClick={() => onToggleFullPayment(proj.id)}
-                                className="h-[18px] w-[18px] rounded-full border-2 flex-none transition"
-                                style={{ borderColor: 'rgba(255,255,255,0.38)', background: 'transparent', flexShrink: 0 }} />
-                              <span className="flex-1 text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>תשלום מלא</span>
-                              <span className="text-sm font-bold flex-none" style={{ color: '#fcd34d' }}>{fmt(proj.total_amount)}</span>
-                            </div>
-                          ))}
-                          {hasPlan && paidItems.map(({ inst, idx }) => (
-                            <div key={idx} className="flex items-center gap-2 mb-1.5">
+                        {/* Installment plan — all rows always visible */}
+                        {hasPlan && plan.map((inst, idx) => {
+                          const isPaid = inst.paid;
+                          const isNext = idx === nextIdx;
+                          const amt    = iAmt(inst);
+                          return (
+                            <div key={idx} className="flex items-center gap-2.5 rounded-xl px-3 py-2"
+                              style={{
+                                background: isNext && !isPaid ? 'rgba(255,255,255,0.04)' : 'transparent',
+                                border: `1px solid ${isNext && !isPaid ? 'rgba(255,255,255,0.08)' : 'transparent'}`,
+                              }}>
                               <button onClick={() => onToggleProjectInstallment(proj.id, idx)}
-                                className="h-4 w-4 rounded-full border-2 flex items-center justify-center flex-none transition-all"
-                                style={{ borderColor: '#22c55e', background: '#22c55e', flexShrink: 0 }}>
-                                <Check size={8} strokeWidth={3.5} color="#fff" />
+                                className="h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center flex-none transition-all inst-check-btn"
+                                style={{
+                                  borderColor: isPaid ? '#22c55e' : isNext ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)',
+                                  background: isPaid ? '#22c55e' : 'transparent',
+                                  flexShrink: 0,
+                                }}>
+                                {isPaid && <Check size={8} strokeWidth={3.5} color="#fff" />}
                               </button>
-                              <span className="flex-1 text-xs truncate" style={{ color: 'rgba(255,255,255,0.28)', textDecoration: 'line-through' }}>
+                              <span className="flex-1 text-xs truncate"
+                                style={{
+                                  color: isPaid ? 'rgba(255,255,255,0.22)' : isNext ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.45)',
+                                  textDecoration: isPaid ? 'line-through' : 'none',
+                                  fontWeight: isNext && !isPaid ? 600 : 400,
+                                }}>
                                 {inst.label || `תשלום ${idx + 1}`}
                               </span>
-                              {iAmt(inst) > 0 && <span className="text-xs flex-none" style={{ color: 'rgba(255,255,255,0.2)' }}>{fmt(iAmt(inst))}</span>}
+                              {inst.date && !isPaid && (
+                                <span className="flex-none text-[10px]" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                                  {fmtDate(inst.date)}
+                                </span>
+                              )}
+                              {amt > 0 && (
+                                <span className="flex-none text-xs font-bold tabular-nums"
+                                  style={{ color: isPaid ? 'rgba(255,255,255,0.15)' : isNext ? '#fcd34d' : 'rgba(255,255,255,0.35)' }}>
+                                  {fmt(amt)}
+                                </span>
+                              )}
                             </div>
-                          ))}
-                          {hasPlan && paidItems.length > 0 && next && (
-                            <div className="mb-2" style={{ height: 1, background: 'rgba(255,255,255,0.05)' }} />
-                          )}
-                          {hasPlan && (next ? (
-                            <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
-                              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                              <button onClick={() => onToggleProjectInstallment(proj.id, nextIdx)}
-                                className="h-[18px] w-[18px] rounded-full border-2 flex-none"
-                                style={{ borderColor: 'rgba(255,255,255,0.38)', background: 'transparent', flexShrink: 0 }} />
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-semibold truncate" style={{ color: 'rgba(255,255,255,0.85)' }}>
-                                  {next.label || `תשלום ${nextIdx + 1}`}
-                                </div>
-                                {next.date && (
-                                  <div className="flex items-center gap-1 mt-0.5">
-                                    <Calendar size={9} style={{ color: 'rgba(255,255,255,0.28)' }} />
-                                    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.28)' }}>{fmtDate(next.date)}</span>
-                                  </div>
-                                )}
-                              </div>
-                              {iAmt(next) > 0 && <span className="text-sm font-bold flex-none" style={{ color: '#fcd34d' }}>{fmt(iAmt(next))}</span>}
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2 rounded-xl px-3 py-2.5"
-                              style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                              <Check size={14} strokeWidth={2.5} style={{ color: '#86efac' }} />
-                              <span className="text-xs font-semibold" style={{ color: '#86efac' }}>כל התשלומים התקבלו</span>
-                            </div>
-                          ))}
-                        </div>
+                          );
+                        })}
+
+                        {/* All paid banner */}
+                        {hasPlan && allPaid && (
+                          <div className="flex items-center gap-2 rounded-xl px-3 py-1.5 mt-1"
+                            style={{ background: 'rgba(34,197,94,0.07)', border: '1px solid rgba(34,197,94,0.15)' }}>
+                            <Check size={12} strokeWidth={2.5} style={{ color: '#86efac' }} />
+                            <span className="text-xs font-semibold" style={{ color: '#86efac' }}>כל התשלומים התקבלו</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
