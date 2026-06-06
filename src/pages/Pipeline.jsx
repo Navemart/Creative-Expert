@@ -359,6 +359,17 @@ export default function Pipeline() {
 
   useEffect(() => { if (userId) loadLeads(); }, [userId]);
 
+  // Clear editing highlight when clicking outside the table
+  useEffect(() => {
+    function handleOutsideClick(e) {
+      if (tableRef.current && !tableRef.current.contains(e.target)) {
+        setEditingLeadId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   // ── Follow-up notifications ───────────────────────────────────
   useEffect(() => {
     if (leads.length === 0) return;
