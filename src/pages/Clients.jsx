@@ -1820,7 +1820,7 @@ export default function Clients() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 mid:grid-cols-3 wide:grid-cols-4 gap-3 items-start">
+            <div className="grid grid-cols-1 mid:grid-cols-2 wide:grid-cols-3 gap-4 items-start">
               {filteredClients.map(client => (
                 <ClientCard
                   key={client.id}
