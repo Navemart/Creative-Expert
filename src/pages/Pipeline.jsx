@@ -41,8 +41,8 @@ function fmtDate(d) {
 
 // ── Cell components ───────────────────────────────────────────
 
-function TextCell({ value, onSave, placeholder = '', multiline = false }) {
-  const [editing, setEditing] = useState(false);
+function TextCell({ value, onSave, placeholder = '', multiline = false, defaultEditing = false }) {
+  const [editing, setEditing] = useState(defaultEditing);
   const [val, setVal] = useState(value || '');
   const ref = useRef(null);
 
@@ -302,7 +302,9 @@ export default function Pipeline() {
 
   const [leads,          setLeads]          = useState([]);
   const [selected,       setSelected]       = useState(new Set());
+  const [newLeadId,      setNewLeadId]      = useState(null);
   const [loading,        setLoading]        = useState(true);
+  const tableRef = useRef(null);
   const [dbError,        setDbError]        = useState(null);
   const [closedModal,    setClosedModal]    = useState(null); // { name, leadId }
   const [filters, setFilters] = useState({
@@ -440,11 +442,26 @@ export default function Pipeline() {
       setDbError(error.message);
     } else if (data) {
       setLeads(prev => [data, ...prev]);
+      setSelected(prev => new Set([...prev, data.id]));
+      setNewLeadId(data.id);
+      setTimeout(() => tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
     }
   }
 
   async function updateLead(id, field, value) {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l));
+
+    // Auto-sort by date when a date field gets a value
+    if (value) {
+      if (field === 'contact_date') {
+        setFilters(prev => ({ ...prev, sort: 'newest' }));
+      } else if (field === 'call_date') {
+        setFilters(prev => ({ ...prev, sort: 'call_date_desc' }));
+      } else if (field === 'followup_date') {
+        setFilters(prev => ({ ...prev, sort: 'followup_date_desc' }));
+      }
+    }
+
     await supabase.from('leads').update({ [field]: value }).eq('id', id);
 
     // When a lead is marked as closed → confetti + prompt to open a new client card
@@ -948,7 +965,7 @@ export default function Pipeline() {
       )}
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden"
+      <div ref={tableRef} className="rounded-xl overflow-hidden"
         style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgb(var(--bg-surface))' }}>
         <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <table className="w-full"
@@ -1027,7 +1044,8 @@ export default function Pipeline() {
                 const u = (f, v) => updateLead(lead.id, f, v);
                 return (
                   <tr key={lead.id} className="group"
-                    style={{
+                    onClick={() => { if (!selected.has(lead.id)) setSelected(prev => new Set([...prev, lead.id])); }}
+                    style={{ cursor: 'default',
                       borderBottom: '1px solid rgba(255,255,255,0.05)',
                       background: selected.has(lead.id)
                         ? 'rgba(245,193,24,0.07)'
@@ -1047,7 +1065,8 @@ export default function Pipeline() {
 
                     {/* שם */}
                     <td style={td()}>
-                      <TextCell value={lead.name} onSave={v => u('name', v)} placeholder="שם ליד..." />
+                      <TextCell value={lead.name} onSave={v => u('name', v)} placeholder="שם ליד..."
+                        defaultEditing={lead.id === newLeadId} />
                     </td>
 
                     {/* תאריך התקשרות */}
