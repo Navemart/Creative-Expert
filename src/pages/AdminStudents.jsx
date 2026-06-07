@@ -125,17 +125,19 @@ function Delta({ value, prev }) {
 
 // ── Monthly stats panel ─────────────────────────────────────
 function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_paid }) {
-  const sorted = [...monthly].sort((a, b) => b.month.localeCompare(a.month));
-  const [idx, setIdx] = useState(0);
+  // Ascending: oldest (left) → newest (right)
+  const sorted = [...monthly].sort((a, b) => a.month.localeCompare(b.month));
+  // Start at the newest month (rightmost tab)
+  const [idx, setIdx] = useState(() => Math.max(0, sorted.length - 1));
 
-  // Reset to latest month when student changes
-  useEffect(() => { setIdx(0); }, [studentId]);
+  // Reset to newest when student changes
+  useEffect(() => { setIdx(Math.max(0, sorted.length - 1)); }, [studentId, sorted.length]);
 
   const cur  = sorted[idx]     ?? null;
-  const prev = sorted[idx + 1] ?? null;
+  const prev = sorted[idx - 1] ?? null;  // month before current
 
-  // Sparkline — last 6 months, chronological
-  const sparkData = [...sorted].reverse().slice(-6);
+  // Sparkline — last 6 months, chronological (already ascending)
+  const sparkData = sorted.slice(-6);
   const maxIncome = Math.max(...sparkData.map(m => num(m.total_income || m.amount)), 1);
 
   const curIncome  = cur ? num(cur.total_income  || cur.amount) : 0;
@@ -181,26 +183,18 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
         <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
           <div className="flex gap-1.5 pb-1" style={{ minWidth: 'max-content' }}>
             {sorted.map((m, i) => {
-              const mIncome  = num(m.total_income || m.amount);
               const isActive = i === idx;
               return (
                 <button key={m.month} onClick={() => setIdx(i)}
-                  className="flex flex-col items-center rounded-xl px-3 py-2 transition-all"
+                  className="rounded-lg px-3 py-1.5 transition-all whitespace-nowrap"
                   style={{
                     background: isActive ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)',
                     border: `1px solid ${isActive ? 'rgba(245,193,24,0.45)' : 'rgba(255,255,255,0.07)'}`,
-                    minWidth: 110,   // FIX: wide enough for "ספטמבר 2026"
                   }}>
-                  <span className="text-[11px] font-semibold whitespace-nowrap"
+                  <span className="text-[11px] font-semibold"
                     style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.45)' }}>
                     {fmtMonth(m.month)}
                   </span>
-                  {mIncome > 0 && (
-                    <span className="text-[12px] font-black mt-0.5"
-                      style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.5)' }}>
-                      {fmtILS(mIncome)}
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -517,11 +511,11 @@ export default function AdminStudents() {
 
   function StudentList({ list }) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
         {list.map(s => {
           const isOpen = openStudentId === s.id;
           return (
-            <div key={s.id} className={isOpen ? 'lg:col-span-2' : ''}>
+            <div key={s.id}>
               <StudentCard
                 student={s}
                 open={isOpen}
