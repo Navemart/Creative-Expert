@@ -129,7 +129,7 @@ export default function Roadmap() {
 
   // Task modal
   const [taskModal, setTaskModal] = useState(null); // { mode: 'add'|'edit', weekId, task? }
-  const [taskForm,  setTaskForm]  = useState({ title: '', level_label: '', category_label: '', link: '' });
+  const [taskForm,  setTaskForm]  = useState({ title: '', level_label: '', category_label: '', tag: '', link: '' });
 
   // Add phase form
   const [showAddPhase, setShowAddPhase] = useState(false);
@@ -396,6 +396,7 @@ export default function Roadmap() {
         title:          taskForm.title.trim(),
         level_label:    taskForm.level_label,
         category_label: taskForm.category_label,
+        tag:            taskForm.tag,
         link:           taskForm.link,
         sort_order:     week?.tasks.length || 0,
       }).select().single();
@@ -413,6 +414,7 @@ export default function Roadmap() {
         title:          taskForm.title.trim(),
         level_label:    taskForm.level_label,
         category_label: taskForm.category_label,
+        tag:            taskForm.tag,
         link:           taskForm.link,
       };
       await supabase.from('roadmap_tasks').update(update).eq('id', taskId);
@@ -426,7 +428,7 @@ export default function Roadmap() {
     }
 
     setTaskModal(null);
-    setTaskForm({ title: '', level_label: '', category_label: '', link: '' });
+    setTaskForm({ title: '', level_label: '', category_label: '', tag: '', link: '' });
   }
 
   async function deleteTask(weekId, taskId) {
@@ -792,66 +794,76 @@ export default function Roadmap() {
                             </div>
 
                             {/* Title */}
-                            <span
-                              className="flex-1 text-xs"
+                            <span className="flex-1 text-xs px-1.5"
                               style={{
-                                color:          done ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.78)',
+                                color: done ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.82)',
                                 textDecoration: done ? 'line-through' : 'none',
-                                fontWeight:     400,
-                                paddingLeft: 6,
-                                paddingRight: 6,
-                              }}
-                            >
+                              }}>
                               {task.title}
                             </span>
 
-                            {/* Level — hidden on mobile */}
-                            <div className="hidden sm:block" style={{ width: 96, flexShrink: 0 }}>
+                            {/* Level label */}
+                            <div className="hidden sm:flex items-center" style={{ width: 150, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: 8 }}>
                               {task.level_label && (
-                                <span className="text-[10px] px-2 py-0.5 rounded font-medium"
-                                  style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.38)' }}>
+                                <span className="text-[10px] truncate"
+                                  style={{ color: 'rgba(255,255,255,0.35)' }}>
                                   {task.level_label}
                                 </span>
                               )}
                             </div>
 
-                            {/* Category — hidden on mobile */}
-                            <div className="hidden sm:block" style={{ width: 120, flexShrink: 0 }}>
+                            {/* Category badge */}
+                            <div className="hidden sm:flex items-center" style={{ width: 130, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: 8 }}>
                               {task.category_label && (
-                                <span className="text-[10px] px-2 py-0.5 rounded font-semibold"
-                                  style={{ background: categoryStyle(task.category_label).bg, color: categoryStyle(task.category_label).color }}>
+                                <span className="text-[10px] px-2 py-0.5 rounded font-semibold truncate"
+                                  style={{ background: categoryStyle(task.category_label).bg, color: categoryStyle(task.category_label).color, border: `1px solid ${categoryStyle(task.category_label).color}33` }}>
                                   {task.category_label}
                                 </span>
                               )}
                             </div>
 
-                            {/* Link + actions */}
-                            <div className="flex items-center gap-1 flex-none" style={{ width: 56, justifyContent: 'flex-end' }}>
-                              {task.link && (
-                                <a href={task.link} target="_blank" rel="noopener noreferrer"
-                                  onClick={e => e.stopPropagation()}
-                                  className="hover:text-white/60 transition rounded-md p-0.5"
-                                  style={{ color: 'rgba(255,255,255,0.22)' }} title="פתח קישור">
-                                  <ExternalLink size={12} />
-                                </a>
-                              )}
-                              {editMode && (
-                                <>
-                                  <button
-                                    onClick={() => { setTaskModal({ mode: 'edit', weekId: week.id, task }); setTaskForm({ title: task.title, level_label: task.level_label || '', category_label: task.category_label || '', link: task.link || '' }); }}
-                                    className="opacity-0 group-hover:opacity-100 rounded-md p-0.5 hover:bg-white/10 transition"
-                                    style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                    <Edit2 size={12} />
-                                  </button>
-                                  <button
-                                    onClick={() => deleteTask(week.id, task.id)}
-                                    className="opacity-0 group-hover:opacity-100 rounded-md p-0.5 hover:bg-red-500/20 transition"
-                                    style={{ color: 'rgba(255,255,255,0.3)' }}>
-                                    <Trash2 size={12} />
-                                  </button>
-                                </>
+                            {/* Tag chip (e.g. S3, F1) */}
+                            <div className="hidden sm:flex items-center justify-center" style={{ width: 46, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                              {task.tag && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                  style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.02em', fontFamily: 'monospace' }}>
+                                  {task.tag}
+                                </span>
                               )}
                             </div>
+
+                            {/* Link — truncated URL */}
+                            <div className="hidden sm:flex items-center gap-1" style={{ width: 160, flexShrink: 0 }}>
+                              {task.link ? (
+                                <a href={task.link} target="_blank" rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="flex items-center gap-1 hover:opacity-80 transition truncate"
+                                  style={{ color: 'rgba(255,255,255,0.28)', maxWidth: '100%' }}>
+                                  <ExternalLink size={10} style={{ flexShrink: 0 }} />
+                                  <span className="text-[10px] truncate">
+                                    {task.link.replace(/^https?:\/\//, '')}
+                                  </span>
+                                </a>
+                              ) : <span style={{ width: 160 }} />}
+                            </div>
+
+                            {/* Edit/Delete actions */}
+                            {editMode && (
+                              <div className="flex items-center gap-0.5 flex-none opacity-0 group-hover:opacity-100 transition">
+                                <button
+                                  onClick={() => { setTaskModal({ mode: 'edit', weekId: week.id, task }); setTaskForm({ title: task.title, level_label: task.level_label || '', category_label: task.category_label || '', tag: task.tag || '', link: task.link || '' }); }}
+                                  className="rounded-md p-0.5 hover:bg-white/10 transition"
+                                  style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                  <Edit2 size={12} />
+                                </button>
+                                <button
+                                  onClick={() => deleteTask(week.id, task.id)}
+                                  className="rounded-md p-0.5 hover:bg-red-500/20 transition"
+                                  style={{ color: 'rgba(255,255,255,0.3)' }}>
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -999,6 +1011,19 @@ export default function Roadmap() {
               </select>
             </div>
 
+            {/* תג מספר (S3, F1 וכו׳) */}
+            <div className="space-y-1">
+              <label className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>תג (S3, F1, I2...)</label>
+              <input
+                value={taskForm.tag}
+                onChange={e => setTaskForm(f => ({ ...f, tag: e.target.value }))}
+                placeholder="לדוגמה: S3, F1, I2"
+                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontFamily: 'monospace' }}
+                dir="ltr"
+              />
+            </div>
+
             {/* קישור */}
             <div className="space-y-1">
               <label className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>קישור</label>
@@ -1009,6 +1034,7 @@ export default function Roadmap() {
                 className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 onKeyDown={e => { if (e.key === 'Enter') saveTask(); }}
+                dir="ltr"
               />
             </div>
 
