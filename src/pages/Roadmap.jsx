@@ -679,7 +679,7 @@ export default function Roadmap() {
                       <div
                         className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-white/[0.03] transition select-none"
                         style={{ background: weekActive ? 'rgba(245,193,24,0.04)' : 'rgba(255,255,255,0.025)' }}
-                        onClick={() => !editMode && toggleWeek(week.id)}
+                        onClick={() => toggleWeek(week.id)}
                         onDrop={editMode ? e => dropTaskOnWeek(e, week.id) : undefined}
                         onDragOver={editMode && dragging?.type === 'task' ? e => dndOver(e, `weekhdr-${week.id}`) : undefined}
                       >
