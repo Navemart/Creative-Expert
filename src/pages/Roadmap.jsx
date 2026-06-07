@@ -121,6 +121,7 @@ export default function Roadmap() {
   const [phases,          setPhases]          = useState([]);
   const [completions,     setCompletions]     = useState(new Set());
   const [expanded,        setExpanded]        = useState(new Set());
+  const [expandedWeeks,   setExpandedWeeks]   = useState(new Set());
   const [editMode,        setEditMode]        = useState(false);
   const [loading,         setLoading]         = useState(true);
 
@@ -163,6 +164,8 @@ export default function Roadmap() {
 
       setPhases(phaseList);
       setCompletions(new Set((cData || []).map(c => c.task_id)));
+      // auto-expand all weeks by default
+      setExpandedWeeks(new Set((wData || []).map(w => w.id)));
     } catch (err) {
       console.error('Roadmap load error:', err);
     } finally {
@@ -186,6 +189,27 @@ export default function Roadmap() {
 
   function togglePhase(id) {
     setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        // auto-expand all weeks of this phase when opening
+        const phase = phases.find(p => p.id === id);
+        if (phase) {
+          setExpandedWeeks(wPrev => {
+            const wNext = new Set(wPrev);
+            phase.weeks.forEach(w => wNext.add(w.id));
+            return wNext;
+          });
+        }
+      }
+      return next;
+    });
+  }
+
+  function toggleWeek(id) {
+    setExpandedWeeks(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
@@ -439,7 +463,7 @@ export default function Roadmap() {
           const phaseTotal     = phaseTasks.length;
           const phasePct       = phaseTotal > 0 ? Math.round((phaseCompleted / phaseTotal) * 100) : 0;
           const isOpen         = expanded.has(phase.id);
-          const circleR        = 22;
+          const circleR        = 17;
           const circumference  = 2 * Math.PI * circleR;
 
           return (
@@ -450,49 +474,47 @@ export default function Roadmap() {
             >
               {/* Phase header */}
               <div
-                className="flex items-center gap-5 px-6 py-5 cursor-pointer hover:bg-white/5 transition select-none"
+                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.03] transition select-none"
                 onClick={() => togglePhase(phase.id)}
               >
-                {/* Month badge */}
-                <div
-                  className="flex-none flex flex-col items-center justify-center rounded-xl"
-                  style={{ minWidth: 64, padding: '8px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-                >
-                  <div className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.25)' }}>חודש</div>
-                  <div className="text-3xl font-bold text-white leading-none mt-0.5">
+                {/* Month badge — compact horizontal */}
+                <div className="flex-none flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 72 }}>
+                  <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש</span>
+                  <span className="text-base font-bold text-white leading-none">
                     {String(phase.month_number).padStart(2, '0')}
-                  </div>
+                  </span>
                 </div>
 
                 {/* Title + meta */}
-                <div className="flex-1 min-w-0 py-1" onClick={e => editMode && e.stopPropagation()}>
+                <div className="flex-1 min-w-0" onClick={e => editMode && e.stopPropagation()}>
                   <InlineEdit
                     value={phase.title}
                     onSave={t => updatePhaseTitle(phase.id, t)}
                     active={editMode}
-                    className="text-xl"
-                    style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 700 }}
+                    className="text-sm font-bold"
+                    style={{ color: 'rgba(255,255,255,0.92)' }}
                   />
-                  <div className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                  <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>
                     {phaseCompleted} מתוך {phaseTotal} משימות · {phasePct}%
                   </div>
                 </div>
 
                 {/* Circular progress + controls */}
-                <div className="flex items-center gap-3 flex-none">
-                  <svg width="56" height="56">
-                    <circle cx="28" cy="28" r={circleR} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3.5" />
+                <div className="flex items-center gap-2 flex-none">
+                  <svg width="44" height="44">
+                    <circle cx="22" cy="22" r={circleR} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
                     <circle
-                      cx="28" cy="28" r={circleR} fill="none"
+                      cx="22" cy="22" r={circleR} fill="none"
                       stroke={phasePct === 100 ? '#22c55e' : '#F5C118'}
-                      strokeWidth="3.5"
+                      strokeWidth="3"
                       strokeDasharray={circumference}
                       strokeDashoffset={circumference * (1 - phasePct / 100)}
                       strokeLinecap="round"
-                      transform="rotate(-90 28 28)"
+                      transform="rotate(-90 22 22)"
                       style={{ transition: 'stroke-dashoffset 0.5s' }}
                     />
-                    <text x="28" y="33" textAnchor="middle" fontSize="11"
+                    <text x="22" y="26" textAnchor="middle" fontSize="10"
                       fill={phasePct === 100 ? '#22c55e' : '#F5C118'} fontWeight="bold">
                       {phasePct}%
                     </text>
@@ -501,172 +523,175 @@ export default function Roadmap() {
                   {editMode && (
                     <button
                       onClick={e => { e.stopPropagation(); deletePhase(phase.id); }}
-                      className="rounded-md p-1.5 transition hover:bg-red-500/20"
+                      className="rounded-md p-1 transition hover:bg-red-500/20"
                       style={{ color: 'rgba(255,255,255,0.3)' }}
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} />
                     </button>
                   )}
 
-                  {isOpen
-                    ? <ChevronDown size={22} style={{ color: 'rgba(255,255,255,0.35)' }} />
-                    : <ChevronRight size={22} style={{ color: 'rgba(255,255,255,0.35)' }} />
-                  }
+                  <ChevronDown size={16} className="transition-transform duration-200"
+                    style={{ color: 'rgba(255,255,255,0.35)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
               </div>
 
               {/* Phase content */}
               {isOpen && (
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                  {phase.weeks.map(week => (
+                  {phase.weeks.map(week => {
+                    const weekDone  = week.tasks.filter(t => completions.has(t.id)).length;
+                    const weekTotal = week.tasks.length;
+                    const weekPct   = weekTotal > 0 ? Math.round(weekDone / weekTotal * 100) : 0;
+                    const isWeekOpen = expandedWeeks.has(week.id);
+                    const nextTaskId = week.tasks.find(t => !completions.has(t.id))?.id;
+
+                    return (
                     <div key={week.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
 
-                      {/* Week header */}
+                      {/* Week header — clickable */}
                       <div
-                        className="flex items-center justify-between px-6 py-3"
-                        style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                        className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-white/[0.03] transition select-none"
+                        style={{ background: 'rgba(255,255,255,0.025)' }}
+                        onClick={() => !editMode && toggleWeek(week.id)}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.25)', minWidth: 56 }}>
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <ChevronDown size={13} className="flex-none transition-transform duration-200"
+                            style={{ color: 'rgba(255,255,255,0.3)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+                          <span className="text-[10px] font-bold uppercase tracking-widest flex-none"
+                            style={{ color: 'rgba(255,255,255,0.25)' }}>
                             שבוע {week.week_number}
                           </span>
-                          <InlineEdit
-                            value={week.title}
-                            onSave={t => updateWeekTitle(week.id, t)}
-                            active={editMode}
-                            className="text-sm"
-                            style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}
-                          />
+                          <div onClick={e => editMode && e.stopPropagation()}>
+                            <InlineEdit
+                              value={week.title}
+                              onSave={t => updateWeekTitle(week.id, t)}
+                              active={editMode}
+                              className="text-xs font-semibold"
+                              style={{ color: 'rgba(255,255,255,0.75)' }}
+                            />
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.25)' }}>
-                            {week.tasks.filter(t => completions.has(t.id)).length}/{week.tasks.length}
+                        <div className="flex items-center gap-2 flex-none">
+                          {/* Progress pill */}
+                          <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-md"
+                            style={{
+                              background: weekPct === 100 ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)',
+                              color: weekPct === 100 ? '#86efac' : 'rgba(255,255,255,0.3)',
+                            }}>
+                            {weekDone}/{weekTotal}
                           </span>
                           {editMode && (
                             <>
                               <button
-                                onClick={() => {
-                                  setTaskModal({ mode: 'add', weekId: week.id });
-                                  setTaskForm({ title: '', level_label: '', category_label: '', link: '' });
-                                }}
+                                onClick={e => { e.stopPropagation(); setTaskModal({ mode: 'add', weekId: week.id }); setTaskForm({ title: '', level_label: '', category_label: '', link: '' }); }}
                                 className="rounded-md p-1 hover:bg-white/10 transition"
-                                style={{ color: 'rgba(255,255,255,0.4)' }}
-                                title="הוסף משימה"
-                              >
-                                <Plus size={14} />
+                                style={{ color: 'rgba(255,255,255,0.4)' }} title="הוסף משימה">
+                                <Plus size={13} />
                               </button>
                               <button
-                                onClick={() => deleteWeek(phase.id, week.id)}
+                                onClick={e => { e.stopPropagation(); deleteWeek(phase.id, week.id); }}
                                 className="rounded-md p-1 hover:bg-red-500/20 transition"
-                                style={{ color: 'rgba(255,255,255,0.3)' }}
-                                title="מחק שבוע"
-                              >
-                                <Trash2 size={14} />
+                                style={{ color: 'rgba(255,255,255,0.3)' }} title="מחק שבוע">
+                                <Trash2 size={13} />
                               </button>
                             </>
                           )}
                         </div>
                       </div>
 
-                      {/* Tasks */}
-                      {week.tasks.map(task => {
-                        const done = completions.has(task.id);
+                      {/* Week progress bar */}
+                      {weekTotal > 0 && (
+                        <div className="h-[2px]" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                          <div className="h-full transition-all duration-500"
+                            style={{ width: `${weekPct}%`, background: weekPct === 100 ? '#22c55e' : '#F5C118' }} />
+                        </div>
+                      )}
+
+                      {/* Tasks — shown only when week is expanded */}
+                      {isWeekOpen && week.tasks.map(task => {
+                        const done   = completions.has(task.id);
+                        const isNext = task.id === nextTaskId;
                         return (
                           <div
                             key={task.id}
-                            className="flex items-center px-6 py-3.5 hover:bg-white/5 transition group"
-                            style={{ borderTop: '1px solid rgba(255,255,255,0.04)', gap: 0 }}
+                            className="flex items-center px-4 py-2 hover:bg-white/[0.03] transition group"
+                            style={{
+                              borderTop: '1px solid rgba(255,255,255,0.04)',
+                              background: isNext ? 'rgba(245,193,24,0.03)' : 'transparent',
+                              gap: 0,
+                            }}
                           >
                             {/* Checkbox */}
-                            <div style={{ width: 36, flexShrink: 0 }}>
+                            <div style={{ width: 30, flexShrink: 0 }}>
                               <button
                                 onClick={() => toggleCompletion(task.id)}
-                                className="h-5 w-5 rounded-full border-2 flex items-center justify-center transition"
+                                className="h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center transition"
                                 style={{
-                                  borderColor: done ? '#22c55e' : 'rgba(255,255,255,0.2)',
+                                  borderColor: done ? '#22c55e' : isNext ? 'rgba(245,193,24,0.5)' : 'rgba(255,255,255,0.18)',
                                   background:  done ? '#22c55e' : 'transparent',
                                 }}
                               >
-                                {done && <Check size={11} strokeWidth={3} color="#fff" />}
+                                {done && <Check size={9} strokeWidth={3} color="#fff" />}
                               </button>
                             </div>
 
-                            {/* Title — flex-1 */}
+                            {/* Title */}
                             <span
-                              className="flex-1 text-sm"
+                              className="flex-1 text-xs"
                               style={{
-                                color:          done ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.88)',
+                                color:          done ? 'rgba(255,255,255,0.22)' : isNext ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)',
                                 textDecoration: done ? 'line-through' : 'none',
-                                fontWeight:     done ? 400 : 500,
-                                paddingLeft: 8,
-                                paddingRight: 8,
+                                fontWeight:     isNext && !done ? 600 : done ? 400 : 400,
+                                paddingLeft: 6,
+                                paddingRight: 6,
                               }}
                             >
                               {task.title}
                             </span>
 
                             {/* Level — hidden on mobile */}
-                            <div className="hidden sm:block" style={{ width: 110, flexShrink: 0 }}>
-                              {task.level_label ? (
-                                <span
-                                  className="text-xs px-2.5 py-1 rounded-md font-medium"
-                                  style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)' }}
-                                >
+                            <div className="hidden sm:block" style={{ width: 96, flexShrink: 0 }}>
+                              {task.level_label && (
+                                <span className="text-[10px] px-2 py-0.5 rounded font-medium"
+                                  style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.38)' }}>
                                   {task.level_label}
                                 </span>
-                              ) : null}
+                              )}
                             </div>
 
                             {/* Category — hidden on mobile */}
-                            <div className="hidden sm:block" style={{ width: 140, flexShrink: 0 }}>
-                              {task.category_label ? (
-                                <span
-                                  className="text-xs px-2.5 py-1 rounded-md font-semibold"
-                                  style={{ background: categoryStyle(task.category_label).bg, color: categoryStyle(task.category_label).color }}
-                                >
+                            <div className="hidden sm:block" style={{ width: 120, flexShrink: 0 }}>
+                              {task.category_label && (
+                                <span className="text-[10px] px-2 py-0.5 rounded font-semibold"
+                                  style={{ background: categoryStyle(task.category_label).bg, color: categoryStyle(task.category_label).color }}>
                                   {task.category_label}
                                 </span>
-                              ) : null}
+                              )}
                             </div>
 
-                            {/* Link + actions — עמודה קבועה */}
-                            <div className="flex items-center gap-1" style={{ width: 64, flexShrink: 0, justifyContent: 'flex-end' }}>
+                            {/* Link + actions */}
+                            <div className="flex items-center gap-1 flex-none" style={{ width: 56, justifyContent: 'flex-end' }}>
                               {task.link && (
-                                <a
-                                  href={task.link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <a href={task.link} target="_blank" rel="noopener noreferrer"
                                   onClick={e => e.stopPropagation()}
-                                  className="hover:text-white/60 transition rounded-md p-1"
-                                  style={{ color: 'rgba(255,255,255,0.25)' }}
-                                  title="פתח קישור"
-                                >
-                                  <ExternalLink size={14} />
+                                  className="hover:text-white/60 transition rounded-md p-0.5"
+                                  style={{ color: 'rgba(255,255,255,0.22)' }} title="פתח קישור">
+                                  <ExternalLink size={12} />
                                 </a>
                               )}
                               {editMode && (
                                 <>
                                   <button
-                                    onClick={() => {
-                                      setTaskModal({ mode: 'edit', weekId: week.id, task });
-                                      setTaskForm({
-                                        title:          task.title,
-                                        level_label:    task.level_label    || '',
-                                        category_label: task.category_label || '',
-                                        link:           task.link           || '',
-                                      });
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 rounded-md p-1 hover:bg-white/10 transition"
-                                    style={{ color: 'rgba(255,255,255,0.4)' }}
-                                  >
-                                    <Edit2 size={13} />
+                                    onClick={() => { setTaskModal({ mode: 'edit', weekId: week.id, task }); setTaskForm({ title: task.title, level_label: task.level_label || '', category_label: task.category_label || '', link: task.link || '' }); }}
+                                    className="opacity-0 group-hover:opacity-100 rounded-md p-0.5 hover:bg-white/10 transition"
+                                    style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                    <Edit2 size={12} />
                                   </button>
                                   <button
                                     onClick={() => deleteTask(week.id, task.id)}
-                                    className="opacity-0 group-hover:opacity-100 rounded-md p-1 hover:bg-red-500/20 transition"
-                                    style={{ color: 'rgba(255,255,255,0.3)' }}
-                                  >
-                                    <Trash2 size={13} />
+                                    className="opacity-0 group-hover:opacity-100 rounded-md p-0.5 hover:bg-red-500/20 transition"
+                                    style={{ color: 'rgba(255,255,255,0.3)' }}>
+                                    <Trash2 size={12} />
                                   </button>
                                 </>
                               )}
@@ -676,13 +701,14 @@ export default function Roadmap() {
                       })}
 
                       {/* Empty week */}
-                      {week.tasks.length === 0 && (
-                        <div className="px-5 py-3 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                      {isWeekOpen && week.tasks.length === 0 && (
+                        <div className="px-4 py-2 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
                           {editMode ? 'אין משימות — לחץ + להוסיף' : 'אין משימות בשבוע זה'}
                         </div>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
 
                   {/* Add week row */}
                   {editMode && (
