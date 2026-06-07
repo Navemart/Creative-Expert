@@ -511,11 +511,11 @@ function LevelCard({ level, isAdmin }) {
       </div>
 
       {/* ── Text area ── */}
-      <div className="relative flex-1 overflow-hidden" style={{ background: 'rgb(var(--bg-surface))' }}>
+      <div className="relative flex-1" style={{ background: 'rgb(var(--bg-surface))', overflowY: editMode ? 'auto' : 'hidden' }}>
 
         {editMode ? (
           /* ── Edit mode ── */
-          <div className="px-4 pt-3 pb-4 space-y-2" onClick={e => e.stopPropagation()}>
+          <div className="px-3 pt-2 pb-3 space-y-1.5" onClick={e => e.stopPropagation()}>
             {/* Name input */}
             <input
               autoFocus
