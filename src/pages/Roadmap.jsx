@@ -1023,20 +1023,23 @@ export default function Roadmap() {
               </select>
             </div>
 
-            {/* קטגוריה */}
+            {/* קטגוריה — חופשי, עם הצעות מקטגוריות קיימות */}
             <div className="space-y-1">
-              <label className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>קטגוריה</label>
-              <select
+              <label className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>קטגוריה (הכנס בעצמך)</label>
+              <input
+                list="category-suggestions"
                 value={taskForm.category_label}
                 onChange={e => setTaskForm(f => ({ ...f, category_label: e.target.value }))}
+                placeholder="לדוגמה: Grow Audience, מכירות..."
                 className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-              >
-                <option value="">ללא קטגוריה</option>
-                {['Onboarding','החזון','המודל','לספק','10K ספרינט','לבלוט','להוביל','לשלוט','AI & Systems'].map(c => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                dir="rtl"
+              />
+              <datalist id="category-suggestions">
+                {[...new Set(
+                  phases.flatMap(p => p.weeks.flatMap(w => w.tasks.map(t => t.category_label).filter(Boolean)))
+                )].map(c => <option key={c} value={c} />)}
+              </datalist>
             </div>
 
             {/* תג מספר (S3, F1 וכו׳) */}
