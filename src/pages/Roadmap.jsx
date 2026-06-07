@@ -190,24 +190,22 @@ export default function Roadmap() {
   }
 
   function togglePhase(id) {
+    const willOpen = !expanded.has(id);
     setExpanded(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-        // auto-expand all weeks of this phase when opening
-        const phase = phases.find(p => p.id === id);
-        if (phase) {
-          setExpandedWeeks(wPrev => {
-            const wNext = new Set(wPrev);
-            phase.weeks.forEach(w => wNext.add(w.id));
-            return wNext;
-          });
-        }
-      }
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+    if (willOpen) {
+      const phase = phases.find(p => p.id === id);
+      if (phase) {
+        setExpandedWeeks(prev => {
+          const next = new Set(prev);
+          phase.weeks.forEach(w => next.add(w.id));
+          return next;
+        });
+      }
+    }
   }
 
   // ── Drag & Drop (admin edit mode only) ───────────────────────
