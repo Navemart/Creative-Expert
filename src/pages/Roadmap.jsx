@@ -340,12 +340,29 @@ export default function Roadmap() {
 
   async function updatePhaseTitle(id, title) {
     const { error } = await supabase.from('roadmap_phases').update({ title }).eq('id', id);
-    if (error) {
-      console.error('updatePhaseTitle error:', error);
-      await dialog.alert(error.message || 'שגיאה בשמירת השם', { title: 'שגיאה' });
-      return;
-    }
+    if (error) { console.error('updatePhaseTitle error:', error); return; }
     setPhases(prev => prev.map(p => p.id === id ? { ...p, title } : p));
+  }
+
+  async function updatePhaseMonth(id, raw) {
+    const month_number = parseInt(raw) || 1;
+    setPhases(prev => prev.map(p => p.id === id ? { ...p, month_number } : p));
+    await supabase.from('roadmap_phases').update({ month_number }).eq('id', id);
+  }
+
+  async function updateWeekTitle(id, title) {
+    setPhases(prev => prev.map(p => ({
+      ...p, weeks: p.weeks.map(w => w.id === id ? { ...w, title } : w),
+    })));
+    await supabase.from('roadmap_weeks').update({ title }).eq('id', id);
+  }
+
+  async function updateWeekNumber(id, raw) {
+    const week_number = parseInt(raw) || 1;
+    setPhases(prev => prev.map(p => ({
+      ...p, weeks: p.weeks.map(w => w.id === id ? { ...w, week_number } : w),
+    })));
+    await supabase.from('roadmap_weeks').update({ week_number }).eq('id', id);
   }
 
   async function deletePhase(id) {
@@ -371,14 +388,6 @@ export default function Roadmap() {
     }
     setWeekForm({ title: '', week_number: '' });
     setAddWeekForPhase(null);
-  }
-
-  async function updateWeekTitle(id, title) {
-    setPhases(prev => prev.map(p => ({
-      ...p,
-      weeks: p.weeks.map(w => w.id === id ? { ...w, title } : w),
-    })));
-    await supabase.from('roadmap_weeks').update({ title }).eq('id', id);
   }
 
   async function deleteWeek(phaseId, weekId) {
@@ -585,13 +594,18 @@ export default function Roadmap() {
                 className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.03] transition select-none"
                 onClick={() => togglePhase(phase.id)}
               >
-                {/* Month badge — compact horizontal */}
+                {/* Month badge — compact horizontal, number editable in edit mode */}
                 <div className="flex-none flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 72 }}>
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 72 }}
+                  onClick={e => editMode && e.stopPropagation()}>
                   <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש</span>
-                  <span className="text-base font-bold text-white leading-none">
-                    {String(phase.month_number).padStart(2, '0')}
-                  </span>
+                  <InlineEdit
+                    value={String(phase.month_number)}
+                    onSave={v => updatePhaseMonth(phase.id, v)}
+                    active={editMode}
+                    className="text-base font-bold"
+                    style={{ color: 'white', lineHeight: 1 }}
+                  />
                 </div>
 
                 {/* Title + meta */}
@@ -686,10 +700,17 @@ export default function Roadmap() {
                             <ChevronDown size={13} className="flex-none transition-transform duration-200"
                               style={{ color: 'rgba(255,255,255,0.3)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
                           )}
-                          <span className="text-[10px] font-bold uppercase tracking-widest flex-none"
-                            style={{ color: 'rgba(255,255,255,0.25)' }}>
-                            שבוע {week.week_number}
-                          </span>
+                          <div className="flex items-center gap-1 flex-none" onClick={e => editMode && e.stopPropagation()}>
+                            <span className="text-[10px] font-bold uppercase tracking-widest"
+                              style={{ color: 'rgba(255,255,255,0.25)' }}>שבוע</span>
+                            <InlineEdit
+                              value={String(week.week_number)}
+                              onSave={v => updateWeekNumber(week.id, v)}
+                              active={editMode}
+                              className="text-[10px] font-bold"
+                              style={{ color: 'rgba(255,255,255,0.5)' }}
+                            />
+                          </div>
                           <div onClick={e => editMode && e.stopPropagation()}>
                             <InlineEdit
                               value={week.title}
