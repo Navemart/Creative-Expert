@@ -166,8 +166,7 @@ export default function Roadmap() {
 
       setPhases(phaseList);
       setCompletions(new Set((cData || []).map(c => c.task_id)));
-      // auto-expand all weeks by default
-      setExpandedWeeks(new Set((wData || []).map(w => w.id)));
+      // weeks start collapsed — user opens each one manually
     } catch (err) {
       console.error('Roadmap load error:', err);
     } finally {
@@ -766,7 +765,7 @@ export default function Roadmap() {
                             className="flex items-center px-4 py-2 hover:bg-white/[0.03] transition group"
                             style={{
                               borderTop: isDropTarget ? '2px solid rgba(245,193,24,0.5)' : '1px solid rgba(255,255,255,0.04)',
-                              background: isNext ? 'rgba(245,193,24,0.03)' : 'transparent',
+                              background: 'transparent',
                               opacity: isDraggingThis ? 0.35 : 1,
                               gap: 0,
                               cursor: editMode ? 'grab' : 'default',
@@ -784,7 +783,7 @@ export default function Roadmap() {
                                 onClick={() => toggleCompletion(task.id)}
                                 className="h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center transition"
                                 style={{
-                                  borderColor: done ? '#22c55e' : isNext ? 'rgba(245,193,24,0.5)' : 'rgba(255,255,255,0.18)',
+                                  borderColor: done ? '#22c55e' : 'rgba(255,255,255,0.18)',
                                   background:  done ? '#22c55e' : 'transparent',
                                 }}
                               >
@@ -796,9 +795,9 @@ export default function Roadmap() {
                             <span
                               className="flex-1 text-xs"
                               style={{
-                                color:          done ? 'rgba(255,255,255,0.22)' : isNext ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.78)',
+                                color:          done ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.78)',
                                 textDecoration: done ? 'line-through' : 'none',
-                                fontWeight:     isNext && !done ? 600 : done ? 400 : 400,
+                                fontWeight:     400,
                                 paddingLeft: 6,
                                 paddingRight: 6,
                               }}
