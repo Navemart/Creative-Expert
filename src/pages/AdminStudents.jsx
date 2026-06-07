@@ -113,119 +113,224 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
   const cur  = sorted[idx]   ?? null;
   const prev = sorted[idx+1] ?? null;
 
-  function delta(field) {
-    const c = num(cur?.[field]), p = num(prev?.[field]);
-    if (!cur || !prev || p === 0) return null;
-    return Math.round((c - p) / p * 100);
+  function pct(cur, prev) {
+    if (cur == null || prev == null || prev === 0) return null;
+    return Math.round((cur - prev) / Math.abs(prev) * 100);
   }
 
-  function Stat({ label, value, field, color = 'white', format = 'ils' }) {
-    const d = field ? delta(field) : null;
-    const val = format === 'ils' ? fmtFull(value) : value != null ? String(value) : '—';
+  // Mini sparkline bars (last 6 months, income)
+  const sparkData = [...sorted].reverse().slice(-6);
+  const maxIncome = Math.max(...sparkData.map(m => num(m.total_income || m.amount)), 1);
+
+  function Delta({ value, prev }) {
+    const d = pct(value, prev);
+    if (d == null) return null;
+    const color = d > 0 ? '#86efac' : d < 0 ? '#fca5a5' : 'rgba(255,255,255,0.3)';
+    const Icon  = d > 0 ? ArrowUpRight : d < 0 ? ArrowDownRight : Minus;
     return (
-      <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(255,255,255,0.28)' }}>{label}</p>
-        <p className="text-base font-black leading-none" style={{ color }}>{val}</p>
-        {d != null && (
-          <div className="flex items-center gap-1 mt-1.5">
-            {d > 0 ? <ArrowUpRight size={10} style={{ color:'#86efac' }} />
-             : d < 0 ? <ArrowDownRight size={10} style={{ color:'#fca5a5' }} />
-             : <Minus size={10} style={{ color:'rgba(255,255,255,0.25)' }} />}
-            <span className="text-[10px] font-semibold" style={{ color: d>0?'#86efac':d<0?'#fca5a5':'rgba(255,255,255,0.25)' }}>
-              {d>0?'+':''}{d}%
-            </span>
-          </div>
-        )}
+      <span className="flex items-center gap-0.5 text-[10px] font-bold" style={{ color }}>
+        <Icon size={10} />{d > 0 ? '+' : ''}{d}%
+      </span>
+    );
+  }
+
+  function KpiBox({ label, value, prevValue, color, size = 'sm' }) {
+    return (
+      <div className="rounded-xl p-3 flex flex-col gap-1.5"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+        <p className="text-[10px] uppercase tracking-wider leading-none" style={{ color: 'rgba(255,255,255,0.3)' }}>{label}</p>
+        <p className={`font-black leading-none ${size === 'lg' ? 'text-xl' : 'text-sm'}`} style={{ color }}>
+          {value ?? '—'}
+        </p>
+        {prevValue != null && <Delta value={num(value?.replace?.(/[₪K,]/g,'') ?? value)} prev={num(prevValue?.replace?.(/[₪K,]/g,'') ?? prevValue)} />}
       </div>
     );
   }
 
-  const income   = cur ? num(cur.total_income || cur.amount) : 0;
-  const expenses = cur ? num(cur.software_expenses) + num(cur.variable_expenses) + num(cur.paid_ads) : 0;
-  const net      = income - expenses;
+  const curIncome   = cur ? num(cur.total_income || cur.amount) : 0;
+  const prevIncome  = prev ? num(prev.total_income || prev.amount) : null;
+  const curExpenses = cur ? num(cur.software_expenses) + num(cur.variable_expenses) + num(cur.paid_ads) : 0;
+  const curNet      = curIncome - curExpenses;
+  const prevNet     = prev ? (num(prev.total_income||prev.amount) - num(prev.software_expenses) - num(prev.variable_expenses) - num(prev.paid_ads)) : null;
+  const incomeD     = pct(curIncome, prevIncome);
 
   return (
-    <div className="px-4 pb-5 pt-4 space-y-4">
+    <div className="px-4 pb-5 pt-3 space-y-4">
 
-      {/* Profile fields — shown here on mobile */}
-      <div className="flex flex-wrap items-center gap-2 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* Profile fields */}
+      <div className="flex flex-wrap items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>הצטרף:</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>הצטרף</span>
           <input type="date" defaultValue={enrolled_at || ''}
             onBlur={e => onUpdateProfile(studentId, { enrolled_at: e.target.value || null })}
             className="rounded-lg px-2 py-1 text-xs outline-none"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', colorScheme: 'dark' }} />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>שילם:</span>
-          <div className="flex items-center gap-1 rounded-lg px-2 py-1"
-            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>₪</span>
-            <input type="number" defaultValue={total_paid ?? ''}
-              onBlur={e => onUpdateProfile(studentId, { total_paid: e.target.value ? parseInt(e.target.value, 10) : null })}
-              placeholder="0"
-              className="w-20 bg-transparent text-xs outline-none text-white"
-              style={{ colorScheme: 'dark' }} />
-          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>שילם ₪</span>
+          <input type="number" defaultValue={total_paid ?? ''}
+            onBlur={e => onUpdateProfile(studentId, { total_paid: e.target.value ? parseInt(e.target.value, 10) : null })}
+            placeholder="0"
+            className="w-24 rounded-lg px-2 py-1 text-xs outline-none text-white"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', colorScheme: 'dark' }} />
         </div>
       </div>
 
       {!cur ? (
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.28)' }}>אין נתונים חודשיים</p>
+        <p className="text-xs py-4 text-center" style={{ color: 'rgba(255,255,255,0.28)' }}>אין נתונים חודשיים עדיין</p>
       ) : (<>
-        {/* Month navigation */}
-        <div className="flex items-center justify-between">
-          <button onClick={() => setIdx(i => Math.min(i+1, sorted.length-1))} disabled={idx >= sorted.length-1}
-            className="p-1.5 rounded-lg transition hover:bg-white/10 disabled:opacity-20">
-            <ChevronRight size={15} style={{ color: 'rgba(255,255,255,0.6)' }} />
-          </button>
-          <div className="text-center">
-            <p className="text-sm font-bold text-white">{fmtMonth(cur.month)}</p>
-            {prev && <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>מול {fmtMonth(prev.month)}</p>}
+
+        {/* ── Month navigator + income hero ── */}
+        <div className="rounded-2xl p-4 space-y-3"
+          style={{ background: 'rgba(245,193,24,0.05)', border: '1px solid rgba(245,193,24,0.15)' }}>
+
+          {/* Nav row */}
+          <div className="flex items-center justify-between">
+            <button onClick={() => setIdx(i => Math.min(i+1, sorted.length-1))} disabled={idx >= sorted.length-1}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition hover:bg-white/10 disabled:opacity-25"
+              style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <ChevronRight size={13} /> קודם
+            </button>
+            <div className="text-center">
+              <p className="text-base font-bold text-white">{fmtMonth(cur.month)}</p>
+              {prev && <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>מול {fmtMonth(prev.month)}</p>}
+            </div>
+            <button onClick={() => setIdx(i => Math.max(i-1, 0))} disabled={idx <= 0}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition hover:bg-white/10 disabled:opacity-25"
+              style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              הבא <ChevronLeft size={13} />
+            </button>
           </div>
-          <button onClick={() => setIdx(i => Math.max(i-1, 0))} disabled={idx <= 0}
-            className="p-1.5 rounded-lg transition hover:bg-white/10 disabled:opacity-20">
-            <ChevronLeft size={15} style={{ color: 'rgba(255,255,255,0.6)' }} />
-          </button>
+
+          {/* Income hero */}
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה חודשית</p>
+              <p className="text-3xl font-black leading-none" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
+              {prevIncome != null && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  {incomeD != null && (
+                    <span className="flex items-center gap-0.5 text-xs font-bold rounded-md px-1.5 py-0.5"
+                      style={{
+                        background: incomeD > 0 ? 'rgba(134,239,172,0.15)' : incomeD < 0 ? 'rgba(252,165,165,0.15)' : 'rgba(255,255,255,0.08)',
+                        color: incomeD > 0 ? '#86efac' : incomeD < 0 ? '#fca5a5' : 'rgba(255,255,255,0.4)',
+                      }}>
+                      {incomeD > 0 ? '↑' : incomeD < 0 ? '↓' : '–'} {Math.abs(incomeD)}%
+                    </span>
+                  )}
+                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                    לעומת {fmtFull(prevIncome)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Mini sparkline */}
+            {sparkData.length > 1 && (
+              <div className="flex items-end gap-1 h-10 flex-shrink-0">
+                {sparkData.map((m, i) => {
+                  const h = Math.max(4, Math.round(num(m.total_income || m.amount) / maxIncome * 40));
+                  const isCur = m.month === cur.month;
+                  return (
+                    <div key={i} title={`${fmtMonth(m.month)}: ${fmtFull(num(m.total_income||m.amount))}`}
+                      style={{ width: 8, height: h, borderRadius: 3, background: isCur ? '#F5C118' : 'rgba(245,193,24,0.25)', flexShrink: 0 }} />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Month dots navigation */}
+          {sorted.length > 1 && (
+            <div className="flex items-center gap-1.5 justify-center pt-1">
+              {sorted.map((m, i) => (
+                <button key={m.month} onClick={() => setIdx(i)}
+                  className="rounded-full transition-all"
+                  style={{ width: i === idx ? 16 : 6, height: 6, background: i === idx ? '#F5C118' : 'rgba(255,255,255,0.2)' }} />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Financials */}
+        {/* ── Financial grid ── */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color:'rgba(255,255,255,0.25)' }}>💰 כספים</p>
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5"
+            style={{ color:'rgba(255,255,255,0.3)' }}>
+            <span>💰</span> כספים
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <Stat label="הכנסה"        value={income}              field="total_income"    color="#F5C118" />
-            <Stat label="עסקאות חדשות" value={cur.total_new_deals} field="total_new_deals" color="rgba(255,255,255,0.8)" />
-            <Stat label="הוצאות"        value={expenses}            color="rgba(252,165,165,0.8)" />
-            <Stat label="רווח נטו"      value={net}                 color={net>=0?'#4fc38a':'#ff5a72'} />
+            <div className="rounded-xl p-3 col-span-1" style={{ background: 'rgba(245,193,24,0.07)', border: '1px solid rgba(245,193,24,0.2)' }}>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה</p>
+              <p className="text-base font-black" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
+              {prevIncome != null && <Delta value={curIncome} prev={prevIncome} />}
+            </div>
+            <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>עסקאות חדשות</p>
+              <p className="text-base font-black" style={{ color: 'rgba(255,255,255,0.85)' }}>{fmtFull(cur.total_new_deals)}</p>
+              {prev && <Delta value={num(cur.total_new_deals)} prev={num(prev.total_new_deals)} />}
+            </div>
+            <div className="rounded-xl p-3" style={{ background: 'rgba(252,165,165,0.06)', border: '1px solid rgba(252,165,165,0.15)' }}>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(252,165,165,0.5)' }}>הוצאות</p>
+              <p className="text-base font-black" style={{ color: 'rgba(252,165,165,0.85)' }}>{fmtFull(curExpenses)}</p>
+            </div>
+            <div className="rounded-xl p-3"
+              style={{ background: curNet >= 0 ? 'rgba(79,195,138,0.07)' : 'rgba(255,90,114,0.07)', border: `1px solid ${curNet >= 0 ? 'rgba(79,195,138,0.2)' : 'rgba(255,90,114,0.2)'}` }}>
+              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: curNet >= 0 ? 'rgba(79,195,138,0.6)' : 'rgba(255,90,114,0.6)' }}>רווח נטו</p>
+              <p className="text-base font-black" style={{ color: curNet >= 0 ? '#4fc38a' : '#ff5a72' }}>{fmtFull(curNet)}</p>
+              {prevNet != null && <Delta value={curNet} prev={prevNet} />}
+            </div>
           </div>
         </div>
 
-        {/* Sales */}
+        {/* ── Sales grid ── */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color:'rgba(255,255,255,0.25)' }}>📊 מכירות</p>
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5"
+            style={{ color:'rgba(255,255,255,0.3)' }}>
+            <span>📊</span> מכירות
+          </p>
           <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            <Stat label="הצעות"         value={cur.proposals}       field="proposals"       color="#818cf8" format="num" />
-            <Stat label="לידים"         value={cur.leads}           field="leads"           color="#a78bfa" format="num" />
-            <Stat label="שיחות"         value={cur.sales_calls_set} field="sales_calls_set" color="#6366f1" format="num" />
-            <Stat label="לקוחות"        value={cur.active_clients}  field="active_clients"  color="#34d399" format="num" />
-            <Stat label="דרגה"          value={cur.current_rank || '—'} color={getRankColor(cur.current_rank)} format="num" />
+            {[
+              { label: 'הצעות',   value: cur.proposals,        prev: prev?.proposals,        color: '#818cf8' },
+              { label: 'לידים',   value: cur.leads,            prev: prev?.leads,            color: '#a78bfa' },
+              { label: 'שיחות',   value: cur.sales_calls_set,  prev: prev?.sales_calls_set,  color: '#6366f1' },
+              { label: 'לקוחות',  value: cur.active_clients,   prev: prev?.active_clients,   color: '#34d399' },
+              { label: 'דרגה',    value: cur.current_rank || null, prev: null, color: getRankColor(cur.current_rank) },
+            ].map(({ label, value, prev: p, color }) => (
+              <div key={label} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{label}</p>
+                <p className="text-base font-black leading-none" style={{ color }}>{value ?? '—'}</p>
+                {p != null && <Delta value={num(value)} prev={num(p)} />}
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Content */}
+        {/* ── Content grid ── */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color:'rgba(255,255,255,0.25)' }}>📱 תוכן</p>
+          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2.5 flex items-center gap-1.5"
+            style={{ color:'rgba(255,255,255,0.3)' }}>
+            <span>📱</span> תוכן
+          </p>
           <div className="grid grid-cols-3 gap-2">
-            <Stat label="פוסטים" value={cur.posts_count} field="posts_count" color="#fcd34d" format="num" />
-            <Stat label="עוקבים" value={cur.followers?.toLocaleString('he-IL')||'—'} color="#e1306c" format="num" />
-            <Stat label="ריץ׳"   value={cur.reach >= 1000 ? `${Math.round(cur.reach/1000)}K` : cur.reach || '—'} color="#38bdf8" format="num" />
+            {[
+              { label: 'פוסטים', value: cur.posts_count, prev: prev?.posts_count, color: '#fcd34d' },
+              { label: 'עוקבים', value: cur.followers != null ? cur.followers.toLocaleString('he-IL') : null, prev: prev?.followers, color: '#e1306c' },
+              { label: 'ריץ׳',   value: cur.reach >= 1000 ? `${Math.round(cur.reach/1000)}K` : cur.reach || null, prev: prev?.reach, color: '#38bdf8' },
+            ].map(({ label, value, prev: p, color }) => (
+              <div key={label} className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{label}</p>
+                <p className="text-base font-black leading-none" style={{ color }}>{value ?? '—'}</p>
+                {p != null && <Delta value={num(cur[label === 'פוסטים' ? 'posts_count' : label === 'עוקבים' ? 'followers' : 'reach'])} prev={num(p)} />}
+              </div>
+            ))}
           </div>
         </div>
 
+        {/* Biggest win */}
         {cur.biggest_win && (
-          <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(245,193,24,0.06)', border: '1px solid rgba(245,193,24,0.15)' }}>
+          <div className="rounded-xl px-4 py-3" style={{ background: 'rgba(245,193,24,0.06)', border: '1px solid rgba(245,193,24,0.2)' }}>
             <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#F5C118' }}>🏆 הנצחון הגדול</p>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.75)' }}>{cur.biggest_win}</p>
+            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.78)' }}>{cur.biggest_win}</p>
           </div>
         )}
       </>)}
@@ -513,7 +618,7 @@ export default function AdminStudents() {
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start">
           {displayed.map(s => (
             <StudentCard key={s.id} student={s}
               onHealthChange={handleHealthChange}
@@ -532,7 +637,7 @@ export default function AdminStudents() {
             <span className="text-xs font-semibold">ארכיון ({archived.length} תלמידים)</span>
             <ChevronDown size={12} className="group-open:rotate-180 transition-transform mr-auto" />
           </summary>
-          <div className="space-y-2 mt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2 items-start">
             {archived.map(s => (
               <div key={s.id} className="opacity-50 hover:opacity-80 transition-opacity">
                 <StudentCard student={s}
