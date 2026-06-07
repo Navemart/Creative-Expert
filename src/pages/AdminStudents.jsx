@@ -194,11 +194,9 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
                     border: `1px solid ${isActive ? 'rgba(245,193,24,0.4)' : 'rgba(255,255,255,0.07)'}`,
                     minWidth: 72,
                   }}>
-                  <span className="text-[10px] font-semibold"
+                  <span className="text-[11px] font-semibold"
                     style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.4)' }}>
-                    {new Date(m.month + '-01').toLocaleString('he-IL', { month: 'short', timeZone: 'UTC' })}
-                    {' '}
-                    {new Date(m.month + '-01').getFullYear().toString().slice(2)}
+                    {fmtMonth(m.month)}
                   </span>
                   {mIncome > 0 && (
                     <span className="text-[11px] font-black mt-0.5"
@@ -338,8 +336,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
 }
 
 // ── Student card ─────────────────────────────────────────────
-function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }) {
-  const [open, setOpen] = useState(false);
+function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile, open, onToggle }) {
   const [approving, setApproving] = useState(false);
 
   const { name, email, monthly, latest_income, latest_rank, health_status,
@@ -380,7 +377,7 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
         </div>
 
         {/* Name + email stacked */}
-        <button onClick={() => has_data && setOpen(o => !o)}
+        <button onClick={() => has_data && onToggle()}
           className="flex-1 text-right min-w-0 transition hover:opacity-80"
           style={{ cursor: has_data ? 'pointer' : 'default' }}>
           <div className="flex items-center gap-2 flex-wrap">
@@ -433,7 +430,7 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
 
           {/* Expand chevron */}
           {has_data && (
-            <button onClick={() => setOpen(o => !o)}
+            <button onClick={onToggle}
               className="p-1 rounded transition hover:bg-white/10">
               <ChevronDown size={14} className="transition-transform duration-200"
                 style={{ color: 'rgba(255,255,255,0.3)', transform: open ? 'rotate(180deg)' : 'none' }} />
@@ -461,10 +458,15 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
 // ── Main ─────────────────────────────────────────────────────
 export default function AdminStudents() {
   const { user } = useUser();
-  const [students, setStudents] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState(null);
-  const [filter,   setFilter]   = useState('all');
+  const [students,       setStudents]       = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState(null);
+  const [filter,         setFilter]         = useState('all');
+  const [openStudentId,  setOpenStudentId]  = useState(null);
+
+  function toggleStudent(id) {
+    setOpenStudentId(prev => prev === id ? null : id);
+  }
 
   if (user && user.id !== ADMIN_ID) {
     return <div className="flex h-64 items-center justify-center text-sm" style={{ color:'rgba(255,255,255,0.3)' }}>אין גישה</div>;
@@ -618,12 +620,19 @@ export default function AdminStudents() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start">
-          {displayed.map(s => (
-            <StudentCard key={s.id} student={s}
-              onHealthChange={handleHealthChange}
-              onApproveRank={handleApproveRank}
-              onUpdateProfile={updateProfile} />
-          ))}
+          {displayed.map(s => {
+            const isOpen = openStudentId === s.id;
+            return (
+              <div key={s.id} className={isOpen ? 'lg:col-span-2' : ''}>
+                <StudentCard student={s}
+                  open={isOpen}
+                  onToggle={() => toggleStudent(s.id)}
+                  onHealthChange={handleHealthChange}
+                  onApproveRank={handleApproveRank}
+                  onUpdateProfile={updateProfile} />
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -637,14 +646,19 @@ export default function AdminStudents() {
             <ChevronDown size={12} className="group-open:rotate-180 transition-transform mr-auto" />
           </summary>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mt-2 items-start">
-            {archived.map(s => (
-              <div key={s.id} className="opacity-50 hover:opacity-80 transition-opacity">
-                <StudentCard student={s}
-                  onHealthChange={handleHealthChange}
-                  onApproveRank={handleApproveRank}
-                  onUpdateProfile={updateProfile} />
-              </div>
-            ))}
+            {archived.map(s => {
+              const isOpen = openStudentId === s.id;
+              return (
+                <div key={s.id} className={`opacity-50 hover:opacity-80 transition-opacity ${isOpen ? 'lg:col-span-2' : ''}`}>
+                  <StudentCard student={s}
+                    open={isOpen}
+                    onToggle={() => toggleStudent(s.id)}
+                    onHealthChange={handleHealthChange}
+                    onApproveRank={handleApproveRank}
+                    onUpdateProfile={updateProfile} />
+                </div>
+              );
+            })}
           </div>
         </details>
       )}
