@@ -190,22 +190,12 @@ export default function Roadmap() {
   }
 
   function togglePhase(id) {
-    const willOpen = !expanded.has(id);
     setExpanded(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
-    if (willOpen) {
-      const phase = phases.find(p => p.id === id);
-      if (phase) {
-        setExpandedWeeks(prev => {
-          const next = new Set(prev);
-          phase.weeks.forEach(w => next.add(w.id));
-          return next;
-        });
-      }
-    }
+    // weeks start closed when phase opens — user opens each week manually
   }
 
   // ── Drag & Drop (admin edit mode only) ───────────────────────
@@ -659,11 +649,13 @@ export default function Roadmap() {
               {isOpen && (
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                   {phase.weeks.map(week => {
-                    const weekDone  = week.tasks.filter(t => completions.has(t.id)).length;
-                    const weekTotal = week.tasks.length;
-                    const weekPct   = weekTotal > 0 ? Math.round(weekDone / weekTotal * 100) : 0;
+                    const weekDone   = week.tasks.filter(t => completions.has(t.id)).length;
+                    const weekTotal  = week.tasks.length;
+                    const weekPct    = weekTotal > 0 ? Math.round(weekDone / weekTotal * 100) : 0;
                     const isWeekOpen = expandedWeeks.has(week.id);
                     const nextTaskId = week.tasks.find(t => !completions.has(t.id))?.id;
+                    // week is "active" if it has tasks and is not fully completed
+                    const weekActive = weekTotal > 0 && weekPct < 100;
 
                     return (
                     <div key={week.id}
@@ -675,16 +667,17 @@ export default function Roadmap() {
                       onDrop={editMode ? e => dropWeekOnWeek(e, week.id, phase.id) : undefined}
                       style={{
                         borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        borderRight: weekActive ? '3px solid rgba(245,193,24,0.55)' : '3px solid transparent',
                         opacity: dragging?.type === 'week' && dragging?.id === week.id ? 0.4 : 1,
                         outline: dragOverId === `week-${week.id}` && dragging?.type === 'week' && dragging?.id !== week.id
                           ? '2px solid rgba(245,193,24,0.5)' : 'none',
-                        transition: 'opacity 0.15s',
+                        transition: 'opacity 0.15s, border-right-color 0.2s',
                       }}>
 
                       {/* Week header — clickable */}
                       <div
                         className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-white/[0.03] transition select-none"
-                        style={{ background: 'rgba(255,255,255,0.025)' }}
+                        style={{ background: weekActive ? 'rgba(245,193,24,0.04)' : 'rgba(255,255,255,0.025)' }}
                         onClick={() => !editMode && toggleWeek(week.id)}
                         onDrop={editMode ? e => dropTaskOnWeek(e, week.id) : undefined}
                         onDragOver={editMode && dragging?.type === 'task' ? e => dndOver(e, `weekhdr-${week.id}`) : undefined}
@@ -715,7 +708,7 @@ export default function Roadmap() {
                               onSave={t => updateWeekTitle(week.id, t)}
                               active={editMode}
                               className="text-xs font-semibold"
-                              style={{ color: 'rgba(255,255,255,0.75)' }}
+                              style={{ color: weekActive ? 'rgba(245,193,24,0.9)' : 'rgba(255,255,255,0.75)' }}
                             />
                           </div>
                         </div>
