@@ -5,7 +5,7 @@ import { useIsAdmin } from '../hooks/useIsAdmin.js';
 import { useDialog } from '../components/Dialog.jsx';
 import {
   ChevronDown, ChevronRight, Plus, Trash2, Edit2,
-  Check, X, ExternalLink, Settings2, Map as MapIcon,
+  Check, X, ExternalLink, Settings2, Map as MapIcon, GripVertical,
 } from 'lucide-react';
 
 // ── Category colors ───────────────────────────────────────────
