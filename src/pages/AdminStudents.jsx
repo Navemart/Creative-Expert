@@ -515,7 +515,7 @@ export default function AdminStudents() {
         {list.map(s => {
           const isOpen = openStudentId === s.id;
           return (
-            <div key={s.id}>
+            <div key={s.id} className={isOpen ? 'col-span-full' : ''}>
               <StudentCard
                 student={s}
                 open={isOpen}
