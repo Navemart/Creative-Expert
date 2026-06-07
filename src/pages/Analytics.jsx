@@ -400,16 +400,34 @@ export default function Analytics() {
   const salesN    = salesRange==='1m' ? 1 : salesRange==='3m' ? 3 : salesRange==='6m' ? 6 : 12;
   const salesSlice = useMemo(() => [...sorted].reverse().slice(0, salesN).reverse(), [sorted, salesN]);
 
-  const salesData = useMemo(() => salesSlice.map((m, i) => ({
-    month:   shortMonth(m.month),
-    fullMonth: fmtMonth(m.month),
-    הצעות:   num(m.proposals),
-    לידים:   num(m.leads),
-    שיחות:   num(m.sales_calls_set),
-    סגירות:  i > 0
-      ? Math.max(0, num(m.active_clients) - num(salesSlice[i-1]?.active_clients))
-      : 0,
-  })), [salesSlice]);
+  const salesData = useMemo(() => {
+    // Build month → pipeline closures map (using call_date as the closing date)
+    const pipelineByMonth = {};
+    pipelineLeads
+      .filter(l => l.call_status === 'נסגר' && l.call_date)
+      .forEach(l => {
+        const key = String(l.call_date).substring(0, 7); // "2025-04"
+        pipelineByMonth[key] = (pipelineByMonth[key] || 0) + 1;
+      });
+
+    return salesSlice.map(m => {
+      const monthKey = m.month ? String(m.month).substring(0, 7) : '';
+      // Priority 1: closings_count from monthly form
+      // Priority 2: pipeline leads marked נסגר with call_date in this month
+      const closings = m.closings_count != null
+        ? num(m.closings_count)
+        : (pipelineByMonth[monthKey] || 0);
+
+      return {
+        month:     shortMonth(m.month),
+        fullMonth: fmtMonth(m.month),
+        הצעות:    num(m.proposals),
+        לידים:    num(m.leads),
+        שיחות:    num(m.sales_calls_set),
+        סגירות:   closings,
+      };
+    });
+  }, [salesSlice, pipelineLeads]);
 
   const clientData = useMemo(() => slice.map(m => ({
     month: shortMonth(m.month),
