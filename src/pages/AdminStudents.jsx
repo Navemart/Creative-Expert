@@ -180,74 +180,73 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
         <p className="text-xs py-4 text-center" style={{ color: 'rgba(255,255,255,0.28)' }}>אין נתונים חודשיים עדיין</p>
       ) : (<>
 
-        {/* ── Month navigator + income hero ── */}
-        <div className="rounded-2xl p-4 space-y-3"
-          style={{ background: 'rgba(245,193,24,0.05)', border: '1px solid rgba(245,193,24,0.15)' }}>
-
-          {/* Nav row */}
-          <div className="flex items-center justify-between">
-            <button onClick={() => setIdx(i => Math.min(i+1, sorted.length-1))} disabled={idx >= sorted.length-1}
-              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition hover:bg-white/10 disabled:opacity-25"
-              style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <ChevronRight size={13} /> קודם
-            </button>
-            <div className="text-center">
-              <p className="text-base font-bold text-white">{fmtMonth(cur.month)}</p>
-              {prev && <p className="text-[10px] mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>מול {fmtMonth(prev.month)}</p>}
-            </div>
-            <button onClick={() => setIdx(i => Math.max(i-1, 0))} disabled={idx <= 0}
-              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition hover:bg-white/10 disabled:opacity-25"
-              style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              הבא <ChevronLeft size={13} />
-            </button>
-          </div>
-
-          {/* Income hero */}
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה חודשית</p>
-              <p className="text-3xl font-black leading-none" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
-              {prevIncome != null && (
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  {incomeD != null && (
-                    <span className="flex items-center gap-0.5 text-xs font-bold rounded-md px-1.5 py-0.5"
-                      style={{
-                        background: incomeD > 0 ? 'rgba(134,239,172,0.15)' : incomeD < 0 ? 'rgba(252,165,165,0.15)' : 'rgba(255,255,255,0.08)',
-                        color: incomeD > 0 ? '#86efac' : incomeD < 0 ? '#fca5a5' : 'rgba(255,255,255,0.4)',
-                      }}>
-                      {incomeD > 0 ? '↑' : incomeD < 0 ? '↓' : '–'} {Math.abs(incomeD)}%
+        {/* ── Month tabs ── */}
+        <div className="overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-1 min-w-max">
+            {sorted.map((m, i) => {
+              const mIncome = num(m.total_income || m.amount);
+              const isActive = i === idx;
+              return (
+                <button key={m.month} onClick={() => setIdx(i)}
+                  className="flex flex-col items-center rounded-xl px-3 py-2 transition-all flex-shrink-0"
+                  style={{
+                    background: isActive ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)',
+                    border: `1px solid ${isActive ? 'rgba(245,193,24,0.4)' : 'rgba(255,255,255,0.07)'}`,
+                    minWidth: 72,
+                  }}>
+                  <span className="text-[10px] font-semibold"
+                    style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.4)' }}>
+                    {new Date(m.month + '-01').toLocaleString('he-IL', { month: 'short', timeZone: 'UTC' })}
+                    {' '}
+                    {new Date(m.month + '-01').getFullYear().toString().slice(2)}
+                  </span>
+                  {mIncome > 0 && (
+                    <span className="text-[11px] font-black mt-0.5"
+                      style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.5)' }}>
+                      {fmtILS(mIncome)}
                     </span>
                   )}
-                  <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                    לעומת {fmtFull(prevIncome)}
-                  </span>
-                </div>
-              )}
-            </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Mini sparkline */}
-            {sparkData.length > 1 && (
-              <div className="flex items-end gap-1 h-10 flex-shrink-0">
-                {sparkData.map((m, i) => {
-                  const h = Math.max(4, Math.round(num(m.total_income || m.amount) / maxIncome * 40));
-                  const isCur = m.month === cur.month;
-                  return (
-                    <div key={i} title={`${fmtMonth(m.month)}: ${fmtFull(num(m.total_income||m.amount))}`}
-                      style={{ width: 8, height: h, borderRadius: 3, background: isCur ? '#F5C118' : 'rgba(245,193,24,0.25)', flexShrink: 0 }} />
-                  );
-                })}
+        {/* ── Income hero ── */}
+        <div className="rounded-2xl px-4 py-3 flex items-end justify-between gap-4"
+          style={{ background: 'rgba(245,193,24,0.05)', border: '1px solid rgba(245,193,24,0.15)' }}>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה — {fmtMonth(cur.month)}</p>
+            <p className="text-3xl font-black leading-none" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
+            {prevIncome != null && (
+              <div className="flex items-center gap-1.5 mt-1.5">
+                {incomeD != null && (
+                  <span className="text-xs font-bold rounded-md px-1.5 py-0.5"
+                    style={{
+                      background: incomeD > 0 ? 'rgba(134,239,172,0.15)' : incomeD < 0 ? 'rgba(252,165,165,0.15)' : 'rgba(255,255,255,0.08)',
+                      color: incomeD > 0 ? '#86efac' : incomeD < 0 ? '#fca5a5' : 'rgba(255,255,255,0.4)',
+                    }}>
+                    {incomeD > 0 ? '↑' : incomeD < 0 ? '↓' : '–'} {Math.abs(incomeD)}%
+                  </span>
+                )}
+                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  לעומת {fmtFull(prevIncome)} ({fmtMonth(prev?.month)})
+                </span>
               </div>
             )}
           </div>
-
-          {/* Month dots navigation */}
-          {sorted.length > 1 && (
-            <div className="flex items-center gap-1.5 justify-center pt-1">
-              {sorted.map((m, i) => (
-                <button key={m.month} onClick={() => setIdx(i)}
-                  className="rounded-full transition-all"
-                  style={{ width: i === idx ? 16 : 6, height: 6, background: i === idx ? '#F5C118' : 'rgba(255,255,255,0.2)' }} />
-              ))}
+          {/* Sparkline */}
+          {sparkData.length > 1 && (
+            <div className="flex items-end gap-1 h-10 flex-shrink-0">
+              {sparkData.map((m, i) => {
+                const h = Math.max(4, Math.round(num(m.total_income || m.amount) / maxIncome * 40));
+                return (
+                  <div key={i} onClick={() => setIdx(sorted.findIndex(s => s.month === m.month))}
+                    title={`${fmtMonth(m.month)}: ${fmtFull(num(m.total_income||m.amount))}`}
+                    className="cursor-pointer rounded-sm transition-all hover:opacity-100"
+                    style={{ width: 8, height: h, background: m.month === cur.month ? '#F5C118' : 'rgba(245,193,24,0.25)', flexShrink: 0 }} />
+                );
+              })}
             </div>
           )}
         </div>
