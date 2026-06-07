@@ -249,7 +249,7 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
 
   return (
     <div className="group relative rounded-2xl overflow-hidden flex flex-col"
-      style={{ width: 435, height: 400, boxShadow: '0 4px 24px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      style={{ width: '100%', height: 400, boxShadow: '0 4px 24px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
 
       {/* ── Illustration area ── */}
       <div ref={imgAreaRef} className="relative overflow-hidden"
@@ -533,7 +533,7 @@ export default function ContentLibrary() {
         </div>
       ) : (
         <div className="grid gap-4" dir="ltr"
-          style={{ gridTemplateColumns: 'repeat(3, 435px)', justifyContent: 'center' }}>
+          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
           {LEVELS.map(level => (
             <LevelCard
               key={level.key}
