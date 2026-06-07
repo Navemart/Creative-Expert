@@ -254,34 +254,43 @@ function LevelCard({ level, isAdmin }) {
   const [repoMode, setRepoMode] = useState(false);
   const [dragging, setDragging] = useState(false);
 
-  // Editable name + url
+  // Editable name + description + url
   const [customName, setCustomName] = useState(() => {
     try { return localStorage.getItem(`level_name_${level.key}`) || ''; } catch { return ''; }
+  });
+  const [customDesc, setCustomDesc] = useState(() => {
+    try { return localStorage.getItem(`level_desc_${level.key}`) || ''; } catch { return ''; }
   });
   const [customUrl, setCustomUrl] = useState(() => {
     try { return localStorage.getItem(`level_url_${level.key}`) || ''; } catch { return ''; }
   });
-  const [editMode, setEditMode] = useState(false);
-  const [draftName, setDraftName] = useState('');
-  const [draftUrl,  setDraftUrl]  = useState('');
+  const [editMode,   setEditMode]  = useState(false);
+  const [draftName,  setDraftName] = useState('');
+  const [draftDesc,  setDraftDesc] = useState('');
+  const [draftUrl,   setDraftUrl]  = useState('');
 
   function startEdit(e) {
     e.preventDefault();
     e.stopPropagation();
     setDraftName(customName || level.name);
-    setDraftUrl(customUrl  || level.url === '#' ? '' : (customUrl || level.url));
+    setDraftDesc(customDesc || level.description);
+    setDraftUrl(customUrl || (level.url !== '#' ? level.url : ''));
     setEditMode(true);
   }
 
   function saveEdit(e) {
     e.stopPropagation();
     const name = draftName.trim() || level.name;
+    const desc = draftDesc.trim() || level.description;
     const url  = draftUrl.trim();
     setCustomName(name !== level.name ? name : '');
+    setCustomDesc(desc !== level.description ? desc : '');
     setCustomUrl(url);
     try {
       if (name !== level.name) localStorage.setItem(`level_name_${level.key}`, name);
       else localStorage.removeItem(`level_name_${level.key}`);
+      if (desc !== level.description) localStorage.setItem(`level_desc_${level.key}`, desc);
+      else localStorage.removeItem(`level_desc_${level.key}`);
       if (url) localStorage.setItem(`level_url_${level.key}`, url);
       else localStorage.removeItem(`level_url_${level.key}`);
     } catch {}
@@ -289,6 +298,7 @@ function LevelCard({ level, isAdmin }) {
   }
 
   const displayName = customName || level.name;
+  const displayDesc = customDesc || level.description;
   const displayUrl  = customUrl  || (level.url !== '#' ? level.url : '');
 
   // ── Drag handlers ──────────────────────────────────────────
@@ -517,6 +527,16 @@ function LevelCard({ level, isAdmin }) {
               style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}
               dir="rtl"
             />
+            {/* Description input */}
+            <input
+              value={draftDesc}
+              onChange={e => setDraftDesc(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveEdit(e)}
+              placeholder="תת-כותרת / תיאור"
+              className="w-full rounded-lg px-3 py-1.5 text-xs text-white outline-none"
+              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.75)' }}
+              dir="rtl"
+            />
             {/* URL input */}
             <div className="flex items-center gap-1.5 rounded-lg px-3 py-1.5"
               style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -561,7 +581,7 @@ function LevelCard({ level, isAdmin }) {
                       <span className="text-sm leading-none">{level.dot}</span>
                     </div>
                     <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      {level.description}
+                      {displayDesc}
                     </p>
                   </div>
                   <ExternalLink size={13} className="flex-none mt-0.5 opacity-0 group-hover:opacity-50 transition-opacity"
@@ -585,7 +605,7 @@ function LevelCard({ level, isAdmin }) {
                       <span className="text-sm leading-none">{level.dot}</span>
                     </div>
                     <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      {level.description}
+                      {displayDesc}
                     </p>
                   </div>
                 </div>
