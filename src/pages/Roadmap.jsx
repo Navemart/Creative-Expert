@@ -24,6 +24,34 @@ function categoryStyle(label) {
   return CATEGORY_COLORS[label] || { bg: 'rgba(245,193,24,0.15)', color: '#F5C118' };
 }
 
+// ── Level colors ──────────────────────────────────────────────
+const LEVEL_COLORS = {
+  'Level 0 - ברוכים הבאים': { bg: 'rgba(59,130,246,0.15)',  color: '#93c5fd' },
+  'Level 1 - החזון':         { bg: 'rgba(168,85,247,0.15)',  color: '#d8b4fe' },
+  'Level 2 - המודל':         { bg: 'rgba(6,182,212,0.15)',   color: '#67e8f9' },
+  'Level 3 - לספק':          { bg: 'rgba(34,197,94,0.15)',   color: '#86efac' },
+  'ספרינט 10K':              { bg: 'rgba(245,158,11,0.15)',  color: '#fcd34d' },
+  'Level 4 - לבלוט':         { bg: 'rgba(236,72,153,0.15)',  color: '#f9a8d4' },
+  'Level 5 - להוביל':        { bg: 'rgba(99,102,241,0.15)',  color: '#a5b4fc' },
+  'Level 6 - לשלוט':         { bg: 'rgba(239,68,68,0.15)',   color: '#fca5a5' },
+  'Level 7 - AI & Systems':  { bg: 'rgba(20,184,166,0.15)',  color: '#5eead4' },
+};
+function levelStyle(label) {
+  return LEVEL_COLORS[label] || { bg: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' };
+}
+
+const LEVEL_OPTIONS = [
+  'Level 0 - ברוכים הבאים',
+  'Level 1 - החזון',
+  'Level 2 - המודל',
+  'Level 3 - לספק',
+  'ספרינט 10K',
+  'Level 4 - לבלוט',
+  'Level 5 - להוביל',
+  'Level 6 - לשלוט',
+  'Level 7 - AI & Systems',
+];
+
 // ── Inline text editor ────────────────────────────────────────
 function InlineEdit({ value, onSave, className, style, as: Tag = 'span', active }) {
   const [editing, setEditing] = useState(false);
@@ -802,11 +830,11 @@ export default function Roadmap() {
                               {task.title}
                             </span>
 
-                            {/* Level label */}
-                            <div className="hidden sm:flex items-center" style={{ width: 150, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: 8 }}>
+                            {/* Level label — colored badge */}
+                            <div className="hidden sm:flex items-center" style={{ width: 170, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: 8 }}>
                               {task.level_label && (
-                                <span className="text-[10px] truncate"
-                                  style={{ color: 'rgba(255,255,255,0.35)' }}>
+                                <span className="text-[10px] px-2 py-0.5 rounded font-semibold truncate"
+                                  style={{ background: levelStyle(task.level_label).bg, color: levelStyle(task.level_label).color, border: `1px solid ${levelStyle(task.level_label).color}33` }}>
                                   {task.level_label}
                                 </span>
                               )}
@@ -989,8 +1017,8 @@ export default function Roadmap() {
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
               >
                 <option value="">ללא רמה</option>
-                {[0,1,2,3,4,5,6,7].map(n => (
-                  <option key={n} value={`Level ${n}`}>Level {n}</option>
+                {LEVEL_OPTIONS.map(l => (
+                  <option key={l} value={l}>{l}</option>
                 ))}
               </select>
             </div>

@@ -25,7 +25,7 @@ function compressImageToBlob(file, maxWidth = 1400, quality = 0.82) {
 // ── Level definitions ─────────────────────────────────────────
 const LEVELS = [
   {
-    key: 'level-0', badge: '0', name: 'תחילו כאן', dot: '⚪',
+    key: 'level-0', badge: '0', name: 'ברוכים הבאים', dot: '⚪',
     description: 'היכרות עם התוכנית',
     bg: '#a8b4c0', groundGrass: '#4a8a2a', groundDirt: '#7a5020', type: 'game',
     scene: [
@@ -75,7 +75,7 @@ const LEVELS = [
     ], url: '#',
   },
   {
-    key: 'sprint', badge: null, name: '10K+ ספרינט', dot: '💰',
+    key: 'sprint', badge: null, name: 'ספרינט 10K', dot: '💰',
     description: 'הפורמולה לכסף בחשבון',
     bg: '#d8dce0', type: 'character', character: '💰', charSize: 80, url: '#',
   },
@@ -94,8 +94,8 @@ const LEVELS = [
     ], url: '#',
   },
   {
-    key: 'level-5', badge: '5', name: 'שם השלב', dot: '🔵',
-    description: 'תיאור השלב',
+    key: 'level-5', badge: '5', name: 'להוביל', dot: '🔵',
+    description: 'לבנות סמכות ומנהיגות בתחום',
     bg: '#4a8fd4', groundGrass: '#3a7a28', groundDirt: '#6a4018', type: 'game',
     scene: [
       { e: '✈️', top: '20%', left: '12%',  size: 56, flip: true },
@@ -108,8 +108,8 @@ const LEVELS = [
     ], url: '#',
   },
   {
-    key: 'level-6', badge: '6', name: 'שם השלב', dot: '🟣',
-    description: 'תיאור השלב',
+    key: 'level-6', badge: '6', name: 'לשלוט', dot: '🟣',
+    description: 'לשלוט בשוק ולהפוך לאוטוריטה',
     bg: '#8848b8', groundGrass: '#3a7a28', groundDirt: '#6a4018', type: 'game',
     scene: [
       { e: '✈️', top: '42%', left: '8%',   size: 52, flip: true },
@@ -121,8 +121,8 @@ const LEVELS = [
     ], url: '#',
   },
   {
-    key: 'level-7', badge: '7', name: 'שם השלב', dot: '🤖',
-    description: 'תיאור השלב',
+    key: 'level-7', badge: '7', name: 'AI & Systems', dot: '🤖',
+    description: 'אוטומציה ומערכות לצמיחה',
     bg: '#d8dce0', type: 'character', character: '🤖', charSize: 76, url: '#',
   },
 ];
