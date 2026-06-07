@@ -474,22 +474,30 @@ export default function ContentLibrary() {
     try {
       const blob = await compressImageToBlob(file);
       const path = `${key}.jpg`;
+
       const { error: upErr } = await supabase.storage
         .from('content-library')
         .upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
-      if (upErr) { console.error('Storage upload error:', upErr); return; }
+
+      if (upErr) {
+        console.error('Storage upload error:', upErr);
+        alert(`שגיאה בהעלאת תמונה:\n${upErr.message}\n\nוודא שהרצת את ה-SQL של הרשאות Storage ב-Supabase.`);
+        return;
+      }
 
       const { data: { publicUrl } } = supabase.storage.from('content-library').getPublicUrl(path);
-      // Append timestamp to bust cache for returning visitors
       const imageUrl = `${publicUrl}?v=${Date.now()}`;
 
-      await supabase.from('content_library').upsert(
+      const { error: dbErr } = await supabase.from('content_library').upsert(
         { key, image_url: imageUrl, image_pos_x: 50, image_pos_y: 50, updated_at: new Date().toISOString() },
         { onConflict: 'key' }
       );
+      if (dbErr) { console.error('DB upsert error:', dbErr); return; }
+
       setServerData(prev => ({ ...prev, [key]: { ...prev[key], key, image_url: imageUrl, image_pos_x: 50, image_pos_y: 50 } }));
     } catch (err) {
       console.error('uploadImage failed:', err);
+      alert(`שגיאה לא צפויה: ${err.message}`);
     }
   }
 
