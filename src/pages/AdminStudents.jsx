@@ -511,20 +511,19 @@ export default function AdminStudents() {
 
   function StudentList({ list }) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 items-start">
+      <div className="space-y-2" style={{ maxWidth: 480 }}>
         {list.map(s => {
           const isOpen = openStudentId === s.id;
           return (
-            <div key={s.id} className={isOpen ? 'col-span-full' : ''}>
-              <StudentCard
-                student={s}
-                open={isOpen}
-                onToggle={() => toggleStudent(s.id)}
-                onHealthChange={handleHealthChange}
-                onApproveRank={handleApproveRank}
-                onUpdateProfile={updateProfile}
-              />
-            </div>
+            <StudentCard
+              key={s.id}
+              student={s}
+              open={isOpen}
+              onToggle={() => toggleStudent(s.id)}
+              onHealthChange={handleHealthChange}
+              onApproveRank={handleApproveRank}
+              onUpdateProfile={updateProfile}
+            />
           );
         })}
       </div>
