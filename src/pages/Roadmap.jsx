@@ -124,6 +124,8 @@ export default function Roadmap() {
   const [expandedWeeks,   setExpandedWeeks]   = useState(new Set());
   const [editMode,        setEditMode]        = useState(false);
   const [loading,         setLoading]         = useState(true);
+  const [dragging,        setDragging]        = useState(null); // { type:'week'|'task', id, phaseId, weekId? }
+  const [dragOverId,      setDragOverId]      = useState(null);
 
   // Task modal
   const [taskModal, setTaskModal] = useState(null); // { mode: 'add'|'edit', weekId, task? }
@@ -206,6 +208,105 @@ export default function Roadmap() {
       }
       return next;
     });
+  }
+
+  // ── Drag & Drop (admin edit mode only) ───────────────────────
+  function dndStart(e, item) {
+    e.stopPropagation();
+    setDragging(item);
+    e.dataTransfer.effectAllowed = 'move';
+  }
+  function dndOver(e, id) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverId(id);
+  }
+  function dndEnd() { setDragging(null); setDragOverId(null); }
+
+  async function dropWeekOnPhase(e, targetPhaseId) {
+    e.preventDefault(); e.stopPropagation();
+    if (!dragging || dragging.type !== 'week') return dndEnd();
+    const { id: weekId, phaseId: srcPhaseId } = dragging;
+    if (srcPhaseId === targetPhaseId) return dndEnd();
+    const srcPhase  = phases.find(p => p.id === srcPhaseId);
+    const week      = srcPhase?.weeks.find(w => w.id === weekId);
+    if (!week) return dndEnd();
+    const tgtWeekCount = phases.find(p => p.id === targetPhaseId)?.weeks.length || 0;
+    setPhases(prev => prev.map(p => {
+      if (p.id === srcPhaseId)  return { ...p, weeks: p.weeks.filter(w => w.id !== weekId) };
+      if (p.id === targetPhaseId) return { ...p, weeks: [...p.weeks, week] };
+      return p;
+    }));
+    await supabase.from('roadmap_weeks').update({ phase_id: targetPhaseId, sort_order: tgtWeekCount }).eq('id', weekId);
+    dndEnd();
+  }
+
+  async function dropWeekOnWeek(e, targetWeekId, targetPhaseId) {
+    e.preventDefault(); e.stopPropagation();
+    if (!dragging || dragging.type !== 'week' || dragging.id === targetWeekId) return dndEnd();
+    const { id: weekId, phaseId: srcPhaseId } = dragging;
+    const srcPhase = phases.find(p => p.id === srcPhaseId);
+    const week     = srcPhase?.weeks.find(w => w.id === weekId);
+    if (!week) return dndEnd();
+    setPhases(prev => {
+      let ps = prev.map(p => p.id === srcPhaseId ? { ...p, weeks: p.weeks.filter(w => w.id !== weekId) } : p);
+      return ps.map(p => {
+        if (p.id !== targetPhaseId) return p;
+        const idx = p.weeks.findIndex(w => w.id === targetWeekId);
+        const nw  = [...p.weeks]; nw.splice(idx, 0, week);
+        return { ...p, weeks: nw };
+      });
+    });
+    const tgtPhase = phases.find(p => p.id === targetPhaseId);
+    const tgtIdx   = tgtPhase?.weeks.findIndex(w => w.id === targetWeekId) ?? 0;
+    await supabase.from('roadmap_weeks').update({ phase_id: targetPhaseId, sort_order: tgtIdx }).eq('id', weekId);
+    dndEnd();
+  }
+
+  async function dropTaskOnWeek(e, targetWeekId) {
+    e.preventDefault(); e.stopPropagation();
+    if (!dragging || dragging.type !== 'task') return dndEnd();
+    const { id: taskId, weekId: srcWeekId } = dragging;
+    if (srcWeekId === targetWeekId) return dndEnd();
+    const allWeeks  = phases.flatMap(p => p.weeks);
+    const srcWeek   = allWeeks.find(w => w.id === srcWeekId);
+    const task      = srcWeek?.tasks.find(t => t.id === taskId);
+    if (!task) return dndEnd();
+    const newOrder = allWeeks.find(w => w.id === targetWeekId)?.tasks.length || 0;
+    setPhases(prev => prev.map(p => ({
+      ...p, weeks: p.weeks.map(w => {
+        if (w.id === srcWeekId)    return { ...w, tasks: w.tasks.filter(t => t.id !== taskId) };
+        if (w.id === targetWeekId) return { ...w, tasks: [...w.tasks, task] };
+        return w;
+      }),
+    })));
+    await supabase.from('roadmap_tasks').update({ week_id: targetWeekId, sort_order: newOrder }).eq('id', taskId);
+    dndEnd();
+  }
+
+  async function dropTaskOnTask(e, targetTaskId, targetWeekId) {
+    e.preventDefault(); e.stopPropagation();
+    if (!dragging || dragging.type !== 'task' || dragging.id === targetTaskId) return dndEnd();
+    const { id: taskId, weekId: srcWeekId } = dragging;
+    const allWeeks = phases.flatMap(p => p.weeks);
+    const srcWeek  = allWeeks.find(w => w.id === srcWeekId);
+    const task     = srcWeek?.tasks.find(t => t.id === taskId);
+    if (!task) return dndEnd();
+    setPhases(prev => {
+      let ps = prev.map(p => ({ ...p, weeks: p.weeks.map(w =>
+        w.id === srcWeekId ? { ...w, tasks: w.tasks.filter(t => t.id !== taskId) } : w
+      )}));
+      return ps.map(p => ({ ...p, weeks: p.weeks.map(w => {
+        if (w.id !== targetWeekId) return w;
+        const idx = w.tasks.findIndex(t => t.id === targetTaskId);
+        const nt  = [...w.tasks]; nt.splice(idx, 0, task);
+        return { ...w, tasks: nt };
+      })}));
+    });
+    const tgtWeek = phases.flatMap(p => p.weeks).find(w => w.id === targetWeekId);
+    const tgtIdx  = tgtWeek?.tasks.findIndex(t => t.id === targetTaskId) ?? 0;
+    await supabase.from('roadmap_tasks').update({ week_id: targetWeekId, sort_order: tgtIdx }).eq('id', taskId);
+    dndEnd();
   }
 
   function toggleWeek(id) {
@@ -470,7 +571,14 @@ export default function Roadmap() {
             <div
               key={phase.id}
               className="rounded-2xl overflow-hidden"
-              style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{
+                background: 'rgb(var(--bg-surface))',
+                border: `1px solid ${dragOverId === `phase-${phase.id}` && dragging?.type === 'week' ? 'rgba(245,193,24,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                transition: 'border-color 0.15s',
+              }}
+              onDragOver={editMode ? e => dndOver(e, `phase-${phase.id}`) : undefined}
+              onDragLeave={editMode ? () => setDragOverId(null) : undefined}
+              onDrop={editMode ? e => dropWeekOnPhase(e, phase.id) : undefined}
             >
               {/* Phase header */}
               <div
@@ -546,17 +654,38 @@ export default function Roadmap() {
                     const nextTaskId = week.tasks.find(t => !completions.has(t.id))?.id;
 
                     return (
-                    <div key={week.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div key={week.id}
+                      draggable={editMode}
+                      onDragStart={editMode ? e => dndStart(e, { type: 'week', id: week.id, phaseId: phase.id }) : undefined}
+                      onDragEnd={editMode ? dndEnd : undefined}
+                      onDragOver={editMode ? e => dndOver(e, `week-${week.id}`) : undefined}
+                      onDragLeave={editMode ? () => setDragOverId(null) : undefined}
+                      onDrop={editMode ? e => dropWeekOnWeek(e, week.id, phase.id) : undefined}
+                      style={{
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        opacity: dragging?.type === 'week' && dragging?.id === week.id ? 0.4 : 1,
+                        outline: dragOverId === `week-${week.id}` && dragging?.type === 'week' && dragging?.id !== week.id
+                          ? '2px solid rgba(245,193,24,0.5)' : 'none',
+                        transition: 'opacity 0.15s',
+                      }}>
 
                       {/* Week header — clickable */}
                       <div
                         className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-white/[0.03] transition select-none"
                         style={{ background: 'rgba(255,255,255,0.025)' }}
                         onClick={() => !editMode && toggleWeek(week.id)}
+                        onDrop={editMode ? e => dropTaskOnWeek(e, week.id) : undefined}
+                        onDragOver={editMode && dragging?.type === 'task' ? e => dndOver(e, `weekhdr-${week.id}`) : undefined}
                       >
                         <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          <ChevronDown size={13} className="flex-none transition-transform duration-200"
-                            style={{ color: 'rgba(255,255,255,0.3)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+                          {editMode && (
+                            <GripVertical size={13} className="flex-none cursor-grab"
+                              style={{ color: 'rgba(255,255,255,0.2)' }} />
+                          )}
+                          {!editMode && (
+                            <ChevronDown size={13} className="flex-none transition-transform duration-200"
+                              style={{ color: 'rgba(255,255,255,0.3)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+                          )}
                           <span className="text-[10px] font-bold uppercase tracking-widest flex-none"
                             style={{ color: 'rgba(255,255,255,0.25)' }}>
                             שבוע {week.week_number}
@@ -611,16 +740,32 @@ export default function Roadmap() {
                       {isWeekOpen && week.tasks.map(task => {
                         const done   = completions.has(task.id);
                         const isNext = task.id === nextTaskId;
+                        const isDraggingThis = dragging?.type === 'task' && dragging?.id === task.id;
+                        const isDropTarget   = dragOverId === `task-${task.id}` && dragging?.type === 'task' && !isDraggingThis;
                         return (
                           <div
                             key={task.id}
+                            draggable={editMode}
+                            onDragStart={editMode ? e => { e.stopPropagation(); dndStart(e, { type: 'task', id: task.id, weekId: week.id, phaseId: phase.id }); } : undefined}
+                            onDragEnd={editMode ? dndEnd : undefined}
+                            onDragOver={editMode ? e => dndOver(e, `task-${task.id}`) : undefined}
+                            onDragLeave={editMode ? () => setDragOverId(null) : undefined}
+                            onDrop={editMode ? e => dropTaskOnTask(e, task.id, week.id) : undefined}
                             className="flex items-center px-4 py-2 hover:bg-white/[0.03] transition group"
                             style={{
-                              borderTop: '1px solid rgba(255,255,255,0.04)',
+                              borderTop: isDropTarget ? '2px solid rgba(245,193,24,0.5)' : '1px solid rgba(255,255,255,0.04)',
                               background: isNext ? 'rgba(245,193,24,0.03)' : 'transparent',
+                              opacity: isDraggingThis ? 0.35 : 1,
                               gap: 0,
+                              cursor: editMode ? 'grab' : 'default',
                             }}
                           >
+                            {/* Grip handle — only in edit mode */}
+                            {editMode && (
+                              <div style={{ width: 18, flexShrink: 0 }}>
+                                <GripVertical size={12} style={{ color: 'rgba(255,255,255,0.18)' }} />
+                              </div>
+                            )}
                             {/* Checkbox */}
                             <div style={{ width: 30, flexShrink: 0 }}>
                               <button
