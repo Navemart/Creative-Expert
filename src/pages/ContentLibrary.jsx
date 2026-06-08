@@ -532,8 +532,8 @@ export default function ContentLibrary() {
           <Loader size={28} className="animate-spin" style={{ color: 'rgba(255,255,255,0.3)' }} />
         </div>
       ) : (
-        <div className="grid gap-4" dir="ltr"
-          style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mx-auto" dir="ltr"
+          style={{ maxWidth: 1080 }}>
           {LEVELS.map(level => (
             <LevelCard
               key={level.key}
