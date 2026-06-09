@@ -505,30 +505,32 @@ export default function Analytics() {
 
 
       {/* ── Hero KPIs ──────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setSelIdx(i => Math.max(0, (i ?? sorted.length-1) - 1))}
-            disabled={effIdx <= 0}
-            className="rounded-lg p-1.5 transition"
-            style={{ background:'rgba(255,255,255,0.06)', opacity: effIdx <= 0 ? 0.3 : 1 }}
-          >
-            <ChevronRight size={16} color="white" />
-          </button>
-          <span className="text-sm font-semibold text-white" style={{ minWidth: 110, textAlign:'center' }}>
-            {selMonth ? fmtMonth(selMonth.month) : '—'}
-          </span>
+      <div className="flex items-center justify-end mb-1">
+        <div className="flex items-center gap-2 rounded-xl px-3 py-1.5" style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)' }}>
           <button
             onClick={() => setSelIdx(i => Math.min(sorted.length-1, (i ?? sorted.length-1) + 1))}
             disabled={effIdx >= sorted.length - 1}
-            className="rounded-lg p-1.5 transition"
-            style={{ background:'rgba(255,255,255,0.06)', opacity: effIdx >= sorted.length-1 ? 0.3 : 1 }}
+            className="rounded-lg p-1 transition hover:bg-white/10"
+            style={{ opacity: effIdx >= sorted.length-1 ? 0.25 : 1 }}
           >
-            <ChevronLeft size={16} color="white" />
+            <ChevronRight size={15} color="white" />
+          </button>
+          <span className="text-sm font-bold text-white" style={{ minWidth: 100, textAlign:'center' }}>
+            {selMonth ? fmtMonth(selMonth.month) : '—'}
+          </span>
+          <button
+            onClick={() => setSelIdx(i => Math.max(0, (i ?? sorted.length-1) - 1))}
+            disabled={effIdx <= 0}
+            className="rounded-lg p-1 transition hover:bg-white/10"
+            style={{ opacity: effIdx <= 0 ? 0.25 : 1 }}
+          >
+            <ChevronLeft size={15} color="white" />
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div key={effIdx} className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
+        style={{ animation: 'kpiSlide 0.3s ease' }}>
+        <style>{`@keyframes kpiSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }`}</style>
         <KpiCard
           label="סך העסקאות החודש"
           value={selDeals > 0 ? fmtFull(selDeals) : '—'}
