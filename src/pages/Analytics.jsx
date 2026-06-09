@@ -5,6 +5,7 @@ import {
   Loader2, TrendingUp, Users, Target, FileText, DollarSign,
   BarChart3, AlertCircle, CheckCircle2, Clock, Smartphone,
   ArrowUpRight, ArrowDownRight, Minus, Pencil, Check, X,
+  ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, ComposedChart,
@@ -160,6 +161,7 @@ export default function Analytics() {
   const [range,      setRange]      = useState('6m');
   const [tab,        setTab]        = useState('overview');
   const [salesRange,    setSalesRange]    = useState('6m');
+  const [selIdx,     setSelIdx]     = useState(null);
 
   // ── Desired salary (localStorage) ────────────────────────────
   const salaryKey = userId ? `desired_salary_${userId}` : null;
@@ -230,6 +232,12 @@ export default function Analytics() {
   const latest  = sorted[sorted.length-1] ?? null;
   const prev    = sorted[sorted.length-2] ?? null;
 
+  // ── Month navigator ───────────────────────────────────────────
+  const effIdx   = selIdx !== null ? selIdx : sorted.length - 1;
+  const selMonth = sorted[effIdx] ?? null;
+  const selPrev  = sorted[effIdx - 1] ?? null;
+  useEffect(() => { if (sorted.length) setSelIdx(sorted.length - 1); }, [sorted.length]);
+
   // ── Current month ─────────────────────────────────────────────
   const curIncome  = num(latest?.total_income || latest?.amount);
   const curExp     = num(latest?.software_expenses) + num(latest?.variable_expenses) + num(latest?.paid_ads);
@@ -244,6 +252,19 @@ export default function Analytics() {
   const curDeals      = num(latest?.total_new_deals);
   const prevDeals     = num(prev?.total_new_deals);
   const dealsTrend    = prevDeals > 0 ? Math.round((curDeals - prevDeals) / prevDeals * 100) : null;
+
+  // ── Selected month KPI values (for hero cards) ────────────────
+  const selIncome  = num(selMonth?.total_income || selMonth?.amount);
+  const selExp     = num(selMonth?.software_expenses) + num(selMonth?.variable_expenses) + num(selMonth?.paid_ads);
+  const selNet     = selIncome - selExp;
+  const selNetPct  = selIncome > 0 ? Math.round(selNet / selIncome * 100) : 0;
+  const selPrevInc = num(selPrev?.total_income || selPrev?.amount);
+  const selIncTrend = selPrevInc > 0 ? Math.round((selIncome - selPrevInc) / selPrevInc * 100) : null;
+  const selPrevNet = selPrevInc - (num(selPrev?.software_expenses) + num(selPrev?.variable_expenses) + num(selPrev?.paid_ads));
+  const selNetTrend = selPrevInc > 0 ? Math.round((selNet - selPrevNet) / Math.abs(selPrevNet || 1) * 100) : null;
+  const selDeals   = num(selMonth?.total_new_deals);
+  const selPrevDeals = num(selPrev?.total_new_deals);
+  const selDealsTrend = selPrevDeals > 0 ? Math.round((selDeals - selPrevDeals) / selPrevDeals * 100) : null;
 
   // ── YTD ───────────────────────────────────────────────────────
   const currentYear = new Date().getFullYear();
@@ -484,20 +505,43 @@ export default function Analytics() {
 
 
       {/* ── Hero KPIs ──────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSelIdx(i => Math.max(0, (i ?? sorted.length-1) - 1))}
+            disabled={effIdx <= 0}
+            className="rounded-lg p-1.5 transition"
+            style={{ background:'rgba(255,255,255,0.06)', opacity: effIdx <= 0 ? 0.3 : 1 }}
+          >
+            <ChevronRight size={16} color="white" />
+          </button>
+          <span className="text-sm font-semibold text-white" style={{ minWidth: 110, textAlign:'center' }}>
+            {selMonth ? fmtMonth(selMonth.month) : '—'}
+          </span>
+          <button
+            onClick={() => setSelIdx(i => Math.min(sorted.length-1, (i ?? sorted.length-1) + 1))}
+            disabled={effIdx >= sorted.length - 1}
+            className="rounded-lg p-1.5 transition"
+            style={{ background:'rgba(255,255,255,0.06)', opacity: effIdx >= sorted.length-1 ? 0.3 : 1 }}
+          >
+            <ChevronLeft size={16} color="white" />
+          </button>
+        </div>
+      </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <KpiCard
           label="סך העסקאות החודש"
-          value={curDeals > 0 ? fmtFull(curDeals) : '—'}
+          value={selDeals > 0 ? fmtFull(selDeals) : '—'}
           sub="עסקאות חדשות שנסגרו"
           color="#F5C118"
-          trend={dealsTrend}
+          trend={selDealsTrend}
           icon={TrendingUp}
         />
         <KpiCard
           label="כסף שנכנס בפועל"
-          value={curIncome > 0 ? fmtFull(curIncome) : '—'}
-          sub={fmtMonth(latest?.month)}
-          trend={incomeTrend}
+          value={selIncome > 0 ? fmtFull(selIncome) : '—'}
+          sub={fmtMonth(selMonth?.month)}
+          trend={selIncTrend}
           color="#4ade80"
           icon={DollarSign}
         />
@@ -510,10 +554,10 @@ export default function Analytics() {
         />
         <KpiCard
           label="רווח אחרי הוצאות"
-          value={curIncome > 0 ? fmtFull(curNet) : '—'}
-          sub={curIncome > 0 ? `${curNetPct}% מרווח` : '—'}
-          color={curNet >= 0 ? '#86efac' : '#fca5a5'}
-          trend={netTrend}
+          value={selIncome > 0 ? fmtFull(selNet) : '—'}
+          sub={selIncome > 0 ? `${selNetPct}% מרווח` : '—'}
+          color={selNet >= 0 ? '#86efac' : '#fca5a5'}
+          trend={selNetTrend}
           icon={Target}
         />
       </div>
