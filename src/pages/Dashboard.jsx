@@ -1381,10 +1381,10 @@ export default function Dashboard() {
               {icon}
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] sm:text-xs mb-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>
+              <div className="text-[10px] sm:text-xs mb-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 {label}
               </div>
-              <div className="text-base sm:text-xl lg:text-2xl font-bold text-white leading-none truncate">{value}</div>
+              <div dir="ltr" className="text-base sm:text-xl lg:text-2xl font-bold text-white leading-none truncate text-right">{value}</div>
               {suffix && <div className="text-[10px] sm:text-[11px] text-white/30 mt-0.5">{suffix}</div>}
             </div>
           </div>

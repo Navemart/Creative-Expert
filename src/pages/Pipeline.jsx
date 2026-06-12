@@ -62,7 +62,7 @@ function TextCell({ value, onSave, placeholder = '', multiline = false, defaultE
       if (!multiline && (e.key === 'Enter')) finish();
       if (e.key === 'Escape') { setVal(value || ''); setEditing(false); }
     },
-    className: 'w-full bg-transparent outline-none text-xs text-white leading-snug',
+    className: 'w-full bg-transparent outline-none text-sm text-white leading-snug',
     style: { fontFamily: 'inherit', resize: 'none' },
   };
 
@@ -74,7 +74,7 @@ function TextCell({ value, onSave, placeholder = '', multiline = false, defaultE
 
   return (
     <div onClick={() => setEditing(true)}
-      className="cursor-text min-h-[20px] text-xs leading-snug"
+      className="cursor-text min-h-[20px] text-sm leading-snug"
       style={{
         color: val ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)',
         overflow: 'hidden', textOverflow: 'ellipsis',
@@ -105,7 +105,7 @@ function LinkCell({ value, onSave }) {
         onBlur={finish}
         onKeyDown={e => { if (e.key === 'Enter') finish(); if (e.key === 'Escape') { setVal(value || ''); setEditing(false); } }}
         placeholder="https://instagram.com/..."
-        className="w-full bg-transparent outline-none text-xs"
+        className="w-full bg-transparent outline-none text-sm"
         style={{ color: '#60a5fa', fontFamily: 'inherit' }} />
     );
   }
@@ -115,21 +115,21 @@ function LinkCell({ value, onSave }) {
       <div className="flex items-center gap-1 group/link">
         <a href={value.startsWith('http') ? value : `https://instagram.com/${value.replace('@','')}`}
           target="_blank" rel="noopener noreferrer"
-          className="text-xs truncate hover:underline"
+          className="text-sm truncate hover:underline"
           style={{ color: '#60a5fa' }}>
           {value}
         </a>
         <ExternalLink size={10} className="flex-none opacity-50 group-hover/link:opacity-100 transition"
           style={{ color: '#60a5fa' }} />
         <button onClick={() => setEditing(true)}
-          className="flex-none opacity-0 group-hover/link:opacity-60 transition text-[10px] mr-1"
+          className="flex-none opacity-0 group-hover/link:opacity-60 transition text-xs mr-1"
           style={{ color: 'rgba(255,255,255,0.4)' }}>✎</button>
       </div>
     );
   }
 
   return (
-    <div onClick={() => setEditing(true)} className="cursor-text text-xs"
+    <div onClick={() => setEditing(true)} className="cursor-text text-sm"
       style={{ color: 'rgba(255,255,255,0.2)' }}>+ לינק</div>
   );
 }
@@ -147,12 +147,12 @@ function DateCell({ value, onSave, highlight = false }) {
 
   return editing ? (
     <input ref={ref} type="date" defaultValue={value || ''}
-      className="bg-transparent outline-none text-xs text-white w-[110px]"
+      className="bg-transparent outline-none text-sm text-white w-[110px]"
       onChange={e => { onSave(e.target.value || null); setEditing(false); }}
       onBlur={() => setEditing(false)} />
   ) : (
     <div onClick={() => setEditing(true)}
-      className="cursor-pointer text-xs whitespace-nowrap inline-flex items-center gap-1"
+      className="cursor-pointer text-sm whitespace-nowrap inline-flex items-center gap-1"
       style={highlight && !value ? {
         color: '#f59e0b',
         background: 'rgba(245,158,11,0.12)',
@@ -196,7 +196,7 @@ function SelectCell({ value, options, onSave, placeholder = '— בחר —' }) 
   return (
     <>
       <div ref={triggerRef} onClick={handleOpen}
-        className="cursor-pointer text-xs rounded-md px-2 py-0.5 inline-flex items-center whitespace-nowrap select-none"
+        className="cursor-pointer text-sm rounded-md px-2 py-0.5 inline-flex items-center whitespace-nowrap select-none"
         style={opt
           ? { color: opt.color, background: opt.bg, border: `1px solid ${opt.border}` }
           : { color: 'rgba(255,255,255,0.25)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -214,7 +214,7 @@ function SelectCell({ value, options, onSave, placeholder = '— בחר —' }) 
           }}>
           {value && (
             <button onClick={() => { onSave(''); setOpen(false); }}
-              className="w-full text-right flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-white/5 transition"
+              className="w-full text-right flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-white/5 transition"
               style={{ color: 'rgba(255,255,255,0.4)' }}>
               <span className="h-2 w-2 rounded-full flex-none" style={{ background: 'rgba(255,255,255,0.2)' }} />
               נקה בחירה
@@ -222,7 +222,7 @@ function SelectCell({ value, options, onSave, placeholder = '— בחר —' }) 
           )}
           {options.map(o => (
             <button key={o.value} onClick={() => { onSave(o.value); setOpen(false); }}
-              className="w-full text-right flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-white/5 transition"
+              className="w-full text-right flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-white/5 transition"
               style={{ color: 'rgba(255,255,255,0.85)' }}>
               <span className="h-2 w-2 rounded-full flex-none" style={{ background: o.color }} />
               {o.value}
@@ -620,7 +620,7 @@ export default function Pipeline() {
               </div>
               <div>
                 <div className="text-base font-bold text-white">עסקה נסגרה!</div>
-                <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                <div className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
                   {closedModal.name || 'הליד'} הפך ללקוח
                 </div>
               </div>
@@ -671,8 +671,8 @@ export default function Pipeline() {
           <span className="text-base leading-none mt-0.5">⚠️</span>
           <div>
             <div className="font-semibold mb-0.5">שגיאת מסד נתונים</div>
-            <div className="text-xs opacity-80 font-mono">{dbError}</div>
-            <div className="text-xs mt-1.5 opacity-70">
+            <div className="text-sm opacity-80 font-mono">{dbError}</div>
+            <div className="text-sm mt-1.5 opacity-70">
               אם הטבלה לא קיימת, הרץ את ה-SQL ב-Supabase → SQL Editor
             </div>
           </div>
@@ -685,13 +685,13 @@ export default function Pipeline() {
         {/* אחוז סגירה */}
         <div className="rounded-xl px-4 py-3 relative overflow-hidden"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
             אחוז סגירה
             {leadsWithCall.length > 0 && <span className="font-normal opacity-60"> (מתוך {leadsWithCall.length} עם שיחה)</span>}
           </div>
           <div className="flex items-end gap-2">
             <span className="text-[26px] font-bold leading-none" style={{ color: '#22c55e' }}>{closePct}%</span>
-            <span className="text-xs mb-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{closedCount}/{leadsWithCall.length}</span>
+            <span className="text-sm mb-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{closedCount}/{leadsWithCall.length}</span>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
             <div className="h-full transition-all duration-700"
@@ -702,13 +702,13 @@ export default function Pipeline() {
         {/* אחוז הופעות */}
         <div className="rounded-xl px-4 py-3 relative overflow-hidden"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <div className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
             אחוז הופעות לשיחה
             {leadsWithCall.length > 0 && <span className="font-normal opacity-60"> (מתוך {leadsWithCall.length} עם שיחה)</span>}
           </div>
           <div className="flex items-end gap-2">
             <span className="text-[26px] font-bold leading-none" style={{ color: '#60a5fa' }}>{showPct}%</span>
-            <span className="text-xs mb-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{showedUpCount}/{leadsWithCall.length}</span>
+            <span className="text-sm mb-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{showedUpCount}/{leadsWithCall.length}</span>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
             <div className="h-full transition-all duration-700"
@@ -719,14 +719,14 @@ export default function Pipeline() {
         {/* פולואפ */}
         <div className="rounded-xl px-4 py-3"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>🔄 פולואפ</div>
+          <div className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>🔄 פולואפ</div>
           <div className="text-[26px] font-bold leading-none" style={{ color: '#f59e0b' }}>{followupCount}</div>
         </div>
 
         {/* סה״כ לידים */}
         <div className="rounded-xl px-4 py-3"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>סה״כ לידים</div>
+          <div className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>סה״כ לידים</div>
           <div className="text-[26px] font-bold leading-none" style={{ color: 'rgba(255,255,255,0.75)' }}>{total}</div>
         </div>
       </div>
@@ -735,7 +735,7 @@ export default function Pipeline() {
       <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => setShowFilters(p => !p)}
-          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+          className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold transition"
           style={{
             background: showFilters ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
             border: '1px solid ' + (showFilters ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)'),
@@ -744,7 +744,7 @@ export default function Pipeline() {
           <SlidersHorizontal size={13} />
           סינון ומיון
           {activeFilterCount > 0 && (
-            <span className="rounded-full text-[10px] font-bold px-1.5 py-0.5 leading-none"
+            <span className="rounded-full text-xs font-bold px-1.5 py-0.5 leading-none"
               style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--accent-foreground))' }}>
               {activeFilterCount}
             </span>
@@ -753,7 +753,7 @@ export default function Pipeline() {
 
         <button
           onClick={() => setShowLegend(p => !p)}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition"
           style={{
             background: showLegend ? 'rgba(251,191,36,0.12)' : 'rgba(255,255,255,0.04)',
             border: '1px solid ' + (showLegend ? 'rgba(251,191,36,0.3)' : 'rgba(255,255,255,0.08)'),
@@ -767,13 +767,13 @@ export default function Pipeline() {
         {activeFilterCount > 0 && (
           <button
             onClick={() => setFilters({ status: 'all', minRating: 0, source: 'all', sort: 'newest' })}
-            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition hover:bg-white/10"
+            className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm transition hover:bg-white/10"
             style={{ color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <X size={11} /> נקה הכל
           </button>
         )}
 
-        <span className="mr-auto text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
+        <span className="mr-auto text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>
           {filtered.length === leads.length ? `${leads.length} לידים` : `${filtered.length} מתוך ${leads.length}`}
         </span>
       </div>
@@ -826,11 +826,11 @@ export default function Pipeline() {
                       ))
                     : <>
                         <Star size={11} fill="#fbbf24" style={{ color: '#fbbf24' }} />
-                        <span className="text-[10px] font-bold" style={{ color: '#fbbf24' }}>-2</span>
+                        <span className="text-xs font-bold" style={{ color: '#fbbf24' }}>-2</span>
                       </>
                   }
                 </div>
-                <span className="text-xs font-bold" style={{ color: row.color }}>{row.label}</span>
+                <span className="text-sm font-bold" style={{ color: row.color }}>{row.label}</span>
               </div>
 
               {/* Divider */}
@@ -838,8 +838,8 @@ export default function Pipeline() {
 
               {/* Description + action stacked */}
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-white leading-snug">{row.desc}</div>
-                <div className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                <div className="text-sm font-bold text-white leading-snug">{row.desc}</div>
+                <div className="text-sm mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
                   <span style={{ color: row.color, marginLeft: 4 }}>→</span>{row.action}
                 </div>
               </div>
@@ -859,7 +859,7 @@ export default function Pipeline() {
 
             {/* מיון לפי תאריך */}
             <div className="space-y-1.5">
-              <div className="text-[11px] font-semibold uppercase tracking-wider"
+              <div className="text-xs font-semibold uppercase tracking-wider"
                 style={{ color: 'rgba(255,255,255,0.3)' }}>מיון לפי תאריך התקשרות</div>
               <div className="flex gap-1">
                 {[
@@ -867,7 +867,7 @@ export default function Pipeline() {
                   { v: 'oldest', l: 'ישן ראשון',   icon: <ChevronUp size={11}/> },
                 ].map(s => (
                   <button key={s.v} onClick={() => setFilter('sort', s.v)}
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition"
                     style={{
                       background: filters.sort === s.v ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
                       border: '1px solid ' + (filters.sort === s.v ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)'),
@@ -881,7 +881,7 @@ export default function Pipeline() {
 
             {/* מיון לפי דירוג */}
             <div className="space-y-1.5">
-              <div className="text-[11px] font-semibold uppercase tracking-wider"
+              <div className="text-xs font-semibold uppercase tracking-wider"
                 style={{ color: 'rgba(255,255,255,0.3)' }}>מיון לפי דירוג</div>
               <div className="flex gap-1">
                 {[
@@ -889,7 +889,7 @@ export default function Pipeline() {
                   { v: 'rating_low',  l: 'נמוך ראשון' },
                 ].map(s => (
                   <button key={s.v} onClick={() => setFilter('sort', s.v)}
-                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition"
                     style={{
                       background: filters.sort === s.v ? 'rgba(251,191,36,0.15)' : 'rgba(255,255,255,0.04)',
                       border: '1px solid ' + (filters.sort === s.v ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.07)'),
@@ -909,7 +909,7 @@ export default function Pipeline() {
 
           {/* Row 2: מצב שיחה */}
           <div className="space-y-1.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider"
+            <div className="text-xs font-semibold uppercase tracking-wider"
               style={{ color: 'rgba(255,255,255,0.3)' }}>מצב שיחה</div>
             <div className="flex gap-1.5 flex-wrap">
               {[
@@ -922,7 +922,7 @@ export default function Pipeline() {
                 const active = filters.status === f.v;
                 return (
                   <button key={f.v} onClick={() => setFilter('status', f.v)}
-                    className="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+                    className="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
                     style={{
                       background: active ? `${f.color}22` : 'rgba(255,255,255,0.04)',
                       border: `1px solid ${active ? f.color + '55' : 'rgba(255,255,255,0.07)'}`,
@@ -937,13 +937,13 @@ export default function Pipeline() {
 
           {/* Row 3: דירוג מינימלי */}
           <div className="space-y-1.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider"
+            <div className="text-xs font-semibold uppercase tracking-wider"
               style={{ color: 'rgba(255,255,255,0.3)' }}>
               דירוג מינימלי {filters.minRating > 0 && <span style={{ color: '#fbbf24' }}>({filters.minRating}★ ומעלה)</span>}
             </div>
             <div className="flex gap-1 items-center">
               <button onClick={() => setFilter('minRating', 0)}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
                 style={{
                   background: filters.minRating === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
                   border: '1px solid ' + (filters.minRating === 0 ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)'),
@@ -964,11 +964,11 @@ export default function Pipeline() {
 
           {/* Row 4: סוג פניה */}
           <div className="space-y-1.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider"
+            <div className="text-xs font-semibold uppercase tracking-wider"
               style={{ color: 'rgba(255,255,255,0.3)' }}>סוג פניה</div>
             <div className="flex gap-1.5 flex-wrap">
               <button onClick={() => setFilter('source', 'all')}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
                 style={{
                   background: filters.source === 'all' ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)',
                   border: '1px solid ' + (filters.source === 'all' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.07)'),
@@ -978,7 +978,7 @@ export default function Pipeline() {
                 const active = filters.source === o.value;
                 return (
                   <button key={o.value} onClick={() => setFilter('source', active ? 'all' : o.value)}
-                    className="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+                    className="rounded-lg px-3 py-1.5 text-sm font-semibold transition"
                     style={{
                       background: active ? o.bg    : 'rgba(255,255,255,0.04)',
                       border:     `1px solid ${active ? o.border : 'rgba(255,255,255,0.07)'}`,
@@ -1186,7 +1186,7 @@ export default function Pipeline() {
 
         {/* Add row */}
         <button onClick={addLead}
-          className="w-full flex items-center gap-2 px-4 py-2.5 text-xs transition hover:bg-white/[0.04]"
+          className="w-full flex items-center gap-2 px-4 py-2.5 text-sm transition hover:bg-white/[0.04]"
           style={{ color: 'rgba(255,255,255,0.28)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
           <Plus size={13} /> הוסף ליד
         </button>
@@ -1201,7 +1201,7 @@ export default function Pipeline() {
           </span>
           <div style={{ width:1, height:18, background:'rgba(255,255,255,0.15)' }} />
           <button onClick={() => setSelected(new Set())}
-            className="text-xs font-medium transition hover:opacity-80"
+            className="text-sm font-medium transition hover:opacity-80"
             style={{ color:'rgba(255,255,255,0.45)' }}>
             בטל בחירה
           </button>

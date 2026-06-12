@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Creative Expert 3.0™</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+/* ── TOKENS ─────────────────────────────────── */
+:root {
+  --accent:     #F9C200;
+  --accent-dim: rgba(249,194,0,0.15);
+  --bg:         #080A12;
+  --card:       #0F1220;
+  --card2:      #141828;
+  --border:     rgba(255,255,255,0.07);
+  --border2:    rgba(249,194,0,0.25);
+  --white:      #FFFFFF;
+  --muted:      rgba(255,255,255,0.5);
+  --muted2:     rgba(255,255,255,0.25);
+}
+
+/* ── RESET ──────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Heebo',sans-serif;
+  background:var(--bg);
+  color:var(--white);
+  direction:rtl;
+  overflow-x:hidden;
+}
+a{text-decoration:none;color:inherit}
+
+/* ── MOUSE GLOW ─────────────────────────────── */
+#glow{
+  pointer-events:none;
+  position:fixed;
+  inset:0;
+  z-index:0;
+  transition:opacity .3s;
+}
+#glow canvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+}
+
+/* ── LAYOUT ─────────────────────────────────── */
+.container{
+  position:relative;
+  z-index:1;
+  max-width:1080px;
+  margin:0 auto;
+  padding:0 32px;
+}
+section{padding:120px 0;position:relative;z-index:1}
+
+/* ── TYPOGRAPHY UTILITIES ───────────────────── */
+.label{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:24px;
+}
+.label::before{
+  content:'';
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--accent);
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.h1{
+  font-size:clamp(3rem,6vw,5.5rem);
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin-bottom:24px;
+}
+.h2{
+  font-size:clamp(2.4rem,5vw,4rem);
+  font-weight:900;
+  line-height:1.1;
+  letter-spacing:-.02em;
+  margin-bottom:20px;
+}
+.accent{color:var(--accent)}
+.italic{font-style:italic;color:var(--muted2)}
+.body-lg{
+  font-size:1.05rem;
+  color:var(--muted);
+  line-height:1.75;
+  max-width:560px;
+}
+
+/* ── BUTTONS ────────────────────────────────── */
+.btn-primary{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  background:var(--accent);
+  color:#080A12;
+  font-family:'Heebo',sans-serif;
+  font-weight:800;
+  font-size:1rem;
+  padding:16px 36px;
+  border-radius:50px;
+  border:none;
+  cursor:pointer;
+  transition:all .2s;
+  position:relative;
+  overflow:hidden;
+}
+.btn-primary::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:rgba(255,255,255,0);
+  transition:background .2s;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(249,194,0,.4)}
+.btn-primary:hover::after{background:rgba(255,255,255,.1)}
+
+.btn-secondary{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  background:rgba(255,255,255,.05);
+  color:var(--white);
+  font-family:'Heebo',sans-serif;
+  font-weight:700;
+  font-size:1rem;
+  padding:16px 36px;
+  border-radius:50px;
+  border:1px solid rgba(255,255,255,.15);
+  cursor:pointer;
+  transition:all .2s;
+}
+.btn-secondary:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);transform:translateY(-2px)}
+
+/* ── SCROLL REVEAL ──────────────────────────── */
+.sr{
+  opacity:0;
+  transform:translateY(28px);
+  transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1);
+}
+.sr.in{opacity:1;transform:none}
+.sr-d1{transition-delay:.1s}
+.sr-d2{transition-delay:.2s}
+.sr-d3{transition-delay:.3s}
+.sr-d4{transition-delay:.4s}
+
+/* ═══════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════ */
+nav{
+  position:fixed;
+  top:0; left:0; right:0;
+  z-index:1000;
+  padding:0 32px;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:rgba(8,10,18,.7);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  transition:background .3s;
+}
+nav.scrolled{background:rgba(8,10,18,.95)}
+
+.nav-logo img{height:36px;width:auto}
+
+.nav-links{
+  display:flex;
+  list-style:none;
+  gap:32px;
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+}
+.nav-links a{
+  font-size:.88rem;
+  font-weight:500;
+  color:var(--muted);
+  transition:color .2s;
+  position:relative;
+}
+.nav-links a::after{
+  content:'';
+  position:absolute;
+  bottom:-4px; left:0; right:0;
+  height:2px;
+  background:var(--accent);
+  transform:scaleX(0);
+  transition:transform .2s;
+  border-radius:2px;
+}
+.nav-links a:hover{color:var(--white)}
+.nav-links a:hover::after{transform:scaleX(1)}
+
+.nav-cta{
+  background:var(--white);
+  color:#080A12;
+  font-family:'Heebo',sans-serif;
+  font-weight:800;
+  font-size:.85rem;
+  padding:8px 22px;
+  border-radius:50px;
+  border:none;
+  cursor:pointer;
+  transition:all .2s;
+}
+.nav-cta:hover{background:var(--accent);transform:translateY(-1px)}
+
+@media(max-width:768px){.nav-links{display:none}}
+
+/* ═══════════════════════════════════════════
+   HERO
+═══════════════════════════════════════════ */
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:140px 32px 100px;
+  position:relative;
+  overflow:hidden;
+}
+
+.hero-spots{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:rgba(249,194,0,.08);
+  border:1px solid rgba(249,194,0,.2);
+  border-radius:50px;
+  padding:7px 18px;
+  font-size:.8rem;
+  font-weight:600;
+  color:var(--accent);
+  margin-bottom:36px;
+}
+.hero-spots .dot{
+  width:7px;height:7px;
+  border-radius:50%;
+  background:var(--accent);
+  animation:blink 1.5s infinite;
+}
+
+.hero-h1{
+  font-size:clamp(3.2rem,7vw,6rem);
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:-.025em;
+  margin-bottom:28px;
+  max-width:900px;
+}
+
+.hero-sub{
+  font-size:1.05rem;
+  color:var(--muted);
+  line-height:1.75;
+  max-width:520px;
+  margin:0 auto 44px;
+}
+
+.hero-btns{
+  display:flex;
+  gap:14px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-bottom:80px;
+}
+
+/* Video */
+.hero-video{
+  width:100%;
+  max-width:820px;
+  margin:0 auto;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid rgba(249,194,0,.15);
+  box-shadow:0 40px 120px rgba(0,0,0,.7), 0 0 0 1px rgba(249,194,0,.05);
+  position:relative;
+  cursor:pointer;
+}
+.hero-video .thumb{
+  aspect-ratio:16/9;
+  background:linear-gradient(135deg,#0F1220 0%,#141828 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:14px;
+  position:relative;
+  overflow:hidden;
+}
+.hero-video .thumb::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(249,194,0,.06) 0%, transparent 70%);
+}
+.hero-video .play-ring{
+  width:72px;height:72px;
+  border-radius:50%;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  transition:transform .25s, box-shadow .25s;
+  box-shadow:0 0 0 16px rgba(249,194,0,.1);
+}
+.hero-video:hover .play-ring{
+  transform:scale(1.1);
+  box-shadow:0 0 0 24px rgba(249,194,0,.08);
+}
+.hero-video .play-ring svg{fill:#080A12;margin-right:-3px}
+.hero-video .thumb-label{
+  font-size:.85rem;
+  color:var(--muted2);
+  position:relative;
+}
+
+/* ═══════════════════════════════════════════
+   TICKER / SOCIAL PROOF
+═══════════════════════════════════════════ */
+.ticker-wrap{
+  overflow:hidden;
+  border-top:1px solid var(--border);
+  border-bottom:1px solid var(--border);
+  background:var(--card);
+  padding:16px 0;
+  position:relative;
+  z-index:1;
+}
+.ticker-track{
+  display:flex;
+  width:max-content;
+  animation:marquee 32s linear infinite;
+}
+.ticker-track:hover{animation-play-state:paused}
+@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+.ticker-item{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:0 48px;
+  font-size:.85rem;
+  color:var(--muted);
+  white-space:nowrap;
+  border-left:1px solid var(--border);
+}
+.ticker-item .av{
+  width:30px;height:30px;
+  border-radius:50%;
+  border:1.5px solid var(--accent);
+  background:var(--card2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.72rem;font-weight:800;color:var(--accent);
+  flex-shrink:0;
+}
+.ticker-item strong{color:var(--white)}
+
+/* ═══════════════════════════════════════════
+   STATS
+═══════════════════════════════════════════ */
+.stats-section{
+  padding:96px 0;
+  position:relative;
+  z-index:1;
+  border-bottom:1px solid var(--border);
+}
+.stats-head{margin-bottom:48px}
+.stats-head .label{display:flex}
+
+.stats-big-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:60px;
+  position:relative;
+  overflow:hidden;
+}
+.stats-big-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 60% 80% at 40% 50%, rgba(249,194,0,.04) 0%, transparent 65%);
+  pointer-events:none;
+}
+.stats-big-num{
+  font-size:clamp(5rem,10vw,9rem);
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-.04em;
+  color:var(--white);
+  margin-bottom:8px;
+}
+.stats-big-num .accent{color:var(--accent)}
+.stats-big-label{font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
+.stats-big-sub{font-size:.9rem;color:var(--muted);line-height:1.7;max-width:480px;margin-bottom:32px}
+.stats-big-side{
+  position:absolute;
+  left:60px; top:50%;
+  transform:translateY(-50%);
+  text-align:left;
+  display:flex;flex-direction:column;gap:28px;
+}
+.stats-big-side .item .lbl{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);margin-bottom:4px}
+.stats-big-side .item .val{font-size:1.6rem;font-weight:900;color:var(--accent)}
+
+.stats-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:16px;
+}
+.stat-mini{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:32px 28px;
+  transition:border-color .25s;
+}
+.stat-mini:hover{border-color:var(--border2)}
+.stat-mini .val{
+  font-size:2.6rem;
+  font-weight:900;
+  color:var(--accent);
+  line-height:1;
+  margin-bottom:8px;
+}
+.stat-mini .lbl{font-size:.8rem;color:var(--muted)}
+@media(max-width:640px){.stats-row{grid-template-columns:1fr}}
+@media(max-width:900px){.stats-big-side{position:static;transform:none;flex-direction:row;gap:48px}}
+
+/* ═══════════════════════════════════════════
+   SECTION — GENERIC
+═══════════════════════════════════════════ */
+.section-ltr{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:80px;
+  align-items:center;
+}
+.section-ltr.flip{direction:ltr}
+.section-ltr.flip .section-text{direction:rtl}
+@media(max-width:768px){
+  .section-ltr{grid-template-columns:1fr;gap:48px}
+}
+
+/* ═══════════════════════════════════════════
+   PROBLEMS
+═══════════════════════════════════════════ */
+.problems-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:2px;
+  background:var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:64px;
+}
+.problem-card{
+  background:var(--card);
+  padding:44px 36px;
+  transition:background .25s;
+  position:relative;
+  overflow:hidden;
+}
+.problem-card::after{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
+  transform:scaleX(0);
+  transition:transform .4s;
+}
+.problem-card:hover{background:var(--card2)}
+.problem-card:hover::after{transform:scaleX(1)}
+.problem-num{
+  font-size:5rem;
+  font-weight:900;
+  color:rgba(249,194,0,.08);
+  line-height:1;
+  margin-bottom:20px;
+  letter-spacing:-.04em;
+}
+.problem-card h3{font-size:1.15rem;font-weight:800;margin-bottom:12px}
+.problem-card p{font-size:.9rem;color:var(--muted);line-height:1.75}
+
+/* ═══════════════════════════════════════════
+   FLYWHEEL
+═══════════════════════════════════════════ */
+.fw-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px;
+  background:var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:64px;
+}
+.fw-card{
+  background:var(--card);
+  padding:44px 36px;
+  position:relative;
+  overflow:hidden;
+  transition:background .25s;
+}
+.fw-card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse 80% 80% at 0% 0%, rgba(249,194,0,.04), transparent 60%);
+  opacity:0;
+  transition:opacity .3s;
+}
+.fw-card:hover{background:var(--card2)}
+.fw-card:hover::before{opacity:1}
+.fw-step{
+  font-size:.68rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);
+  font-weight:700;margin-bottom:14px;
+}
+.fw-card h3{font-size:1.3rem;font-weight:800;margin-bottom:12px}
+.fw-card p{font-size:.9rem;color:var(--muted);line-height:1.75}
+.fw-icon{font-size:2rem;margin-bottom:16px}
+@media(max-width:580px){.fw-grid{grid-template-columns:1fr}}
+
+/* ═══════════════════════════════════════════
+   PHASES (timeline)
+═══════════════════════════════════════════ */
+.phases-wrap{margin-top:64px;display:flex;flex-direction:column;gap:16px}
+.phase{
+  display:grid;
+  grid-template-columns:56px 1fr;
+  gap:0;
+  align-items:stretch;
+}
+.phase-line{
+  display:flex;flex-direction:column;align-items:center;
+  padding-top:6px;
+}
+.phase-dot{
+  width:44px;height:44px;
+  border-radius:50%;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:.95rem;color:#080A12;
+  flex-shrink:0;
+  box-shadow:0 0 0 8px rgba(249,194,0,.1);
+  z-index:1;
+}
+.phase-connector{
+  flex:1;width:2px;
+  background:linear-gradient(to bottom, var(--accent), transparent);
+  margin:10px auto 0;
+  opacity:.3;
+}
+.phase:last-child .phase-connector{display:none}
+.phase-body{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:28px 32px;
+  margin-right:16px;
+  margin-bottom:0;
+  transition:border-color .25s, background .25s;
+}
+.phase-body:hover{border-color:var(--border2);background:var(--card2)}
+.phase-tag{
+  font-size:.68rem;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent);
+  font-weight:700;margin-bottom:8px;
+}
+.phase-body h3{font-size:1.15rem;font-weight:800;margin-bottom:10px}
+.phase-body p{font-size:.88rem;color:var(--muted);line-height:1.75;margin-bottom:16px}
+.phase-pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{
+  font-size:.75rem;font-weight:700;
+  background:rgba(249,194,0,.08);
+  color:var(--accent);
+  border:1px solid rgba(249,194,0,.2);
+  padding:4px 14px;border-radius:50px;
+}
+
+/* ═══════════════════════════════════════════
+   ABOUT
+═══════════════════════════════════════════ */
+.about-img{
+  border-radius:20px;
+  overflow:hidden;
+  border:1px solid var(--border2);
+  aspect-ratio:4/5;
+  background:var(--card);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.about-img img{width:100%;height:100%;object-fit:cover}
+.about-img-placeholder{
+  color:var(--muted2);font-size:.9rem;
+  text-align:center;padding:20px;
+}
+.about-text p{
+  font-size:.97rem;color:var(--muted);
+  line-height:1.8;margin-bottom:14px;
+}
+.creds{display:flex;flex-direction:column;gap:10px;margin-top:24px}
+.cred{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.cred .icon{color:var(--accent);font-size:.9rem;flex-shrink:0}
+
+/* ═══════════════════════════════════════════
+   INCLUDED
+═══════════════════════════════════════════ */
+.inc-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2px;
+  background:var(--border);
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:64px;
+}
+.inc-item{
+  background:var(--card);
+  padding:28px 32px;
+  display:flex;gap:16px;align-items:flex-start;
+  transition:background .2s;
+}
+.inc-item:hover{background:var(--card2)}
+.inc-check{
+  width:22px;height:22px;
+  border-radius:50%;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:2px;
+}
+.inc-check svg{fill:#080A12}
+.inc-item strong{display:block;font-size:.92rem;font-weight:800;margin-bottom:5px}
+.inc-item span{font-size:.82rem;color:var(--muted);line-height:1.6}
+@media(max-width:580px){.inc-grid{grid-template-columns:1fr}}
+
+/* ═══════════════════════════════════════════
+   SLACK / WINS FEED
+═══════════════════════════════════════════ */
+.slack-window{
+  max-width:660px;
+  margin:64px auto 0;
+  background:#0D0F1C;
+  border:1px solid var(--border);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 32px 80px rgba(0,0,0,.6);
+}
+.slack-bar{
+  background:#0A0C16;
+  border-bottom:1px solid var(--border);
+  padding:12px 20px;
+  display:flex;align-items:center;gap:10px;
+}
+.slack-dot{width:11px;height:11px;border-radius:50%}
+.slack-dot-r{background:#FF5F57}
+.slack-dot-y{background:#FEBC2E}
+.slack-dot-g{background:#28C840}
+.slack-channel{
+  margin-right:auto;font-size:.78rem;
+  font-weight:600;color:var(--muted2);
+  font-family:monospace;
+}
+.slack-msgs{padding:20px;display:flex;flex-direction:column;gap:16px}
+.slack-msg{
+  display:flex;gap:12px;
+  opacity:0;transform:translateY(10px);
+}
+.slack-msg.show{
+  animation:msg-appear .5s ease forwards;
+}
+@keyframes msg-appear{to{opacity:1;transform:none}}
+.slack-av{
+  width:36px;height:36px;
+  border-radius:8px;
+  background:var(--card2);
+  border:1.5px solid var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:800;color:var(--accent);
+  flex-shrink:0;
+}
+.slack-name{font-size:.78rem;font-weight:700;color:var(--accent)}
+.slack-time{font-size:.68rem;color:var(--muted2);margin-right:6px}
+.slack-text{font-size:.84rem;color:rgba(255,255,255,.75);line-height:1.55;margin-top:2px}
+.slack-reacts{display:flex;gap:6px;margin-top:6px}
+.react-pill{
+  font-size:.72rem;
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--border);
+  border-radius:6px;padding:2px 8px;
+  color:var(--muted);
+}
+
+/* ═══════════════════════════════════════════
+   CASE STUDIES
+═══════════════════════════════════════════ */
+.cases-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:16px;
+  margin-top:64px;
+}
+.case-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  overflow:hidden;
+  transition:border-color .25s, transform .25s;
+  cursor:pointer;
+}
+.case-card:hover{border-color:var(--border2);transform:translateY(-4px)}
+.case-thumb{
+  aspect-ratio:16/9;
+  background:linear-gradient(135deg, var(--card) 0%, var(--card2) 100%);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  overflow:hidden;
+}
+.case-thumb::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 50%, rgba(249,194,0,.06), transparent);
+}
+.case-play{
+  width:52px;height:52px;border-radius:50%;
+  background:rgba(249,194,0,.85);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+  transition:transform .2s;
+}
+.case-card:hover .case-play{transform:scale(1.1)}
+.case-play svg{fill:#080A12;margin-right:-3px}
+.case-info{padding:20px 22px}
+.case-name{font-weight:800;font-size:.92rem;margin-bottom:4px}
+.case-result{font-size:.8rem;color:var(--accent);font-weight:700}
+.case-desc{font-size:.8rem;color:var(--muted);margin-top:6px;line-height:1.6}
+
+/* ═══════════════════════════════════════════
+   TESTIMONIALS
+═══════════════════════════════════════════ */
+.testi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:16px;
+  margin-top:64px;
+}
+.testi-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:32px;
+  transition:border-color .25s,transform .25s;
+}
+.testi-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.testi-stars{color:var(--accent);letter-spacing:2px;font-size:.95rem;margin-bottom:14px}
+.testi-card p{font-size:.92rem;color:rgba(255,255,255,.72);line-height:1.75;margin-bottom:22px}
+.testi-author{display:flex;align-items:center;gap:12px}
+.testi-av{
+  width:42px;height:42px;border-radius:50%;
+  border:2px solid var(--accent);background:var(--card2);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.88rem;color:var(--accent);
+  flex-shrink:0;
+}
+.testi-name{font-weight:800;font-size:.88rem}
+.testi-role{font-size:.78rem;color:var(--muted2)}
+
+/* ═══════════════════════════════════════════
+   FAQ
+═══════════════════════════════════════════ */
+.faq-wrap{max-width:720px;margin:64px auto 0;display:flex;flex-direction:column;gap:8px}
+.faq-item{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.faq-item.open{border-color:rgba(249,194,0,.3)}
+.faq-btn{
+  width:100%;background:none;border:none;
+  color:var(--white);
+  font-family:'Heebo',sans-serif;font-size:.97rem;font-weight:700;
+  text-align:right;
+  padding:22px 24px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+}
+.faq-icon{
+  width:24px;height:24px;border-radius:50%;
+  background:var(--accent-dim);
+  border:1px solid rgba(249,194,0,.25);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--accent);font-size:1.1rem;font-weight:300;
+  flex-shrink:0;transition:transform .3s,background .2s;
+  line-height:1;
+}
+.faq-item.open .faq-icon{transform:rotate(45deg);background:var(--accent);color:#080A12}
+.faq-ans{
+  max-height:0;overflow:hidden;
+  transition:max-height .35s ease,padding .3s;
+}
+.faq-item.open .faq-ans{max-height:400px;padding:0 24px 22px}
+.faq-ans p{font-size:.9rem;color:var(--muted);line-height:1.8}
+
+/* ═══════════════════════════════════════════
+   GUARANTEE
+═══════════════════════════════════════════ */
+.guarantee-inner{
+  max-width:680px;margin:0 auto;
+  text-align:center;
+}
+.guarantee-badge{
+  width:88px;height:88px;border-radius:50%;
+  background:var(--accent-dim);
+  border:2px solid rgba(249,194,0,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2.2rem;
+  margin:0 auto 28px;
+}
+.guarantee-inner p{font-size:1rem;color:var(--muted);line-height:1.8;margin-top:16px}
+
+/* ═══════════════════════════════════════════
+   PRICING
+═══════════════════════════════════════════ */
+.pricing-card{
+  max-width:540px;
+  margin:64px auto 0;
+  background:var(--card);
+  border:1px solid var(--accent);
+  border-radius:24px;
+  padding:56px 48px;
+  text-align:center;
+  box-shadow:0 0 0 1px rgba(249,194,0,.05), 0 0 80px rgba(249,194,0,.08);
+  position:relative;
+  overflow:hidden;
+}
+.pricing-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(249,194,0,.05), transparent 60%);
+  pointer-events:none;
+}
+.pricing-plan{
+  font-size:.72rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--accent);
+  font-weight:700;margin-bottom:20px;
+}
+.pricing-price{
+  font-size:4rem;font-weight:900;line-height:1;
+  margin-bottom:8px;letter-spacing:-.03em;
+}
+.pricing-note{font-size:.85rem;color:var(--muted2);margin-bottom:36px}
+.pricing-divider{height:1px;background:var(--border);margin:32px 0}
+.pricing-features{
+  text-align:right;
+  display:flex;flex-direction:column;gap:13px;margin-bottom:40px;
+}
+.pf{display:flex;align-items:center;gap:10px;font-size:.92rem}
+.pf::before{content:'✓';color:var(--accent);font-weight:900;flex-shrink:0}
+.pricing-btn{
+  width:100%;display:block;text-align:center;
+  padding:18px;font-size:1.05rem;border-radius:50px;
+}
+.pricing-footer{margin-top:16px;font-size:.78rem;color:var(--muted2)}
+
+/* ═══════════════════════════════════════════
+   FINAL CTA
+═══════════════════════════════════════════ */
+.final-cta-section{
+  padding:140px 0;text-align:center;
+  position:relative;z-index:1;
+  overflow:hidden;
+}
+.final-cta-section::before{
+  content:'';position:absolute;
+  bottom:-100px;left:50%;transform:translateX(-50%);
+  width:600px;height:400px;
+  background:radial-gradient(ellipse, rgba(249,194,0,.07) 0%, transparent 70%);
+  pointer-events:none;
+}
+.final-spots{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(249,194,0,.08);
+  border:1px solid rgba(249,194,0,.2);
+  border-radius:50px;padding:8px 20px;
+  font-size:.8rem;font-weight:600;color:var(--accent);
+  margin-bottom:28px;
+}
+.final-spots .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.5s infinite}
+
+/* ═══════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════ */
+footer{
+  position:relative;z-index:1;
+  border-top:1px solid var(--border);
+  padding:48px 0;text-align:center;
+  background:var(--card);
+}
+footer img{height:36px;margin-bottom:20px;opacity:.7;transition:opacity .2s}
+footer img:hover{opacity:1}
+footer p{font-size:.82rem;color:var(--muted2)}
+.footer-links{display:flex;justify-content:center;gap:24px;margin-top:14px}
+.footer-links a{font-size:.8rem;color:rgba(255,255,255,.2);transition:color .2s}
+.footer-links a:hover{color:var(--muted)}
+
+/* ═══════════════════════════════════════════
+   GLOW LINE
+═══════════════════════════════════════════ */
+.glow-line{
+  height:1px;
+  background:linear-gradient(90deg,transparent 0%,rgba(249,194,0,.3) 50%,transparent 100%);
+  position:relative;z-index:1;
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:768px){
+  section{padding:80px 0}
+  .h1{font-size:2.8rem}
+  .h2{font-size:2.2rem}
+  .hero-h1{font-size:2.6rem}
+  .stats-big-card{padding:32px}
+  .stats-big-num{font-size:5rem}
+  .stats-big-side{position:static;transform:none}
+  .section-ltr{grid-template-columns:1fr;gap:40px}
+  .pricing-card{padding:36px 24px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     MOUSE GLOW OVERLAY
+══════════════════════════════════════════ -->
+<div id="glow"><canvas id="glowCanvas"></canvas></div>
+
+<!-- ══════════════════════════════════════════
+     NAV
+══════════════════════════════════════════ -->
+<nav id="mainNav">
+  <a href="#" class="nav-logo"><img src="/logo.png" alt="Creative Expert 3.0"/></a>
+  <ul class="nav-links">
+    <!-- ✏️ ערוך קישורים -->
+    <li><a href="#flywheel">השיטה</a></li>
+    <li><a href="#phases">שלבים</a></li>
+    <li><a href="#testimonials">עדויות</a></li>
+    <li><a href="#about">אודות</a></li>
+  </ul>
+  <a href="#pricing" class="nav-cta">הגשת מועמדות</a>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-spots sr">
+    <span class="dot"></span>
+    <!-- ✏️ שנה מספר מקומות -->
+    3 מקומות פנויים החודש
+  </div>
+
+  <!-- ✏️ ערוך כותרת -->
+  <h1 class="hero-h1 sr sr-d1">
+    בנה את<br/>
+    <span class="accent">₪20–50K לחודש</span><br/>
+    <span class="italic">בלי</span> שהעסק יבלע אותך.
+  </h1>
+
+  <!-- ✏️ ערוך תת-כותרת -->
+  <p class="hero-sub sr sr-d2">
+    התקן את ה-Creative Expert Flywheel™. השיטה שהופכת את הבלאגן של פרילאנס לעסק קבוע, צפוי ורווחי.
+  </p>
+
+  <div class="hero-btns sr sr-d3">
+    <a href="#pricing" class="btn-primary">הגש מועמדות ←</a>
+    <a href="#flywheel" class="btn-secondary">ראה איך זה עובד</a>
+  </div>
+
+  <!-- ✏️ להוסיף וידאו: שנה ל-<iframe> עם YouTube ID -->
+  <div class="hero-video sr sr-d4" id="heroVideo">
+    <div class="thumb">
+      <div class="play-ring">
+        <svg width="26" height="26" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </div>
+      <div class="thumb-label">לחץ לצפייה בסרטון ההסבר</div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- ══════════════════════════════════════════
+     TICKER
+══════════════════════════════════════════ -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <!-- ✏️ שנה עדויות בטיקר -->
+    <span class="ticker-item"><span class="av">מ</span><strong>מרים כ.</strong>&nbsp;— הכפילה הכנסות תוך 60 יום 🚀</span>
+    <span class="ticker-item"><span class="av">ד</span><strong>דן ש.</strong>&nbsp;— סגר 3 לקוחות חדשים השבוע 💰</span>
+    <span class="ticker-item"><span class="av">ר</span><strong>רוני א.</strong>&nbsp;— ₪18,000 בחודש ראשון ✅</span>
+    <span class="ticker-item"><span class="av">ל</span><strong>לירון מ.</strong>&nbsp;— עזב עבודה שכירה לאחר שבועיים 🎯</span>
+    <span class="ticker-item"><span class="av">נ</span><strong>נועה ה.</strong>&nbsp;— 4 לקוחות ממתינים בתור ⚡</span>
+    <span class="ticker-item"><span class="av">א</span><strong>אור ב.</strong>&nbsp;— הכפיל תעריפים ולא איבד לקוח 🔥</span>
+    <!-- כפל לאנימציה רצופה -->
+    <span class="ticker-item"><span class="av">מ</span><strong>מרים כ.</strong>&nbsp;— הכפילה הכנסות תוך 60 יום 🚀</span>
+    <span class="ticker-item"><span class="av">ד</span><strong>דן ש.</strong>&nbsp;— סגר 3 לקוחות חדשים השבוע 💰</span>
+    <span class="ticker-item"><span class="av">ר</span><strong>רוני א.</strong>&nbsp;— ₪18,000 בחודש ראשון ✅</span>
+    <span class="ticker-item"><span class="av">ל</span><strong>לירון מ.</strong>&nbsp;— עזב עבודה שכירה לאחר שבועיים 🎯</span>
+    <span class="ticker-item"><span class="av">נ</span><strong>נועה ה.</strong>&nbsp;— 4 לקוחות ממתינים בתור ⚡</span>
+    <span class="ticker-item"><span class="av">א</span><strong>אור ב.</strong>&nbsp;— הכפיל תעריפים ולא איבד לקוח 🔥</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     STATS
+══════════════════════════════════════════ -->
+<section class="stats-section">
+  <div class="container">
+    <div class="stats-head sr">
+      <div class="label">המספרים</div>
+      <!-- ✏️ ערוך כותרת + תאריך -->
+      <h2 class="h2">31 בוגרים. חודש אחד.<br/><span class="accent">קבלות.</span></h2>
+      <p class="body-lg">כל בוגר פעיל מדווח מספרים בפורטל מדי חודש. אלה הנתונים הגולמיים — כפי שהם.</p>
+    </div>
+
+    <div class="stats-big-card sr sr-d1">
+      <div class="stats-big-label">תשואה ממוצעת על השקעה</div>
+      <div class="stats-big-num"><span data-count="33" data-decimal=".8">0</span><span class="accent">x</span></div>
+      <!-- ✏️ שנה תת-תיאור -->
+      <p class="stats-big-sub">כל ₪1 שהשקעת בתוכנית החזיר ₪33.8 בעסק חדש. סה"כ הכנסות כלל הבוגרים — מדווח על ידם.</p>
+      <div class="stats-big-side">
+        <div class="item"><div class="lbl">מתוך</div><div class="val accent">₪10K</div><div style="font-size:.7rem;color:var(--muted2)">השקעה כוללת</div></div>
+        <div class="item"><div class="lbl">אל</div><div class="val accent">₪325K</div><div style="font-size:.7rem;color:var(--muted2)">הכנסות חדשות</div></div>
+      </div>
+    </div>
+
+    <div class="stats-row sr sr-d2">
+      <!-- ✏️ שנה מספרים -->
+      <div class="stat-mini">
+        <div class="val" data-count="200">0</div>
+        <div class="lbl">בוגרים בסה"כ</div>
+      </div>
+      <div class="stat-mini">
+        <div class="val" data-count="94">0</div>
+        <div class="lbl">% שביעות רצון</div>
+      </div>
+      <div class="stat-mini">
+        <div class="val" data-prefix="₪" data-count="15">0</div>
+        <div class="lbl">K+ הכנסה ממוצעת</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- ══════════════════════════════════════════
+     PROBLEMS
+══════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="sr">
+      <div class="label">הבעיה</div>
+      <!-- ✏️ ערוך כותרת -->
+      <h2 class="h2">למה רוב היוצרים<br/><span class="accent">תקועים באותו מקום?</span></h2>
+      <p class="body-lg">לא חסר לך כישרון. חסר לך מערכת.</p>
+    </div>
+    <div class="problems-grid">
+      <!-- ✏️ שנה כאבים -->
+      <div class="problem-card sr">
+        <div class="problem-num">01</div>
+        <h3>מסתמכים על הפניות בלבד</h3>
+        <p>חודש טוב, חודש גרוע. אין שליטה על ההכנסה ואין מנוע לידים שעובד גם כשאתה לא.</p>
+      </div>
+      <div class="problem-card sr sr-d1">
+        <div class="problem-num">02</div>
+        <h3>מורידים מחיר כדי לנצח</h3>
+        <p>מתחרים על מחיר במקום על ערך. הלקוחות לא מבינים למה לשלם יותר כשכולם נראים אותו דבר.</p>
+      </div>
+      <div class="problem-card sr sr-d2">
+        <div class="problem-num">03</div>
+        <h3>עובדים קשה — מרוויחים מעט</h3>
+        <p>שעות ארוכות, פרויקטים שוחקים, ובסוף החודש עדיין שואלים איפה הכסף הלך.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FLYWHEEL
+══════════════════════════════════════════ -->
+<section id="flywheel">
+  <div class="container">
+    <div class="sr">
+      <div class="label">השיטה</div>
+      <!-- ✏️ ערוך שם השיטה -->
+      <h2 class="h2">ה<span class="accent">Creative Flywheel™</span><br/>— ארבעה גלגלים.</h2>
+      <p class="body-lg">ארבעה שלבים שמתחברים לכדי מכונה שמייצרת לקוחות, הכנסה ועצמאות ברצף.</p>
+    </div>
+    <div class="fw-grid">
+      <!-- ✏️ שנה שלבי השיטה -->
+      <div class="fw-card sr">
+        <div class="fw-icon">🎯</div>
+        <div class="fw-step">שלב 01</div>
+        <h3>מיצוב</h3>
+        <p>מגדירים בדיוק מי אתה, למי אתה מדבר, ולמה הם ישלמו לך יותר מכולם — גם בשוק תחרותי.</p>
+      </div>
+      <div class="fw-card sr sr-d1">
+        <div class="fw-icon">📣</div>
+        <div class="fw-step">שלב 02</div>
+        <h3>נוכחות</h3>
+        <p>בונים נוכחות דיגיטלית שמייצרת לידים ברצף — גם כשאתה לא בפלאפון.</p>
+      </div>
+      <div class="fw-card sr sr-d1">
+        <div class="fw-icon">🤝</div>
+        <div class="fw-step">שלב 03</div>
+        <h3>מכירה</h3>
+        <p>תהליך מכירה שמרגיש טבעי — ומניב לקוחות שמשלמים בלי לבקש הנחה.</p>
+      </div>
+      <div class="fw-card sr sr-d2">
+        <div class="fw-icon">🔁</div>
+        <div class="fw-step">שלב 04</div>
+        <h3>סקייל</h3>
+        <p>מייצרים מערכת שגדלה איתך — בלי לשרוף את עצמך ובלי לוותר על איכות.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- ══════════════════════════════════════════
+     PHASES
+══════════════════════════════════════════ -->
+<section id="phases">
+  <div class="container">
+    <div class="sr">
+      <div class="label">שלבי התוכנית</div>
+      <!-- ✏️ ערוך כותרת -->
+      <h2 class="h2">מה קורה בכל<br/><span class="accent">שלב בתוכנית?</span></h2>
+      <p class="body-lg">תהליך מובנה ומוכח — ממקום שבו אתה היום ועד למקום שאתה רוצה להיות.</p>
+    </div>
+    <div class="phases-wrap">
+      <!-- ✏️ שנה שלבים -->
+      <div class="phase sr">
+        <div class="phase-line">
+          <div class="phase-dot">1</div>
+          <div class="phase-connector"></div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tag">שבועות 1–3</div>
+          <h3>Ignite — הצתה</h3>
+          <p>מניחים את הבסיס: מגדירים מיצוב, בונים הצעת ערך ברורה, ומכינים את כל הכלים שצריך.</p>
+          <div class="phase-pills">
+            <span class="pill">מיצוב</span>
+            <span class="pill">הצעת ערך</span>
+            <span class="pill">פרופיל מקצועי</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase sr sr-d1">
+        <div class="phase-line">
+          <div class="phase-dot">2</div>
+          <div class="phase-connector"></div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tag">שבועות 4–8</div>
+          <h3>Stabilise — יציבות</h3>
+          <p>יוצרים זרם לידים קבוע, מייצרים תוכן שמוכר, ומתחילים לבנות מוניטין שמביא לקוחות.</p>
+          <div class="phase-pills">
+            <span class="pill">תוכן</span>
+            <span class="pill">צינור לידים</span>
+            <span class="pill">מכירות</span>
+          </div>
+        </div>
+      </div>
+      <div class="phase sr sr-d2">
+        <div class="phase-line">
+          <div class="phase-dot">3</div>
+          <div class="phase-connector"></div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tag">שבועות 9–12+</div>
+          <h3>Scale — צמיחה</h3>
+          <p>מגדילים הכנסות, מעלים מחירים, ובונים מערכת שעובדת גם כשאתה לא.</p>
+          <div class="phase-pills">
+            <span class="pill">אוטומציה</span>
+            <span class="pill">הגדלת מחיר</span>
+            <span class="pill">מינוף</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     ABOUT
+══════════════════════════════════════════ -->
+<section id="about">
+  <div class="container">
+    <div class="section-ltr">
+      <div class="about-text">
+        <div class="label sr">מי אני</div>
+        <!-- ✏️ שנה שמך -->
+        <h2 class="h2 sr">נייב מרציאנו —<br/><span class="accent">המוח מאחורי<br/>Creative Expert™</span></h2>
+        <!-- ✏️ שנה ביוגרפיה -->
+        <p class="sr sr-d1">התחלתי כצלם פרילאנס בלי שום מושג איך לנהל עסק — רק כישרון וחלום. הכנסתי לפח יותר הצעות מחיר ממה שסגרתי.</p>
+        <p class="sr sr-d1">אחרי שנים של נסיון וטעויות, בניתי שיטה שמתבססת על מיצוב חכם, נוכחות עקבית ומכירה שמרגישה טבעית.</p>
+        <p class="sr sr-d2">Creative Expert 3.0™ הוא סיכום של הכל, ארוז בתוכנית שמוכנה להיכנס לחיים שלך מחר בבוקר.</p>
+        <div class="creds sr sr-d2">
+          <!-- ✏️ שנה הישגים -->
+          <div class="cred"><span class="icon">✈</span>+200 יוצרים עברו דרכי</div>
+          <div class="cred"><span class="icon">✈</span>3 שנים בתחום הצילום והתוכן</div>
+          <div class="cred"><span class="icon">✈</span>עסק שמרוויח ₪30K+ לחודש</div>
+          <div class="cred"><span class="icon">✈</span>מאמן מוסמך בתחום עסקי יצירה</div>
+        </div>
+      </div>
+      <div class="about-img sr sr-d1">
+        <!-- ✏️ הוסף: <img src="/profile.jpg" alt="נייב"/> -->
+        <div class="about-img-placeholder">
+          📸 הוסף תמונה שלך כאן<br/><br/>
+          <code style="font-size:.72rem;color:rgba(255,255,255,.2)">&lt;img src="/profile.jpg"/&gt;</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- ══════════════════════════════════════════
+     INCLUDED
+══════════════════════════════════════════ -->
+<section id="included">
+  <div class="container">
+    <div class="sr">
+      <div class="label">מה כלול</div>
+      <h2 class="h2">הכל מה שאתה צריך<br/><span class="accent">בתוך קופסה אחת.</span></h2>
+    </div>
+    <!-- ✏️ שנה פריטים -->
+    <div class="inc-grid">
+      <div class="inc-item sr">
+        <div class="inc-check"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="#080A12" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+        <div><strong>ליווי אישי 1:1</strong><span>פגישות שבועיות אחד על אחד עם נייב — ממוקדות, מעשיות, תוצאות.</span></div>
+      </div>
+      <div class="inc-item sr sr-d1">
+        <div class="inc-check"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="#080A12" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+        <div><strong>קהילה סגורה</strong><span>גישה לקבוצה עם כל הבוגרים — שיתוף, תמיכה ואנרגיה.</span></div>
+      </div>
+      <div class="inc-item sr">
+        <div class="inc-check"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="#080A12" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+        <div><strong>ספריית תכנים מלאה</strong><span>מעל 40 שיעורים מוקלטים שאפשר לצפות בכל זמן.</span></div>
+      </div>
+      <div class="inc-item sr sr-d1">
+        <div class="inc-check"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="#080A12" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+        <div><strong>תבניות ומסמכים</strong><span>הצעות מחיר, חוזים, תסריטי מכירה — הכל מוכן לשימוש מיידי.</span></div>
+      </div>
+      <div class="inc-item sr">
+        <div class="inc-check"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="#080A12" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+        <div><strong>כלי AI מותאמים</strong><span>סוכני AI שחוסכים שעות עבודה בכל שבוע.</span></div>
+      </div>
+      <div class="inc-item sr sr-d1">
+        <div class="inc-check"><svg width="12" height="10" viewBox="0 0 12 10"><path d="M1 5l3.5 3.5L11 1" stroke="#080A12" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div>
+        <div><strong>מאסטרקלאסים חיים</strong><span>פגישות קבוצתיות חודשיות עם נושאים מתקדמים.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SLACK / WINS FEED
+══════════════════════════════════════════ -->
+<section>
+  <div class="container" style="text-align:center">
+    <div class="label sr" style="justify-content:center">ניצחונות בקהילה</div>
+    <h2 class="h2 sr">מה קורה<br/><span class="accent">בפנים כל יום?</span></h2>
+    <div class="slack-window sr sr-d1" id="slackWin">
+      <div class="slack-bar">
+        <div class="slack-dot slack-dot-r"></div>
+        <div class="slack-dot slack-dot-y"></div>
+        <div class="slack-dot slack-dot-g"></div>
+        <span class="slack-channel"># ניצחונות 🏆</span>
+      </div>
+      <div class="slack-msgs" id="slackMsgs">
+        <!-- ✏️ שנה הודעות -->
+        <div class="slack-msg">
+          <div class="slack-av">מ</div>
+          <div><span class="slack-name">מרים כ. <span class="slack-time">היום 09:14</span></span>
+          <div class="slack-text">סגרתי פרויקט ב-₪6,500 🔥 השנה הראשונה שאני לא מוזילה מחיר!!!</div>
+          <div class="slack-reacts"><span class="react-pill">🔥 12</span><span class="react-pill">💪 8</span><span class="react-pill">🎉 6</span></div></div>
+        </div>
+        <div class="slack-msg">
+          <div class="slack-av">ד</div>
+          <div><span class="slack-name">דן ש. <span class="slack-time">היום 11:32</span></span>
+          <div class="slack-text">3 פניות אורגניות מהאינסטגרם השבוע. לא עשיתי כלום, הן פשוט הגיעו 😮</div>
+          <div class="slack-reacts"><span class="react-pill">🚀 15</span><span class="react-pill">✅ 9</span></div></div>
+        </div>
+        <div class="slack-msg">
+          <div class="slack-av">ר</div>
+          <div><span class="slack-name">רוני א. <span class="slack-time">אתמול 20:45</span></span>
+          <div class="slack-text">חודש ראשון בתוכנית — ₪18,000 הכנסה. לא מאמין שזה אני כותב את זה 🙏</div>
+          <div class="slack-reacts"><span class="react-pill">💰 22</span><span class="react-pill">🔥 18</span></div></div>
+        </div>
+        <div class="slack-msg">
+          <div class="slack-av">ל</div>
+          <div><span class="slack-name">לירון מ. <span class="slack-time">אתמול 14:10</span></span>
+          <div class="slack-text">הגשתי התפטרות מהעבודה השכירה 😂 יש לי מלא לקוחות ממתינים!</div>
+          <div class="slack-reacts"><span class="react-pill">🎉 31</span><span class="react-pill">✈️ 14</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- ══════════════════════════════════════════
+     CASE STUDIES
+══════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="sr">
+      <div class="label">סיפורי הצלחה</div>
+      <h2 class="h2">תוצאות <span class="accent">אמיתיות</span><br/>מבוגרים אמיתיים.</h2>
+    </div>
+    <!-- ✏️ שנה case studies -->
+    <div class="cases-grid">
+      <div class="case-card sr">
+        <div class="case-thumb">
+          <div class="case-play"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <div class="case-info">
+          <div class="case-name">מרים כ. — צלמת אירועים</div>
+          <div class="case-result">x2 הכנסות תוך 60 יום</div>
+          <div class="case-desc">מ-₪4K לחודש ל-₪9K — בלי לקחת יותר פרויקטים.</div>
+        </div>
+      </div>
+      <div class="case-card sr sr-d1">
+        <div class="case-thumb">
+          <div class="case-play"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <div class="case-info">
+          <div class="case-name">דן ש. — מנהל תוכן</div>
+          <div class="case-result">₪18,000 בחודש הראשון</div>
+          <div class="case-desc">ממתין לפניות — למותג שלקוחות מחפשים.</div>
+        </div>
+      </div>
+      <div class="case-card sr sr-d2">
+        <div class="case-thumb">
+          <div class="case-play"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+        </div>
+        <div class="case-info">
+          <div class="case-name">רוני א. — ויוואוגרף</div>
+          <div class="case-result">עזב עבודה שכירה</div>
+          <div class="case-desc">בנה מנוע לידים שמביא פניות אורגניות כל שבוע.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     TESTIMONIALS
+══════════════════════════════════════════ -->
+<section id="testimonials">
+  <div class="container">
+    <div class="sr">
+      <div class="label">עדויות</div>
+      <h2 class="h2">מה אומרים<br/><span class="accent">בוגרי התוכנית.</span></h2>
+    </div>
+    <!-- ✏️ שנה עדויות -->
+    <div class="testi-grid">
+      <div class="testi-card sr">
+        <div class="testi-stars">★★★★★</div>
+        <p>"לפני התוכנית הייתי לוקח כל פרויקט שהגיע. אחרי שלושה חודשים הכפלתי את המחיר שלי ומחציתי את הלקוחות."</p>
+        <div class="testi-author">
+          <div class="testi-av">מ</div>
+          <div><div class="testi-name">מרים כ.</div><div class="testi-role">צלמת אירועים, תל אביב</div></div>
+        </div>
+      </div>
+      <div class="testi-card sr sr-d1">
+        <div class="testi-stars">★★★★★</div>
+        <p>"לא האמנתי שאפשר לייצר לידים בלי לרדוף אחרי אנשים. היום פניות מגיעות אליי מהאינסטגרם כל שבוע."</p>
+        <div class="testi-author">
+          <div class="testi-av">ד</div>
+          <div><div class="testi-name">דן ש.</div><div class="testi-role">מנהל תוכן, ירושלים</div></div>
+        </div>
+      </div>
+      <div class="testi-card sr sr-d2">
+        <div class="testi-stars">★★★★★</div>
+        <p>"המערכת שנייב נתן לי שינתה את הדרך שאני מתנהל. עכשיו יש לי ודאות חודשית שלא הייתה לי אף פעם."</p>
+        <div class="testi-author">
+          <div class="testi-av">ר</div>
+          <div><div class="testi-name">רוני א.</div><div class="testi-role">ויוואוגרף, חיפה</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FAQ
+══════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div style="text-align:center" class="sr">
+      <div class="label" style="justify-content:center">שאלות נפוצות</div>
+      <h2 class="h2">יש לך שאלה?<br/><span class="accent">כנראה יש לנו תשובה.</span></h2>
+    </div>
+    <!-- ✏️ שנה שאלות -->
+    <div class="faq-wrap">
+      <div class="faq-item sr">
+        <button class="faq-btn" onclick="toggleFaq(this)"><span>למי מיועדת התוכנית?</span><span class="faq-icon">+</span></button>
+        <div class="faq-ans"><p>התוכנית מיועדת לצלמים, ויוצרי תוכן ועצמאיים בתחום היצירה שרוצים להפוך את הכישרון שלהם לעסק מניב ויציב.</p></div>
+      </div>
+      <div class="faq-item sr">
+        <button class="faq-btn" onclick="toggleFaq(this)"><span>כמה זמן אורכת התוכנית?</span><span class="faq-icon">+</span></button>
+        <div class="faq-ans"><p>✏️ ערוך תשובה — כמה חודשים, שבועות, פורמט.</p></div>
+      </div>
+      <div class="faq-item sr">
+        <button class="faq-btn" onclick="toggleFaq(this)"><span>האם יש ליווי אישי?</span><span class="faq-icon">+</span></button>
+        <div class="faq-ans"><p>✏️ ערוך תשובה — פגישות 1:1, כמה, איזה פורמט.</p></div>
+      </div>
+      <div class="faq-item sr">
+        <button class="faq-btn" onclick="toggleFaq(this)"><span>מה אם זה לא יתאים לי?</span><span class="faq-icon">+</span></button>
+        <div class="faq-ans"><p>✏️ ערוך — מדיניות גרנטי, החזר כספי.</p></div>
+      </div>
+      <div class="faq-item sr">
+        <button class="faq-btn" onclick="toggleFaq(this)"><span>כמה מקומות פנויים?</span><span class="faq-icon">+</span></button>
+        <div class="faq-ans"><p>✏️ ערוך — כמה מקומות, מתי פותחים מחזור.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="glow-line"></div>
+
+<!-- ══════════════════════════════════════════
+     GUARANTEE
+══════════════════════════════════════════ -->
+<section>
+  <div class="container">
+    <div class="guarantee-inner sr">
+      <div class="guarantee-badge">🛡️</div>
+      <div class="label" style="justify-content:center">הגרנטי שלנו</div>
+      <h2 class="h2">אנחנו מאמינים בך —<br/><span class="accent">מספיק כדי לערוב.</span></h2>
+      <!-- ✏️ שנה תנאי גרנטי -->
+      <p>אם תעקוב אחרי השיטה, תעשה את הגישות ותהיה פרזנטי בקהילה — ולא תראה תוצאות תוך X ימים, נחזיר לך את ההשקעה. בלי שאלות.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     PRICING
+══════════════════════════════════════════ -->
+<section id="pricing">
+  <div class="container" style="text-align:center">
+    <div class="sr">
+      <div class="label" style="justify-content:center">ההשקעה</div>
+      <h2 class="h2">מוכן להמריא?<br/><span class="accent">זה מה שזה עולה.</span></h2>
+    </div>
+    <div class="pricing-card sr sr-d1">
+      <!-- ✏️ שנה שם, מחיר, פיצ'רים -->
+      <div class="pricing-plan">Creative Expert 3.0™ — Pilot Edition</div>
+      <div class="pricing-price">₪X,XXX</div>
+      <div class="pricing-note">✏️ תשלום חד-פעמי / חודשי</div>
+      <div class="pricing-divider"></div>
+      <div class="pricing-features">
+        <div class="pf">ליווי אישי 1:1 שבועי</div>
+        <div class="pf">קהילה סגורה</div>
+        <div class="pf">ספריית תכנים מלאה</div>
+        <div class="pf">תבניות ומסמכים מוכנים</div>
+        <div class="pf">כלי AI מותאמים</div>
+        <div class="pf">מאסטרקלאסים חיים</div>
+        <div class="pf">גרנטי X ימים</div>
+      </div>
+      <a href="#" class="btn-primary pricing-btn">אני רוצה להצטרף ←</a>
+      <div class="pricing-footer">✏️ הוסף הערת גרנטי / ביטול</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FINAL CTA
+══════════════════════════════════════════ -->
+<section class="final-cta-section">
+  <div class="container">
+    <div class="final-spots sr">
+      <span class="dot"></span>
+      <!-- ✏️ שנה מספר מקומות -->
+      נותרו 3 מקומות בלבד
+    </div>
+    <!-- ✏️ ערוך כותרת אחרונה -->
+    <h2 class="h2 sr">מוכן לקחת שליטה<br/>על <span class="accent">הקריירה שלך?</span></h2>
+    <p class="body-lg sr sr-d1" style="margin:0 auto 40px">המקומות מוגבלים. המחזור הבא נפתח בקרוב.</p>
+    <a href="#pricing" class="btn-primary sr sr-d2" style="font-size:1.1rem;padding:20px 52px">הגש מועמדות עכשיו ←</a>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <img src="/logo.png" alt="Creative Expert 3.0"/>
+    <!-- ✏️ שנה פרטי פוטר -->
+    <p>© 2025 Creative Expert 3.0™ — כל הזכויות שמורות</p>
+    <div class="footer-links">
+      <a href="#">פרטיות</a>
+      <a href="#">תנאי שימוש</a>
+      <a href="#">צור קשר</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+// ── MOUSE GLOW ──────────────────────────────────
+const canvas = document.getElementById('glowCanvas');
+const ctx = canvas.getContext('2d');
+let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+let cx = mx, cy = my;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+window.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+});
+
+function drawGlow() {
+  // smooth follow
+  cx += (mx - cx) * 0.06;
+  cy += (my - cy) * 0.06;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // main glow
+  const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 520);
+  grad.addColorStop(0,   'rgba(249,194,0,0.07)');
+  grad.addColorStop(0.4, 'rgba(249,194,0,0.03)');
+  grad.addColorStop(1,   'rgba(249,194,0,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // small bright core
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, 120);
+  core.addColorStop(0,   'rgba(249,194,0,0.05)');
+  core.addColorStop(1,   'rgba(249,194,0,0)');
+  ctx.fillStyle = core;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  requestAnimationFrame(drawGlow);
+}
+drawGlow();
+
+// ── SCROLL REVEAL ────────────────────────────────
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.sr').forEach(el => revealObs.observe(el));
+
+// ── NAV SCROLL ───────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('mainNav').classList.toggle('scrolled', scrollY > 30);
+});
+
+// ── COUNTER ANIMATION ────────────────────────────
+function animCount(el) {
+  const target = parseFloat(el.dataset.count);
+  const prefix = el.dataset.prefix || '';
+  const decimal = el.dataset.decimal || '';
+  const dur = 2000;
+  const start = performance.now();
+  function step(now) {
+    const t = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    const val = ease * target;
+    el.textContent = prefix + (decimal ? val.toFixed(1) : Math.round(val)) + (t === 1 ? decimal : '');
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+const countObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting && !e.target.dataset.done) {
+      e.target.dataset.done = '1';
+      animCount(e.target);
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-count]').forEach(el => countObs.observe(el));
+
+// ── FAQ ──────────────────────────────────────────
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const open = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!open) item.classList.add('open');
+}
+
+// ── SLACK MESSAGES STAGGER ───────────────────────
+const slackObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const msgs = e.target.querySelectorAll('.slack-msg');
+      msgs.forEach((m, i) => {
+        setTimeout(() => m.classList.add('show'), i * 400);
+      });
+      slackObs.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+const sw = document.getElementById('slackWin');
+if (sw) slackObs.observe(sw);
+
+// ── VIDEO PLACEHOLDER ────────────────────────────
+const hv = document.getElementById('heroVideo');
+if (hv) hv.addEventListener('click', () => {
+  // ✏️ החלף ב-iframe אמיתי:
+  // hv.innerHTML = '<iframe width="100%" style="aspect-ratio:16/9;display:block" src="https://www.youtube.com/embed/YOUR_ID" frameborder="0" allowfullscreen></iframe>';
+  hv.querySelector('.thumb-label').textContent = '🎬 הוסף קישור YouTube בקוד';
+});
+</script>
+</body>
+</html>

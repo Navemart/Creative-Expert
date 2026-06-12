@@ -58,7 +58,7 @@ function MemberCard({ member, index }) {
           {member.name}
         </h3>
       </div>
-      <div className="mt-1 text-xs text-slate-500">{member.role}</div>
+      <div className="mt-1 text-sm text-slate-500">{member.role}</div>
     </Link>
   );
 }
@@ -211,7 +211,7 @@ export default function Members() {
                           {member.name}
                         </span>
                       </div>
-                      <div className="text-xs text-slate-500">{status.label}</div>
+                      <div className="text-sm text-slate-500">{status.label}</div>
                     </div>
                     <div className="text-sm text-slate-600">{member.role}</div>
                   </Link>

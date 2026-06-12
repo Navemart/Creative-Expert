@@ -531,7 +531,7 @@ export default function AdminStudents() {
   }
 
   return (
-    <div className="w-full space-y-5" dir="rtl">
+    <div className="w-full space-y-5 mx-auto" dir="rtl" style={{ maxWidth: 1080 }}>
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
