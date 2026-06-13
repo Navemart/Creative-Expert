@@ -111,6 +111,23 @@ CREATE POLICY "own diagnosis_results" ON diagnosis_results
   USING  (user_id = auth.jwt()->>'sub')
   WITH CHECK (user_id = auth.jwt()->>'sub');
 
+-- diagnosis_content  (single row of editable page text/labels — admin writes, everyone reads)
+CREATE TABLE IF NOT EXISTS diagnosis_content (
+  id         text PRIMARY KEY DEFAULT 'default',
+  data       jsonb,
+  updated_at timestamptz DEFAULT now()
+);
+ALTER TABLE diagnosis_content ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "read diagnosis_content"        ON diagnosis_content;
+DROP POLICY IF EXISTS "admin write diagnosis_content" ON diagnosis_content;
+CREATE POLICY "read diagnosis_content" ON diagnosis_content
+  FOR SELECT
+  USING (auth.jwt()->>'role' = 'authenticated');
+CREATE POLICY "admin write diagnosis_content" ON diagnosis_content
+  FOR ALL
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
 -- student_profiles
 --   • Admin can read ALL profiles (needed for the admin panel)
 --   • Students can only read & write their own row
