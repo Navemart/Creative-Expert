@@ -13,6 +13,7 @@ import {
   Mic2,
   Video,
   Library,
+  Target,
   X,
 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ const NAV_ITEMS = [
 
 const ENGINE_ITEMS = [
   { to: '/roadmap',         label: 'מפת דרכים',    icon: MapIcon },
+  { to: '/diagnosis',       label: 'אבחון עסקי',   icon: Target },
   { to: '/content-library', label: 'ספריית תכנים', icon: Library },
 ];
 

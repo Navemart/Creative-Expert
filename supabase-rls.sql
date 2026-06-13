@@ -91,6 +91,26 @@ CREATE POLICY "own roadmap_completions" ON roadmap_completions
   USING  (user_id = auth.jwt()->>'sub')
   WITH CHECK (user_id = auth.jwt()->>'sub');
 
+-- diagnosis_results  (one row per student — saved business-stage diagnosis)
+CREATE TABLE IF NOT EXISTS diagnosis_results (
+  user_id        text PRIMARY KEY,
+  offer_checks   jsonb,
+  leads_checks   jsonb,
+  delivery_check boolean DEFAULT false,
+  offer_score    int,
+  leads_score    int,
+  status         text,
+  focus_text     text,
+  metric_text    text,
+  recheck_date   date,
+  updated_at     timestamptz DEFAULT now()
+);
+ALTER TABLE diagnosis_results ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "own diagnosis_results" ON diagnosis_results;
+CREATE POLICY "own diagnosis_results" ON diagnosis_results
+  USING  (user_id = auth.jwt()->>'sub')
+  WITH CHECK (user_id = auth.jwt()->>'sub');
+
 -- student_profiles
 --   • Admin can read ALL profiles (needed for the admin panel)
 --   • Students can only read & write their own row

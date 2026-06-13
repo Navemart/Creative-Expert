@@ -12,6 +12,7 @@ import Settings from './pages/Settings.jsx';
 import AdminStudents from './pages/AdminStudents.jsx';
 import PricingCalculator from './pages/PricingCalculator.jsx';
 import Roadmap from './pages/Roadmap.jsx';
+import Diagnosis from './pages/Diagnosis.jsx';
 import ContentLibrary from './pages/ContentLibrary.jsx';
 import Clients from './pages/Clients.jsx';
 import Transcriptions from './pages/Transcriptions.jsx';
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="content"         element={<Content />} />
             <Route path="recordings"      element={<ZoomRecordings />} />
             <Route path="roadmap"         element={<Roadmap />} />
+            <Route path="diagnosis"       element={<Diagnosis />} />
             <Route path="content-library" element={<ContentLibrary />} />
             <Route path="agents"          element={<Agents />} />
             <Route path="calculator"      element={<PricingCalculator />} />
