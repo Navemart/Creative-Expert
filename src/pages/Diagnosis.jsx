@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { supabase } from '../lib/supabase.js';
-import { Target, AlertCircle, CheckCircle2, X, ChevronDown } from 'lucide-react';
+import { AlertCircle, CheckCircle2, X, ChevronDown } from 'lucide-react';
 
 // ── Questions ─────────────────────────────────────────────────
 const OFFER_QUESTIONS = [
@@ -108,6 +108,14 @@ const COLOR_HEX = {
   blue:  '#3b82f6',
 };
 
+// Short focus tags shown as chips on each stage card
+const FOCUS_TAGS = {
+  building:    ['הצעה אחת', 'מכירה ראשונה', 'תיעוד'],
+  loaded:      ['ערוץ אחד', 'פעולה שבועית', 'מעקב'],
+  spinning:    ['מיפוי תהליך', 'תבנות עבודה', 'תקרת לקוחות'],
+  compounding: ['תמחור פרימיום', 'בחירת לקוחות', 'חופש'],
+};
+
 function computeStatus(offerScore, leadsScore, delivery) {
   if (offerScore < 3) return 'building';
   if (leadsScore < 3) return 'loaded';
@@ -137,31 +145,55 @@ function CheckRow({ checked, onToggle, children }) {
 }
 
 // ── Stage card (top row of 4) ───────────────────────────────────
-function StageCard({ statusKey, isCurrent, isDone }) {
+function StageCard({ statusKey, isCurrent, isDone, offerOk, leadsOk, hasResult }) {
   const meta = STATUS_META[statusKey];
   const hex = COLOR_HEX[meta.color];
+
   return (
     <div
-      className="rounded-xl px-3 py-3 relative"
+      className="rounded-xl px-3.5 py-3.5 relative transition"
       style={{
-        background: isCurrent ? `${hex}1f` : 'rgb(var(--bg-elevated))',
-        border: `1px solid ${isCurrent ? hex + '88' : 'rgba(255,255,255,0.07)'}`,
+        background: isCurrent ? `${hex}1a` : 'rgb(var(--bg-elevated))',
+        border: `1px solid ${isCurrent ? hex : 'rgba(255,255,255,0.07)'}`,
+        boxShadow: isCurrent ? `0 0 0 1px ${hex}33` : 'none',
+        opacity: hasResult && !isCurrent ? 0.55 : 1,
       }}
     >
-      {isCurrent && (
-        <div className="absolute -top-2 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full"
-          style={{ background: hex, color: '#0b0b0b' }}>
-          אתה כאן
-        </div>
-      )}
-      <div className="flex items-center gap-2">
-        <span className="h-2 w-2 rounded-full flex-none" style={{ background: isDone || isCurrent ? hex : 'rgba(255,255,255,0.15)' }} />
+      <div className="flex items-center justify-between mb-1.5">
         <span className="text-sm font-bold" style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.75)' }}>
           {meta.title}
         </span>
+        {hasResult && (
+          <span className="h-2.5 w-2.5 rounded-full flex-none" style={{
+            border: `2px solid ${hex}`,
+            background: isCurrent ? hex : 'transparent',
+          }} />
+        )}
       </div>
-      <div className="mt-1 text-xs leading-snug" style={{ color: 'rgba(255,255,255,0.4)' }}>
-        {meta.subtitle}
+
+      {hasResult && (
+        <div className="flex items-center gap-2 mb-2">
+          <span className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: offerOk ? '#22c55e' : '#ef4444' }} />
+            הצעה
+          </span>
+          <span className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: leadsOk ? '#22c55e' : '#ef4444' }} />
+            פניות
+          </span>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-1">
+        {FOCUS_TAGS[statusKey].map(tag => (
+          <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+            style={{
+              background: isCurrent ? `${hex}25` : 'rgba(255,255,255,0.05)',
+              color: isCurrent ? hex : 'rgba(255,255,255,0.4)',
+            }}>
+            {tag}
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -343,14 +375,6 @@ export default function Diagnosis() {
         setDelivery(!!data.delivery_check);
         setUpdatedAt(data.updated_at || null);
         setHasResult(true);
-        const st = computeStatus(
-          (data.offer_checks || []).filter(Boolean).length,
-          (data.leads_checks || []).filter(Boolean).length,
-          !!data.delivery_check
-        );
-        setOpenStages(new Set([st]));
-      } else {
-        setOpenStages(new Set(['building']));
       }
     } catch (err) {
       console.error('Diagnosis load error:', err);
@@ -419,57 +443,63 @@ export default function Diagnosis() {
   return (
     <div className="w-full space-y-6">
 
-      {/* Header */}
+      {/* Header + prominent diagnosis button */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-4xl font-bold text-white">אבחון עסקי</h1>
+          <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+            לפני שעובדים על משהו - חשוב לדעת על מה לעבוד. הנה ארבעת השלבים, ואיפה אתה נמצא בהם.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="flex-none rounded-xl px-6 py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground"
+        >
+          {hasResult ? 'לאבחן מחדש את העסק שלי' : 'לאבחן את העסק שלי'}
+        </button>
+      </div>
+
+      {/* Progress header */}
       <div>
-        <h1 className="text-2xl sm:text-4xl font-bold text-white">אבחון עסקי</h1>
-        <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
-          לפני שעובדים על משהו - חשוב לדעת על מה לעבוד. הנה ארבעת השלבים, ואיפה אתה נמצא בהם.
+        <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          סטטוס המסע העסקי
+        </div>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h2 className="text-xl sm:text-2xl font-bold text-white">
+            {hasResult ? `הרמה שלך: ${currentMeta.title}` : 'עדיין לא ביצעת אבחון'}
+          </h2>
+          {hasResult && (
+            <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: `${currentHex}25`, color: currentHex }}>
+              {currentMeta.dots} · שלב {currentIdx + 1} מתוך 4
+            </span>
+          )}
+        </div>
+        <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+          {hasResult
+            ? <>{currentMeta.subtitle}. ההתמקדות שלך עכשיו: {currentMeta.focus[0]}</>
+            : 'לחץ על "לאבחן את העסק שלי" כדי לגלות באיזה שלב אתה נמצא ומה הצעד הבא שלך.'}
         </p>
+        {hasResult && (
+          <p className="mt-1 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            ציון הצעה: {offerScore}/5 · ציון פניות: {leadsScore}/5
+            {updatedAt && <> · עודכן: {new Date(updatedAt).toLocaleDateString('he-IL')}</>}
+          </p>
+        )}
       </div>
 
       {/* Stage cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {STATUS_ORDER.map((key, i) => (
-          <StageCard key={key} statusKey={key} isCurrent={hasResult && key === status} isDone={hasResult && i < currentIdx} />
+          <StageCard
+            key={key}
+            statusKey={key}
+            isCurrent={hasResult && key === status}
+            isDone={hasResult && i < currentIdx}
+            hasResult={hasResult}
+            offerOk={offerScore >= 3}
+            leadsOk={leadsScore >= 3}
+          />
         ))}
-      </div>
-
-      {/* Your level block */}
-      <div className="rounded-2xl p-5 sm:p-6" style={{ background: 'rgb(var(--bg-surface))', border: `1px solid ${hasResult ? currentHex + '55' : 'rgba(255,255,255,0.08)'}` }}>
-        {hasResult ? (
-          <>
-            <div className="flex items-center gap-2 mb-1">
-              <Target size={18} style={{ color: currentHex }} />
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>הרמה שלך</span>
-            </div>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-xl">{currentMeta.dots}</span>
-              <h3 className="text-lg font-bold" style={{ color: currentHex }}>{currentMeta.title}</h3>
-            </div>
-            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>{currentMeta.subtitle}</p>
-            <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              ציון הצעה: {offerScore}/5 · ציון פניות: {leadsScore}/5
-              {updatedAt && <> · עודכן: {new Date(updatedAt).toLocaleDateString('he-IL')}</>}
-            </p>
-            <div className="mt-3 text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
-              ההתמקדות שלך עכשיו: {currentMeta.focus[0]}
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center gap-3">
-            <Target size={20} style={{ color: 'rgba(255,255,255,0.3)' }} />
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              עדיין לא ביצעת אבחון. לחץ על הכפתור למטה כדי לגלות באיזה שלב אתה נמצא.
-            </p>
-          </div>
-        )}
-
-        <button
-          onClick={() => setShowModal(true)}
-          className="mt-4 rounded-lg px-5 py-2.5 text-sm font-semibold transition hover:opacity-90 bg-accent text-accent-foreground"
-        >
-          {hasResult ? 'לאבחן מחדש את העסק שלי' : 'לאבחן את העסק שלי'}
-        </button>
       </div>
 
       {/* Stage details */}
