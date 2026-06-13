@@ -311,9 +311,16 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
   const [offerChecks, setOfferChecks] = useState(initial.offerChecks);
   const [leadsChecks, setLeadsChecks] = useState(initial.leadsChecks);
   const [delivery, setDelivery] = useState(initial.delivery);
+  const [error, setError] = useState('');
 
   const offerScore = offerChecks.filter(Boolean).length;
   const leadsScore = leadsChecks.filter(Boolean).length;
+
+  async function handleSave() {
+    setError('');
+    const err = await onSave({ offerChecks, leadsChecks, delivery });
+    if (err) setError('שגיאה בשמירה: ' + err);
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
@@ -365,8 +372,10 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
             </div>
           )}
 
+          {error && <p className="text-xs" style={{ color: '#fca5a5' }}>{error}</p>}
+
           <button
-            onClick={() => onSave({ offerChecks, leadsChecks, delivery })}
+            onClick={handleSave}
             disabled={saving}
             className="w-full rounded-lg py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-40 bg-accent text-accent-foreground"
           >
@@ -383,14 +392,17 @@ function ContentEditorModal({ content, onClose, onSave, saving }) {
   const [text, setText] = useState(JSON.stringify(content, null, 2));
   const [error, setError] = useState('');
 
-  function handleSave() {
+  async function handleSave() {
+    let parsed;
     try {
-      const parsed = JSON.parse(text);
-      setError('');
-      onSave(parsed);
+      parsed = JSON.parse(text);
     } catch (e) {
       setError('שגיאה בפורמט: ' + e.message);
+      return;
     }
+    setError('');
+    const err = await onSave(parsed);
+    if (err) setError('שגיאה בשמירה: ' + err);
   }
 
   return (
@@ -480,8 +492,10 @@ export default function Diagnosis() {
       if (error) throw error;
       setContent(newContent);
       setShowEditor(false);
+      return null;
     } catch (err) {
       console.error('Diagnosis content save error:', err);
+      return err.message || String(err);
     } finally {
       setSavingContent(false);
     }
@@ -514,7 +528,7 @@ export default function Diagnosis() {
   const status = computeStatus(offerScore, leadsScore, delivery);
 
   async function saveResults({ offerChecks: oc, leadsChecks: lc, delivery: dl }) {
-    if (!userId) return;
+    if (!userId) return 'משתמש לא מחובר';
     setSaving(true);
     try {
       const newStatus = computeStatus(oc.filter(Boolean).length, lc.filter(Boolean).length, dl);
@@ -537,8 +551,10 @@ export default function Diagnosis() {
       setHasResult(true);
       setSelectedStage(newStatus);
       setShowModal(false);
+      return null;
     } catch (err) {
       console.error('Diagnosis save error:', err);
+      return err.message || String(err);
     } finally {
       setSaving(false);
     }
