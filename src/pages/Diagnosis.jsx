@@ -116,6 +116,14 @@ const FOCUS_TAGS = {
   compounding: ['תמחור פרימיום', 'בחירת לקוחות', 'חופש'],
 };
 
+// Static requirements bullets shown per card (not based on the user's actual answers)
+const STAGE_REQUIREMENTS = {
+  building:    [{ label: 'הצעה שמוכרת',  ok: false }, { label: 'זרימת פניות', ok: false }],
+  loaded:      [{ label: 'הצעה שמוכרת',  ok: true  }, { label: 'זרימת פניות', ok: false }],
+  spinning:    [{ label: 'הצעה שמוכרת',  ok: true  }, { label: 'זרימת פניות', ok: true  }],
+  compounding: [{ label: 'הצעה שמוכרת',  ok: true  }, { label: 'זרימת פניות', ok: true  }, { label: 'מנוף',          ok: true  }],
+};
+
 function computeStatus(offerScore, leadsScore, delivery) {
   if (offerScore < 3) return 'building';
   if (leadsScore < 3) return 'loaded';
@@ -145,45 +153,43 @@ function CheckRow({ checked, onToggle, children }) {
 }
 
 // ── Stage card (top row of 4) ───────────────────────────────────
-function StageCard({ statusKey, isCurrent, isDone, offerOk, leadsOk, hasResult }) {
+function StageCard({ statusKey, isCurrent, hasResult }) {
   const meta = STATUS_META[statusKey];
   const hex = COLOR_HEX[meta.color];
+  const reqs = STAGE_REQUIREMENTS[statusKey];
 
   return (
     <div
       className="rounded-xl px-3.5 py-3.5 relative transition"
       style={{
-        background: isCurrent ? `${hex}1a` : 'rgb(var(--bg-elevated))',
-        border: `1px solid ${isCurrent ? hex : 'rgba(255,255,255,0.07)'}`,
+        background: isCurrent ? `${hex}14` : 'rgb(var(--bg-elevated))',
+        border: `${isCurrent ? 2 : 1}px solid ${isCurrent ? hex : 'rgba(255,255,255,0.07)'}`,
         boxShadow: isCurrent ? `0 0 0 1px ${hex}33` : 'none',
-        opacity: hasResult && !isCurrent ? 0.55 : 1,
+        opacity: hasResult && !isCurrent ? 0.6 : 1,
       }}
     >
-      <div className="flex items-center justify-between mb-1.5">
+      <div className="flex items-center justify-between mb-2.5">
         <span className="text-sm font-bold" style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.75)' }}>
           {meta.title}
         </span>
-        {hasResult && (
-          <span className="h-2.5 w-2.5 rounded-full flex-none" style={{
-            border: `2px solid ${hex}`,
-            background: isCurrent ? hex : 'transparent',
-          }} />
+        {isCurrent && hasResult && (
+          <span className="h-2.5 w-2.5 rounded-full flex-none" style={{ background: hex }} />
         )}
       </div>
 
-      {hasResult && (
-        <div className="flex items-center gap-2 mb-2">
-          <span className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: offerOk ? '#22c55e' : '#ef4444' }} />
-            הצעה
-          </span>
-          <span className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: leadsOk ? '#22c55e' : '#ef4444' }} />
-            פניות
-          </span>
-        </div>
-      )}
+      <div className="space-y-1.5 mb-3">
+        {reqs.map(r => (
+          <div key={r.label} className="flex items-center gap-2 text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>
+            <span className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: r.ok ? '#22c55e' : '#ef4444' }} />
+            {r.label}
+          </div>
+        ))}
+      </div>
 
+      <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
+        style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.3)' }}>
+        ההתמקדות
+      </div>
       <div className="flex flex-wrap gap-1">
         {FOCUS_TAGS[statusKey].map(tag => (
           <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
@@ -196,6 +202,28 @@ function StageCard({ statusKey, isCurrent, isDone, offerOk, leadsOk, hasResult }
         ))}
       </div>
     </div>
+  );
+}
+
+// ── Circular progress ring ──────────────────────────────────────
+function ProgressRing({ value, total, color }) {
+  const size = 56;
+  const stroke = 5;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = total ? value / total : 0;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-none -rotate-90">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+      <circle
+        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+        strokeDasharray={c} strokeDashoffset={c * (1 - pct)} strokeLinecap="round"
+      />
+      <text x={size / 2} y={size / 2} dy="0.32em" textAnchor="middle" fill={color} fontSize="14" fontWeight="700"
+        transform={`rotate(90 ${size / 2} ${size / 2})`}>
+        {value}/{total}
+      </text>
+    </svg>
   );
 }
 
@@ -460,31 +488,35 @@ export default function Diagnosis() {
       </div>
 
       {/* Progress header */}
-      <div>
-        <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          סטטוס המסע העסקי
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-xl sm:text-2xl font-bold text-white">
-            {hasResult ? `הרמה שלך: ${currentMeta.title}` : 'עדיין לא ביצעת אבחון'}
-          </h2>
+      <div className="rounded-2xl px-5 py-5 flex items-center justify-between gap-4 flex-wrap"
+        style={{ background: 'rgb(var(--bg-elevated))', border: `1px solid ${hasResult ? currentHex + '33' : 'rgba(255,255,255,0.07)'}` }}>
+        <div className="min-w-0">
+          <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            התקדמות עסקית
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              {hasResult ? `הרמה שלך: ${currentMeta.title}` : 'עדיין לא ביצעת אבחון'}
+            </h2>
+            {hasResult && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: `${currentHex}25`, color: currentHex }}>
+                {currentMeta.dots} · שלב {currentIdx + 1} מתוך 4
+              </span>
+            )}
+          </div>
+          <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            {hasResult
+              ? <>{currentMeta.subtitle}. ההתמקדות שלך עכשיו: {currentMeta.focus[0]}</>
+              : 'לחץ על "לאבחן את העסק שלי" כדי לגלות באיזה שלב אתה נמצא ומה הצעד הבא שלך.'}
+          </p>
           {hasResult && (
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: `${currentHex}25`, color: currentHex }}>
-              {currentMeta.dots} · שלב {currentIdx + 1} מתוך 4
-            </span>
+            <p className="mt-1 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              ציון הצעה: {offerScore}/5 · ציון פניות: {leadsScore}/5
+              {updatedAt && <> · עודכן: {new Date(updatedAt).toLocaleDateString('he-IL')}</>}
+            </p>
           )}
         </div>
-        <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
-          {hasResult
-            ? <>{currentMeta.subtitle}. ההתמקדות שלך עכשיו: {currentMeta.focus[0]}</>
-            : 'לחץ על "לאבחן את העסק שלי" כדי לגלות באיזה שלב אתה נמצא ומה הצעד הבא שלך.'}
-        </p>
-        {hasResult && (
-          <p className="mt-1 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            ציון הצעה: {offerScore}/5 · ציון פניות: {leadsScore}/5
-            {updatedAt && <> · עודכן: {new Date(updatedAt).toLocaleDateString('he-IL')}</>}
-          </p>
-        )}
+        {hasResult && <ProgressRing value={currentIdx + 1} total={4} color={currentHex} />}
       </div>
 
       {/* Stage cards */}
@@ -494,10 +526,7 @@ export default function Diagnosis() {
             key={key}
             statusKey={key}
             isCurrent={hasResult && key === status}
-            isDone={hasResult && i < currentIdx}
             hasResult={hasResult}
-            offerOk={offerScore >= 3}
-            leadsOk={leadsScore >= 3}
           />
         ))}
       </div>
