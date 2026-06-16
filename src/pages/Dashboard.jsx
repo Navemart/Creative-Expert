@@ -749,6 +749,7 @@ export default function Dashboard() {
   const [labels,        setLabels]        = useState(DEFAULT_LABELS);
 
   const [modal, setModal]               = useState(null);
+  const [winStep, setWinStep]           = useState(1);
   const [showFormEditor,  setShowFormEditor]  = useState(false);
   const [formConfig,      setFormConfig]      = useState(loadFormConfig);
   // Helper: get field config by key
@@ -1267,7 +1268,7 @@ export default function Dashboard() {
           <h1 className="text-2xl sm:text-4xl font-bold text-white">{getGreeting()}, {firstName}.</h1>
         </div>
         <div className="flex flex-wrap gap-2 sm:justify-end">
-          <button onClick={() => setModal('win')}     className={btnClass} style={btnStyle}><Trophy   size={15} /> נצחונות שבועיים</button>
+          <button onClick={() => { setWinStep(1); setModal('win'); }} className={btnClass} style={btnStyle}><Trophy size={15} /> נצחונות שבועיים</button>
           <button
             onClick={() => {
               // Always open a fresh form — editing existing data is via "עריכת נתונים"
@@ -1433,7 +1434,7 @@ export default function Dashboard() {
                       <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>שתף את הנצחונות שלך מהשבוע</p>
                     </div>
                     <button
-                      onClick={() => setModal('win')}
+                      onClick={() => { setWinStep(1); setModal('win'); }}
                       className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-80"
                       style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}
                     >
@@ -2002,83 +2003,183 @@ export default function Dashboard() {
         </div>
       )}
 
-      {modal === 'win' && (
-        <Modal title="" onClose={() => setModal(null)}>
-          <div className="max-h-[75vh] overflow-y-auto -mx-6 px-6 space-y-6">
+      {modal === 'win' && (() => {
+        const accentGold = '#F5C118';
+        const stepBg = 'rgb(var(--bg-surface))';
+        const fieldBg = 'rgb(var(--bg-elevated))';
+        const fieldBorder = '1px solid rgba(255,255,255,0.1)';
+        const dateStr = new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' });
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-white">נצחונות שבועיים 🏆</h2>
-                <p className="text-xs text-white/40 mt-0.5">{new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-              </div>
-            </div>
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
+            <div className="w-full max-w-2xl rounded-2xl overflow-hidden" style={{ background: stepBg, border: '1px solid rgba(255,255,255,0.1)' }}>
 
-            {/* Section 1 - Wins */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                <span className="text-[11px] font-semibold tracking-widest text-white/35 uppercase">מה ניצחת השבוע?</span>
-                <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.08)' }} />
-              </div>
-
-              {[
-                { key: 'win_1', num: '1', label: 'הנצחון הכי משמעותי', placeholder: 'מה הדבר שאתה הכי גאה בו השבוע?', required: true },
-                { key: 'win_2', num: '2', label: 'נצחון נוסף', placeholder: 'עוד משהו טוב שקרה...', required: false },
-                { key: 'win_3', num: '3', label: 'ועוד אחד', placeholder: 'גם הקטן שבנצחונות חשוב 💪', required: false },
-              ].map(({ key, num, label, placeholder, required }) => (
-                <div key={key} className="flex gap-3 items-start">
-                  <div
-                    className="flex-none mt-1 h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: winForm[key] ? '#F5C118' : 'rgba(255,255,255,0.08)', color: winForm[key] ? '#13152A' : 'rgba(255,255,255,0.3)' }}
-                  >
-                    {num}
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <label className="text-sm font-medium text-white/85">{label}{required && <span className="text-red-400 mr-1">*</span>}</label>
-                    <Input placeholder={placeholder} value={winForm[key]} onChange={e => setWinForm(f => ({ ...f, [key]: e.target.value }))} />
-                  </div>
+              {/* Header bar */}
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-bold text-white">נצחונות שבועיים</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)' }}>
+                    {dateStr}
+                  </span>
                 </div>
-              ))}
+                <button onClick={() => { setModal(null); setWinStep(1); }} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Sub-header */}
+              <div className="px-5 py-2.5" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  שתפו את 3 הנצחונות הכי גדולים מהשבוע שעבר, ואת עדיפות השבוע הקרוב.
+                </p>
+              </div>
+
+              {/* Step tabs */}
+              <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                {[{ n: 1, label: 'נצחונות' }, { n: 2, label: 'השבוע הקרוב' }].map(({ n, label }) => (
+                  <button
+                    key={n}
+                    onClick={() => setWinStep(n)}
+                    className="flex-1 py-2.5 text-sm font-medium transition"
+                    style={{
+                      color: winStep === n ? accentGold : 'rgba(255,255,255,0.35)',
+                      borderBottom: winStep === n ? `2px solid ${accentGold}` : '2px solid transparent',
+                      background: 'transparent',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Progress bar */}
+              <div className="h-0.5 w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div className="h-full transition-all duration-300" style={{ width: winStep === 1 ? '50%' : '100%', background: accentGold }} />
+              </div>
+
+              {/* Body */}
+              <div className="flex" style={{ minHeight: 320 }}>
+                {/* Left — context */}
+                <div className="flex-none w-48 p-5 space-y-3" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
+                  <p className="text-xs font-bold tabular-nums" style={{ color: accentGold }}>
+                    {String(winStep).padStart(2,'0')} / 02
+                  </p>
+                  {winStep === 1 ? (
+                    <>
+                      <p className="text-sm font-bold text-white">🏆 3 הנצחונות</p>
+                      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        תרשמו את הנצחונות מהשבוע שעבר — קטנים כגדולים, הכל מצטבר.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-bold text-white">🎯 השבוע הקרוב</p>
+                      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        קבעו את המוקד וספרו לנו מה מעכב אתכם כדי שנוכל לעזור.
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                {/* Right — form fields */}
+                <div className="flex-1 p-5 space-y-4">
+                  {winStep === 1 ? (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הנצחון הגדול ביותר</label>
+                        <input
+                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
+                          style={{ background: fieldBg, border: winForm.win_1 ? `1px solid ${accentGold}66` : fieldBorder }}
+                          placeholder="הנצחון הכי גדול שלך..."
+                          value={winForm.win_1}
+                          onChange={e => setWinForm(f => ({ ...f, win_1: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הנצחון השני</label>
+                        <input
+                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
+                          style={{ background: fieldBg, border: fieldBorder }}
+                          placeholder="עוד משהו טוב שקרה..."
+                          value={winForm.win_2}
+                          onChange={e => setWinForm(f => ({ ...f, win_2: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הנצחון השלישי</label>
+                        <input
+                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
+                          style={{ background: fieldBg, border: fieldBorder }}
+                          placeholder="ועוד אחד..."
+                          value={winForm.win_3}
+                          onChange={e => setWinForm(f => ({ ...f, win_3: e.target.value }))}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>״הדבר האחד״ שתתמקד בו</label>
+                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>המוקד הכי חשוב לשבוע הקרוב.</p>
+                        <input
+                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
+                          style={{ background: fieldBg, border: winForm.focus_next_week ? `1px solid ${accentGold}66` : fieldBorder }}
+                          placeholder="הדבר האחד שהכי חשוב..."
+                          value={winForm.focus_next_week}
+                          onChange={e => setWinForm(f => ({ ...f, focus_next_week: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>המעצור הכי גדול שלך</label>
+                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>מה מרגיש כמו חסם? מה אנחנו יכולים לעזור לך לפתור?</p>
+                        <textarea
+                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none text-white placeholder:text-white/20"
+                          style={{ background: fieldBg, border: fieldBorder }}
+                          placeholder="איפה אתה צריך תמיכה?"
+                          rows={4}
+                          value={winForm.blocker}
+                          onChange={e => setWinForm(f => ({ ...f, blocker: e.target.value }))}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <button
+                  onClick={() => winStep === 1 ? (setModal(null), setWinStep(1)) : setWinStep(1)}
+                  className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
+                  style={{ color: 'rgba(255,255,255,0.55)' }}
+                >
+                  ← {winStep === 1 ? 'ביטול' : 'חזרה'}
+                </button>
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>שלב {winStep} מתוך 2</span>
+                {winStep === 1 ? (
+                  <button
+                    onClick={() => setWinStep(2)}
+                    disabled={!winForm.win_1.trim()}
+                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
+                    style={{ background: accentGold, color: '#13152A' }}
+                  >
+                    הבא: השבוע הקרוב →
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => { submitWin(); setWinStep(1); }}
+                    disabled={!winForm.focus_next_week.trim()}
+                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
+                    style={{ background: accentGold, color: '#13152A' }}
+                  >
+                    שלח נצחונות ✓
+                  </button>
+                )}
+              </div>
             </div>
-
-            {/* Section 2 - Forward */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.08)' }} />
-                <span className="text-[11px] font-semibold tracking-widest text-white/35 uppercase">השבוע הקרוב</span>
-                <div className="h-px flex-1" style={{ background: 'rgba(255,255,255,0.08)' }} />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-white/85">מה ״הדבר האחד״ שאתה הולך להתמקד בו? <span className="text-red-400">*</span></label>
-                <textarea
-                  placeholder="דבר אחד. ממוקד. ברור."
-                  value={winForm.focus_next_week}
-                  onChange={e => setWinForm(f => ({ ...f, focus_next_week: e.target.value }))}
-                  rows={2}
-                  className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
-                  style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-white/85">מה מרגיש כמו ״מעצור״? מה אני יכול לעזור לך לפתור?</label>
-                <textarea
-                  placeholder="שתף אותי — זה בדיוק בשביל מה אני כאן 🙏"
-                  value={winForm.blocker}
-                  onChange={e => setWinForm(f => ({ ...f, blocker: e.target.value }))}
-                  rows={3}
-                  className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
-                  style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                />
-              </div>
-            </div>
-
-            <SubmitBtn onClick={submitWin}>שלח את הנצחונות שלי</SubmitBtn>
           </div>
-        </Modal>
-      )}
+        );
+      })()}
 
       {showFormEditor && (
         <FormConfigEditor onClose={() => { setShowFormEditor(false); setFormConfig(loadFormConfig()); }} />
