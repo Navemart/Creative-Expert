@@ -2004,7 +2004,8 @@ export default function Dashboard() {
       )}
 
       {modal === 'win' && (() => {
-        const accentGold = '#F5C118';
+        const STEP_COLORS = { 1: '#F5C118', 2: '#f97316' };
+        const accent = STEP_COLORS[winStep];
         const stepBg = 'rgb(var(--bg-surface))';
         const fieldBg = 'rgb(var(--bg-elevated))';
         const fieldBorder = '1px solid rgba(255,255,255,0.1)';
@@ -2042,8 +2043,8 @@ export default function Dashboard() {
                     onClick={() => setWinStep(n)}
                     className="flex-1 py-2.5 text-sm font-medium transition"
                     style={{
-                      color: winStep === n ? accentGold : 'rgba(255,255,255,0.35)',
-                      borderBottom: winStep === n ? `2px solid ${accentGold}` : '2px solid transparent',
+                      color: winStep === n ? STEP_COLORS[n] : 'rgba(255,255,255,0.35)',
+                      borderBottom: winStep === n ? `2px solid ${STEP_COLORS[n]}` : '2px solid transparent',
                       background: 'transparent',
                     }}
                   >
@@ -2052,16 +2053,17 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Progress bar */}
-              <div className="h-0.5 w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                <div className="h-full transition-all duration-300" style={{ width: winStep === 1 ? '50%' : '100%', background: accentGold }} />
+              {/* Progress bar — two colored segments */}
+              <div className="flex h-0.5 w-full">
+                <div className="flex-1 transition-all duration-300" style={{ background: STEP_COLORS[1] }} />
+                <div className="flex-1 transition-all duration-300" style={{ background: winStep === 2 ? STEP_COLORS[2] : 'rgba(255,255,255,0.06)' }} />
               </div>
 
               {/* Body */}
               <div className="flex" style={{ minHeight: 320 }}>
                 {/* Left — context */}
                 <div className="flex-none w-48 p-5 space-y-3" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
-                  <p className="text-xs font-bold tabular-nums" style={{ color: accentGold }}>
+                  <p className="text-xs font-bold tabular-nums" style={{ color: accent }}>
                     {String(winStep).padStart(2,'0')} / 02
                   </p>
                   {winStep === 1 ? (
@@ -2089,7 +2091,7 @@ export default function Dashboard() {
                         <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הנצחון הגדול ביותר</label>
                         <input
                           className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                          style={{ background: fieldBg, border: winForm.win_1 ? `1px solid ${accentGold}66` : fieldBorder }}
+                          style={{ background: fieldBg, border: winForm.win_1 ? `1px solid ${accent}66` : fieldBorder }}
                           placeholder="הנצחון הכי גדול שלך..."
                           value={winForm.win_1}
                           onChange={e => setWinForm(f => ({ ...f, win_1: e.target.value }))}
@@ -2123,7 +2125,7 @@ export default function Dashboard() {
                         <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>המוקד הכי חשוב לשבוע הקרוב.</p>
                         <input
                           className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                          style={{ background: fieldBg, border: winForm.focus_next_week ? `1px solid ${accentGold}66` : fieldBorder }}
+                          style={{ background: fieldBg, border: winForm.focus_next_week ? `1px solid ${accent}66` : fieldBorder }}
                           placeholder="הדבר האחד שהכי חשוב..."
                           value={winForm.focus_next_week}
                           onChange={e => setWinForm(f => ({ ...f, focus_next_week: e.target.value }))}
@@ -2161,7 +2163,7 @@ export default function Dashboard() {
                     onClick={() => setWinStep(2)}
                     disabled={!winForm.win_1.trim()}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
-                    style={{ background: accentGold, color: '#13152A' }}
+                    style={{ background: accent, color: '#13152A' }}
                   >
                     הבא: השבוע הקרוב →
                   </button>
@@ -2170,7 +2172,7 @@ export default function Dashboard() {
                     onClick={() => { submitWin(); setWinStep(1); }}
                     disabled={!winForm.focus_next_week.trim()}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
-                    style={{ background: accentGold, color: '#13152A' }}
+                    style={{ background: accent, color: '#13152A' }}
                   >
                     שלח נצחונות ✓
                   </button>
