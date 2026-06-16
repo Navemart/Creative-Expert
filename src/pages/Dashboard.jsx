@@ -1876,51 +1876,130 @@ export default function Dashboard() {
       {/* ── Modals ── */}
 
       {modal === 'deal' && (
-        <Modal title="" onClose={() => setModal(null)}>
-          <div className="space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
+          <div className="w-full max-w-2xl rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
 
-            {/* Header */}
-            <div>
-              <h2 className="text-lg font-bold text-white">עסקה חדשה שנסגרה 💰🏆</h2>
-              <p className="text-xs text-white/40 mt-0.5">ברכות! רשמו כאן את הנצחון שלכם</p>
+            {/* Header bar */}
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-center gap-3">
+                <span className="text-base font-bold text-white">נצחון עסקה חדשה 🛡️</span>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)' }}>
+                  {new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
+                </span>
+              </div>
+              <button onClick={() => setModal(null)} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <X size={18} />
+              </button>
             </div>
 
-            {/* תאריך */}
-            <div className="rounded-lg px-3 py-2 text-sm text-white/50" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.08)' }}>
-              📅 {new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {/* Sub-header */}
+            <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                ברכות על סגירת עסקה חדשה! הכניסו את הפרטים ושתפו את הנצחון עם הקבוצה.
+              </p>
             </div>
 
-            {/* שדות */}
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-white/85">סה"כ סכום העסקה (₪) <span className="text-red-400">*</span></label>
-                <Input placeholder="כמה שווה העסקה?" type="number" value={dealForm.total_amount} onChange={e => setDealForm(f => ({ ...f, total_amount: e.target.value }))} />
+            {/* Body — two columns */}
+            <div className="flex gap-0" style={{ minHeight: 320 }}>
+
+              {/* Left — context */}
+              <div className="flex-none w-48 p-5 space-y-4" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> עסקה חדשה
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-white mb-1">🛡️ הנצחון</p>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    תרשמו את ערך העסקה ומה גביתם בפועל, ואז קבעו את יעד הדרגה הבאה שלכם.
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-white/85">כסף שנכנס בפועל (₪)</label>
-                <Input placeholder="כמה כבר קיבלת?" type="number" value={dealForm.received_amount} onChange={e => setDealForm(f => ({ ...f, received_amount: e.target.value }))} />
-              </div>
+              {/* Right — form */}
+              <div className="flex-1 p-5 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    סה״כ שווי העסקה <span style={{ color: '#f87171' }}>*</span>
+                  </label>
+                  <div className="flex items-center rounded-lg overflow-hidden" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <span className="px-3 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>₪</span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={dealForm.total_amount}
+                      onChange={e => setDealForm(f => ({ ...f, total_amount: e.target.value }))}
+                      className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
+                    />
+                  </div>
+                </div>
 
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-white/85">מה הדרגה הבאה שלך?</label>
-                <select
-                  value={dealForm.next_rank}
-                  onChange={e => setDealForm(f => ({ ...f, next_rank: e.target.value }))}
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                  style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                >
-                  <option value="">בחר דרגה...</option>
-                  {SEGMENTS.map(s => (
-                    <option key={s.label} value={s.label}>{s.label} — ₪{s.min === 0 ? '0' : `${s.min/1000}K`}+</option>
-                  ))}
-                </select>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    כסף שנכנס בפועל <span style={{ color: '#f87171' }}>*</span>
+                  </label>
+                  <div className="flex items-center rounded-lg overflow-hidden" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <span className="px-3 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>₪</span>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={dealForm.received_amount}
+                      onChange={e => setDealForm(f => ({ ...f, received_amount: e.target.value }))}
+                      className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    מה הדרגה הבאה שאתה מכוון אליה?
+                  </label>
+                  <select
+                    value={dealForm.next_rank}
+                    onChange={e => setDealForm(f => ({ ...f, next_rank: e.target.value }))}
+                    className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: dealForm.next_rank ? 'white' : 'rgba(255,255,255,0.25)' }}
+                  >
+                    <option value="">בחר דרגה...</option>
+                    {SEGMENTS.map(s => (
+                      <option key={s.label} value={s.label}>{s.label} — ₪{s.min === 0 ? '0' : `${s.min/1000}K`}+</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הערות</label>
+                  <textarea
+                    placeholder="פרטים נוספים על העסקה הזו..."
+                    rows={3}
+                    value={dealForm.notes || ''}
+                    onChange={e => setDealForm(f => ({ ...f, notes: e.target.value }))}
+                    className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none"
+                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                  />
+                </div>
               </div>
             </div>
 
-            <SubmitBtn onClick={submitDeal}>שלח עסקה</SubmitBtn>
+            {/* Footer */}
+            <div className="flex items-center justify-between px-5 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <button
+                onClick={() => setModal(null)}
+                className="rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
+                style={{ color: 'rgba(255,255,255,0.55)' }}
+              >
+                ביטול
+              </button>
+              <button
+                onClick={submitDeal}
+                disabled={!dealForm.total_amount}
+                className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
+                style={{ background: '#22c55e', color: '#fff' }}
+              >
+                שלח עסקה ✓
+              </button>
+            </div>
           </div>
-        </Modal>
+        </div>
       )}
 
       {modal === 'win' && (
