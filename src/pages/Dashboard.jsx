@@ -2053,10 +2053,15 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {/* Progress bar — two colored segments */}
-              <div className="flex h-0.5 w-full">
-                <div className="flex-1 transition-all duration-300" style={{ background: STEP_COLORS[1] }} />
-                <div className="flex-1 transition-all duration-300" style={{ background: winStep === 2 ? STEP_COLORS[2] : 'rgba(255,255,255,0.06)' }} />
+              {/* Progress bar — single smooth bar */}
+              <div className="h-0.5 w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                <div
+                  className="h-full transition-all duration-500"
+                  style={{
+                    width: winStep === 1 ? '50%' : '100%',
+                    background: winStep === 1 ? STEP_COLORS[1] : `linear-gradient(to left, ${STEP_COLORS[2]}, ${STEP_COLORS[1]})`,
+                  }}
+                />
               </div>
 
               {/* Body */}
@@ -2155,7 +2160,7 @@ export default function Dashboard() {
                   className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
                   style={{ color: 'rgba(255,255,255,0.55)' }}
                 >
-                  ← {winStep === 1 ? 'ביטול' : 'חזרה'}
+                  {winStep === 1 ? 'ביטול' : 'חזרה →'}
                 </button>
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>שלב {winStep} מתוך 2</span>
                 {winStep === 1 ? (
@@ -2163,16 +2168,16 @@ export default function Dashboard() {
                     onClick={() => setWinStep(2)}
                     disabled={!winForm.win_1.trim()}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
-                    style={{ background: accent, color: '#13152A' }}
+                    style={{ background: accent, color: '#1e3a8a' }}
                   >
-                    הבא: השבוע הקרוב →
+                    ← הבא: השבוע הקרוב
                   </button>
                 ) : (
                   <button
                     onClick={() => { submitWin(); setWinStep(1); }}
                     disabled={!winForm.focus_next_week.trim()}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
-                    style={{ background: accent, color: '#13152A' }}
+                    style={{ background: accent, color: '#1e3a8a' }}
                   >
                     שלח נצחונות ✓
                   </button>
