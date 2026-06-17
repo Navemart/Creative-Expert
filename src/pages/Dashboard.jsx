@@ -806,7 +806,7 @@ export default function Dashboard() {
     report_month: '', total_new_deals: '', retainers: '', total_income: '',
     software_expenses: '', variable_expenses: '', paid_ads: '',
     current_rank: '', achieved_next_rank: '', business_confidence: '',
-    sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '',
+    sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', sales_confidence: '',
     leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '',
     followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '',
     new_clients: '', retainers_count: '', client_satisfaction: '', on_time_delivery: '',
@@ -1185,6 +1185,7 @@ export default function Dashboard() {
       sales_calls_showed:   s.sales_calls_showed?.toString()   || '',
       closings_count:       s.closings_count?.toString()       || '',
       strategy_calls:       s.strategy_calls?.toString()       || '',
+      sales_confidence:     s.sales_confidence?.toString()     || '',
       leads:                s.leads?.toString()                || '',
       proposals:            s.proposals?.toString()            || '',
       price_quotes_sent:     s.price_quotes_sent?.toString()     || '',
@@ -1290,6 +1291,7 @@ export default function Dashboard() {
       sales_calls_showed:   i(monthlyForm.sales_calls_showed),
       closings_count:       i(monthlyForm.closings_count),
       strategy_calls:       i(monthlyForm.strategy_calls),
+      sales_confidence:     i(monthlyForm.sales_confidence),
       leads:                i(monthlyForm.leads),
       proposals:            i(monthlyForm.proposals),
       price_quotes_sent:     i(monthlyForm.price_quotes_sent),
@@ -1332,7 +1334,7 @@ export default function Dashboard() {
       report_month: '', total_new_deals: '', retainers: '', total_income: '',
       software_expenses: '', variable_expenses: '', paid_ads: '',
       current_rank: '', achieved_next_rank: '', business_confidence: '',
-      sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '',
+      sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', sales_confidence: '',
       leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '',
       followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '',
       new_clients: '', client_satisfaction: '', on_time_delivery: '',
@@ -2218,6 +2220,9 @@ export default function Dashboard() {
               <MField label="הצעות מחיר נשלחו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_sent} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_sent: e.target.value }))} /></MField>
               <MField label="הצעות מחיר אושרו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_approved} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_approved: e.target.value }))} /></MField>
             </MGrid>
+            <MField label="ביטחון בתהליך המכירה (1–10)" required>
+              <MSlider value={monthlyForm.sales_confidence} onChange={v => setMonthlyForm(f => ({ ...f, sales_confidence: v }))} />
+            </MField>
           </div>,
 
           /* Step 3 — לשלוט */
