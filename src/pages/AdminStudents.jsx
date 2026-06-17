@@ -219,134 +219,183 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
           </div>
         </div>
 
-        {/* ── Income hero + sparkline ── */}
-        <div className="rounded-2xl px-4 py-3 flex items-end justify-between gap-4"
-          style={{ background: 'rgba(245,193,24,0.05)', border: '1px solid rgba(245,193,24,0.15)' }}>
-          <div>
-            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה — {fmtMonth(cur.month)}</p>
-            <p className="text-3xl font-black leading-none" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
-            {prevIncome != null && (
-              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                {incomeD != null && (
-                  <span className="text-xs font-bold rounded-md px-1.5 py-0.5"
-                    style={{ background: incomeD > 0 ? 'rgba(134,239,172,0.15)' : incomeD < 0 ? 'rgba(252,165,165,0.15)' : 'rgba(255,255,255,0.08)', color: incomeD > 0 ? '#86efac' : incomeD < 0 ? '#fca5a5' : 'rgba(255,255,255,0.4)' }}>
-                    {incomeD > 0 ? '↑' : incomeD < 0 ? '↓' : '–'} {Math.abs(incomeD)}%
-                  </span>
-                )}
-                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>לעומת {fmtFull(prevIncome)} ({fmtMonth(prev?.month)})</span>
-              </div>
+        {/* ══ HERO ROW — הנתונים הכי חשובים ══ */}
+        <div className="grid grid-cols-4 gap-3">
+          {/* הכנסה — הגדול */}
+          <div className="col-span-1 rounded-2xl p-5 flex flex-col justify-between"
+            style={{ background: 'rgba(245,193,24,0.08)', border: '1px solid rgba(245,193,24,0.25)' }}>
+            <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה חודשית</p>
+            <p className="text-4xl font-black leading-none" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
+            {incomeD != null && (
+              <span className="mt-2 self-start text-xs font-bold rounded-lg px-2 py-1"
+                style={{ background: incomeD > 0 ? 'rgba(134,239,172,0.15)' : 'rgba(252,165,165,0.15)', color: incomeD > 0 ? '#86efac' : '#fca5a5' }}>
+                {incomeD > 0 ? '↑' : '↓'} {Math.abs(incomeD)}% לעומת {fmtMonth(prev?.month)}
+              </span>
             )}
           </div>
+          {/* רווח נטו */}
+          <div className="rounded-2xl p-5 flex flex-col justify-between"
+            style={{ background: curNet >= 0 ? 'rgba(79,195,138,0.07)' : 'rgba(255,90,114,0.07)', border: `1px solid ${curNet >= 0 ? 'rgba(79,195,138,0.25)' : 'rgba(255,90,114,0.25)'}` }}>
+            <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>רווח נטו</p>
+            <p className="text-3xl font-black leading-none" style={{ color: curNet >= 0 ? '#4fc38a' : '#ff5a72' }}>{fmtFull(curNet)}</p>
+            <p className="text-[10px] mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>הוצ׳ {fmtFull(curExp)}</p>
+          </div>
+          {/* דרגה */}
+          <div className="rounded-2xl p-5 flex flex-col justify-between"
+            style={{ background: getRankColor(cur.current_rank) + '12', border: `1px solid ${getRankColor(cur.current_rank)}40` }}>
+            <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>דרגה נוכחית</p>
+            <p className="text-2xl font-black leading-none" style={{ color: getRankColor(cur.current_rank) }}>{cur.current_rank || '—'}</p>
+          </div>
+          {/* ספארקליין */}
           {sparkData.length > 1 && (
-            <div className="flex items-end gap-1 h-10 flex-shrink-0">
-              {sparkData.map((m, i) => {
-                const barH = Math.max(4, Math.round(num(m.total_income || m.amount) / maxIncome * 40));
-                return (
-                  <div key={i} onClick={() => setIdx(sorted.findIndex(s => s.month === m.month))}
-                    title={`${fmtMonth(m.month)}: ${fmtFull(num(m.total_income || m.amount))}`}
-                    className="cursor-pointer rounded-sm transition-opacity hover:opacity-80"
-                    style={{ width: 8, height: barH, background: m.month === cur.month ? '#F5C118' : 'rgba(245,193,24,0.25)', flexShrink: 0 }} />
-                );
-              })}
+            <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.28)' }}>היסטוריה</p>
+              <div className="flex items-end gap-1.5 h-12">
+                {sparkData.map((m, i) => {
+                  const barH = Math.max(6, Math.round(num(m.total_income || m.amount) / maxIncome * 48));
+                  const isActive = m.month === cur.month;
+                  return (
+                    <div key={i} onClick={() => setIdx(sorted.findIndex(s => s.month === m.month))}
+                      title={`${fmtMonth(m.month)}: ${fmtFull(num(m.total_income || m.amount))}`}
+                      className="cursor-pointer rounded transition-opacity hover:opacity-80 flex-1"
+                      style={{ height: barH, background: isActive ? '#F5C118' : 'rgba(245,193,24,0.2)' }} />
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
 
-        {/* ══ לבלוט ══ */}
-        <div>
-          <SectionHeader label="🎬 לבלוט — תוכן" />
-          <div className="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-2">
-            <Chip label="עוקבים"       value={cur.followers}    prev={prev?.followers}    color="#e1306c" fmt={v => Number(v).toLocaleString('he-IL')} />
-            <Chip label="חשיפה (Reach)" value={cur.reach}       prev={prev?.reach}        color="#38bdf8" fmt={v => num(v) >= 1000 ? `${Math.round(num(v)/1000)}K` : String(v)} />
-            <Chip label="פוסטים"        value={cur.posts_count} prev={prev?.posts_count}  color="#fcd34d" />
-            <Chip label="ממומן (₪)"     value={cur.paid_ads}    prev={prev?.paid_ads}     color="#f97316" fmt={fmtFull} />
+        {/* ══ לבלוט — תוכן ══ */}
+        <div className="rounded-2xl p-4" style={{ background: 'rgba(249,115,22,0.05)', border: '1px solid rgba(249,115,22,0.15)' }}>
+          <p className="text-xs font-bold mb-3" style={{ color: '#f97316' }}>🎬 לבלוט — תוכן</p>
+          <div className="grid grid-cols-4 gap-3 mb-4">
+            {[
+              { label: 'עוקבים',  value: cur.followers,    prev: prev?.followers,   color: '#e1306c', fmt: v => Number(v).toLocaleString('he-IL') },
+              { label: 'חשיפה',   value: cur.reach,        prev: prev?.reach,       color: '#38bdf8', fmt: v => num(v) >= 1000 ? `${Math.round(num(v)/1000)}K` : String(v) },
+              { label: 'פוסטים',  value: cur.posts_count,  prev: prev?.posts_count, color: '#fcd34d', fmt: v => v },
+              { label: 'ממומן',   value: cur.paid_ads,     prev: prev?.paid_ads,    color: '#f97316', fmt: fmtFull },
+            ].map(({ label, value, prev: p, color, fmt }) => (
+              <div key={label}>
+                <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                <p className="text-2xl font-black" style={{ color }}>{value != null && value !== '' ? fmt(value) : '—'}</p>
+                {p != null && p !== '' && value != null && <Delta value={num(value)} prev={num(p)} />}
+              </div>
+            ))}
           </div>
-          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתוכן</p>
+          <div>
+            <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתוכן</p>
             <SliderDisplay value={cur.content_confidence} color="#f97316" />
           </div>
         </div>
 
-        {/* ══ להוביל ══ */}
-        <div>
-          <SectionHeader label="🤝 להוביל — מכירות" />
-          <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 mb-2">
-            <Chip label="לידים"            value={cur.leads}               prev={prev?.leads}               color="#a78bfa" />
-            <Chip label="הצעות"            value={cur.proposals}           prev={prev?.proposals}           color="#818cf8" />
-            <Chip label="שיחות נקבעו"      value={cur.sales_calls_set}     prev={prev?.sales_calls_set}     color="#6366f1" />
-            <Chip label="הגיעו לשיחה"      value={cur.sales_calls_showed}  prev={prev?.sales_calls_showed}  color="#6366f1" />
-            <Chip label="נסגרו"            value={cur.closings_count}      prev={prev?.closings_count}      color="#4ade80" />
-            <Chip label="הצ״מ נשלחו"       value={cur.price_quotes_sent}    prev={prev?.price_quotes_sent}   color="#c4b5fd" />
-            <Chip label="הצ״מ אושרו"       value={cur.price_quotes_approved} prev={prev?.price_quotes_approved} color="#c4b5fd" />
-            <Chip label="שיחות אסטרטגיה"   value={cur.strategy_calls}      prev={prev?.strategy_calls}      color="#818cf8" />
+        {/* ══ להוביל — מכירות ══ */}
+        <div className="rounded-2xl p-4" style={{ background: 'rgba(139,92,246,0.05)', border: '1px solid rgba(139,92,246,0.15)' }}>
+          <p className="text-xs font-bold mb-3" style={{ color: '#8b5cf6' }}>🤝 להוביל — מכירות</p>
+          <div className="grid grid-cols-4 lg:grid-cols-8 gap-3 mb-4">
+            {[
+              { label: 'לידים',          value: cur.leads,                prev: prev?.leads,                color: '#a78bfa' },
+              { label: 'הצעות',          value: cur.proposals,            prev: prev?.proposals,            color: '#818cf8' },
+              { label: 'שיחות נקבעו',    value: cur.sales_calls_set,      prev: prev?.sales_calls_set,      color: '#6366f1' },
+              { label: 'הגיעו לשיחה',    value: cur.sales_calls_showed,   prev: prev?.sales_calls_showed,   color: '#6366f1' },
+              { label: 'נסגרו',          value: cur.closings_count,       prev: prev?.closings_count,       color: '#4ade80' },
+              { label: 'הצ״מ נשלחו',    value: cur.price_quotes_sent,    prev: prev?.price_quotes_sent,    color: '#c4b5fd' },
+              { label: 'הצ״מ אושרו',    value: cur.price_quotes_approved,prev: prev?.price_quotes_approved,color: '#c4b5fd' },
+              { label: 'שיחות אסטרטגיה',value: cur.strategy_calls,       prev: prev?.strategy_calls,       color: '#818cf8' },
+            ].map(({ label, value, prev: p, color }) => (
+              <div key={label}>
+                <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                <p className="text-2xl font-black" style={{ color }}>{value != null && value !== '' ? value : '—'}</p>
+                {p != null && p !== '' && value != null && <Delta value={num(value)} prev={num(p)} />}
+              </div>
+            ))}
           </div>
-          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתהליך המכירה</p>
+          <div>
+            <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתהליך המכירה</p>
             <SliderDisplay value={cur.sales_confidence} color="#8b5cf6" />
           </div>
         </div>
 
-        {/* ══ לשלוט ══ */}
-        <div>
-          <SectionHeader label="📋 לשלוט — לקוחות ופרויקטים" />
-          <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 mb-2">
-            <Chip label="לקוחות חדשים"   value={cur.new_clients}     prev={prev?.new_clients}     color="#4ade80" />
-            <Chip label="לקוחות פעילים"  value={cur.active_clients}  prev={prev?.active_clients}  color="#34d399" />
-            <Chip label="ריטיינרים (מס׳)" value={cur.retainers_count} prev={prev?.retainers_count} color="#2dd4bf" />
-          </div>
-          {cur.main_project && (
-            <div className="rounded-xl px-3 py-2.5 mb-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>פרויקט מרכזי</p>
-              <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{cur.main_project}</p>
+        {/* ══ לשלוט + לספק — שורה אחת ══ */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* לשלוט */}
+          <div className="rounded-2xl p-4" style={{ background: 'rgba(34,197,94,0.05)', border: '1px solid rgba(34,197,94,0.15)' }}>
+            <p className="text-xs font-bold mb-3" style={{ color: '#22c55e' }}>📋 לשלוט — לקוחות</p>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { label: 'לקוחות חדשים',    value: cur.new_clients,     prev: prev?.new_clients,     color: '#4ade80' },
+                { label: 'לקוחות פעילים',   value: cur.active_clients,  prev: prev?.active_clients,  color: '#34d399' },
+                { label: 'ריטיינרים (מס׳)', value: cur.retainers_count, prev: prev?.retainers_count, color: '#2dd4bf' },
+              ].map(({ label, value, prev: p, color }) => (
+                <div key={label}>
+                  <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                  <p className="text-2xl font-black" style={{ color }}>{value != null && value !== '' ? value : '—'}</p>
+                  {p != null && p !== '' && value != null && <Delta value={num(value)} prev={num(p)} />}
+                </div>
+              ))}
             </div>
-          )}
-          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>שביעות רצון לקוחות</p>
-            <SliderDisplay value={cur.client_satisfaction} color="#22c55e" />
+            {cur.main_project && (
+              <div className="rounded-xl px-3 py-2 mb-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <p className="text-[10px] mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>פרויקט מרכזי</p>
+                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{cur.main_project}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>שביעות רצון לקוחות</p>
+              <SliderDisplay value={cur.client_satisfaction} color="#22c55e" />
+            </div>
           </div>
-        </div>
 
-        {/* ══ לספק ══ */}
-        <div>
-          <SectionHeader label="💰 לספק — נתונים עסקיים" />
-          <div className="grid grid-cols-4 lg:grid-cols-7 gap-2 mb-2">
-            <Chip label="הכנסה כוללת"      value={curIncome}                prev={prevIncome}                color="#F5C118" fmt={fmtFull} />
-            <Chip label="עסקאות חדשות"      value={cur.total_new_deals}      prev={prev?.total_new_deals}     color="rgba(255,255,255,0.8)" fmt={fmtFull} />
-            <Chip label="ריטיינרים (₪)"    value={cur.retainers}            prev={prev?.retainers}           color="#fcd34d" fmt={fmtFull} />
-            <Chip label="רווח נטו"          value={curNet}                   prev={prevNet}                   color={curNet >= 0 ? '#4fc38a' : '#ff5a72'} fmt={fmtFull} />
-            <Chip label="הוצאות תוכנות"    value={cur.software_expenses}    prev={null}                      color="#fca5a5" fmt={fmtFull} />
-            <Chip label="הוצאות משתנות"    value={cur.variable_expenses}    prev={null}                      color="#fca5a5" fmt={fmtFull} />
-            <div className="rounded-xl p-3" style={{ background: getRankColor(cur.current_rank) + '18', border: `1px solid ${getRankColor(cur.current_rank)}44` }}>
-              <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>דרגה</p>
-              <p className="text-sm font-black" style={{ color: getRankColor(cur.current_rank) }}>{cur.current_rank || '—'}</p>
+          {/* לספק */}
+          <div className="rounded-2xl p-4" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)' }}>
+            <p className="text-xs font-bold mb-3" style={{ color: '#3b82f6' }}>💰 לספק — עסקים</p>
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {[
+                { label: 'עסקאות חדשות', value: cur.total_new_deals,  prev: prev?.total_new_deals, color: 'rgba(255,255,255,0.85)', fmt: fmtFull },
+                { label: 'ריטיינרים (₪)',value: cur.retainers,        prev: prev?.retainers,       color: '#fcd34d',                fmt: fmtFull },
+                { label: 'הוצ׳ תוכנות',  value: cur.software_expenses,prev: null,                  color: '#fca5a5',                fmt: fmtFull },
+                { label: 'הוצ׳ משתנות',  value: cur.variable_expenses,prev: null,                  color: '#fca5a5',                fmt: fmtFull },
+              ].map(({ label, value, prev: p, color, fmt }) => (
+                <div key={label}>
+                  <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                  <p className="text-lg font-black leading-tight" style={{ color }}>{value != null && value !== '' ? fmt(value) : '—'}</p>
+                  {p != null && value != null && <Delta value={num(value)} prev={num(p)} />}
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בביצועים העסקיים</p>
-            <SliderDisplay value={cur.business_confidence} color="#3b82f6" />
+            <div>
+              <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בביצועים העסקיים</p>
+              <SliderDisplay value={cur.business_confidence} color="#3b82f6" />
+            </div>
           </div>
         </div>
 
         {/* ══ רפלקשן ══ */}
-        <div>
-          <SectionHeader label="🔮 רפלקשן" />
-          <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>NPS — כמה ימליץ על התוכנית</p>
-            <SliderDisplay value={cur.nps} color="#ec4899" />
-          </div>
-          {[
-            { label: '🏆 הנצחון הגדול',              value: cur.biggest_win,      color: '#F5C118' },
-            { label: '👤 למי ימליץ להצטרף',          value: cur.recommendation,   color: 'rgba(255,255,255,0.78)' },
-            { label: '🛠 כלים / הכוונה שצריך',       value: cur.systems_needed,   color: 'rgba(255,255,255,0.78)' },
-            { label: '🎯 פוקוס לחודש הבא',            value: cur.focus_next_month, color: '#38bdf8' },
-            { label: '💬 פידבק לתוכנית',             value: cur.program_feedback, color: 'rgba(255,255,255,0.6)' },
-          ].filter(f => f.value).map(({ label, value, color }) => (
-            <div key={label} className="rounded-xl px-3 py-2.5 mb-2"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-              <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
-              <p className="text-sm leading-relaxed" style={{ color }}>{value}</p>
+        <div className="rounded-2xl p-4" style={{ background: 'rgba(236,72,153,0.05)', border: '1px solid rgba(236,72,153,0.15)' }}>
+          <div className="flex items-start justify-between gap-6 mb-4">
+            <p className="text-xs font-bold" style={{ color: '#ec4899' }}>🔮 רפלקשן</p>
+            <div className="flex items-center gap-3">
+              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>NPS</p>
+              <div className="flex items-center gap-2" style={{ minWidth: 180 }}>
+                <SliderDisplay value={cur.nps} color="#ec4899" />
+              </div>
             </div>
-          ))}
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { label: '🏆 הנצחון הגדול',         value: cur.biggest_win,      color: '#F5C118' },
+              { label: '👤 למי ימליץ להצטרף',     value: cur.recommendation,   color: 'rgba(255,255,255,0.78)' },
+              { label: '🛠 כלים / הכוונה שצריך',  value: cur.systems_needed,   color: 'rgba(255,255,255,0.78)' },
+              { label: '🎯 פוקוס לחודש הבא',       value: cur.focus_next_month, color: '#38bdf8' },
+              { label: '💬 פידבק לתוכנית',         value: cur.program_feedback, color: 'rgba(255,255,255,0.6)' },
+            ].filter(f => f.value).map(({ label, value, color }) => (
+              <div key={label} className="rounded-xl px-3 py-3"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
+                <p className="text-sm leading-relaxed font-medium" style={{ color }}>{value}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
       </>)}
