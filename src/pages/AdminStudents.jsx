@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import {
   TrendingDown, Calendar, ArrowUp, Users, RefreshCw,
@@ -517,6 +517,156 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile, 
   );
 }
 
+// ── Monthly Table ─────────────────────────────────────────────
+const MT_COLS = [
+  { key: 'name',                label: 'שם',              fmt: v => v,                          align: 'right' },
+  { key: 'month',               label: 'חודש',            fmt: v => fmtMonth(v),                align: 'right' },
+  { key: 'total_income',        label: 'הכנסה',           fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', align: 'left', color: '#F5C118' },
+  { key: 'net',                 label: 'נטו',             fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', align: 'left', color: '#4fc38a' },
+  { key: 'total_new_deals',     label: 'עסקאות חדשות',   fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', align: 'left' },
+  { key: 'retainers',          label: 'ריטיינרים',        fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', align: 'left' },
+  { key: 'paid_ads',            label: 'ממומן',           fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', align: 'left' },
+  { key: 'new_clients',         label: 'לקוחות חדשים',   fmt: v => v ?? '—', align: 'center' },
+  { key: 'active_clients',      label: 'פעילים',          fmt: v => v ?? '—', align: 'center' },
+  { key: 'leads',               label: 'לידים',           fmt: v => v ?? '—', align: 'center' },
+  { key: 'sales_calls_set',     label: 'שיחות נקבעו',    fmt: v => v ?? '—', align: 'center' },
+  { key: 'sales_calls_showed',  label: 'הגיעו',           fmt: v => v ?? '—', align: 'center' },
+  { key: 'closings_count',      label: 'סגירות',          fmt: v => v ?? '—', align: 'center' },
+  { key: 'current_rank',        label: 'דרגה',            fmt: v => v || '—', align: 'center' },
+];
+
+function MonthlyTable({ students }) {
+  const [search,  setSearch]  = useState('');
+  const [period,  setPeriod]  = useState('all');
+  const [sortKey, setSortKey] = useState('month');
+  const [sortDir, setSortDir] = useState(-1); // -1 = desc
+
+  const allMonths = useMemo(() => {
+    const months = new Set();
+    students.forEach(s => (s.monthly || []).forEach(m => months.add(m.month?.slice(0, 7))));
+    return [...months].sort().reverse();
+  }, [students]);
+
+  const rows = useMemo(() => {
+    const flat = students.flatMap(s =>
+      (s.monthly || []).map(m => ({
+        ...m,
+        name: s.name,
+        net: num(m.total_income || m.amount) - num(m.software_expenses) - num(m.variable_expenses) - num(m.paid_ads),
+      }))
+    );
+
+    return flat
+      .filter(r => {
+        if (search && !r.name?.toLowerCase().includes(search.toLowerCase())) return false;
+        if (period !== 'all') {
+          const rMonth = r.month?.slice(0, 7);
+          if (period === 'month' && allMonths[0] && rMonth !== allMonths[0]) return false;
+          if (period === '3m') {
+            const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 3);
+            if (new Date(r.month) < cutoff) return false;
+          }
+          if (period === '6m') {
+            const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 6);
+            if (new Date(r.month) < cutoff) return false;
+          }
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const av = a[sortKey] ?? '';
+        const bv = b[sortKey] ?? '';
+        if (typeof av === 'number' || !isNaN(Number(av))) return (Number(av) - Number(bv)) * sortDir;
+        return String(av).localeCompare(String(bv), 'he') * sortDir;
+      });
+  }, [students, search, period, sortKey, sortDir, allMonths]);
+
+  function toggleSort(key) {
+    if (sortKey === key) setSortDir(d => d * -1);
+    else { setSortKey(key); setSortDir(-1); }
+  }
+
+  const totalIncome = rows.reduce((s, r) => s + num(r.total_income || r.amount), 0);
+
+  return (
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2 flex-1 min-w-[180px]"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
+            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+        </div>
+
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          {[
+            { k: 'all',   l: 'כל הזמן' },
+            { k: 'month', l: 'חודש אחרון' },
+            { k: '3m',    l: '3 חודשים' },
+            { k: '6m',    l: '6 חודשים' },
+          ].map(t => (
+            <button key={t.k} onClick={() => setPeriod(t.k)}
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold transition whitespace-nowrap"
+              style={{ background: period === t.k ? 'rgba(255,255,255,0.12)' : 'transparent', color: period === t.k ? 'white' : 'rgba(255,255,255,0.35)' }}>
+              {t.l}
+            </button>
+          ))}
+        </div>
+
+        <div className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          {rows.length} דיווחים · הכנסה כוללת: <span style={{ color: '#F5C118', fontWeight: 700 }}>₪{totalIncome.toLocaleString('he-IL')}</span>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+        <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 900 }}>
+          <thead>
+            <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              {MT_COLS.map(col => (
+                <th key={col.key} onClick={() => toggleSort(col.key)}
+                  className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
+                  style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em', userSelect: 'none' }}>
+                  {col.label}
+                  {sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr><td colSpan={MT_COLS.length} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
+            ) : rows.map((r, i) => (
+              <tr key={`${r.user_id}-${r.month}-${i}`}
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
+                className="hover:bg-white/[0.03] transition">
+                {MT_COLS.map(col => {
+                  const val = r[col.key];
+                  const display = col.fmt(val);
+                  return (
+                    <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
+                      style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' || val === '—' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: 13 }}>
+                      {col.key === 'current_rank' && val ? (
+                        <span className="rounded-md px-2 py-0.5 text-[10px] font-bold"
+                          style={{ background: getRankColor(val) + '20', color: getRankColor(val), border: `1px solid ${getRankColor(val)}40` }}>
+                          {val}
+                        </span>
+                      ) : display}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Main ─────────────────────────────────────────────────────
 export default function AdminStudents() {
   const { user } = useUser();
@@ -525,6 +675,7 @@ export default function AdminStudents() {
   const [error,         setError]         = useState(null);
   const [filter,        setFilter]        = useState('all');
   const [openStudentId, setOpenStudentId] = useState(null);
+  const [view,          setView]          = useState('students'); // 'students' | 'monthly'
 
   function toggleStudent(id) {
     setOpenStudentId(prev => prev === id ? null : id);
@@ -610,12 +761,23 @@ export default function AdminStudents() {
             {active.length} פעילים · {archived.length} בארכיון
           </p>
         </div>
-        <button onClick={fetchStudents} disabled={loading}
-          className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition hover:opacity-80"
-          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
-          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-          רענן
-        </button>
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
+            {[{ k: 'students', l: 'תלמידים' }, { k: 'monthly', l: 'נתונים חודשיים' }].map(t => (
+              <button key={t.k} onClick={() => setView(t.k)}
+                className="rounded-lg px-4 py-1.5 text-sm font-semibold transition whitespace-nowrap"
+                style={{ background: view === t.k ? 'rgba(245,193,24,0.15)' : 'transparent', color: view === t.k ? '#F5C118' : 'rgba(255,255,255,0.4)', border: view === t.k ? '1px solid rgba(245,193,24,0.3)' : '1px solid transparent' }}>
+                {t.l}
+              </button>
+            ))}
+          </div>
+          <button onClick={fetchStudents} disabled={loading}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition hover:opacity-80"
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            רענן
+          </button>
+        </div>
       </div>
 
       {/* KPI cards */}
@@ -667,8 +829,8 @@ export default function AdminStudents() {
         </div>
       )}
 
-      {/* Filter */}
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.05)' }}>
+      {/* Filter — only in students view */}
+      {view === 'students' && <div className="flex gap-1 p-1 rounded-xl w-fit" style={{ background: 'rgba(255,255,255,0.05)' }}>
         {[
           { k: 'all',      l: `כולם (${active.length})` },
           { k: 'alerts',   l: `התראות (${alertList.length})` },
@@ -680,7 +842,7 @@ export default function AdminStudents() {
             {t.l}
           </button>
         ))}
-      </div>
+      </div>}
 
       {/* Error */}
       {error && (
@@ -693,8 +855,13 @@ export default function AdminStudents() {
         </div>
       )}
 
-      {/* Student list */}
-      {loading ? (
+      {/* Monthly table view */}
+      {view === 'monthly' && !loading && (
+        <MonthlyTable students={students.filter(s => s.is_active !== false)} />
+      )}
+
+      {/* Student list view */}
+      {view === 'students' && (loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="h-16 rounded-2xl animate-pulse" style={{ background: 'rgb(var(--bg-surface))' }} />
@@ -709,10 +876,10 @@ export default function AdminStudents() {
         </div>
       ) : (
         <StudentList list={displayed} />
-      )}
+      ))}
 
       {/* Archive */}
-      {!loading && archived.length > 0 && (
+      {view === 'students' && !loading && archived.length > 0 && (
         <details className="group">
           <summary className="flex items-center gap-2 cursor-pointer list-none py-2 px-1 rounded-lg hover:bg-white/5 transition"
             style={{ color: 'rgba(255,255,255,0.3)' }}>
