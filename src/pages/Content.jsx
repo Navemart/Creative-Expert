@@ -658,15 +658,17 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
       .map(h => ({
         date:  new Date(h.recorded_at).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }),
         value: h.followers ?? 0,
-      }));
+      }))
+      .reverse(); // RTL: newest on left
   } else {
     const monthly = buildMonthlyFromPosts(posts, activeMetric);
-    chartData = cutoff
+    chartData = (cutoff
       ? monthly.filter(d => {
           const [yr, mo] = d._key.split('-');
           return new Date(Number(yr), Number(mo) - 1, 1) >= cutoff;
         })
-      : monthly;
+      : monthly
+    ).slice().reverse(); // RTL: newest on left
   }
 
   // Current value display
@@ -678,8 +680,9 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
   const currentVal = currentValues[activeMetric];
 
   // Delta within selected range
+  // index-0 = newest (after RTL reverse), so delta = newest - oldest
   const delta = chartData.length >= 2
-    ? chartData[chartData.length - 1].value - chartData[0].value
+    ? chartData[0].value - chartData[chartData.length - 1].value
     : null;
 
   const hasData = chartData.length > 1;

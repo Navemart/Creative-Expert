@@ -227,7 +227,8 @@ export default function Analytics() {
   // ── Sorted submissions ────────────────────────────────────────
   const sorted = useMemo(() => [...months].sort((a,b) => new Date(a.month)-new Date(b.month)), [months]);
   const rangeN  = range==='3m' ? 3 : range==='6m' ? 6 : 12;
-  const slice   = useMemo(() => [...sorted].reverse().slice(0, rangeN).reverse(), [sorted, rangeN]);
+  // RTL: newest on left → reverse so recharts index-0 = newest (leftmost in LTR chart)
+  const slice   = useMemo(() => [...sorted].slice(-rangeN).reverse(), [sorted, rangeN]);
 
   const latest  = sorted[sorted.length-1] ?? null;
   const prev    = sorted[sorted.length-2] ?? null;
@@ -419,7 +420,7 @@ export default function Analytics() {
   })), [slice]);
 
   const salesN    = salesRange==='1m' ? 1 : salesRange==='3m' ? 3 : salesRange==='6m' ? 6 : 12;
-  const salesSlice = useMemo(() => [...sorted].reverse().slice(0, salesN).reverse(), [sorted, salesN]);
+  const salesSlice = useMemo(() => [...sorted].slice(-salesN).reverse(), [sorted, salesN]);
 
   const salesData = useMemo(() => {
     // Build month → pipeline closures map (using call_date as the closing date)
