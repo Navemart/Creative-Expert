@@ -15,7 +15,8 @@ import instagramRouter     from './routes/instagram.js';
 import facebookRouter     from './routes/facebook.js';
 import zoomRouter         from './routes/zoom.js';
 import authRouter         from './routes/auth.js';
-import adminRouter        from './routes/admin.js';
+import adminRouter           from './routes/admin.js';
+import instagramApifyRouter  from './routes/instagram-apify.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -40,6 +41,7 @@ app.use('/api/facebook',      facebookRouter);
 app.use('/api/zoom',          zoomRouter);
 app.use('/api/auth',          authRouter);
 app.use('/api/admin',         adminRouter);
+app.use('/api/instagram-apify', instagramApifyRouter);
 
 // -----------------------------------------------------------------------------
 // In production, serve the built frontend from /dist so everything runs on one

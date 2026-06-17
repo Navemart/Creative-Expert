@@ -1,0 +1,232 @@
+import express from 'express';
+import { createClient } from '@supabase/supabase-js';
+
+const router = express.Router();
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
+);
+
+const APIFY_TOKEN        = process.env.APIFY_TOKEN;
+const PROFILE_ACTOR_ID   = 'apify~instagram-profile-scraper';
+const POST_ACTOR_ID      = 'apify~instagram-post-scraper';
+const APIFY_BASE         = 'https://api.apify.com/v2';
+
+async function runActor(actorId, input, timeout = 120) {
+  const res = await fetch(
+    `${APIFY_BASE}/acts/${actorId}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=${timeout}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) },
+  );
+  if (!res.ok) throw new Error(`Apify ${actorId} error: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+async function scrapeInstagramProfile(username) {
+  const items = await runActor(PROFILE_ACTOR_ID, { usernames: [username] }, 90);
+  if (!items?.length) throw new Error('לא נמצא פרופיל עם שם זה');
+  return items[0];
+}
+
+async function scrapeInstagramPosts(username) {
+  try {
+    const items = await runActor(POST_ACTOR_ID, { username: [username], resultsLimit: 500 }, 300);
+    console.log(`[post-scraper] got ${items?.length ?? 0} posts for ${username}`);
+    return Array.isArray(items) ? items : [];
+  } catch(e) {
+    console.warn('[instagram-post-scraper] fallback to profile posts:', e.message);
+    return null;
+  }
+}
+
+// ── Normalize posts — works for both Profile Scraper and Post Scraper ──
+function normalizePosts(rawPosts = []) {
+  return rawPosts.map(p => ({
+    id:         p.id || p.shortCode,
+    type:       p.type || (p.videoUrl ? 'Video' : 'Image'),
+    shortCode:  p.shortCode,
+    url:        p.url || (p.shortCode ? `https://www.instagram.com/p/${p.shortCode}/` : null),
+    displayUrl: p.displayUrl || p.thumbnailUrl || null,
+    caption:    p.caption || p.alt || '',
+    likes:      p.likesCount    || p.likes    || 0,
+    comments:   p.commentsCount || p.comments || 0,
+    views:      p.videoViewCount || p.videoPlayCount || null,
+    timestamp:  p.timestamp,
+  }));
+}
+
+// ── Helper: compute stats from normalized posts ──────────────────
+function computePostStats(posts) {
+  const videoPosts = posts.filter(p => p.views != null && p.views > 0);
+  const avgViews = videoPosts.length
+    ? Math.round(videoPosts.reduce((s, p) => s + p.views, 0) / videoPosts.length) : 0;
+  const avgEng = posts.length
+    ? parseFloat((posts.reduce((s, p) => {
+        const denom = p.views || p.likes || 1;
+        return s + (p.likes + p.comments) / denom * 100;
+      }, 0) / posts.length).toFixed(2)) : 0;
+  return { avgViews, avgEng };
+}
+
+// ── GET /api/instagram-apify/proxy-image?url=xxx ────────────────
+router.get('/proxy-image', async (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).end();
+  try {
+    const r = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://www.instagram.com/',
+      },
+    });
+    if (!r.ok) return res.status(r.status).end();
+    res.set('Content-Type', r.headers.get('content-type') || 'image/jpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    const buf = await r.arrayBuffer();
+    res.send(Buffer.from(buf));
+  } catch(e) {
+    res.status(500).end();
+  }
+});
+
+// ── GET /api/instagram-apify/profile?userId=xxx ──────────────────
+router.get('/profile', async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ error: 'missing userId' });
+
+  const { data, error } = await supabase
+    .from('instagram_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data || null);
+});
+
+// ── POST /api/instagram-apify/connect ────────────────────────────
+// body: { userId, username }
+router.post('/connect', async (req, res) => {
+  const { userId, username } = req.body;
+  if (!userId || !username) return res.status(400).json({ error: 'missing fields' });
+
+  try {
+    const cleanUsername = username.replace('@', '');
+    const [raw, rawPostsFromScraper] = await Promise.all([
+      scrapeInstagramProfile(cleanUsername),
+      scrapeInstagramPosts(cleanUsername),
+    ]);
+    const now = new Date().toISOString();
+
+    // Prefer Post Scraper (more history), fall back to Profile Scraper's latestPosts
+    const postSource = rawPostsFromScraper?.length ? rawPostsFromScraper : (raw.latestPosts || []);
+    const posts = normalizePosts(postSource);
+    const { avgViews, avgEng } = computePostStats(posts);
+
+    const row = {
+      user_id:     userId,
+      username:    raw.username || cleanUsername,
+      full_name:   raw.fullName || null,
+      bio:         raw.biography || null,
+      followers:   raw.followersCount || 0,
+      following:   raw.followsCount   || 0,
+      posts_count: raw.postsCount     || 0,
+      profile_pic: raw.profilePicUrl  || null,
+      is_verified: raw.verified       || false,
+      is_business: raw.isBusinessAccount || false,
+      posts,
+      scraped_at:  now,
+    };
+
+    const { error: upsertErr } = await supabase
+      .from('instagram_profiles')
+      .upsert(row, { onConflict: 'user_id' });
+    if (upsertErr) throw new Error(upsertErr.message);
+
+    await supabase.from('instagram_history').insert({
+      user_id: userId, followers: row.followers,
+      following: row.following, posts_count: row.posts_count,
+      avg_views: avgViews, avg_engagement: avgEng,
+      recorded_at: now,
+    });
+
+    res.json({ ok: true, profile: row });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── POST /api/instagram-apify/refresh ────────────────────────────
+// body: { userId }
+router.post('/refresh', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'missing userId' });
+
+  const { data: existing } = await supabase
+    .from('instagram_profiles')
+    .select('username')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (!existing?.username) return res.status(404).json({ error: 'no profile connected' });
+
+  try {
+    const [raw, rawPostsFromScraper] = await Promise.all([
+      scrapeInstagramProfile(existing.username),
+      scrapeInstagramPosts(existing.username),
+    ]);
+    const now = new Date().toISOString();
+
+    const postSource = rawPostsFromScraper?.length ? rawPostsFromScraper : (raw.latestPosts || []);
+    const posts = normalizePosts(postSource);
+    const { avgViews, avgEng } = computePostStats(posts);
+
+    const row = {
+      user_id:     userId,
+      username:    raw.username || existing.username,
+      full_name:   raw.fullName || null,
+      bio:         raw.biography || null,
+      followers:   raw.followersCount || 0,
+      following:   raw.followsCount   || 0,
+      posts_count: raw.postsCount     || 0,
+      profile_pic: raw.profilePicUrl  || null,
+      is_verified: raw.verified       || false,
+      is_business: raw.isBusinessAccount || false,
+      posts,
+      scraped_at:  now,
+    };
+
+    await supabase.from('instagram_profiles').upsert(row, { onConflict: 'user_id' });
+    await supabase.from('instagram_history').insert({
+      user_id: userId, followers: row.followers,
+      following: row.following, posts_count: row.posts_count,
+      avg_views: avgViews, avg_engagement: avgEng,
+      recorded_at: now,
+    });
+    res.json({ ok: true, profile: row });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── GET /api/instagram-apify/history?userId=xxx ──────────────────
+router.get('/history', async (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ error: 'missing userId' });
+  const { data } = await supabase
+    .from('instagram_history')
+    .select('followers, avg_views, avg_engagement, recorded_at')
+    .eq('user_id', userId)
+    .order('recorded_at', { ascending: true });
+  res.json(data || []);
+});
+
+// ── DELETE /api/instagram-apify/disconnect ───────────────────────
+router.delete('/disconnect', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'missing userId' });
+  await supabase.from('instagram_profiles').delete().eq('user_id', userId);
+  res.json({ ok: true });
+});
+
+export default router;

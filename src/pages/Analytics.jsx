@@ -17,7 +17,7 @@ const MONTH_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','י
 function fmtMonth(d)  { if (!d) return '—'; const dt = new Date(d); return `${MONTH_HE[dt.getUTCMonth()]} ${dt.getUTCFullYear()}`; }
 function shortMonth(d){ if (!d) return ''; const dt = new Date(d); return `${MONTH_HE[dt.getUTCMonth()].slice(0,3)}`; }
 function fmtILS(n)    { const v = Number(n); if (!v && v !== 0) return '—'; if (v >= 1_000_000) return `₪${(v/1_000_000).toFixed(1)}M`; if (v >= 1_000) return `₪${Math.round(v/1_000)}K`; return '₪'+Math.round(v).toLocaleString('he-IL'); }
-function fmtFull(n)   { const v = Number(n); if (isNaN(v)) return '—'; return '₪'+Math.round(v).toLocaleString('he-IL'); }
+function fmtFull(n)   { const v = Number(n); if (isNaN(v)) return '—'; const abs = Math.abs(Math.round(v)).toLocaleString('he-IL'); return v < 0 ? `-₪${abs}` : `₪${abs}`; }
 function num(v)       { const n = Number(v); return isNaN(n) ? 0 : n; }
 function fmtDate(d)   { if (!d) return '—'; return new Date(d).toLocaleDateString('he-IL', { day:'numeric', month:'short', year:'2-digit' }); }
 
@@ -555,9 +555,13 @@ export default function Analytics() {
           icon={Clock}
         />
         <KpiCard
-          label="רווח אחרי הוצאות"
+          label={selNet < 0 && selIncome > 0 ? 'הפסד החודש' : 'רווח אחרי הוצאות'}
           value={selIncome > 0 ? fmtFull(selNet) : '—'}
-          sub={selIncome > 0 ? `${selNetPct}% מרווח` : '—'}
+          sub={selIncome > 0
+            ? selNet < 0
+              ? `${Math.abs(selNetPct)}% הפסד מההכנסה`
+              : `${selNetPct}% מרווח`
+            : '—'}
           color={selNet >= 0 ? '#86efac' : '#fca5a5'}
           trend={selNetTrend}
           icon={Target}

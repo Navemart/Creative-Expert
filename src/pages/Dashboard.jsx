@@ -21,6 +21,33 @@ const SEGMENTS = [
 ];
 const MAX_BAR = 35000;
 
+const FLYWHEEL_STAGES = [
+  {
+    key: 'building', label: 'בונה', dots: '🔴🔴', color: '#ef4444',
+    subtitle: 'אין עדיין הצעה שמוכרת ואין עדיין זרימת פניות',
+    requirements: [{ label: 'הצעה שמוכרת', ok: false }, { label: 'זרימת פניות', ok: false }],
+    tags: ['הצעה אחת', 'מכירה ראשונה', 'תיעוד'],
+  },
+  {
+    key: 'loaded', label: 'טעון', dots: '🟢🔴', color: '#f59e0b',
+    subtitle: 'יש הצעה שעובדת אבל אין עדיין זרימת פניות',
+    requirements: [{ label: 'הצעה שמוכרת', ok: true }, { label: 'זרימת פניות', ok: false }],
+    tags: ['ערוץ אחד', 'פעולה שבועית', 'מעקב'],
+  },
+  {
+    key: 'spinning', label: 'מסתובב', dots: '🟢🟢', color: '#22c55e',
+    subtitle: 'הצעה שעובדת וגם זרימת פניות',
+    requirements: [{ label: 'הצעה שמוכרת', ok: true }, { label: 'זרימת פניות', ok: true }],
+    tags: ['מיפוי תהליך', 'תבנות עבודה', 'תקרת לקוחות'],
+  },
+  {
+    key: 'compounding', label: 'מצטבר', dots: '🟢🟢🟢', color: '#3b82f6',
+    subtitle: 'הצעה, פניות, וגם מנוף שמשתלם',
+    requirements: [{ label: 'הצעה שמוכרת', ok: true }, { label: 'זרימת פניות', ok: true }, { label: 'מנוף', ok: true }],
+    tags: ['תמחור פרימיום', 'בחירת לקוחות', 'חופש'],
+  },
+];
+
 function getRank(amount) {
   return [...SEGMENTS].reverse().find(s => amount >= s.min) || SEGMENTS[0];
 }
@@ -765,8 +792,11 @@ export default function Dashboard() {
   const [confetti,         setConfetti]         = useState(false);
   const [rankUpRank,       setRankUpRank]       = useState(null); // null | SEGMENTS item
   const [dealProjectModal, setDealProjectModal] = useState(null); // { totalAmount, receivedAmount }
-  const [nextTask,         setNextTask]         = useState(undefined); // undefined=loading, null=none, obj=task
-  const [upcomingMeetings, setUpcomingMeetings] = useState(null);     // null=loading, []=none
+  const [nextTask,         setNextTask]         = useState(undefined);
+  const [upcomingMeetings, setUpcomingMeetings] = useState(null);
+  const [roadmapAllData,   setRoadmapAllData]   = useState(null);
+  const [diagnosisStatus,  setDiagnosisStatus]  = useState(null);
+  const [diagnosisContent, setDiagnosisContent] = useState(null);
 
   const navigate = useNavigate();
 
@@ -864,6 +894,17 @@ export default function Dashboard() {
       }
     }
     setNextTask(found);
+    setRoadmapAllData({ phases, weeks, tasks, completedIds });
+
+    // Fetch diagnosis status
+    const { data: dxData } = await supabase
+      .from('diagnosis_results').select('status').eq('user_id', userId).maybeSingle();
+    setDiagnosisStatus(dxData?.status || null);
+
+    // Fetch diagnosis content (same source as Diagnosis page)
+    const { data: dcData } = await supabase
+      .from('diagnosis_content').select('data').eq('id', 'default').maybeSingle();
+    if (dcData?.data?.stages) setDiagnosisContent(dcData.data.stages);
   }
 
   // Derived
@@ -1260,568 +1301,374 @@ export default function Dashboard() {
   const btnClass = "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-white/80 hover:bg-white/10 transition";
   const btnStyle = { borderColor: 'rgba(255,255,255,0.15)' };
 
-  return (
-    <div className="w-full space-y-6">
+  // ── Roadmap display data ─────────────────────────────────────
+  const rdPhases = (roadmapAllData?.phases || []);
+  const rdWeeks  = (roadmapAllData?.weeks  || []);
+  const rdTasks  = (roadmapAllData?.tasks  || []);
+  const rdDone   = roadmapAllData?.completedIds || new Set();
+  let rdCurrentPhase = rdPhases[0] || null;
+  let rdCurrentPhaseIndex = 1;
+  for (let i = 0; i < rdPhases.length; i++) {
+    const pw = rdWeeks.filter(w => w.phase_id === rdPhases[i].id);
+    const pt = pw.flatMap(w => rdTasks.filter(t => t.week_id === w.id));
+    if (pt.some(t => !rdDone.has(t.id))) { rdCurrentPhase = rdPhases[i]; rdCurrentPhaseIndex = i + 1; break; }
+    if (i === rdPhases.length - 1) { rdCurrentPhase = rdPhases[i]; rdCurrentPhaseIndex = rdPhases.length; }
+  }
+  let rdDisplayTasks = [], rdWeekTitle = '';
+  if (rdCurrentPhase) {
+    const pw = rdWeeks.filter(w => w.phase_id === rdCurrentPhase.id).sort((a,b) => (a.sort_order??0)-(b.sort_order??0));
+    for (const week of pw) {
+      const wt = rdTasks.filter(t => t.week_id === week.id).sort((a,b) => (a.sort_order??0)-(b.sort_order??0));
+      if (wt.some(t => !rdDone.has(t.id))) { rdDisplayTasks = wt; rdWeekTitle = week.title; break; }
+    }
+    if (!rdDisplayTasks.length && pw.length) {
+      const last = pw[pw.length - 1];
+      rdDisplayTasks = rdTasks.filter(t => t.week_id === last.id).sort((a,b) => (a.sort_order??0)-(b.sort_order??0));
+      rdWeekTitle = last.title;
+    }
+  }
 
-      {/* ── Greeting + action buttons ── */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-4xl font-bold text-white">{getGreeting()}, {firstName}.</h1>
-        </div>
-        <div className="flex flex-wrap gap-2 sm:justify-end">
+  return (
+    <div dir="rtl" className="w-full space-y-6">
+
+      {/* ── 1. Header ── */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-2xl sm:text-4xl font-bold text-white">{getGreeting()}, {firstName}.</h1>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setModal('deal')} className={btnClass} style={btnStyle}><Plus size={15} /> עסקה חדשה</button>
           <button onClick={() => { setWinStep(1); setModal('win'); }} className={btnClass} style={btnStyle}><Trophy size={15} /> נצחונות שבועיים</button>
           <button
             onClick={() => {
-              // Always open a fresh form — editing existing data is via "עריכת נתונים"
-              setMonthlyForm({
-                report_month: currentMonth,
-                total_new_deals: '', retainers: '', total_income: '',
-                software_expenses: '', variable_expenses: '', paid_ads: '',
-                current_rank: '', achieved_next_rank: '', business_confidence: '',
-                sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '',
-                leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '',
-                followers: '', reach: '', posts_count: '', content_confidence: '',
-                biggest_win: '', main_project: '', systems_needed: '',
-                nps: '', program_feedback: '',
-              });
-              setEditingSubmission(null);
-              setModal('monthly');
+              setMonthlyForm({ report_month: currentMonth, total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', biggest_win: '', main_project: '', systems_needed: '', nps: '', program_feedback: '' });
+              setEditingSubmission(null); setModal('monthly');
             }}
             className={btnClass} style={btnStyle}
-          >
-            <Calendar size={15} /> נתונים חודשיים
-          </button>
-          <button onClick={() => setModal('deal')}    className={btnClass} style={btnStyle}><Plus     size={15} /> עסקה חדשה</button>
+          ><Calendar size={15} /> נתונים חודשיים</button>
           <button onClick={() => setModal('edit')} className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90 transition"><Edit2 size={15} /> עריכת נתונים</button>
           {isAdmin && (
-            <button
-              onClick={() => setLabelEditMode(m => !m)}
-              className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-white/10"
-              style={labelEditMode
-                ? { borderColor: 'rgba(245,193,24,0.6)', color: '#F5C118' }
-                : btnStyle
-              }
-            >
-              <Settings2 size={15} />
-              {labelEditMode ? 'סיום עריכה' : 'עריכה'}
+            <button onClick={() => setLabelEditMode(m => !m)} className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-white/10"
+              style={labelEditMode ? { borderColor: 'rgba(245,193,24,0.6)', color: '#F5C118' } : btnStyle}>
+              <Settings2 size={15} />{labelEditMode ? 'סיום עריכה' : 'עריכה'}
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Progress bar ── */}
+      {/* ── 2. Progress bar ── */}
       <ProgressBar
-        current={currentAmount}
-        best={bestAmount}
-        rankAmount={rankAmount}
-        monthsCount={last2.length}
-        currentLabel={
-          currentMonthShort
-            ? (bestAmount > 0 && bestAmount === currentAmount
-                ? `${currentMonthShort} · שיא 🏆`
-                : currentMonthShort)
-            : 'אחרון'
-        }
+        current={currentAmount} best={bestAmount} rankAmount={rankAmount} monthsCount={last2.length}
+        currentLabel={currentMonthShort ? (bestAmount > 0 && bestAmount === currentAmount ? `${currentMonthShort} · שיא 🏆` : currentMonthShort) : 'אחרון'}
         bestLabel={bestMonthShort}
-        sectionLabel={
-          <EditableText
-            labelKey="section_progress"
-            labels={labels}
-            onSave={saveLabel}
-            editMode={labelEditMode}
-            className="text-sm"
-            style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}
-          />
-        }
+        sectionLabel={<EditableText labelKey="section_progress" labels={labels} onSave={saveLabel} editMode={labelEditMode} className="text-sm" style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }} />}
       />
 
-      {/* ── Stat cards ── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[
-          {
-            icon:     <Banknote size={18} />,
-            labelKey: 'stat_total_deals',
-            label:    'סך עסקאות חדשות',
-            value:    totalNewDeals !== null ? '₪' + totalNewDeals.toLocaleString('he-IL') : '—',
-            suffix:   '',
-            color:    '#F5C118',
-          },
-          {
-            icon:     <Users size={18} />,
-            labelKey: 'stat_new_clients',
-            label:    'לקוחות חדשים',
-            value:    newDealsThisMonth > 0 ? newDealsThisMonth : (activeClients !== null ? activeClients : '—'),
-            suffix:   'לקוחות',
-            color:    '#4fc38a',
-          },
-          {
-            icon:     <Plus size={18} />,
-            labelKey: 'stat_proposals',
-            label:    'הצעות שהצעתי',
-            value:    proposalsCount !== null ? proposalsCount : '—',
-            suffix:   proposalsCount !== null ? 'הצעות' : '',
-            color:    '#06b6d4',
-          },
-          {
-            icon:     <Image size={18} />,
-            labelKey: 'stat_posts',
-            label:    'פוסטים שפרסמתי',
-            value:    postsCount !== null ? postsCount : '—',
-            suffix:   postsCount !== null ? 'פוסטים' : '',
-            color:    '#a855f7',
-          },
-        ].map(({ icon, labelKey, label, value, suffix, color }) => (
-          <div
-            key={labelKey}
-            className="rounded-2xl p-3 sm:p-5 flex items-center gap-2 sm:gap-4"
-            style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <div
-              className="flex-none h-8 w-8 sm:h-10 sm:w-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: color + '1a', color }}
-            >
-              {icon}
+      {/* ── 3. Focus + Streak (ימין) | גרף הכנסות (שמאל) ── */}
+      <div className="flex gap-5" style={{ alignItems: 'stretch' }}>
+
+        {/* ימין: הצעד הבא + סטריק */}
+        <div className="flex flex-col gap-4" style={{ width: '37%', flexShrink: 0 }}>
+
+          {/* הצעד הבא */}
+          <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', flex: 1 }}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הצעד הבא</span>
+              <span className="text-sm font-semibold text-white">היום</span>
             </div>
-            <div className="min-w-0">
-              <div className="text-[10px] sm:text-xs mb-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {label}
-              </div>
-              <div dir="ltr" className="text-base sm:text-xl lg:text-2xl font-bold text-white leading-none truncate text-right">{value}</div>
-              {suffix && <div className="text-[10px] sm:text-[11px] text-white/30 mt-0.5">{suffix}</div>}
+            <div className="flex flex-col gap-2">
+              {isSunday && (
+                <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Trophy size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
+                  <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-white leading-tight">שלח נצחונות שבועיים</p><p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>שתף את הנצחונות שלך מהשבוע</p></div>
+                  <button onClick={() => { setWinStep(1); setModal('win'); }} className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
+                </div>
+              )}
+              {isMonthStart && (
+                <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Calendar size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
+                  <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-white leading-tight">מלא נתונים חודשיים</p><p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>סיכום חודשי לחודש הנוכחי</p></div>
+                  <button onClick={() => setModal('monthly')} className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
+                </div>
+              )}
+              {showRoadmapTask && (
+                <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><ListChecks size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{nextTask.title}</p>
+                    <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.38)' }}>{nextTask.phaseTitle}{nextTask.weekTitle ? ` · ${nextTask.weekTitle}` : ''}</p>
+                  </div>
+                  {nextTask.link
+                    ? <a href={nextTask.link} target="_blank" rel="noopener noreferrer" className="flex-none flex items-center gap-0.5 text-xs font-semibold hover:text-white" style={{ color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></a>
+                    : <button onClick={() => navigate('/roadmap')} className="flex-none flex items-center gap-0.5 text-xs font-semibold hover:text-white" style={{ color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></button>}
+                </div>
+              )}
+              {nextTask === null && !isSunday && !isMonthStart && <div className="flex items-center justify-center py-3"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>כל המשימות הושלמו 🎉</p></div>}
+              {nextTask === undefined && !isSunday && !isMonthStart && <div className="flex items-center justify-center py-3"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
             </div>
           </div>
-        ))}
+
+          {/* סטריק נצחונות */}
+          <div className="rounded-2xl p-5 space-y-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex items-center justify-between">
+              <EditableText labelKey="section_streak" labels={labels} onSave={saveLabel} editMode={labelEditMode} className="text-xs uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600 }} />
+              <Trophy size={15} className="text-white/25" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-bold text-white">{currentStreak}</span>
+              <span className="text-xs text-white/40">שבועות · הארוך ביותר {longestStreak}</span>
+            </div>
+            <div dir="ltr" style={{ display: 'flex', gap: 4 }}>
+              {weeklyHistory.map((hasWin, i) => (
+                <div key={i} style={{ flex: 1, height: 8, borderRadius: 99, background: hasWin ? '#F5C118' : 'rgba(255,255,255,0.08)', transition: 'background 0.25s' }} />
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* שמאל: גרף הכנסות */}
+        <div className="flex-1 rounded-2xl p-6" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-start justify-between mb-5">
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>הכנסה · {latestMonthLabel}</div>
+              <div className="mt-1 flex items-baseline gap-3 flex-wrap">
+                <span className="text-2xl sm:text-4xl font-bold text-white">₪{latestAmount.toLocaleString()}</span>
+                {prevMonthLabel && <span className="text-xs text-white/35">לעומת {prevMonthLabel} · ₪{prevAmount.toLocaleString()}</span>}
+              </div>
+            </div>
+            <div className="flex gap-1 rounded-lg p-1 flex-none" style={{ background: 'rgb(var(--bg-elevated))' }}>
+              {[{ key: '3M', label: '3M' }, { key: '6M', label: '6M' }, { key: '1Y', label: 'שנה' }].map(({ key, label }) => (
+                <button key={key} type="button" onClick={() => setChartRange(key)} className="rounded-md px-3 py-1 text-xs font-semibold transition"
+                  style={{ background: chartRange === key ? 'rgba(255,255,255,0.15)' : 'transparent', color: chartRange === key ? 'white' : 'rgba(255,255,255,0.35)' }}>{label}</button>
+              ))}
+            </div>
+          </div>
+          {chartData.length > 0 ? (
+            <div dir="ltr">
+              <ResponsiveContainer width="100%" height={200}>
+                <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#F5C118" stopOpacity={0.25} />
+                      <stop offset="100%" stopColor="#F5C118" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={48} />
+                  <Tooltip contentStyle={{ background: 'rgb(19,21,40)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 13 }} formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
+                  <Area type="monotone" dataKey="revenue" stroke="#F5C118" strokeWidth={2.5} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 5, fill: '#F5C118', stroke: '#fff', strokeWidth: 2 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="flex h-44 items-center justify-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>הגש את הסיכום החודשי הראשון שלך כדי לראות את הגרף 📈</div>
+          )}
+        </div>
       </div>
 
-      {/* ── Bottom grid ── */}
-      <div className="grid grid-cols-1 gap-6 wide:grid-cols-2">
+      {/* ── 4. שלבי הפלייוויל ── */}
+      {(() => {
+        // Merge hardcoded defaults with dynamic content from diagnosis_content table
+        const mergedStages = FLYWHEEL_STAGES.map(s => {
+          const db = diagnosisContent?.[s.key] || {};
+          return {
+            ...s,
+            label:        db.title        || s.label,
+            subtitle:     db.subtitle     || s.subtitle,
+            requirements: db.requirements || s.requirements,
+            tags:         db.tags         || s.tags,
+          };
+        });
+        const currentIdx   = mergedStages.findIndex(s => s.key === diagnosisStatus);
+        const currentStage = mergedStages[currentIdx] ?? null;
+        return (
+          <div className="space-y-4">
 
-        {/* Left column — streak + next-action + focus */}
-        <div className="flex flex-col gap-6 order-last wide:order-first">
-
-          {/* Streak + Next Action row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-            {/* Next Action block */}
-            <div
-              className="rounded-2xl p-5 flex flex-col gap-4"
-              style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                  הצעד הבא
-                </span>
-                <span className="text-sm font-semibold text-white">היום</span>
+            {/* Header — outside the cards */}
+            <div>
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                סטטוס הפלייוויל שלך
+              </p>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-2xl font-bold text-white">הרמה שלך</h2>
+                {currentStage && (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: currentStage.color + '25', color: currentStage.color }}>
+                    <span className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: currentStage.color }} />
+                    {currentStage.label} · שלב {currentIdx + 1} מתוך 4
+                  </span>
+                )}
               </div>
-
-              {/* Action items */}
-              <div className="flex flex-col gap-2">
-
-                {/* Sunday reminder */}
-                {isSunday && (
-                  <div
-                    className="flex items-center gap-3 rounded-xl p-3"
-                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <div
-                      className="flex-none h-9 w-9 rounded-xl flex items-center justify-center"
-                      style={{ background: 'rgba(255,255,255,0.07)' }}
-                    >
-                      <Trophy size={16} style={{ color: 'rgba(255,255,255,0.65)' }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white leading-tight">שלח נצחונות שבועיים</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>שתף את הנצחונות שלך מהשבוע</p>
-                    </div>
-                    <button
-                      onClick={() => { setWinStep(1); setModal('win'); }}
-                      className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-80"
-                      style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}
-                    >
-                      שלח
-                    </button>
-                  </div>
-                )}
-
-                {/* Month-start reminder */}
-                {isMonthStart && (
-                  <div
-                    className="flex items-center gap-3 rounded-xl p-3"
-                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <div
-                      className="flex-none h-9 w-9 rounded-xl flex items-center justify-center"
-                      style={{ background: 'rgba(255,255,255,0.07)' }}
-                    >
-                      <Calendar size={16} style={{ color: 'rgba(255,255,255,0.65)' }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white leading-tight">מלא נתונים חודשיים</p>
-                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>סיכום חודשי לחודש הנוכחי</p>
-                    </div>
-                    <button
-                      onClick={() => setModal('monthly')}
-                      className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-80"
-                      style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}
-                    >
-                      שלח
-                    </button>
-                  </div>
-                )}
-
-                {/* Next roadmap task — shown only if fewer than 2 reminders */}
-                {showRoadmapTask && (
-                  <div
-                    className="flex items-center gap-3 rounded-xl p-3"
-                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <div
-                      className="flex-none h-9 w-9 rounded-xl flex items-center justify-center"
-                      style={{ background: 'rgba(255,255,255,0.07)' }}
-                    >
-                      <ListChecks size={16} style={{ color: 'rgba(255,255,255,0.65)' }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{nextTask.title}</p>
-                      <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.38)' }}>
-                        {nextTask.phaseTitle}{nextTask.weekTitle ? ` · ${nextTask.weekTitle}` : ''}
-                      </p>
-                    </div>
-                    {nextTask.link ? (
-                      <a
-                        href={nextTask.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-none flex items-center gap-0.5 text-xs font-semibold transition hover:text-white"
-                        style={{ color: 'rgba(255,255,255,0.45)' }}
-                      >
-                        פתח <ChevronLeft size={13} />
-                      </a>
-                    ) : (
-                      <button
-                        onClick={() => navigate('/roadmap')}
-                        className="flex-none flex items-center gap-0.5 text-xs font-semibold transition hover:text-white"
-                        style={{ color: 'rgba(255,255,255,0.45)' }}
-                      >
-                        פתח <ChevronLeft size={13} />
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* All done */}
-                {nextTask === null && !isSunday && !isMonthStart && (
-                  <div className="flex items-center justify-center py-3">
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>כל המשימות הושלמו 🎉</p>
-                  </div>
-                )}
-
-                {/* Loading */}
-                {nextTask === undefined && !isSunday && !isMonthStart && (
-                  <div className="flex items-center justify-center py-3">
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p>
-                  </div>
-                )}
-
-              </div>
+              <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.42)' }}>
+                {currentStage ? currentStage.subtitle : 'בצע אבחון עסקי כדי לראות את השלב שלך.'}
+              </p>
             </div>
 
-            {/* Sunday Wins streak */}
-            <div
-              className="rounded-2xl p-5 space-y-3"
-              style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              <div className="flex items-center justify-between">
-                <EditableText
-                  labelKey="section_streak"
-                  labels={labels}
-                  onSave={saveLabel}
-                  editMode={labelEditMode}
-                  className="text-xs uppercase tracking-widest"
-                  style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}
-                />
-                <Trophy size={15} className="text-white/25" />
-              </div>
-
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl sm:text-4xl font-bold text-white">{currentStreak}</span>
-                <span className="text-xs text-white/40">
-                  שבועות · הארוך ביותר {longestStreak}
-                </span>
-              </div>
-
-              {/* Segmented bar — dir ltr כדי שהישן משמאל, החדש מימין */}
-              <div dir="ltr" style={{ display: 'flex', gap: 4 }}>
-                {weeklyHistory.map((hasWin, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      flex: 1, height: 8, borderRadius: 99,
-                      background: hasWin ? '#F5C118' : 'rgba(255,255,255,0.08)',
-                      transition: 'background 0.25s',
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-          </div>{/* end streak + next-action row */}
-
-          {/* Monthly focus + Upcoming meetings */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-          {/* Monthly focus */}
-          <div
-            className="rounded-2xl p-6 flex flex-col"
-            style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <EditableText
-                labelKey="section_focus"
-                labels={labels}
-                onSave={saveLabel}
-                editMode={labelEditMode}
-                className="text-xs uppercase tracking-widest"
-                style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}
-              />
-              <span className="text-xs text-white/25">
-                {latestMonthLabel}
-              </span>
-            </div>
-
-            {currentSubmission?.main_project ? (
-              <div className="flex-1 flex flex-col justify-between">
-                <div
-                  className="flex items-start gap-3 rounded-xl p-4"
-                  style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.07)' }}
-                >
-                  <div
-                    className="flex-none mt-0.5 h-7 w-7 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(245,193,24,0.15)', color: '#F5C118' }}
-                  >
-                    <TrendingUp size={15} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white leading-snug">
-                      {currentSubmission.main_project}
-                    </p>
-                    {currentSubmission.systems_needed && (
-                      <p className="mt-1.5 text-xs text-white/35 leading-relaxed line-clamp-2">
-                        {currentSubmission.systems_needed}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {currentSubmission.biggest_win && (
-                  <div className="mt-3 flex items-start gap-2">
-                    <Trophy size={13} className="flex-none mt-0.5 text-white/20" />
-                    <p className="text-xs text-white/35 leading-relaxed line-clamp-2">
-                      {currentSubmission.biggest_win}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <p className="text-sm text-white/20 text-center">
-                  מלא את הסיכום החודשי<br />כדי לראות את הפוקוס שלך כאן
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Upcoming meetings this week */}
-          <div
-            className="rounded-2xl p-5 flex flex-col gap-4"
-            style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                הפגישות הבאות
-              </span>
-              <Video size={15} className="text-white/25" />
-            </div>
-
-            {/* Meeting list */}
-            <div className="flex flex-col gap-2 flex-1">
-              {upcomingMeetings === null && (
-                <div className="flex-1 flex items-center justify-center">
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p>
-                </div>
-              )}
-
-              {upcomingMeetings?.length === 0 && (
-                <div className="flex-1 flex items-center justify-center">
-                  <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                    אין פגישות קרובות
-                  </p>
-                </div>
-              )}
-
-              {upcomingMeetings?.map(m => {
-                const isLab    = m.topic?.includes('מעבדת');
-                const dotColor = isLab ? '#67e8f9' : '#F5C118';
-
-                let dateLine = '';
-                let timeLine = '';
-                if (m.start_time) {
-                  const start = new Date(m.start_time);
-                  dateLine = start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' });
-                  timeLine = start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' })
-                    + (m.duration ? ` · ${m.duration} דק׳` : '');
-                } else {
-                  timeLine = m.duration ? `${m.duration} דק׳` : '';
-                }
-
+            {/* Stepper */}
+            <div className="flex items-center" style={{ paddingRight: 2, paddingLeft: 2 }}>
+              {mergedStages.map((stage, i) => {
+                const isPast = currentIdx > i;
+                const isCur  = currentIdx === i;
                 return (
-                  <div
-                    key={m.id}
-                    className="flex items-center gap-3 rounded-xl p-3"
-                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                      <Video size={15} style={{ color: 'rgba(255,255,255,0.4)' }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: dotColor }} />
-                        <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{m.topic}</p>
-                      </div>
-                      {dateLine && (
-                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)', paddingRight: '14px' }}>
-                          {dateLine}
-                        </p>
-                      )}
-                      {timeLine && (
-                        <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)', paddingRight: '14px' }}>
-                          {timeLine}
-                        </p>
-                      )}
-                    </div>
-                    {m.join_url && (
-                      <a
-                        href={m.join_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-80"
-                        style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.1)' }}
-                      >
-                        הצטרף
-                      </a>
+                  <div key={stage.key} className="flex items-center" style={{ flex: i < FLYWHEEL_STAGES.length - 1 ? '1' : 'none' }}>
+                    <div className="flex-none h-3.5 w-3.5 rounded-full" style={{
+                      background: isCur ? currentStage?.color : (isPast ? '#22c55e' : 'rgba(255,255,255,0.1)'),
+                      boxShadow: isCur ? `0 0 0 3px ${currentStage?.color}33` : 'none',
+                    }} />
+                    {i < FLYWHEEL_STAGES.length - 1 && (
+                      <div className="flex-1 h-px" style={{ background: isPast ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.07)' }} />
                     )}
                   </div>
                 );
               })}
             </div>
+
+            {/* 4 individual cards */}
+            <div className="grid grid-cols-4 gap-3">
+              {mergedStages.map(stage => {
+                const isCurrent = diagnosisStatus === stage.key;
+                return (
+                  <div key={stage.key} className="rounded-xl p-4 flex flex-col gap-3" style={{
+                    background: 'rgb(var(--bg-surface))',
+                    border: `1px solid ${isCurrent ? stage.color + '60' : 'rgba(255,255,255,0.07)'}`,
+                    boxShadow: isCurrent ? `0 0 0 1px ${stage.color}25` : 'none',
+                  }}>
+
+                    {/* Card header: stage name + requirement dots */}
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-sm font-bold text-white">{stage.label}</p>
+                      <div className="flex items-center gap-1 flex-none">
+                        {stage.requirements.map((req, ri) => (
+                          <span key={ri} className="h-2 w-2 rounded-full" style={{ background: req.ok ? '#22c55e' : '#ef4444' }} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Requirements list */}
+                    <div className="flex flex-col gap-1.5">
+                      {stage.requirements.map(req => (
+                        <div key={req.label} className="flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: req.ok ? '#22c55e' : '#ef4444' }} />
+                          <span className="text-xs leading-none" style={{ color: req.ok ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.38)' }}>
+                            {req.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Focus section */}
+                    <div className="mt-auto pt-1">
+                      <p className="text-[9px] uppercase tracking-widest font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.22)' }}>פוקוס</p>
+                      <div className="flex flex-wrap gap-1">
+                        {stage.tags.map(tag => (
+                          <span key={tag} className="text-[10px] font-medium" style={{
+                            ...(isCurrent
+                              ? { background: stage.color + '28', color: stage.color, padding: '2px 8px', borderRadius: 4 }
+                              : { color: 'rgba(255,255,255,0.55)', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.15)' }
+                            ),
+                          }}>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+
           </div>
+        );
+      })()}
 
-          </div>{/* end monthly focus + meetings grid */}
+      {/* ── 5. כרטיסי נתונים ── */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[
+          { icon: <Banknote size={18} />, label: 'סך עסקאות חדשות', value: totalNewDeals !== null ? '₪' + totalNewDeals.toLocaleString('he-IL') : '—', suffix: '', color: '#F5C118' },
+          { icon: <Users size={18} />, label: 'לקוחות פעילים', value: activeClients !== null ? activeClients : '—', suffix: activeClients !== null ? 'לקוחות' : '', color: '#4fc38a' },
+          { icon: <Plus size={18} />, label: 'הצעות שהצעתי', value: proposalsCount !== null ? proposalsCount : '—', suffix: proposalsCount !== null ? 'הצעות' : '', color: '#06b6d4' },
+          { icon: <Image size={18} />, label: 'פוסטים שפרסמתי', value: postsCount !== null ? postsCount : '—', suffix: postsCount !== null ? 'פוסטים' : '', color: '#a855f7' },
+        ].map(({ icon, label, value, suffix, color }) => (
+          <div key={label} className="rounded-2xl p-3 sm:p-5 flex items-center gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex-none h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: color + '1a', color }}>{icon}</div>
+            <div className="min-w-0">
+              <div className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</div>
+              <div dir="ltr" className="text-xl lg:text-2xl font-bold text-white leading-none text-right">{value}</div>
+              {suffix && <div className="text-[11px] text-white/30 mt-0.5">{suffix}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
 
+      {/* ── 6. צ'קליסט יישום (ימין) | פגישות קרובות (שמאל) ── */}
+      <div className="flex gap-5" style={{ alignItems: 'stretch' }}>
+
+        {/* ימין: צ'קליסט מפת הדרכים */}
+        <div className="flex-1 rounded-2xl p-5 flex flex-col gap-4" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div>
+            <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>יישום</span>
+            <div className="flex items-baseline gap-2 mt-1.5">
+              <p className="text-sm font-bold text-white">{rdCurrentPhase?.title || '...'}</p>
+              {rdPhases.length > 0 && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש {rdCurrentPhaseIndex} מתוך {rdPhases.length}</span>}
+            </div>
+            {rdWeekTitle && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{rdWeekTitle}</p>}
+          </div>
+          <div className="flex flex-col gap-0.5 flex-1">
+            {!roadmapAllData && <p className="text-xs text-center py-4" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
+            {rdDisplayTasks.map((task, i) => {
+              const done = rdDone.has(task.id);
+              return (
+                <div key={task.id} className="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-white/[0.03] transition group">
+                  <div className="flex-none h-5 w-5 rounded-full flex items-center justify-center" style={{ background: done ? '#F5C118' : 'transparent', border: done ? 'none' : '1.5px solid rgba(255,255,255,0.2)' }}>
+                    {done && <span className="text-[9px] font-bold" style={{ color: '#13152A' }}>✓</span>}
+                  </div>
+                  <span className="text-[10px] font-mono w-4 flex-none" style={{ color: 'rgba(255,255,255,0.2)' }}>{String(i+1).padStart(2,'0')}</span>
+                  <span className="flex-1 text-sm" style={{ color: done ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)', textDecoration: done ? 'line-through' : 'none' }}>{task.title}</span>
+                  {task.link && <a href={task.link} target="_blank" rel="noopener noreferrer" className="flex-none opacity-0 group-hover:opacity-100 transition" style={{ color: 'rgba(255,255,255,0.3)' }}><ExternalLink size={12} /></a>}
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={() => navigate('/roadmap')} className="text-xs font-medium transition text-start mt-auto" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            הצג מפת דרכים מלאה ←
+          </button>
         </div>
 
-        {/* Revenue chart */}
-        <div
-          className="rounded-2xl p-6 order-first wide:order-last"
-          style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          {/* Header */}
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest text-white/40">
-                הכנסה · {latestMonthLabel}
-              </div>
-              <div className="mt-1 flex items-baseline gap-3 flex-wrap">
-                <span className="text-2xl sm:text-4xl font-bold text-white">
-                  ₪{latestAmount.toLocaleString()}
-                </span>
-                {prevMonthLabel && (
-                  <span className="text-xs text-white/35">
-                    לעומת {prevMonthLabel} · ₪{prevAmount.toLocaleString()}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* טווח זמן — סדר הפוך במערך כי RTL, כדי שיוצג: 3M | 6M | שנה */}
-            <div className="flex gap-1 rounded-lg p-1 flex-none" style={{ background: 'rgb(var(--bg-elevated))' }}>
-              {[
-                { key: '3M', label: '3M' },
-                { key: '6M', label: '6M' },
-                { key: '1Y', label: 'שנה' },
-              ].map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setChartRange(key)}
-                  className="rounded-md px-3 py-1 text-xs font-semibold transition"
-                  style={{
-                    background: chartRange === key ? 'rgba(255,255,255,0.15)' : 'transparent',
-                    color:      chartRange === key ? 'white' : 'rgba(255,255,255,0.35)',
-                  }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+        {/* שמאל: פגישות קרובות */}
+        <div className="flex-1 rounded-2xl p-5 flex flex-col gap-4" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
+            <Video size={15} className="text-white/25" />
           </div>
-
-          {chartData.length > 0 ? (
-            /* dir=ltr: keeps recharts SVG rendering correct; data is already reversed for RTL */
-            <div dir="ltr">
-            <ResponsiveContainer width="100%" height={180}>
-              <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%"   stopColor="#F5C118" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="#F5C118" stopOpacity={0}    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 11 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={v => v === 0 ? '₪0' : `₪${v / 1000}K`}
-                  width={48}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgb(19,21,40)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: 10,
-                    color: 'white',
-                    fontSize: 13,
-                  }}
-                  formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']}
-                  cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#F5C118"
-                  strokeWidth={2.5}
-                  fill="url(#revenueGrad)"
-                  dot={false}
-                  activeDot={{ r: 5, fill: '#F5C118', stroke: '#fff', strokeWidth: 2 }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="flex h-44 items-center justify-center text-sm text-white/25">
-              הגש את הסיכום החודשי הראשון שלך כדי לראות את הגרף 📈
-            </div>
-          )}
+          <div className="flex flex-col gap-2 flex-1">
+            {upcomingMeetings === null && <div className="flex-1 flex items-center justify-center"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
+            {upcomingMeetings?.length === 0 && <div className="flex-1 flex items-center justify-center"><p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p></div>}
+            {upcomingMeetings?.map(m => {
+              const dotColor = m.topic?.includes('מעבדת') ? '#67e8f9' : '#F5C118';
+              let dateLine = '', timeLine = '';
+              if (m.start_time) {
+                const start = new Date(m.start_time);
+                dateLine = start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' });
+                timeLine = start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) + (m.duration ? ` · ${m.duration} דק׳` : '');
+              } else { timeLine = m.duration ? `${m.duration} דק׳` : ''; }
+              return (
+                <div key={m.id} className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}><Video size={15} style={{ color: 'rgba(255,255,255,0.4)' }} /></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: dotColor }} />
+                      <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{m.topic}</p>
+                    </div>
+                    {dateLine && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)', paddingRight: '14px' }}>{dateLine}</p>}
+                    {timeLine && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)', paddingRight: '14px' }}>{timeLine}</p>}
+                  </div>
+                  {m.join_url && <a href={m.join_url} target="_blank" rel="noopener noreferrer" className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.1)' }}>הצטרף</a>}
+                </div>
+              );
+            })}
+          </div>
         </div>
+
       </div>
 
       {/* ── Deal → Open Project popup ── */}

@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { useSearchParams } from 'react-router-dom';
 import {
-  Instagram, Users, Eye, Heart, TrendingUp,
+  Instagram, Users, Heart, TrendingUp,
   RefreshCw, LogOut, ExternalLink, MessageCircle, AlertCircle,
+  Video, Image, Layers,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -537,93 +537,535 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
 }
 
 
-// ── root component ────────────────────────────────────────────
-export default function Content() {
-  const { user }     = useUser();
-  const userId       = user?.id;
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const [state,      setState]      = useState('loading'); // loading | connected | disconnected
-  const [profile,    setProfile]    = useState(null);
-  const [media,      setMedia]      = useState([]);
-  const [insights,   setInsights]   = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [oauthError, setOauthError] = useState(false);
-
-  // Handle redirect from Instagram OAuth callback
-  useEffect(() => {
-    const ig = searchParams.get('ig');
-    if (ig === 'error') setOauthError(true);
-    if (ig) setSearchParams({});
-  }, []); // eslint-disable-line
-
-  const loadAll = useCallback(async () => {
-    if (!userId) return;
-    setRefreshing(true);
-    try {
-      const [profileRes, mediaRes, insightsRes] = await Promise.all([
-        fetch(`/api/instagram/profile?userId=${userId}`),
-        fetch(`/api/instagram/media?userId=${userId}&limit=100`),
-        fetch(`/api/instagram/insights?userId=${userId}&days=90`),
-      ]);
-      const [pd, md, id] = await Promise.all([profileRes.json(), mediaRes.json(), insightsRes.json()]);
-
-      if (!pd.connected) { setState('disconnected'); return; }
-
-      setProfile(pd.profile  || null);
-      setMedia(md.data       || []);
-      setInsights(id         || null);
-      setState('connected');
-    } finally {
-      setRefreshing(false);
-    }
-  }, [userId]);
-
-  useEffect(() => {
-    if (!userId) return;
-    (async () => {
-      // Quick status check first (no API call to Instagram)
-      const r    = await fetch(`/api/instagram/status?userId=${userId}`);
-      const data = await r.json();
-      if (data.connected) {
-        setState('connected');
-        loadAll();
-      } else {
-        setState('disconnected');
-      }
-    })();
-  }, [userId]); // eslint-disable-line
-
-  async function handleDisconnect() {
-    await fetch(`/api/instagram/disconnect?userId=${userId}`, { method: 'DELETE' });
-    setState('disconnected');
-    setProfile(null);
-    setMedia([]);
-    setInsights(null);
-  }
-
-  if (state === 'loading') {
-    return (
-      <div className="w-full space-y-4" dir="rtl">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: 'rgb(var(--bg-surface))' }} />
-        ))}
+// ── Apify connect screen ──────────────────────────────────────
+function ApifyConnectScreen({ onConnect, loading, error }) {
+  const [username, setUsername] = useState('');
+  return (
+    <div className="w-full flex flex-col items-center justify-center py-24 gap-8" dir="rtl">
+      <div className="h-20 w-20 rounded-2xl flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}>
+        <Instagram size={40} color="white" />
       </div>
-    );
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold text-white">חבר את האינסטגרם שלך</h2>
+        <p className="text-sm max-w-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          הכנס את שם המשתמש שלך באינסטגרם ונביא את הנתונים שלך.
+        </p>
+      </div>
+      {error && (
+        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+          style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
+          <AlertCircle size={15} />
+          {error}
+        </div>
+      )}
+      <div className="flex items-center gap-2 w-full max-w-sm">
+        <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>@</span>
+        <input
+          value={username}
+          onChange={e => setUsername(e.target.value.replace('@', '').trim())}
+          onKeyDown={e => e.key === 'Enter' && username && onConnect(username)}
+          placeholder="שם_משתמש"
+          dir="ltr"
+          className="flex-1 rounded-xl px-4 py-3 text-sm text-white outline-none"
+          style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.15)' }}
+        />
+        <button
+          onClick={() => username && onConnect(username)}
+          disabled={!username || loading}
+          className="rounded-xl px-5 py-3 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
+          style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', color: 'white' }}
+        >
+          {loading ? <RefreshCw size={15} className="animate-spin" /> : 'חבר'}
+        </button>
+      </div>
+      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
+        ניתן להשתמש בפרופיל ציבורי בלבד
+      </p>
+    </div>
+  );
+}
+
+// ── helpers ────────────────────────────────────────────────────
+const TYPE_LABEL = { Video: 'וידאו', Sidecar: 'קרוסלה', Image: 'תמונה' };
+const TYPE_COLOR = { Video: '#818cf8', Sidecar: '#34d399', Image: '#f472b6' };
+function TypeIcon({ type, size = 11 }) {
+  if (type === 'Video')   return <Video   size={size} />;
+  if (type === 'Sidecar') return <Layers  size={size} />;
+  return <Image size={size} />;
+}
+function engPct(post) {
+  if (!post.views && post.views !== 0) return null; // image/carousel – no views
+  const total = (post.likes || 0) + (post.comments || 0);
+  const denom = post.views || post.likes || 1;
+  return (total / denom * 100).toFixed(1);
+}
+
+// ── unified metric chart ──────────────────────────────────────
+const METRICS = [
+  { key: 'followers',      label: 'עוקבים',   color: '#833ab4', fmt: fmtK },
+  { key: 'avg_views',      label: 'חשיפה',     color: '#06b6d4', fmt: fmtK },
+  { key: 'avg_engagement', label: 'מעורבות',   color: '#f97316', fmt: v => `${v}%` },
+];
+const RANGES = [
+  { key: '3m',  label: '3 חודשים', months: 3  },
+  { key: '6m',  label: 'חצי שנה',  months: 6  },
+  { key: '1y',  label: 'שנה',       months: 12 },
+  { key: 'all', label: 'הכל',       months: null },
+];
+
+// build monthly chart from posts array (views / engagement)
+function buildMonthlyFromPosts(posts, metricKey) {
+  const byMonth = {};
+  posts.forEach(p => {
+    if (!p.timestamp) return;
+    const d = new Date(p.timestamp);
+    const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!byMonth[key]) byMonth[key] = { views: [], eng: [] };
+    if (p.views > 0) byMonth[key].views.push(p.views);
+    const denom = p.views || p.likes || 1;
+    byMonth[key].eng.push((p.likes + p.comments) / denom * 100);
+  });
+  return Object.entries(byMonth)
+    .sort(([a],[b]) => a.localeCompare(b))
+    .map(([key, v]) => {
+      const [yr, mo] = key.split('-');
+      const date = new Date(Number(yr), Number(mo)-1).toLocaleDateString('he-IL', { month: 'short', year: '2-digit' });
+      const value = metricKey === 'avg_views'
+        ? (v.views.length ? Math.round(v.views.reduce((s,x)=>s+x,0)/v.views.length) : 0)
+        : parseFloat((v.eng.reduce((s,x)=>s+x,0)/v.eng.length).toFixed(2));
+      return { date, value, _key: key };
+    });
+}
+
+function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
+  const [activeMetric, setActiveMetric] = useState('followers');
+  const [activeRange,  setActiveRange]  = useState('3m');
+
+  const metric = METRICS.find(m => m.key === activeMetric);
+  const range  = RANGES.find(r => r.key === activeRange);
+
+  const cutoff = range.months
+    ? new Date(Date.now() - range.months * 30 * 24 * 3600 * 1000)
+    : null;
+
+  // For followers — use history snapshots
+  // For views/engagement — derive from posts by month (much richer data)
+  let chartData;
+  if (activeMetric === 'followers') {
+    chartData = history
+      .filter(h => !cutoff || new Date(h.recorded_at) >= cutoff)
+      .map(h => ({
+        date:  new Date(h.recorded_at).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }),
+        value: h.followers ?? 0,
+      }));
+  } else {
+    const monthly = buildMonthlyFromPosts(posts, activeMetric);
+    chartData = cutoff
+      ? monthly.filter(d => {
+          const [yr, mo] = d._key.split('-');
+          return new Date(Number(yr), Number(mo) - 1, 1) >= cutoff;
+        })
+      : monthly;
   }
 
-  if (state === 'disconnected') {
-    return <ConnectScreen userId={userId} error={oauthError} />;
+  // Current value display
+  const currentValues = {
+    followers:      followers,
+    avg_views:      curAvgViews,
+    avg_engagement: curAvgEng,
+  };
+  const currentVal = currentValues[activeMetric];
+
+  // Delta within selected range
+  const delta = chartData.length >= 2
+    ? chartData[chartData.length - 1].value - chartData[0].value
+    : null;
+
+  const hasData = chartData.length > 1;
+
+  return (
+    <div className="rounded-2xl p-5"
+      style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+
+      {/* ── top row: metric tabs (right) + range tabs (left) ── */}
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+        {/* Metric tabs */}
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          {METRICS.map(m => (
+            <button key={m.key} onClick={() => setActiveMetric(m.key)}
+              className="rounded-lg px-4 py-1.5 text-sm font-semibold transition-all"
+              style={{
+                background: activeMetric === m.key ? m.color + '22' : 'transparent',
+                color:      activeMetric === m.key ? m.color        : 'rgba(255,255,255,0.35)',
+                border:     activeMetric === m.key ? `1px solid ${m.color}44` : '1px solid transparent',
+              }}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Range tabs */}
+        <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          {RANGES.map(r => (
+            <button key={r.key} onClick={() => setActiveRange(r.key)}
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
+              style={{
+                background: activeRange === r.key ? 'rgba(255,255,255,0.12)' : 'transparent',
+                color:      activeRange === r.key ? 'white'                  : 'rgba(255,255,255,0.3)',
+              }}>
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── current value + delta ── */}
+      <div className="mb-4">
+        <p className="text-4xl font-black text-white leading-none">
+          {metric.fmt(currentVal)}
+        </p>
+        {delta != null && (
+          <p className="text-sm mt-1.5 font-semibold" style={{ color: delta >= 0 ? '#4ade80' : '#ef4444' }}>
+            {delta >= 0 ? '+' : ''}{metric.fmt(delta)} ב{range.label}
+          </p>
+        )}
+      </div>
+
+      {/* ── chart ── */}
+      {hasData ? (
+        <div dir="ltr" key={activeMetric}>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id={`grad_${activeMetric}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stopColor={metric.color} stopOpacity={0.3} />
+                  <stop offset="100%" stopColor={metric.color} stopOpacity={0}   />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.28)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: 10 }} axisLine={false} tickLine={false}
+                tickFormatter={metric.fmt} width={48} domain={['auto', 'auto']} />
+              <Tooltip
+                contentStyle={{ background: 'rgba(8,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 12 }}
+                formatter={v => [metric.fmt(v), metric.label]}
+              />
+              <Area type="monotone" dataKey="value" stroke={metric.color} strokeWidth={2.5}
+                fill={`url(#grad_${activeMetric})`}
+                dot={{ r: 3.5, fill: metric.color, stroke: 'rgb(var(--bg-surface))', strokeWidth: 1.5 }}
+                activeDot={{ r: 5, fill: metric.color }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-2" style={{ height: 200, color: 'rgba(255,255,255,0.18)' }}>
+          <TrendingUp size={30} />
+          <p className="text-sm text-center">הגרף יתמלא לאחר מספר רענונים<br/>לחץ "רענן" מדי פעם</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── image with proxy fallback ────────────────────────────────
+function ProxiedImage({ src, alt, className, style }) {
+  const [url, setUrl] = useState(src ? `/api/instagram-apify/proxy-image?url=${encodeURIComponent(src)}` : null);
+  if (!url) return null;
+  return (
+    <img src={url} alt={alt || ''} className={className} style={style}
+      onError={() => setUrl(null)} />
+  );
+}
+
+// ── Apify profile dashboard ───────────────────────────────────
+function ApifyDashboard({ profile, history, onDisconnect, onRefresh, refreshing }) {
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [sortCol,  setSortCol]  = useState('timestamp');
+  const [sortDir,  setSortDir]  = useState('desc');
+
+  const scrapedAt = profile.scraped_at
+    ? new Date(profile.scraped_at).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+  // Current values from posts
+  const posts = Array.isArray(profile.posts) ? profile.posts : [];
+  const videoPosts = posts.filter(p => p.views > 0);
+  const curAvgViews = videoPosts.length
+    ? Math.round(videoPosts.reduce((s, p) => s + p.views, 0) / videoPosts.length) : 0;
+  const curAvgEng = posts.length
+    ? parseFloat((posts.reduce((s, p) => {
+        const d = p.views || p.likes || 1;
+        return s + (p.likes + p.comments) / d * 100;
+      }, 0) / posts.length).toFixed(1)) : 0;
+
+  // Posts table
+  const filtered = typeFilter === 'all' ? posts : posts.filter(p => p.type === typeFilter);
+  const sorted = [...filtered].sort((a, b) => {
+    const aVal = sortCol === 'timestamp' ? new Date(a.timestamp) : (a[sortCol] ?? -1);
+    const bVal = sortCol === 'timestamp' ? new Date(b.timestamp) : (b[sortCol] ?? -1);
+    return sortDir === 'desc' ? bVal - aVal : aVal - bVal;
+  });
+  function toggleSort(col) {
+    if (sortCol === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setSortCol(col); setSortDir('desc'); }
   }
 
   return (
-    <InstagramDashboard
-      userId={userId}
+    <div className="w-full space-y-5" dir="rtl">
+
+      {/* ── Profile header ── */}
+      <div className="rounded-2xl p-5 flex items-center gap-4"
+        style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+
+        {profile.profile_pic ? (
+          <ProxiedImage src={profile.profile_pic} alt={profile.username}
+            className="h-14 w-14 rounded-full object-cover flex-none"
+            style={{ border: '2px solid rgba(255,255,255,0.15)' }} />
+        ) : (
+          <div className="h-14 w-14 rounded-full flex items-center justify-center flex-none"
+            style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)' }}>
+            <Instagram size={24} color="white" />
+          </div>
+        )}
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-base font-bold text-white">@{profile.username}</span>
+            {profile.is_verified && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa' }}>✓ מאומת</span>}
+            <a href={`https://instagram.com/${profile.username}`} target="_blank" rel="noopener noreferrer"
+              className="p-1 rounded hover:bg-white/10 transition" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              <ExternalLink size={12} />
+            </a>
+          </div>
+          {profile.bio && <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{profile.bio}</p>}
+          {scrapedAt && <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>עודכן {scrapedAt}</p>}
+        </div>
+
+        <div className="flex gap-6 flex-none text-center px-2">
+          <div>
+            <p className="text-xl font-black text-white">{fmtK(profile.followers)}</p>
+            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.38)' }}>עוקבים</p>
+          </div>
+          <div>
+            <p className="text-xl font-black text-white">{fmtK(profile.posts_count)}</p>
+            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.38)' }}>פוסטים</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-none">
+          <button onClick={onRefresh} disabled={refreshing}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition hover:bg-white/10"
+            style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+            <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
+            {refreshing ? 'טוען...' : 'רענן'}
+          </button>
+          <button onClick={onDisconnect}
+            className="rounded-lg p-1.5 hover:bg-white/10 transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <LogOut size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* ── unified metric chart ── */}
+      <MetricChart
+        history={history}
+        posts={posts}
+        followers={profile.followers}
+        curAvgViews={curAvgViews}
+        curAvgEng={curAvgEng}
+      />
+
+      {/* ── Latest content table ── */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Controls */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-wrap gap-3">
+          <div>
+            <p className="text-sm font-bold text-white">תוכן אחרון</p>
+            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.28)' }}>{posts.length} פוסטים</p>
+          </div>
+          <div className="flex gap-1 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {['all', 'Video', 'Sidecar', 'Image'].map(t => (
+              <button key={t} onClick={() => setTypeFilter(t)}
+                className="rounded-md px-3 py-1 text-xs font-semibold transition-all"
+                style={{ background: typeFilter === t ? 'rgba(255,255,255,0.12)' : 'transparent', color: typeFilter === t ? 'white' : 'rgba(255,255,255,0.32)' }}>
+                {t === 'all' ? 'הכל' : TYPE_LABEL[t]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Table header */}
+        <div className="grid px-5 pb-2" style={{ gridTemplateColumns: '52px 1fr 90px 72px 72px 72px 82px' }}>
+          {[
+            { k: null,        l: '' },
+            { k: null,        l: 'כיתוב' },
+            { k: 'timestamp', l: 'פורסם' },
+            { k: 'views',     l: 'צפיות' },
+            { k: 'likes',     l: 'לייקים' },
+            { k: 'comments',  l: 'תגובות' },
+            { k: null,        l: 'Engagement' },
+          ].map(({ k, l }) => (
+            <button key={l} onClick={() => k && toggleSort(k)} disabled={!k}
+              className="text-[10px] font-bold uppercase tracking-widest text-right"
+              style={{ color: sortCol === k ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)', cursor: k ? 'pointer' : 'default' }}>
+              {l}{sortCol === k ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
+            </button>
+          ))}
+        </div>
+
+        {/* Rows */}
+        {sorted.length === 0 ? (
+          <div className="px-5 py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פוסטים</div>
+        ) : sorted.map((post, i) => {
+          const eng = engPct(post);
+          const daysAgo = post.timestamp
+            ? Math.floor((Date.now() - new Date(post.timestamp)) / 86_400_000)
+            : null;
+          return (
+            <div key={post.id || i} className="grid px-5 py-3 items-center hover:bg-white/[0.02] transition"
+              style={{ gridTemplateColumns: '52px 1fr 90px 72px 72px 72px 82px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+
+              {/* Thumbnail */}
+              <a href={post.url} target="_blank" rel="noopener noreferrer" className="block">
+                {post.displayUrl ? (
+                  <ProxiedImage src={post.displayUrl} alt=""
+                    className="h-10 w-10 rounded-lg object-cover"
+                    style={{}} />
+                ) : (
+                  <div className="h-10 w-10 rounded-lg flex items-center justify-center"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: TYPE_COLOR[post.type] || 'white' }}>
+                    <TypeIcon type={post.type} size={14} />
+                  </div>
+                )}
+              </a>
+
+              {/* Caption + type badge */}
+              <div className="min-w-0 pr-3">
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded mb-0.5"
+                  style={{ background: (TYPE_COLOR[post.type] || '#fff') + '18', color: TYPE_COLOR[post.type] || 'white' }}>
+                  <TypeIcon type={post.type} size={9} />
+                  {TYPE_LABEL[post.type] || post.type}
+                </span>
+                <p className="text-xs text-white truncate max-w-xs leading-snug" style={{ direction: 'rtl' }}>
+                  {post.caption?.slice(0, 80) || '—'}
+                </p>
+              </div>
+
+              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                {daysAgo === 0 ? 'היום' : daysAgo === 1 ? 'אתמול' : daysAgo != null ? `לפני ${daysAgo}י` : '—'}
+              </p>
+              <p className="text-sm font-semibold" style={{ color: post.views ? 'white' : 'rgba(255,255,255,0.2)' }}>
+                {post.views != null && post.views > 0 ? fmtK(post.views) : '—'}
+              </p>
+              <p className="text-sm font-semibold text-white">{fmtK(post.likes)}</p>
+              <p className="text-sm font-semibold text-white">{fmtK(post.comments)}</p>
+              <p className="text-sm font-semibold" style={{ color: eng ? '#4ade80' : 'rgba(255,255,255,0.2)' }}>
+                {eng ? `${eng}%` : '—'}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── root component ────────────────────────────────────────────
+export default function Content() {
+  const { user }  = useUser();
+  const userId    = user?.id;
+
+  const [state,      setState]      = useState('loading'); // loading | connected | disconnected
+  const [profile,    setProfile]    = useState(null);
+  const [history,    setHistory]    = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [connectErr, setConnectErr] = useState(null);
+  const [connecting, setConnecting] = useState(false);
+
+  function loadHistory(uid) {
+    fetch(`/api/instagram-apify/history?userId=${uid}`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d) && setHistory(d))
+      .catch(() => {});
+  }
+
+  useEffect(() => {
+    if (!userId) return;
+    fetch(`/api/instagram-apify/profile?userId=${userId}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.username) { setProfile(data); setState('connected'); loadHistory(userId); }
+        else setState('disconnected');
+      })
+      .catch(() => setState('disconnected'));
+  }, [userId]);
+
+  async function handleConnect(username) {
+    setConnecting(true);
+    setConnectErr(null);
+    try {
+      const r = await fetch('/api/instagram-apify/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, username }),
+      });
+      const d = await r.json();
+      if (!r.ok || d.error) throw new Error(d.error || 'שגיאה בחיבור');
+      setProfile(d.profile);
+      setState('connected');
+      loadHistory(userId);
+    } catch(e) {
+      setConnectErr(e.message);
+    } finally {
+      setConnecting(false);
+    }
+  }
+
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      const r = await fetch('/api/instagram-apify/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const d = await r.json();
+      if (d.profile) { setProfile(d.profile); loadHistory(userId); }
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  async function handleDisconnect() {
+    await fetch('/api/instagram-apify/disconnect', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    });
+    setProfile(null);
+    setState('disconnected');
+  }
+
+  if (state === 'loading') return (
+    <div className="w-full space-y-4" dir="rtl">
+      {[...Array(3)].map((_, i) => (
+        <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: 'rgb(var(--bg-surface))' }} />
+      ))}
+    </div>
+  );
+
+  if (state === 'disconnected') {
+    return <ApifyConnectScreen onConnect={handleConnect} loading={connecting} error={connectErr} />;
+  }
+
+  return (
+    <ApifyDashboard
       profile={profile}
-      media={media}
-      insights={insights}
+      history={history}
       onDisconnect={handleDisconnect}
-      onRefresh={loadAll}
+      onRefresh={handleRefresh}
       refreshing={refreshing}
     />
   );

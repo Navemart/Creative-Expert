@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import {
   ExternalLink, ChevronDown, ChevronUp,
-  Video, Loader2, Pencil, Check, X, BookOpen, Trash2, Sparkles, Plus, Link,
+  Video, Loader2, Pencil, Check, X, BookOpen, Trash2, Sparkles, Plus, Link, Star,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -87,7 +87,7 @@ function groupByMonth(meetings) {
 }
 
 // ── Single recording row ───────────────────────────────────────
-function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin }) {
+function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin, isStarred, onToggleStar }) {
   const [editing,   setEditing]   = useState(null); // null | 'title' | 'new-link'
   const [inputVal,  setInputVal]  = useState('');
   const [linkName,  setLinkName]  = useState('');
@@ -271,6 +271,22 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin 
       {/* Actions */}
       <div className="flex items-center gap-2 pr-4 mt-1 flex-wrap">
 
+        {/* Star button */}
+        <button
+          onClick={() => onToggleStar(meeting.uuid)}
+          className="flex items-center justify-center rounded-lg p-1.5 transition hover:opacity-80"
+          title={isStarred ? 'הסר מהשמורות' : 'שמור הקלטה'}
+          style={{
+            background: isStarred ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${isStarred ? 'rgba(245,193,24,0.3)' : 'rgba(255,255,255,0.1)'}`,
+          }}
+        >
+          <Star size={13} fill={isStarred ? '#F5C118' : 'none'} style={{ color: isStarred ? '#F5C118' : 'rgba(255,255,255,0.3)' }} />
+          <span className="text-xs font-medium" style={{ color: isStarred ? '#F5C118' : 'rgba(255,255,255,0.4)' }}>
+            {isStarred ? 'שמור' : 'שמור הקלטה'}
+          </span>
+        </button>
+
         {/* Recording button */}
         <a
           href={watchUrl}
@@ -405,6 +421,14 @@ export default function ZoomRecordings() {
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
   const [collapsed, setCollapsed] = useState({});
+  const [activeTab, setActiveTab] = useState('all');
+  const [starred,   setStarred]   = useState(() => {
+    try {
+      const key = user?.id ? `starred_recordings_${user.id}` : null;
+      if (!key) return new Set();
+      return new Set(JSON.parse(localStorage.getItem(key) || '[]'));
+    } catch(e) { return new Set(); }
+  });
 
   useEffect(() => {
     setLoading(true);
@@ -446,6 +470,18 @@ export default function ZoomRecordings() {
     setCollapsed(c => ({ ...c, [key]: !c[key] }));
   }
 
+  function toggleStar(uuid) {
+    setStarred(prev => {
+      const next = new Set(prev);
+      if (next.has(uuid)) next.delete(uuid); else next.add(uuid);
+      try {
+        const key = user?.id ? `starred_recordings_${user.id}` : null;
+        if (key) localStorage.setItem(key, JSON.stringify([...next]));
+      } catch(e) {}
+      return next;
+    });
+  }
+
   // ── Loading ──────────────────────────────────────────────────
   if (loading) return (
     <div className="flex items-center justify-center min-h-[50vh]">
@@ -469,36 +505,52 @@ export default function ZoomRecordings() {
     </div>
   );
 
-  const grouped   = groupByMonth(meetings);
-  const monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+  const visibleMeetings = activeTab === 'starred'
+    ? meetings.filter(m => starred.has(m.uuid))
+    : meetings;
 
-  // ── Empty ────────────────────────────────────────────────────
-  if (monthKeys.length === 0) return (
-    <div className="w-full space-y-4">
-      <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות</h1>
-      <div
-        className="rounded-2xl p-10 flex flex-col items-center gap-4"
-        style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-      >
-        <Video size={40} style={{ color: 'rgba(255,255,255,0.1)' }} />
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          אין הקלטות Creative Expert בחודשים האחרונים
-        </p>
-      </div>
-    </div>
-  );
+  const grouped   = groupByMonth(visibleMeetings);
+  const monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   // ── Main render ──────────────────────────────────────────────
   return (
     <div className="w-full space-y-2" dir="rtl">
 
       {/* Page title */}
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות</h1>
         <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {meetings.length} הקלטות · Creative Expert
         </p>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 border-b mb-4" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        {[
+          { k: 'all',     l: 'כל ההקלטות' },
+          { k: 'starred', l: `שמורות${starred.size > 0 ? ` (${starred.size})` : ''}`, icon: true },
+        ].map(t => (
+          <button key={t.k} onClick={() => setActiveTab(t.k)}
+            className="pb-3 px-4 text-sm font-semibold transition-all relative flex items-center gap-1.5"
+            style={{ color: activeTab === t.k ? 'white' : 'rgba(255,255,255,0.35)' }}>
+            {t.icon && <Star size={12} fill={activeTab === t.k ? '#F5C118' : 'none'} style={{ color: activeTab === t.k ? '#F5C118' : 'rgba(255,255,255,0.35)' }} />}
+            {t.l}
+            {activeTab === t.k && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: '#F5C118' }} />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Empty state for starred tab */}
+      {monthKeys.length === 0 && activeTab === 'starred' && (
+        <div className="rounded-2xl p-10 flex flex-col items-center gap-3"
+          style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <Star size={36} style={{ color: 'rgba(255,255,255,0.1)' }} />
+          <p className="text-sm font-semibold text-white">אין הקלטות שמורות</p>
+          <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>לחץ על הכוכב ליד הקלטה כדי לשמור אותה כאן</p>
+        </div>
+      )}
 
       {/* Month groups */}
       {monthKeys.map(monthKey => {
@@ -563,6 +615,8 @@ export default function ZoomRecordings() {
                             onMetaUpdate={handleMetaUpdate}
                             onDelete={handleDelete}
                             isAdmin={isAdmin}
+                            isStarred={starred.has(m.uuid)}
+                            onToggleStar={toggleStar}
                           />
                         ))}
                       </div>
