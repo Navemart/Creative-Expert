@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import {
   LayoutDashboard,
@@ -57,31 +58,43 @@ const ADMIN_ITEMS = [
 
 
 function NavItemExpandable({ item, collapsed, onCloseMobile }) {
-  const location = useLocation();
-  const isExpanded = location.pathname.startsWith(item.to);
+  const location  = useLocation();
+  const anyActive = location.pathname.startsWith(item.to);
+  const [open, setOpen] = useState(anyActive);
   const Icon = item.icon;
+
+  // Auto-open when navigating to a child route from outside
+  useEffect(() => { if (anyActive) setOpen(true); }, [anyActive]);
 
   return (
     <li>
-      <NavLink
-        to={item.to}
-        onClick={onCloseMobile}
-        className={({ isActive }) =>
-          [
-            'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-            isExpanded ? 'bg-accent text-accent-foreground' : 'hover:bg-white/10',
-            collapsed ? 'md:justify-center md:px-2' : '',
-          ].join(' ')
-        }
-        style={({ isActive }) => isExpanded ? {} : { color: 'rgba(255,255,255,0.75)' }}
+      {/* Parent row — toggles dropdown, does not navigate */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={[
+          'w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10',
+          collapsed ? 'md:justify-center md:px-2' : '',
+        ].join(' ')}
+        style={{ color: anyActive ? 'white' : 'rgba(255,255,255,0.75)' }}
       >
         <Icon size={18} className="flex-none" />
-        <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
-      </NavLink>
+        {!collapsed && (
+          <>
+            <span className="flex-1 text-right">{item.label}</span>
+            <svg
+              width="12" height="12" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+              style={{ flexShrink: 0, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </>
+        )}
+      </button>
 
-      {/* Sub-items — shown when parent is active */}
-      {isExpanded && !collapsed && item.children && (
-        <ul className="mt-0.5 space-y-0.5 pr-4" style={{ borderRight: '1px solid rgba(255,255,255,0.08)', marginRight: '0.875rem' }}>
+      {/* Sub-items */}
+      {open && !collapsed && item.children && (
+        <ul className="mt-0.5 mb-1 space-y-0.5" style={{ paddingRight: '0.75rem', borderRight: '2px solid rgba(255,255,255,0.07)', marginRight: '1rem' }}>
           {item.children.map(child => (
             <li key={child.to}>
               <NavLink
@@ -89,10 +102,7 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
                 end={child.end}
                 onClick={onCloseMobile}
                 className={({ isActive }) =>
-                  [
-                    'block rounded-md px-3 py-1.5 text-sm transition-colors',
-                    isActive ? 'font-semibold' : 'hover:bg-white/10',
-                  ].join(' ')
+                  ['block rounded-md px-3 py-1.5 text-sm transition-colors', isActive ? 'font-semibold' : 'hover:bg-white/10'].join(' ')
                 }
                 style={({ isActive }) => ({
                   color: isActive ? '#F5C118' : 'rgba(255,255,255,0.55)',

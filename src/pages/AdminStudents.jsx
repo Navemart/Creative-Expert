@@ -518,6 +518,269 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile, 
   );
 }
 
+// ── Weekly Wins Table ─────────────────────────────────────────
+function WeeklyWinsTable({ students }) {
+  const [search,  setSearch]  = useState('');
+  const [sortKey, setSortKey] = useState('week_date');
+  const [sortDir, setSortDir] = useState(-1);
+
+  const rows = useMemo(() => {
+    const flat = students.flatMap(s =>
+      (s.wins || []).map(w => ({ ...w, name: s.name }))
+    );
+    return flat
+      .filter(r => !search || r.name?.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => {
+        const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
+        return String(av).localeCompare(String(bv), 'he') * sortDir;
+      });
+  }, [students, search, sortKey, sortDir]);
+
+  const COLS = [
+    { key: 'name',      label: 'שם',          align: 'right' },
+    { key: 'week_date', label: 'שבוע',         align: 'right', fmt: v => fmtDate(v) },
+    { key: 'win_text',  label: 'הניצחון',      align: 'right', fmt: v => v || '—' },
+    { key: 'platform',  label: 'פלטפורמה',     align: 'center', fmt: v => v || '—' },
+    { key: 'post_url',  label: 'פורסם',        align: 'center', fmt: v => v ? '✓' : '—' },
+    { key: 'submitted_at', label: 'הוגש',      align: 'center', fmt: v => fmtDate(v) },
+  ];
+
+  function toggleSort(key) {
+    if (sortKey === key) setSortDir(d => d * -1); else { setSortKey(key); setSortDir(-1); }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2 flex-1 min-w-[200px]"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
+            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+        </div>
+        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{rows.length} ניצחונות</span>
+      </div>
+      <AdminTable cols={COLS} rows={rows} rowKey={r => `${r.user_id}-${r.week_date}`} sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+    </div>
+  );
+}
+
+// ── Deals Table ───────────────────────────────────────────────
+function DealsTable({ students }) {
+  const [search,  setSearch]  = useState('');
+  const [sortKey, setSortKey] = useState('created_at');
+  const [sortDir, setSortDir] = useState(-1);
+
+  const rows = useMemo(() => {
+    const flat = students.flatMap(s =>
+      (s.deals || []).map(d => ({ ...d, name: s.name }))
+    );
+    return flat
+      .filter(r => !search || r.name?.toLowerCase().includes(search.toLowerCase()))
+      .sort((a, b) => {
+        const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
+        if (!isNaN(Number(av)) && !isNaN(Number(bv))) return (Number(av) - Number(bv)) * sortDir;
+        return String(av).localeCompare(String(bv), 'he') * sortDir;
+      });
+  }, [students, search, sortKey, sortDir]);
+
+  const totalAmount   = rows.reduce((s, r) => s + num(r.total_amount), 0);
+  const totalReceived = rows.reduce((s, r) => s + num(r.received_amount), 0);
+
+  const COLS = [
+    { key: 'name',            label: 'שם',            align: 'right' },
+    { key: 'created_at',      label: 'תאריך',         align: 'right', fmt: v => fmtDate(v) },
+    { key: 'total_amount',    label: 'סכום עסקה',     align: 'left',  fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', color: '#F5C118' },
+    { key: 'received_amount', label: 'התקבל',         align: 'left',  fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', color: '#4fc38a' },
+    { key: 'description',     label: 'תיאור',         align: 'right', fmt: v => v || '—' },
+    { key: 'client_name',     label: 'לקוח',          align: 'right', fmt: v => v || '—' },
+  ];
+
+  function toggleSort(key) {
+    if (sortKey === key) setSortDir(d => d * -1); else { setSortKey(key); setSortDir(-1); }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2 flex-1 min-w-[200px]"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
+            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+        </div>
+        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          {rows.length} עסקאות · סה״כ: <span style={{ color: '#F5C118', fontWeight: 700 }}>₪{totalAmount.toLocaleString('he-IL')}</span>
+          {' · '}התקבל: <span style={{ color: '#4fc38a', fontWeight: 700 }}>₪{totalReceived.toLocaleString('he-IL')}</span>
+        </span>
+      </div>
+      <AdminTable cols={COLS} rows={rows} rowKey={r => `${r.user_id}-${r.id || r.created_at}`} sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+    </div>
+  );
+}
+
+// ── Checklist View ────────────────────────────────────────────
+function ChecklistView({ students, roadmap }) {
+  const [search, setSearch] = useState('');
+  const [expanded, setExpanded] = useState(null);
+
+  const { phases, weeks, tasks } = roadmap;
+  const totalTasks = tasks.length;
+
+  const filtered = students.filter(s => !search || s.name?.toLowerCase().includes(search.toLowerCase()));
+
+  function getProgress(completions) {
+    if (!totalTasks) return 0;
+    return Math.round((completions.length / totalTasks) * 100);
+  }
+
+  function getCurrentTask(completions) {
+    const completedSet = new Set(completions);
+    const sortedPhases = [...phases].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    for (const phase of sortedPhases) {
+      const phaseWeeks = [...weeks].filter(w => w.phase_id === phase.id).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      for (const week of phaseWeeks) {
+        const weekTasks = [...tasks].filter(t => t.week_id === week.id).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+        for (const task of weekTasks) {
+          if (!completedSet.has(task.id)) {
+            return { phase: phase.title, week: week.title, task: task.title };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2 flex-1 min-w-[200px]"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
+            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+        </div>
+        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{filtered.length} תלמידים · {totalTasks} משימות במפת הדרכים</span>
+      </div>
+
+      <div className="space-y-2">
+        {filtered.map(s => {
+          const pct     = getProgress(s.completions || []);
+          const current = getCurrentTask(s.completions || []);
+          const isOpen  = expanded === s.id;
+
+          return (
+            <div key={s.id} className="rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
+              {/* Row */}
+              <button className="w-full flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition text-right"
+                onClick={() => setExpanded(isOpen ? null : s.id)}>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white text-sm truncate">{s.name}</p>
+                  {current ? (
+                    <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      {current.phase} · {current.week} · <span style={{ color: 'rgba(255,255,255,0.6)' }}>{current.task}</span>
+                    </p>
+                  ) : (
+                    <p className="text-xs mt-0.5" style={{ color: '#4fc38a' }}>✓ השלים הכל</p>
+                  )}
+                </div>
+                {/* Progress bar */}
+                <div className="flex items-center gap-3 flex-none">
+                  <div className="w-32 rounded-full overflow-hidden" style={{ height: 6, background: 'rgba(255,255,255,0.08)' }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#4fc38a' : '#F5C118', borderRadius: 999, transition: 'width 0.4s' }} />
+                  </div>
+                  <span className="text-sm font-bold w-10 text-left" style={{ color: pct === 100 ? '#4fc38a' : '#F5C118' }}>{pct}%</span>
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>{(s.completions || []).length}/{totalTasks}</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5"
+                    style={{ transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </button>
+
+              {/* Expanded: per-phase breakdown */}
+              {isOpen && (
+                <div className="px-5 pb-4 space-y-3" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  {[...phases].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map(phase => {
+                    const phaseWeeks = [...weeks].filter(w => w.phase_id === phase.id).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+                    const phaseTasks = phaseWeeks.flatMap(w => tasks.filter(t => t.week_id === w.id));
+                    const phaseDone  = phaseTasks.filter(t => (s.completions || []).includes(t.id)).length;
+                    const phaseTotal = phaseTasks.length;
+                    const phasePct   = phaseTotal ? Math.round(phaseDone / phaseTotal * 100) : 0;
+                    return (
+                      <div key={phase.id} className="pt-3">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>{phase.title}</span>
+                          <span className="text-[11px]" style={{ color: phasePct === 100 ? '#4fc38a' : 'rgba(255,255,255,0.3)' }}>{phaseDone}/{phaseTotal}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {phaseWeeks.map(week => {
+                            const weekTasks = [...tasks].filter(t => t.week_id === week.id);
+                            const done = weekTasks.filter(t => (s.completions || []).includes(t.id)).length;
+                            const all  = weekTasks.length;
+                            const full = done === all && all > 0;
+                            return (
+                              <span key={week.id} className="rounded-lg px-2.5 py-1 text-[11px] font-medium"
+                                style={{ background: full ? 'rgba(79,195,138,0.12)' : 'rgba(255,255,255,0.05)', border: `1px solid ${full ? 'rgba(79,195,138,0.3)' : 'rgba(255,255,255,0.08)'}`, color: full ? '#4fc38a' : 'rgba(255,255,255,0.5)' }}>
+                                {full ? '✓ ' : ''}{week.title} ({done}/{all})
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Shared admin table ────────────────────────────────────────
+function AdminTable({ cols, rows, rowKey, sortKey, sortDir, onSort }) {
+  return (
+    <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+      <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
+        <thead>
+          <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            {cols.map(col => (
+              <th key={col.key} onClick={() => onSort(col.key)}
+                className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
+                style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                {col.label}{sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0
+            ? <tr><td colSpan={cols.length} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
+            : rows.map((r, i) => (
+              <tr key={rowKey(r)} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
+                className="hover:bg-white/[0.03] transition">
+                {cols.map(col => {
+                  const val = r[col.key];
+                  const display = col.fmt ? col.fmt(val) : (val ?? '—');
+                  return (
+                    <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
+                      style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: 13 }}>
+                      {display}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ── Coming Soon placeholder ───────────────────────────────────
 function ComingSoon({ label }) {
   return (
@@ -686,6 +949,7 @@ export default function AdminStudents() {
   const [error,         setError]         = useState(null);
   const [filter,        setFilter]        = useState('all');
   const [openStudentId, setOpenStudentId] = useState(null);
+  const [roadmap,       setRoadmap]       = useState({ phases: [], weeks: [], tasks: [] });
   const location = useLocation();
   const view = location.pathname.includes('/monthly')   ? 'monthly'
              : location.pathname.includes('/wins')      ? 'wins'
@@ -712,8 +976,9 @@ export default function AdminStudents() {
         headers: { 'x-admin-id': import.meta.env.VITE_ADMIN_USER_ID || '' },
       });
       if (!r.ok) { const d = await r.json(); throw new Error(d.error || `HTTP ${r.status}`); }
-      const { students: s } = await r.json();
+      const { students: s, roadmap: rm } = await r.json();
       setStudents(s || []);
+      if (rm) setRoadmap(rm);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   }
@@ -865,10 +1130,10 @@ export default function AdminStudents() {
       )}
 
       {/* Sub-page views */}
-      {view === 'monthly'   && !loading && <MonthlyTable students={students.filter(s => s.is_active !== false)} />}
-      {view === 'wins'      && !loading && <ComingSoon label="נצחונות שבועיים" />}
-      {view === 'deals'     && !loading && <ComingSoon label="עסקאות חדשות" />}
-      {view === 'checklist' && !loading && <ComingSoon label="צ׳קליסט" />}
+      {view === 'monthly'   && !loading && <MonthlyTable   students={students.filter(s => s.is_active !== false)} />}
+      {view === 'wins'      && !loading && <WeeklyWinsTable students={students.filter(s => s.is_active !== false)} />}
+      {view === 'deals'     && !loading && <DealsTable      students={students.filter(s => s.is_active !== false)} />}
+      {view === 'checklist' && !loading && <ChecklistView   students={students.filter(s => s.is_active !== false)} roadmap={roadmap} />}
 
       {/* Student list view */}
       {view === 'students' && (loading ? (

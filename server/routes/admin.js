@@ -38,10 +38,26 @@ router.get('/students', async (req, res) => {
       process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
     );
 
-    const [{ data: submissions }, { data: profiles }, { data: rankReqs }] = await Promise.all([
+    const [
+      { data: submissions },
+      { data: profiles },
+      { data: rankReqs },
+      { data: wins },
+      { data: deals },
+      { data: phases },
+      { data: weeks },
+      { data: tasks },
+      { data: completions },
+    ] = await Promise.all([
       supabase.from('monthly_submissions').select('*').order('month'),
       supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active'),
       supabase.from('rank_upgrade_requests').select('*').eq('status', 'pending'),
+      supabase.from('sunday_wins').select('*').order('week_date', { ascending: false }),
+      supabase.from('deals').select('*').order('created_at', { ascending: false }),
+      supabase.from('roadmap_phases').select('id, title, sort_order').order('sort_order'),
+      supabase.from('roadmap_weeks').select('id, phase_id, title, sort_order').order('sort_order'),
+      supabase.from('roadmap_tasks').select('id, week_id, title, sort_order').order('sort_order'),
+      supabase.from('roadmap_completions').select('user_id, task_id'),
     ]);
 
     // 3. Join data per user
@@ -72,6 +88,10 @@ router.get('/students', async (req, res) => {
         const hasThisMonth = userSubs.some(s => s.month?.slice(0, 7) === lastMonthStr);
         const missingReport = now.getDate() > 10 && !hasThisMonth && userSubs.length > 0;
 
+        const userWins        = (wins        || []).filter(w => w.user_id === u.id);
+        const userDeals       = (deals       || []).filter(d => d.user_id === u.id);
+        const userCompletions = (completions || []).filter(c => c.user_id === u.id).map(c => c.task_id);
+
         return {
           id:            u.id,
           name,
@@ -83,6 +103,9 @@ router.get('/students', async (req, res) => {
           total_paid:    profile?.total_paid     ?? null,
           is_active:     profile?.is_active      ?? true,
           monthly:       userSubs,
+          wins:          userWins,
+          deals:         userDeals,
+          completions:   userCompletions,
           latest_income: latestIncome,
           latest_rank:   latest?.current_rank || null,
           latest_month:  latest?.month || null,
@@ -94,7 +117,10 @@ router.get('/students', async (req, res) => {
         };
       });
 
-    res.json({ students });
+    // Roadmap structure sent once (not per-student)
+    const roadmap = { phases: phases || [], weeks: weeks || [], tasks: tasks || [] };
+
+    res.json({ students, roadmap });
   } catch (err) {
     console.error('[admin/students]', err.message);
     res.status(500).json({ error: err.message });
