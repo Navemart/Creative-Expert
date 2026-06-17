@@ -800,7 +800,7 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
-  const [dealForm,    setDealForm]    = useState({ total_amount: '', received_amount: '', next_rank: '' });
+  const [dealForm,    setDealForm]    = useState({ total_amount: '', received_amount: '', next_rank: '', deal_date: new Date().toISOString().slice(0,10) });
   const [winForm,     setWinForm]     = useState({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '' });
   const [monthlyForm, setMonthlyForm] = useState({
     report_month: '', total_new_deals: '', retainers: '', total_income: '',
@@ -1046,7 +1046,7 @@ export default function Dashboard() {
   async function submitDeal() {
     if (!dealForm.total_amount) return;
 
-    const date = new Date().toISOString().slice(0, 10);
+    const date = dealForm.deal_date || new Date().toISOString().slice(0, 10);
 
     await supabase.from('deals').insert({
       user_id:          userId,
@@ -1054,6 +1054,7 @@ export default function Dashboard() {
       total_amount:     parseFloat(dealForm.total_amount),
       received_amount:  parseFloat(dealForm.received_amount) || 0,
       next_rank:        dealForm.next_rank,
+      created_at:       date + 'T12:00:00.000Z',
     });
 
     // שלח לסלאק
@@ -1075,7 +1076,7 @@ export default function Dashboard() {
 
     const submittedAmount    = dealForm.total_amount;
     const submittedReceived  = dealForm.received_amount;
-    setDealForm({ total_amount: '', received_amount: '', next_rank: '' });
+    setDealForm({ total_amount: '', received_amount: '', next_rank: '', deal_date: new Date().toISOString().slice(0,10) });
     setModal(null);
     fetchAll();
 
@@ -1732,9 +1733,16 @@ export default function Dashboard() {
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-base font-bold text-white">נצחון עסקה חדשה 🛡️</span>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)' }}>
-                  {new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
-                </span>
+                <label className="relative cursor-pointer">
+                  <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 hover:bg-white/15 transition"
+                    style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)' }}>
+                    <Calendar size={11} />
+                    {new Date(dealForm.deal_date + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </span>
+                  <input type="date" value={dealForm.deal_date}
+                    onChange={e => setDealForm(f => ({ ...f, deal_date: e.target.value }))}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full" />
+                </label>
               </div>
               <button onClick={() => setModal(null)} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 <X size={18} />
