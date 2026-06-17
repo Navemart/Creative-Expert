@@ -1263,17 +1263,21 @@ export default function Dashboard() {
     let finalRank          = monthlyForm.current_rank || null;
     let pendingUpgradeData = null; // filled when rank upgrade needs admin approval
 
-    if (!editingSubmission && !isFirstSubmission) {
-      const sorted = [...monthlyData].sort((a, b) => new Date(a.month) - new Date(b.month));
+    if (!isFirstSubmission) {
+      // When editing: exclude the submission being edited so we can re-evaluate it
+      const base   = editingSubmission
+        ? [...monthlyData].filter(s => s.id !== editingSubmission.id)
+        : [...monthlyData];
+      const sorted = base.sort((a, b) => new Date(a.month) - new Date(b.month));
 
       // Current rank floor = best rank ever achieved historically (never downgrade)
       const historicalBest    = calcBestHistoricalRank(sorted);
       const currentRankLabel  = historicalBest?.label || sorted[sorted.length - 1]?.current_rank || SEGMENTS[0].label;
       const currentRankObj    = SEGMENTS.find(s => s.label === currentRankLabel) || SEGMENTS[0];
 
-      // Check new pair: last stored month + new submission
+      // Check new pair: last stored month + new/edited submission
       const lastSub      = sorted[sorted.length - 1];
-      const lastIncome   = lastSub.total_income ?? lastSub.amount ?? 0;
+      const lastIncome   = lastSub?.total_income ?? lastSub?.amount ?? 0;
       const newIncome    = parseFloat(monthlyForm.total_income) || 0;
       const avg          = (lastIncome + newIncome) / 2;
       const newRankObj   = getRank(avg);
