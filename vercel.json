@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod +x /usr/local/bin/yt-dlp && npm run build",
+  "buildCommand": "mkdir -p bin && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o bin/yt-dlp && chmod +x bin/yt-dlp && npm run build",
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
@@ -9,7 +9,8 @@
   ],
   "functions": {
     "api/index.js": {
-      "maxDuration": 300
+      "maxDuration": 300,
+      "includeFiles": "bin/**"
     }
   }
 }
