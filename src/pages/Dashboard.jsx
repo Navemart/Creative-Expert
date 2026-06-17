@@ -1284,9 +1284,11 @@ export default function Dashboard() {
         );
         const afterRank  = calcBestHistoricalRank(afterSubs) || SEGMENTS[0];
 
+        // Editing can move rank up OR down — recalculate from all pairs
+        finalRank = afterRank?.label || SEGMENTS[0].label;
+
         if (afterRank.min > beforeRank.min) {
-          finalRank = afterRank.label;
-          // Find the best pair that caused the upgrade for the approval request
+          // Rank went up → confetti + approval request
           const sortedAfter = [...afterSubs].sort((a, b) => new Date(a.month) - new Date(b.month));
           let bestIdx = 1;
           let bestAvg = 0;
@@ -1307,8 +1309,6 @@ export default function Dashboard() {
             month_2_income: sortedAfter[bestIdx].total_income ?? sortedAfter[bestIdx].amount ?? 0,
             avg_income:     bestAvg,
           };
-        } else {
-          finalRank = beforeRank.label;
         }
       } else {
         // ── New submission ──────────────────────────────────────
