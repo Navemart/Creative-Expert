@@ -255,7 +255,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
         {/* ══ לבלוט ══ */}
         <div>
           <SectionHeader label="🎬 לבלוט — תוכן" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+          <div className="grid grid-cols-4 lg:grid-cols-6 gap-2 mb-2">
             <Chip label="עוקבים"       value={cur.followers}    prev={prev?.followers}    color="#e1306c" fmt={v => Number(v).toLocaleString('he-IL')} />
             <Chip label="חשיפה (Reach)" value={cur.reach}       prev={prev?.reach}        color="#38bdf8" fmt={v => num(v) >= 1000 ? `${Math.round(num(v)/1000)}K` : String(v)} />
             <Chip label="פוסטים"        value={cur.posts_count} prev={prev?.posts_count}  color="#fcd34d" />
@@ -270,14 +270,12 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
         {/* ══ להוביל ══ */}
         <div>
           <SectionHeader label="🤝 להוביל — מכירות" />
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-2">
+          <div className="grid grid-cols-4 lg:grid-cols-8 gap-2 mb-2">
             <Chip label="לידים"            value={cur.leads}               prev={prev?.leads}               color="#a78bfa" />
             <Chip label="הצעות"            value={cur.proposals}           prev={prev?.proposals}           color="#818cf8" />
             <Chip label="שיחות נקבעו"      value={cur.sales_calls_set}     prev={prev?.sales_calls_set}     color="#6366f1" />
             <Chip label="הגיעו לשיחה"      value={cur.sales_calls_showed}  prev={prev?.sales_calls_showed}  color="#6366f1" />
             <Chip label="נסגרו"            value={cur.closings_count}      prev={prev?.closings_count}      color="#4ade80" />
-          </div>
-          <div className="grid grid-cols-3 gap-2 mb-2">
             <Chip label="הצ״מ נשלחו"       value={cur.price_quotes_sent}    prev={prev?.price_quotes_sent}   color="#c4b5fd" />
             <Chip label="הצ״מ אושרו"       value={cur.price_quotes_approved} prev={prev?.price_quotes_approved} color="#c4b5fd" />
             <Chip label="שיחות אסטרטגיה"   value={cur.strategy_calls}      prev={prev?.strategy_calls}      color="#818cf8" />
@@ -291,7 +289,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
         {/* ══ לשלוט ══ */}
         <div>
           <SectionHeader label="📋 לשלוט — לקוחות ופרויקטים" />
-          <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="grid grid-cols-3 lg:grid-cols-5 gap-2 mb-2">
             <Chip label="לקוחות חדשים"   value={cur.new_clients}     prev={prev?.new_clients}     color="#4ade80" />
             <Chip label="לקוחות פעילים"  value={cur.active_clients}  prev={prev?.active_clients}  color="#34d399" />
             <Chip label="ריטיינרים (מס׳)" value={cur.retainers_count} prev={prev?.retainers_count} color="#2dd4bf" />
@@ -311,13 +309,11 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
         {/* ══ לספק ══ */}
         <div>
           <SectionHeader label="💰 לספק — נתונים עסקיים" />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+          <div className="grid grid-cols-4 lg:grid-cols-7 gap-2 mb-2">
             <Chip label="הכנסה כוללת"      value={curIncome}                prev={prevIncome}                color="#F5C118" fmt={fmtFull} />
             <Chip label="עסקאות חדשות"      value={cur.total_new_deals}      prev={prev?.total_new_deals}     color="rgba(255,255,255,0.8)" fmt={fmtFull} />
             <Chip label="ריטיינרים (₪)"    value={cur.retainers}            prev={prev?.retainers}           color="#fcd34d" fmt={fmtFull} />
             <Chip label="רווח נטו"          value={curNet}                   prev={prevNet}                   color={curNet >= 0 ? '#4fc38a' : '#ff5a72'} fmt={fmtFull} />
-          </div>
-          <div className="grid grid-cols-3 gap-2 mb-2">
             <Chip label="הוצאות תוכנות"    value={cur.software_expenses}    prev={null}                      color="#fca5a5" fmt={fmtFull} />
             <Chip label="הוצאות משתנות"    value={cur.variable_expenses}    prev={null}                      color="#fca5a5" fmt={fmtFull} />
             <div className="rounded-xl p-3" style={{ background: getRankColor(cur.current_rank) + '18', border: `1px solid ${getRankColor(cur.current_rank)}44` }}>
@@ -535,7 +531,7 @@ export default function AdminStudents() {
 
   function StudentList({ list }) {
     return (
-      <div className="space-y-2" style={{ maxWidth: 480 }}>
+      <div className="space-y-2 w-full">
         {list.map(s => {
           const isOpen = openStudentId === s.id;
           return (
@@ -555,7 +551,7 @@ export default function AdminStudents() {
   }
 
   return (
-    <div className="w-full space-y-5 mx-auto" dir="rtl" style={{ maxWidth: 1080 }}>
+    <div className="w-full space-y-5" dir="rtl">
 
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
