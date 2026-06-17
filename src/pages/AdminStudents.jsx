@@ -536,14 +536,7 @@ function WeeklyWinsTable({ students }) {
       });
   }, [students, search, sortKey, sortDir]);
 
-  const COLS = [
-    { key: 'name',      label: 'שם',          align: 'right' },
-    { key: 'week_date', label: 'שבוע',         align: 'right', fmt: v => fmtDate(v) },
-    { key: 'win_text',  label: 'הניצחון',      align: 'right', fmt: v => v || '—' },
-    { key: 'platform',  label: 'פלטפורמה',     align: 'center', fmt: v => v || '—' },
-    { key: 'post_url',  label: 'פורסם',        align: 'center', fmt: v => v ? '✓' : '—' },
-    { key: 'submitted_at', label: 'הוגש',      align: 'center', fmt: v => fmtDate(v) },
-  ];
+  const [expanded, setExpanded] = useState(null);
 
   function toggleSort(key) {
     if (sortKey === key) setSortDir(d => d * -1); else { setSortKey(key); setSortDir(-1); }
@@ -560,7 +553,93 @@ function WeeklyWinsTable({ students }) {
         </div>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{rows.length} ניצחונות</span>
       </div>
-      <AdminTable cols={COLS} rows={rows} rowKey={r => `${r.user_id}-${r.week_date}`} sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+
+      <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+        <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 600 }}>
+          <thead>
+            <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              {[
+                { k: 'name',         l: 'שם' },
+                { k: 'week_date',    l: 'שבוע' },
+                { k: 'win_1',        l: 'ניצחון #1' },
+                { k: 'submitted_at', l: 'הוגש' },
+              ].map(c => (
+                <th key={c.k} onClick={() => toggleSort(c.k)}
+                  className="px-4 py-3 text-right cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
+                  style={{ color: sortKey === c.k ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                  {c.l}{sortKey === c.k && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
+                </th>
+              ))}
+              <th className="px-4 py-3 w-8" />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0
+              ? <tr><td colSpan={5} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
+              : rows.map((r, i) => {
+                  const key     = `${r.user_id}-${r.week_date}-${i}`;
+                  const isOpen  = expanded === key;
+                  const hasMore = r.win_2 || r.win_3 || r.focus_next_week || r.blocker;
+                  return (
+                    <>
+                      <tr key={key}
+                        style={{ borderBottom: isOpen ? 'none' : '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)', cursor: hasMore ? 'pointer' : 'default' }}
+                        className="hover:bg-white/[0.03] transition"
+                        onClick={() => hasMore && setExpanded(isOpen ? null : key)}>
+                        <td className="px-4 py-3 font-medium" style={{ color: 'white' }}>{r.name}</td>
+                        <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>{fmtDate(r.week_date)}</td>
+                        <td className="px-4 py-3" style={{ color: 'rgba(255,255,255,0.85)', maxWidth: 380 }}>
+                          {r.win_1 || <span style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>}
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12 }}>{fmtDate(r.submitted_at)}</td>
+                        <td className="px-4 py-3 text-center">
+                          {hasMore && (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5"
+                              style={{ display: 'inline', transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                              <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                          )}
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <tr key={key + '-detail'} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'rgba(245,193,24,0.03)' : 'rgba(245,193,24,0.04)' }}>
+                          <td colSpan={5} className="px-6 pb-4 pt-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {r.win_2 && (
+                                <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>ניצחון #2</p>
+                                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{r.win_2}</p>
+                                </div>
+                              )}
+                              {r.win_3 && (
+                                <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>ניצחון #3</p>
+                                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{r.win_3}</p>
+                                </div>
+                              )}
+                              {r.focus_next_week && (
+                                <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>פוקוס שבוע הבא</p>
+                                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{r.focus_next_week}</p>
+                                </div>
+                              )}
+                              {r.blocker && (
+                                <div className="rounded-xl p-3" style={{ background: 'rgba(255,90,114,0.06)', border: '1px solid rgba(255,90,114,0.15)' }}>
+                                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#ff5a72' }}>חסם</p>
+                                  <p className="text-sm" style={{ color: 'rgba(255,255,255,0.85)' }}>{r.blocker}</p>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
