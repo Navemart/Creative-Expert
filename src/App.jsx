@@ -54,7 +54,7 @@ export default function App() {
 
             {/* ── Admin-only routes ──────────────────────────── */}
             <Route
-              path="admin/students"
+              path="admin/students/*"
               element={
                 <AdminRoute>
                   <AdminStudents />

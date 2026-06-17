@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import {
   LayoutDashboard,
@@ -41,9 +41,73 @@ const TOOLS_ITEMS = [
 ];
 
 const ADMIN_ITEMS = [
-  { to: '/admin/students', label: 'תלמידים', icon: ShieldCheck },
+  {
+    to: '/admin/students',
+    label: 'תלמידים',
+    icon: ShieldCheck,
+    children: [
+      { to: '/admin/students',           label: 'תלמידים',          end: true },
+      { to: '/admin/students/monthly',   label: 'נתונים חודשיים' },
+      { to: '/admin/students/wins',      label: 'נצחונות שבועיים' },
+      { to: '/admin/students/deals',     label: 'עסקאות חדשות' },
+      { to: '/admin/students/checklist', label: 'צ׳קליסט' },
+    ],
+  },
 ];
 
+
+function NavItemExpandable({ item, collapsed, onCloseMobile }) {
+  const location = useLocation();
+  const isExpanded = location.pathname.startsWith(item.to);
+  const Icon = item.icon;
+
+  return (
+    <li>
+      <NavLink
+        to={item.to}
+        onClick={onCloseMobile}
+        className={({ isActive }) =>
+          [
+            'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            isExpanded ? 'bg-accent text-accent-foreground' : 'hover:bg-white/10',
+            collapsed ? 'md:justify-center md:px-2' : '',
+          ].join(' ')
+        }
+        style={({ isActive }) => isExpanded ? {} : { color: 'rgba(255,255,255,0.75)' }}
+      >
+        <Icon size={18} className="flex-none" />
+        <span className={collapsed ? 'md:hidden' : ''}>{item.label}</span>
+      </NavLink>
+
+      {/* Sub-items — shown when parent is active */}
+      {isExpanded && !collapsed && item.children && (
+        <ul className="mt-0.5 space-y-0.5 pr-4" style={{ borderRight: '1px solid rgba(255,255,255,0.08)', marginRight: '0.875rem' }}>
+          {item.children.map(child => (
+            <li key={child.to}>
+              <NavLink
+                to={child.to}
+                end={child.end}
+                onClick={onCloseMobile}
+                className={({ isActive }) =>
+                  [
+                    'block rounded-md px-3 py-1.5 text-sm transition-colors',
+                    isActive ? 'font-semibold' : 'hover:bg-white/10',
+                  ].join(' ')
+                }
+                style={({ isActive }) => ({
+                  color: isActive ? '#F5C118' : 'rgba(255,255,255,0.55)',
+                  background: isActive ? 'rgba(245,193,24,0.08)' : 'transparent',
+                })}
+              >
+                {child.label}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
 
 function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile }) {
   return (
@@ -172,7 +236,9 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
               </div>
               <ul className="space-y-1">
                 {ADMIN_ITEMS.map((item) => (
-                  <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
+                  item.children
+                    ? <NavItemExpandable key={item.to} item={item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
+                    : <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
                 ))}
               </ul>
             </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
+import { useLocation } from 'react-router-dom';
 import {
   TrendingDown, Calendar, ArrowUp, Users, RefreshCw,
   Circle, ArrowUpRight, ArrowDownRight, Minus,
@@ -517,6 +518,16 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile, 
   );
 }
 
+// ── Coming Soon placeholder ───────────────────────────────────
+function ComingSoon({ label }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-24 gap-3" style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 16 }}>
+      <p className="text-2xl font-bold text-white/20">{label}</p>
+      <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>בקרוב</p>
+    </div>
+  );
+}
+
 // ── Monthly Table ─────────────────────────────────────────────
 const MT_COLS = [
   { key: 'name',                label: 'שם',              fmt: v => v,                          align: 'right' },
@@ -675,7 +686,12 @@ export default function AdminStudents() {
   const [error,         setError]         = useState(null);
   const [filter,        setFilter]        = useState('all');
   const [openStudentId, setOpenStudentId] = useState(null);
-  const [view,          setView]          = useState('students'); // 'students' | 'monthly'
+  const location = useLocation();
+  const view = location.pathname.includes('/monthly')   ? 'monthly'
+             : location.pathname.includes('/wins')      ? 'wins'
+             : location.pathname.includes('/deals')     ? 'deals'
+             : location.pathname.includes('/checklist') ? 'checklist'
+             : 'students';
 
   function toggleStudent(id) {
     setOpenStudentId(prev => prev === id ? null : id);
@@ -756,21 +772,14 @@ export default function AdminStudents() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">פאנל תלמידים</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+            {{ students: 'תלמידים', monthly: 'נתונים חודשיים', wins: 'נצחונות שבועיים', deals: 'עסקאות חדשות', checklist: 'צ׳קליסט' }[view]}
+          </h1>
           <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
             {active.length} פעילים · {archived.length} בארכיון
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
-            {[{ k: 'students', l: 'תלמידים' }, { k: 'monthly', l: 'נתונים חודשיים' }].map(t => (
-              <button key={t.k} onClick={() => setView(t.k)}
-                className="rounded-lg px-4 py-1.5 text-sm font-semibold transition whitespace-nowrap"
-                style={{ background: view === t.k ? 'rgba(245,193,24,0.15)' : 'transparent', color: view === t.k ? '#F5C118' : 'rgba(255,255,255,0.4)', border: view === t.k ? '1px solid rgba(245,193,24,0.3)' : '1px solid transparent' }}>
-                {t.l}
-              </button>
-            ))}
-          </div>
           <button onClick={fetchStudents} disabled={loading}
             className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition hover:opacity-80"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
@@ -780,8 +789,8 @@ export default function AdminStudents() {
         </div>
       </div>
 
-      {/* KPI cards */}
-      {students.length > 0 && (() => {
+      {/* KPI cards — students view only */}
+      {view === 'students' && students.length > 0 && (() => {
         const withPaid     = students.filter(s => s.total_paid != null);
         const withEnrolled = students.filter(s => s.enrolled_at);
         const totalRevenue = withPaid.reduce((s, x) => s + (x.total_paid || 0), 0);
@@ -809,8 +818,8 @@ export default function AdminStudents() {
         );
       })()}
 
-      {/* Alert banners */}
-      {alertList.length > 0 && (
+      {/* Alert banners — students view only */}
+      {view === 'students' && alertList.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[
             { icon: ArrowUp,      color: '#F5C118', count: students.filter(s => s.rank_request).length,     label: 'שדרוג דרגה ממתין' },
@@ -855,10 +864,11 @@ export default function AdminStudents() {
         </div>
       )}
 
-      {/* Monthly table view */}
-      {view === 'monthly' && !loading && (
-        <MonthlyTable students={students.filter(s => s.is_active !== false)} />
-      )}
+      {/* Sub-page views */}
+      {view === 'monthly'   && !loading && <MonthlyTable students={students.filter(s => s.is_active !== false)} />}
+      {view === 'wins'      && !loading && <ComingSoon label="נצחונות שבועיים" />}
+      {view === 'deals'     && !loading && <ComingSoon label="עסקאות חדשות" />}
+      {view === 'checklist' && !loading && <ComingSoon label="צ׳קליסט" />}
 
       {/* Student list view */}
       {view === 'students' && (loading ? (
