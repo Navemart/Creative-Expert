@@ -801,7 +801,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   const [dealForm,    setDealForm]    = useState({ total_amount: '', received_amount: '', next_rank: '', deal_date: new Date().toISOString().slice(0,10) });
-  const [winForm,     setWinForm]     = useState({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '' });
+  const [winForm,     setWinForm]     = useState({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '', week_date: new Date().toISOString().slice(0,10), _datePicker: false });
   const [monthlyForm, setMonthlyForm] = useState({
     report_month: '', total_new_deals: '', retainers: '', total_income: '',
     software_expenses: '', variable_expenses: '', paid_ads: '',
@@ -929,43 +929,77 @@ export default function Dashboard() {
     const empty = { currentStreak: 0, longestStreak: 0, weeklyHistory: Array(NUM_WEEKS).fill(false) };
     if (!wins.length) return empty;
 
-    const sorted = [...wins]
-      .filter(w => w.week_date)
-      .sort((a, b) => new Date(a.week_date) - new Date(b.week_date));
-    if (!sorted.length) return empty;
-
-    // Longest streak ever
-    let longest = 1, run = 1;
-    for (let i = 1; i < sorted.length; i++) {
-      const diff = (new Date(sorted[i].week_date) - new Date(sorted[i - 1].week_date)) / 86400000;
-      if (diff <= 9) { run++; if (run > longest) longest = run; }
-      else run = 1;
+    // submitted_at = actual submit time (for streak rules)
+    // week_date    = week the user reports on (for display/grid)
+    // Streak rule: submitted on Thu(4), Fri(5), Sat(6), or Sun(0) before 23:59 → counts
+    function isOnTime(win) {
+      const t = win.submitted_at ? new Date(win.submitted_at) : new Date(win.week_date);
+      const day = t.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
+      if (day === 1 || day === 2 || day === 3) return false; // Mon/Tue/Wed = late
+      if (day === 0) {
+        // Sunday — only before 23:59:59
+        return t.getHours() < 24; // effectively always, but cut at midnight
+      }
+      return true; // Thu, Fri, Sat always OK
     }
 
-    // Current streak (active only if last win ≤ 10 days ago)
-    const daysSinceLast = (Date.now() - new Date(sorted[sorted.length - 1].week_date)) / 86400000;
+    // Get the ISO week number of a date (Sun-based: Sunday starts the week)
+    function isoWeekKey(dateStr) {
+      const d = new Date(dateStr + 'T12:00:00');
+      // Shift so Sunday=0 is week start
+      const day = d.getDay();
+      const sunday = new Date(d);
+      sunday.setDate(d.getDate() - day);
+      return sunday.toISOString().slice(0, 10);
+    }
+
+    // Deduplicate by week (keep first on-time submission per week)
+    const weekMap = {};
+    wins.forEach(w => {
+      const key = isoWeekKey(w.week_date || new Date().toISOString().slice(0,10));
+      if (!weekMap[key] || isOnTime(w)) weekMap[key] = { ...w, _weekKey: key, _onTime: isOnTime(w) };
+    });
+    const sorted = Object.values(weekMap)
+      .sort((a, b) => new Date(a._weekKey) - new Date(b._weekKey));
+    if (!sorted.length) return empty;
+
+    // Longest streak ever (consecutive weeks, on-time only)
+    let longest = 0, run = 0;
+    for (let i = 0; i < sorted.length; i++) {
+      if (!sorted[i]._onTime) { run = 0; continue; }
+      if (i === 0) { run = 1; }
+      else {
+        const diff = (new Date(sorted[i]._weekKey) - new Date(sorted[i-1]._weekKey)) / 86400000;
+        run = (diff <= 8 && sorted[i-1]._onTime) ? run + 1 : 1;
+      }
+      if (run > longest) longest = run;
+    }
+
+    // Current streak (count backwards from latest on-time win)
+    const lastOnTime = [...sorted].reverse().find(w => w._onTime);
     let current = 0;
-    if (daysSinceLast <= 10) {
-      current = 1;
-      for (let i = sorted.length - 2; i >= 0; i--) {
-        const diff = (new Date(sorted[i + 1].week_date) - new Date(sorted[i].week_date)) / 86400000;
-        if (diff <= 9) current++;
-        else break;
+    if (lastOnTime) {
+      const daysSince = (Date.now() - new Date(lastOnTime._weekKey)) / 86400000;
+      if (daysSince <= 13) { // allow up to 13 days (current + last week grace)
+        current = 1;
+        const idx = sorted.indexOf(lastOnTime);
+        for (let i = idx - 1; i >= 0; i--) {
+          if (!sorted[i]._onTime) break;
+          const diff = (new Date(sorted[i+1]._weekKey) - new Date(sorted[i]._weekKey)) / 86400000;
+          if (diff <= 8) current++;
+          else break;
+        }
       }
     }
 
-    // Weekly history grid — last NUM_WEEKS weeks
+    // Weekly history grid — last NUM_WEEKS weeks (on-time wins only)
     const today = new Date();
     const history = Array.from({ length: NUM_WEEKS }, (_, i) => {
-      const wEnd = new Date(today);
-      wEnd.setDate(today.getDate() - i * 7);
-      const wStart = new Date(wEnd);
-      wStart.setDate(wEnd.getDate() - 7);
-      return wins.some(w => {
-        if (!w.week_date) return false;
-        const d = new Date(w.week_date);
-        return d > wStart && d <= wEnd;
-      });
+      const sunday = new Date(today);
+      sunday.setDate(today.getDate() - today.getDay() - i * 7); // go back i sundays
+      sunday.setHours(0,0,0,0);
+      const key = sunday.toISOString().slice(0, 10);
+      return !!weekMap[key]?._onTime;
     }).reverse();
 
     return { currentStreak: current, longestStreak: Math.max(longest, current), weeklyHistory: history };
@@ -1092,7 +1126,8 @@ export default function Dashboard() {
   async function submitWin() {
     if (!winForm.win_1.trim()) return;
 
-    const date = new Date().toISOString().slice(0, 10);
+    const submittedAt = new Date().toISOString(); // actual submit time — used for streak
+    const weekDate    = winForm.week_date || new Date().toISOString().slice(0, 10);
 
     // שמור ב-Supabase
     await supabase.from('sunday_wins').insert({
@@ -1103,7 +1138,8 @@ export default function Dashboard() {
       win_3:           winForm.win_3,
       focus_next_week: winForm.focus_next_week,
       blocker:         winForm.blocker,
-      week_date:       date,
+      week_date:       weekDate,
+      submitted_at:    submittedAt,
     });
 
     // שלח לסלאק
@@ -1125,7 +1161,7 @@ export default function Dashboard() {
       console.error('Slack error:', e);
     }
 
-    setWinForm({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '' });
+    setWinForm({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '', week_date: new Date().toISOString().slice(0,10), _datePicker: false });
     setModal(null);
     fetchAll();
   }
@@ -1875,8 +1911,6 @@ export default function Dashboard() {
         const stepBg = 'rgb(var(--bg-surface))';
         const fieldBg = 'rgb(var(--bg-elevated))';
         const fieldBorder = '1px solid rgba(255,255,255,0.1)';
-        const dateStr = new Date().toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' });
-
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
             <div dir="rtl" className="w-full max-w-2xl rounded-2xl overflow-hidden" style={{ background: stepBg, border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -1885,9 +1919,25 @@ export default function Dashboard() {
               <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
                 <div className="flex items-center gap-3">
                   <span className="text-base font-bold text-white">נצחונות שבועיים</span>
-                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)' }}>
-                    {dateStr}
-                  </span>
+                  <div className="relative">
+                    <button onClick={() => setWinForm(f => ({ ...f, _datePicker: !f._datePicker }))}
+                      className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 hover:bg-white/15 transition"
+                      style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)' }}>
+                      <Calendar size={11} />
+                      {new Date(winForm.week_date + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      <ChevronDown size={10} />
+                    </button>
+                    {winForm._datePicker && (
+                      <div className="absolute top-full mt-2 right-0 z-50 rounded-xl p-4 shadow-2xl"
+                        style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.15)', minWidth: 220 }}>
+                        <p className="text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>על איזה שבוע הנצחונות?</p>
+                        <input type="date" value={winForm.week_date}
+                          onChange={e => setWinForm(f => ({ ...f, week_date: e.target.value, _datePicker: false }))}
+                          className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                          style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.15)' }} />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <button onClick={() => { setModal(null); setWinStep(1); }} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   <X size={18} />
