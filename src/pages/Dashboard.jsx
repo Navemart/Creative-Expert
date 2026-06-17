@@ -1264,41 +1264,74 @@ export default function Dashboard() {
     let pendingUpgradeData = null; // filled when rank upgrade needs admin approval
 
     if (!isFirstSubmission) {
-      // When editing: exclude the submission being edited so we can re-evaluate it
-      const base   = editingSubmission
-        ? [...monthlyData].filter(s => s.id !== editingSubmission.id)
-        : [...monthlyData];
-      const sorted = base.sort((a, b) => new Date(a.month) - new Date(b.month));
+      const newIncome = parseFloat(monthlyForm.total_income) || 0;
 
-      // Current rank floor = best rank ever achieved historically (never downgrade)
-      const historicalBest    = calcBestHistoricalRank(sorted);
-      const currentRankLabel  = historicalBest?.label || sorted[sorted.length - 1]?.current_rank || SEGMENTS[0].label;
-      const currentRankObj    = SEGMENTS.find(s => s.label === currentRankLabel) || SEGMENTS[0];
+      if (editingSubmission) {
+        // ── Editing an existing submission ──────────────────────
+        // Compare best rank across ALL submissions BEFORE vs AFTER the edit
+        const beforeRank = calcBestHistoricalRank(monthlyData) || SEGMENTS[0];
+        const afterSubs  = monthlyData.map(s =>
+          s.id === editingSubmission.id
+            ? { ...s, total_income: newIncome, amount: newIncome }
+            : s
+        );
+        const afterRank  = calcBestHistoricalRank(afterSubs) || SEGMENTS[0];
 
-      // Check new pair: last stored month + new/edited submission
-      const lastSub      = sorted[sorted.length - 1];
-      const lastIncome   = lastSub?.total_income ?? lastSub?.amount ?? 0;
-      const newIncome    = parseFloat(monthlyForm.total_income) || 0;
-      const avg          = (lastIncome + newIncome) / 2;
-      const newRankObj   = getRank(avg);
-
-      if (newRankObj.min > currentRankObj.min) {
-        // Rank upgrade!
-        finalRank = newRankObj.label;
-        pendingUpgradeData = {
-          user_id:        userId,
-          first_name:     user?.firstName || '',
-          current_rank:   currentRankLabel,
-          proposed_rank:  newRankObj.label,
-          month_1:        lastSub.month,
-          month_1_income: lastIncome,
-          month_2:        fullDate,
-          month_2_income: newIncome,
-          avg_income:     avg,
-        };
+        if (afterRank.min > beforeRank.min) {
+          finalRank = afterRank.label;
+          // Find the best pair that caused the upgrade for the approval request
+          const sortedAfter = [...afterSubs].sort((a, b) => new Date(a.month) - new Date(b.month));
+          let bestIdx = 1;
+          let bestAvg = 0;
+          for (let i = 1; i < sortedAfter.length; i++) {
+            const inc1 = sortedAfter[i-1].total_income ?? sortedAfter[i-1].amount ?? 0;
+            const inc2 = sortedAfter[i].total_income   ?? sortedAfter[i].amount   ?? 0;
+            const avg  = (inc1 + inc2) / 2;
+            if (avg > bestAvg) { bestAvg = avg; bestIdx = i; }
+          }
+          pendingUpgradeData = {
+            user_id:        userId,
+            first_name:     user?.firstName || '',
+            current_rank:   beforeRank.label,
+            proposed_rank:  afterRank.label,
+            month_1:        sortedAfter[bestIdx - 1].month,
+            month_1_income: sortedAfter[bestIdx - 1].total_income ?? sortedAfter[bestIdx - 1].amount ?? 0,
+            month_2:        sortedAfter[bestIdx].month,
+            month_2_income: sortedAfter[bestIdx].total_income ?? sortedAfter[bestIdx].amount ?? 0,
+            avg_income:     bestAvg,
+          };
+        } else {
+          finalRank = beforeRank.label;
+        }
       } else {
-        // Never downgrade — keep best historical rank
-        finalRank = currentRankLabel;
+        // ── New submission ──────────────────────────────────────
+        const sorted = [...monthlyData].sort((a, b) => new Date(a.month) - new Date(b.month));
+
+        const historicalBest   = calcBestHistoricalRank(sorted);
+        const currentRankLabel = historicalBest?.label || sorted[sorted.length - 1]?.current_rank || SEGMENTS[0].label;
+        const currentRankObj   = SEGMENTS.find(s => s.label === currentRankLabel) || SEGMENTS[0];
+
+        const lastSub    = sorted[sorted.length - 1];
+        const lastIncome = lastSub?.total_income ?? lastSub?.amount ?? 0;
+        const avg        = (lastIncome + newIncome) / 2;
+        const newRankObj = getRank(avg);
+
+        if (newRankObj.min > currentRankObj.min) {
+          finalRank = newRankObj.label;
+          pendingUpgradeData = {
+            user_id:        userId,
+            first_name:     user?.firstName || '',
+            current_rank:   currentRankLabel,
+            proposed_rank:  newRankObj.label,
+            month_1:        lastSub.month,
+            month_1_income: lastIncome,
+            month_2:        fullDate,
+            month_2_income: newIncome,
+            avg_income:     avg,
+          };
+        } else {
+          finalRank = currentRankLabel;
+        }
       }
     }
     // ─────────────────────────────────────────────────────────
