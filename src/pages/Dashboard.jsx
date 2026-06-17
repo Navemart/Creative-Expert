@@ -811,7 +811,7 @@ export default function Dashboard() {
     followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '',
     new_clients: '', retainers_count: '', client_satisfaction: '', on_time_delivery: '',
     biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '',
-    nps: '', program_feedback: '',
+    nps: '', program_feedback: '', _datePicker: false,
   });
 
   // Load dashboard labels
@@ -2300,22 +2300,35 @@ export default function Dashboard() {
                   <span className="text-base font-bold text-white">
                     {editingSubmission ? 'עריכת נתונים חודשיים' : 'סיכום חודשי'}
                   </span>
-                  {/* Month + Year pickers inline in header */}
-                  <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <select value={rmMonth}
-                      onChange={e => setMonthlyForm(f => ({ ...f, report_month: `${rmYear}-${e.target.value}` }))}
-                      className="text-xs font-medium outline-none bg-transparent cursor-pointer"
-                      style={{ color: 'rgba(255,255,255,0.85)' }}>
-                      {HE_MONTHS.map((m, i) => (
-                        <option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>
-                      ))}
-                    </select>
-                    <select value={rmYear}
-                      onChange={e => setMonthlyForm(f => ({ ...f, report_month: `${e.target.value}-${rmMonth}` }))}
-                      className="text-xs font-medium outline-none bg-transparent cursor-pointer"
-                      style={{ color: 'rgba(255,255,255,0.55)' }}>
-                      {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
+                  {/* Month picker — shows "יוני 2026 ↓", click opens popover */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setMonthlyForm(f => ({ ...f, _datePicker: !f._datePicker }))}
+                      className="flex items-center gap-1 rounded-lg px-2.5 py-1 transition hover:bg-white/10"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.9)' }}>{monthLabel} {rmYear}</span>
+                      <ChevronDown size={13} style={{ color: 'rgba(255,255,255,0.45)' }} />
+                    </button>
+                    {monthlyForm._datePicker && (
+                      <div className="absolute top-full mt-1 right-0 z-10 rounded-xl p-3 space-y-2 shadow-xl"
+                        style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.12)', minWidth: 220 }}>
+                        <p className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>על איזה חודש מדווחים?</p>
+                        <select value={rmMonth}
+                          onChange={e => { setMonthlyForm(f => ({ ...f, report_month: `${rmYear}-${e.target.value}`, _datePicker: false })); }}
+                          className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}>
+                          {HE_MONTHS.map((m, i) => (
+                            <option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>
+                          ))}
+                        </select>
+                        <select value={rmYear}
+                          onChange={e => { setMonthlyForm(f => ({ ...f, report_month: `${e.target.value}-${rmMonth}`, _datePicker: false })); }}
+                          className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+                          style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}>
+                          {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                      </div>
+                    )}
                   </div>
                   {isAdmin && (
                     <button onClick={() => setShowFormEditor(true)}
