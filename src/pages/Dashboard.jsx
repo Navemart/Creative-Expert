@@ -122,10 +122,11 @@ function Modal({ title, onClose, children }) {
 // ── Progress bar ──────────────────────────────────────────────
 const BAR_GRADIENT = 'linear-gradient(to left, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #a855f7)';
 
-function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, currentLabel = 'אחרון', bestLabel = 'שיא' }) {
+function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, currentLabel = 'אחרון', bestLabel = 'שיא', storedRank }) {
   const currentPct = 100 - Math.min((current    / MAX_BAR) * 100, 100);
   const bestPct    = 100 - Math.min((best        / MAX_BAR) * 100, 100);
-  const rank       = getRank(rankAmount ?? current);   // דרגה = ממוצע 2 חודשים
+  // Use stored best-historical rank (never downgrades) for the label; fall back to income-derived rank
+  const rank       = storedRank || getRank(rankAmount ?? current);
   const currentRankDisplay = getRank(current);         // לצבע הסמן הנוכחי
   const bestRank   = getRank(best);
 
@@ -1046,12 +1047,16 @@ export default function Dashboard() {
     return { currentStreak: current, longestStreak: Math.max(longest, current), weeklyHistory: history };
   }, [wins]);
 
-  // חישוב דרגה לפי ממוצע 2 חודשים אחרונים ברצף
+  // חישוב דרגה לפי ממוצע 2 חודשים אחרונים ברצף (לבר בלבד)
   const last2 = sortedMonthly.slice(-2);
   const getAmt = m => m.total_income ?? m.amount ?? 0;
   const rankAmount = last2.length >= 2
     ? (getAmt(last2[0]) + getAmt(last2[1])) / 2
     : getAmt(last2[0] ?? {});
+
+  // Stored best-historical rank (set by retroactive fix in fetchAll — never downgrades)
+  const storedRankLabel = currentSubmission?.current_rank || SEGMENTS[0].label;
+  const storedRank = SEGMENTS.find(s => s.label === storedRankLabel) || SEGMENTS[0];
 
   const rangeMonths = { '3M': 3, '6M': 6, '1Y': 12 };
 
@@ -1268,8 +1273,10 @@ export default function Dashboard() {
 
       if (editingSubmission) {
         // ── Editing an existing submission ──────────────────────
-        // Compare best rank across ALL submissions BEFORE vs AFTER the edit
-        const beforeRank = calcBestHistoricalRank(monthlyData) || SEGMENTS[0];
+        // Baseline = rank currently stored in DB on the latest submission (set by retroactive fix)
+        const sortedForRank = [...monthlyData].sort((a, b) => new Date(a.month) - new Date(b.month));
+        const latestForRank = sortedForRank[sortedForRank.length - 1];
+        const beforeRank    = SEGMENTS.find(s => s.label === latestForRank?.current_rank) || SEGMENTS[0];
         const afterSubs  = monthlyData.map(s =>
           s.id === editingSubmission.id
             ? { ...s, total_income: newIncome, amount: newIncome }
@@ -1479,7 +1486,7 @@ export default function Dashboard() {
 
       {/* ── 2. Progress bar ── */}
       <ProgressBar
-        current={currentAmount} best={bestAmount} rankAmount={rankAmount} monthsCount={last2.length}
+        current={currentAmount} best={bestAmount} rankAmount={rankAmount} monthsCount={last2.length} storedRank={storedRank}
         currentLabel={currentMonthShort ? (bestAmount > 0 && bestAmount === currentAmount ? `${currentMonthShort} · שיא 🏆` : currentMonthShort) : 'אחרון'}
         bestLabel={bestMonthShort}
         sectionLabel={<EditableText labelKey="section_progress" labels={labels} onSave={saveLabel} editMode={labelEditMode} className="text-sm" style={{ color: 'rgba(255,255,255,0.7)', fontWeight: 600 }} />}
