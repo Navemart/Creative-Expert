@@ -808,8 +808,9 @@ export default function Dashboard() {
     current_rank: '', achieved_next_rank: '', business_confidence: '',
     sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '',
     leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '',
-    followers: '', reach: '', posts_count: '', content_confidence: '',
-    biggest_win: '', main_project: '', systems_needed: '',
+    followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '',
+    new_clients: '', retainers_count: '', client_satisfaction: '', on_time_delivery: '',
+    biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '',
     nps: '', program_feedback: '',
   });
 
@@ -1193,9 +1194,17 @@ export default function Dashboard() {
       reach:                s.reach?.toString()                || '',
       posts_count:          s.posts_count?.toString()          || '',
       content_confidence:   s.content_confidence?.toString()   || '',
+      avg_views:            s.avg_views?.toString()            || '',
+      engagement_rate:      s.engagement_rate?.toString()      || '',
+      new_clients:          s.new_clients?.toString()          || '',
+      retainers_count:      s.retainers_count?.toString()      || '',
+      client_satisfaction:  s.client_satisfaction?.toString()  || '',
+      on_time_delivery:     s.on_time_delivery?.toString()     || '',
       biggest_win:          s.biggest_win                      || '',
       main_project:         s.main_project                     || '',
       systems_needed:       s.systems_needed                   || '',
+      recommendation:       s.recommendation                   || '',
+      focus_next_month:     s.focus_next_month                 || '',
       nps:                  s.nps?.toString()                  || '',
       program_feedback:     s.program_feedback                 || '',
     });
@@ -1290,9 +1299,17 @@ export default function Dashboard() {
       reach:                i(monthlyForm.reach),
       posts_count:          i(monthlyForm.posts_count),
       content_confidence:   i(monthlyForm.content_confidence),
+      avg_views:            i(monthlyForm.avg_views),
+      engagement_rate:      n(monthlyForm.engagement_rate),
+      new_clients:          i(monthlyForm.new_clients),
+      retainers_count:      i(monthlyForm.retainers_count),
+      client_satisfaction:  i(monthlyForm.client_satisfaction),
+      on_time_delivery:     i(monthlyForm.on_time_delivery),
       biggest_win:          monthlyForm.biggest_win || null,
       main_project:         monthlyForm.main_project || null,
       systems_needed:       monthlyForm.systems_needed || null,
+      recommendation:       monthlyForm.recommendation || null,
+      focus_next_month:     monthlyForm.focus_next_month || null,
       nps:                  i(monthlyForm.nps),
       program_feedback:     monthlyForm.program_feedback || null,
     };
@@ -1317,8 +1334,9 @@ export default function Dashboard() {
       current_rank: '', achieved_next_rank: '', business_confidence: '',
       sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '',
       leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '',
-      followers: '', reach: '', posts_count: '', content_confidence: '',
-      biggest_win: '', main_project: '', systems_needed: '',
+      followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '',
+      new_clients: '', client_satisfaction: '', on_time_delivery: '',
+      biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '',
       nps: '', program_feedback: '',
     });
     setModal(null);
@@ -1376,7 +1394,7 @@ export default function Dashboard() {
           <button onClick={() => { setWinStep(1); setModal('win'); }} className={btnClass} style={btnStyle}><Trophy size={15} /> נצחונות שבועיים</button>
           <button
             onClick={() => {
-              setMonthlyForm({ report_month: currentMonth, total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', biggest_win: '', main_project: '', systems_needed: '', nps: '', program_feedback: '' });
+              setMonthlyForm({ report_month: currentMonth, total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '', new_clients: '', client_satisfaction: '', on_time_delivery: '', biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '', nps: '', program_feedback: '' });
               setEditingSubmission(null); setModal('monthly');
             }}
             className={btnClass} style={btnStyle}
@@ -2108,19 +2126,27 @@ export default function Dashboard() {
       )}
 
       {modal === 'monthly' && (() => {
-        const MSTEP_COLORS = { 1: '#F5C118', 2: '#f97316', 3: '#22c55e', 4: '#3b82f6' };
+        const MSTEP_COLORS = { 1: '#f97316', 2: '#8b5cf6', 3: '#22c55e', 4: '#3b82f6', 5: '#ec4899' };
         const MSTEP_META = [
-          { n: 1, icon: '💰', label: 'ביצועים', desc: 'הכנסות, עסקאות והוצאות החודש' },
-          { n: 2, icon: '🤝', label: 'מכירות',  desc: 'שיחות, לידים ולקוחות פעילים' },
-          { n: 3, icon: '📱', label: 'תוכן',    desc: 'עוקבים, חשיפה ופוסטים' },
-          { n: 4, icon: '🔮', label: 'פוקוס',   desc: 'נצחון, מוקד ופידבק לתוכנית' },
+          { n: 1, label: 'לבלוט',   desc: 'נתוני תוכן — עוקבים, חשיפה וביצועי פוסטים' },
+          { n: 2, label: 'להוביל',  desc: 'נתוני מכירות — לידים, שיחות ועסקאות' },
+          { n: 3, label: 'לשלוט',   desc: 'לקוחות ופרויקטים — מצב שוטף ואיכות שירות' },
+          { n: 4, label: 'לספק',    desc: 'נתונים עסקיים — הכנסות, הוצאות ודרגה' },
+          { n: 5, label: 'רפלקשן',  desc: 'סיכום החודש — נצחונות, פוקוס ופידבק' },
         ];
-        const mAccent   = MSTEP_COLORS[monthlyStep];
-        const fBg       = 'rgb(var(--bg-elevated))';
-        const fBorder   = '1px solid rgba(255,255,255,0.1)';
-        const mTotal    = MSTEP_META.length;
-        const canNext   = monthlyStep < mTotal;
-        const dateStr   = new Date().toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+        const mAccent = MSTEP_COLORS[monthlyStep];
+        const fBg     = 'rgb(var(--bg-elevated))';
+        const fBorder = '1px solid rgba(255,255,255,0.1)';
+        const mTotal  = MSTEP_META.length;
+        const canNext = monthlyStep < mTotal;
+
+        // Month/year picker from report_month "YYYY-MM"
+        const rmParts  = (monthlyForm.report_month || '').split('-');
+        const rmYear   = rmParts[0] || new Date().getFullYear().toString();
+        const rmMonth  = rmParts[1] || String(new Date().getMonth() + 1).padStart(2, '0');
+        const HE_MONTHS = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+        const monthLabel = HE_MONTHS[parseInt(rmMonth, 10) - 1] || rmMonth;
+        const yearOptions = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i);
 
         const rankBlock = isFirstSubmission ? (
           <>
@@ -2132,7 +2158,7 @@ export default function Dashboard() {
                 {SEGMENTS.map(s => <option key={s.label} value={s.label}>{s.label} — ₪{s.min === 0 ? '0' : `${s.min/1000}K`}+</option>)}
               </select>
             </MField>
-            <MField label="זכיתם כבר בדרגה הבאה? אם כן, באיזו?" required>
+            <MField label="זכיתם כבר בדרגה הבאה? אם כן, באיזו?">
               <MInput placeholder="שם הדרגה שהגעתם אליה (או לא)" value={monthlyForm.achieved_next_rank} onChange={e => setMonthlyForm(f => ({ ...f, achieved_next_rank: e.target.value }))} />
             </MField>
           </>
@@ -2148,7 +2174,7 @@ export default function Dashboard() {
           const label = lastSub?.current_rank;
           const seg = SEGMENTS.find(s => s.label === label);
           return (
-            <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: 'rgba(245,193,24,0.07)', border: '1px solid rgba(245,193,24,0.2)' }}>
+            <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)' }}>
               <span className="text-2xl">🏅</span>
               <div>
                 <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>הדרגה תחושב אוטומטית</p>
@@ -2161,21 +2187,61 @@ export default function Dashboard() {
         })();
 
         const stepContent = [
-          /* Step 1 — ביצועים */
+          /* Step 1 — לבלוט */
           <div className="space-y-4" key={1}>
-            <MField label="החודש המדווח" required>
-              <input type="month" value={monthlyForm.report_month}
-                onChange={e => setMonthlyForm(f => ({ ...f, report_month: e.target.value }))}
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                style={{ background: fBg, border: fBorder, color: 'white' }} />
+            <MGrid cols={3}>
+              <MField label="עוקבים" required><MInput placeholder="0" type="number" value={monthlyForm.followers} onChange={e => setMonthlyForm(f => ({ ...f, followers: e.target.value }))} /></MField>
+              <MField label="חשיפה (Reach)" required><MInput placeholder="0" type="number" value={monthlyForm.reach} onChange={e => setMonthlyForm(f => ({ ...f, reach: e.target.value }))} /></MField>
+              <MField label="פוסטים שפורסמו" required><MInput placeholder="0" type="number" value={monthlyForm.posts_count} onChange={e => setMonthlyForm(f => ({ ...f, posts_count: e.target.value }))} /></MField>
+            </MGrid>
+            <MGrid cols={2}>
+              <MField label="ממוצע צפיות לפוסט"><MInput placeholder="0" type="number" value={monthlyForm.avg_views} onChange={e => setMonthlyForm(f => ({ ...f, avg_views: e.target.value }))} /></MField>
+              <MField label="אחוז מעורבות ממוצע (%)"><MInput placeholder="0.0" type="number" value={monthlyForm.engagement_rate} onChange={e => setMonthlyForm(f => ({ ...f, engagement_rate: e.target.value }))} /></MField>
+            </MGrid>
+            <MField label="ביטחון בתוכן החודש (1–10)" required>
+              <MSlider value={monthlyForm.content_confidence} onChange={v => setMonthlyForm(f => ({ ...f, content_confidence: v }))} />
+            </MField>
+          </div>,
+
+          /* Step 2 — להוביל */
+          <div className="space-y-4" key={2}>
+            <MGrid cols={3}>
+              <MField label="לידים שהגיעו" required><MInput placeholder="0" type="number" value={monthlyForm.leads} onChange={e => setMonthlyForm(f => ({ ...f, leads: e.target.value }))} /></MField>
+              <MField label="הצעות שהצעתי" hint="סטורי, פוסט, DM וכד׳"><MInput placeholder="0" type="number" value={monthlyForm.proposals} onChange={e => setMonthlyForm(f => ({ ...f, proposals: e.target.value }))} /></MField>
+              <MField label="שיחות אסטרטגיה"><MInput placeholder="0" type="number" value={monthlyForm.strategy_calls} onChange={e => setMonthlyForm(f => ({ ...f, strategy_calls: e.target.value }))} /></MField>
+            </MGrid>
+            <MGrid cols={3}>
+              <MField label="שיחות מכירה שנקבעו" required><MInput placeholder="0" type="number" value={monthlyForm.sales_calls_set} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_set: e.target.value }))} /></MField>
+              <MField label="הגיעו לשיחה" required><MInput placeholder="0" type="number" value={monthlyForm.sales_calls_showed} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_showed: e.target.value }))} /></MField>
+              <MField label="נסגרו" hint="כולל לקוחות קיימים"><MInput placeholder="0" type="number" value={monthlyForm.closings_count} onChange={e => setMonthlyForm(f => ({ ...f, closings_count: e.target.value }))} /></MField>
+            </MGrid>
+            <MGrid cols={2}>
+              <MField label="הצעות מחיר נשלחו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_sent} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_sent: e.target.value }))} /></MField>
+              <MField label="הצעות מחיר אושרו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_approved} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_approved: e.target.value }))} /></MField>
+            </MGrid>
+          </div>,
+
+          /* Step 3 — לשלוט */
+          <div className="space-y-4" key={3}>
+            <MGrid cols={3}>
+              <MField label="לקוחות חדשים החודש" required><MInput placeholder="0" type="number" value={monthlyForm.new_clients} onChange={e => setMonthlyForm(f => ({ ...f, new_clients: e.target.value }))} /></MField>
+              <MField label="לקוחות פעילים סה״כ" required><MInput placeholder="0" type="number" value={monthlyForm.active_clients} onChange={e => setMonthlyForm(f => ({ ...f, active_clients: e.target.value }))} /></MField>
+              <MField label="ריטיינרים פעילים" hint="מספר לא סכום"><MInput placeholder="0" type="number" value={monthlyForm.retainers_count} onChange={e => setMonthlyForm(f => ({ ...f, retainers_count: e.target.value }))} /></MField>
+            </MGrid>
+            <MField label="הפרויקט / לקוח המרכזי החודש">
+              <MInput placeholder="על מה הכי השקעתם?" value={monthlyForm.main_project} onChange={e => setMonthlyForm(f => ({ ...f, main_project: e.target.value }))} />
             </MField>
             <MGrid cols={2}>
-              <MField label="עסקאות חדשות שנסגרו (₪)" required>
-                <MInput placeholder="0" type="number" value={monthlyForm.total_new_deals} onChange={e => setMonthlyForm(f => ({ ...f, total_new_deals: e.target.value }))} />
-              </MField>
-              <MField label="ריטיינרים ותשלומים קבועים (₪)">
-                <MInput placeholder="0" type="number" value={monthlyForm.retainers} onChange={e => setMonthlyForm(f => ({ ...f, retainers: e.target.value }))} />
-              </MField>
+              <MField label="שביעות רצון לקוחות (1–10)" hint="תחושה כוללת"><MSlider value={monthlyForm.client_satisfaction} onChange={v => setMonthlyForm(f => ({ ...f, client_satisfaction: v }))} /></MField>
+              <MField label="עמידה בלוחות זמנים (1–10)"><MSlider value={monthlyForm.on_time_delivery} onChange={v => setMonthlyForm(f => ({ ...f, on_time_delivery: v }))} /></MField>
+            </MGrid>
+          </div>,
+
+          /* Step 4 — לספק */
+          <div className="space-y-4" key={4}>
+            <MGrid cols={2}>
+              <MField label="עסקאות חדשות שנסגרו (₪)" required><MInput placeholder="0" type="number" value={monthlyForm.total_new_deals} onChange={e => setMonthlyForm(f => ({ ...f, total_new_deals: e.target.value }))} /></MField>
+              <MField label="ריטיינרים ותשלומים קבועים (₪)"><MInput placeholder="0" type="number" value={monthlyForm.retainers} onChange={e => setMonthlyForm(f => ({ ...f, retainers: e.target.value }))} /></MField>
             </MGrid>
             <MField label="הכנסה כוללת (₪)" required>
               <MInput placeholder="כמה כסף נכנס לבנק החודש?" type="number" value={monthlyForm.total_income} onChange={e => setMonthlyForm(f => ({ ...f, total_income: e.target.value }))} />
@@ -2186,58 +2252,32 @@ export default function Dashboard() {
               <MField label="ממומן (₪)"><MInput placeholder="0" type="number" value={monthlyForm.paid_ads} onChange={e => setMonthlyForm(f => ({ ...f, paid_ads: e.target.value }))} /></MField>
             </MGrid>
             {rankBlock}
-            <MField label="ביטחון בביצועים בעסק" required>
+            <MField label="ביטחון בביצועים העסקיים (1–10)" required>
               <MSlider value={monthlyForm.business_confidence} onChange={v => setMonthlyForm(f => ({ ...f, business_confidence: v }))} />
             </MField>
           </div>,
 
-          /* Step 2 — מכירות */
-          <div className="space-y-4" key={2}>
-            <MGrid cols={3}>
-              <MField label="שיחות שנקבעו" required><MInput placeholder="0" type="number" value={monthlyForm.sales_calls_set} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_set: e.target.value }))} /></MField>
-              <MField label="הגיעו לשיחה" required><MInput placeholder="0" type="number" value={monthlyForm.sales_calls_showed} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_showed: e.target.value }))} /></MField>
-              <MField label="נסגרו" hint="גם עם לקוחות קיימים"><MInput placeholder="0" type="number" value={monthlyForm.closings_count || ''} onChange={e => setMonthlyForm(f => ({ ...f, closings_count: e.target.value }))} /></MField>
-            </MGrid>
-            <MGrid cols={3}>
-              <MField label="לידים שהגיעו" required><MInput placeholder="0" type="number" value={monthlyForm.leads} onChange={e => setMonthlyForm(f => ({ ...f, leads: e.target.value }))} /></MField>
-              <MField label="הצעות שהצעתי" hint="סטורי, פוסט, הודעה וכד׳" required><MInput placeholder="0" type="number" value={monthlyForm.proposals} onChange={e => setMonthlyForm(f => ({ ...f, proposals: e.target.value }))} /></MField>
-              <MField label="לקוחות פעילים" required><MInput placeholder="0" type="number" value={monthlyForm.active_clients} onChange={e => setMonthlyForm(f => ({ ...f, active_clients: e.target.value }))} /></MField>
-            </MGrid>
-            <MGrid cols={3}>
-              <MField label="הצעות מחיר נשלחו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_sent || ''} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_sent: e.target.value }))} /></MField>
-              <MField label="הצעות מחיר אושרו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_approved || ''} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_approved: e.target.value }))} /></MField>
-              <MField label="שיחות אסטרטגיה"><MInput placeholder="0" type="number" value={monthlyForm.strategy_calls} onChange={e => setMonthlyForm(f => ({ ...f, strategy_calls: e.target.value }))} /></MField>
-            </MGrid>
-          </div>,
-
-          /* Step 3 — תוכן */
-          <div className="space-y-4" key={3}>
-            <MGrid cols={3}>
-              <MField label="עוקבים" required><MInput placeholder="0" type="number" value={monthlyForm.followers} onChange={e => setMonthlyForm(f => ({ ...f, followers: e.target.value }))} /></MField>
-              <MField label="חשיפה (Reach)" required><MInput placeholder="0" type="number" value={monthlyForm.reach} onChange={e => setMonthlyForm(f => ({ ...f, reach: e.target.value }))} /></MField>
-              <MField label="פוסטים" required><MInput placeholder="0" type="number" value={monthlyForm.posts_count} onChange={e => setMonthlyForm(f => ({ ...f, posts_count: e.target.value }))} /></MField>
-            </MGrid>
-            <MField label="ביטחון בתוכן" required>
-              <MSlider value={monthlyForm.content_confidence} onChange={v => setMonthlyForm(f => ({ ...f, content_confidence: v }))} />
+          /* Step 5 — רפלקשן */
+          <div className="space-y-4" key={5}>
+            <MField label="כמה תמליץ על התוכנית לחבר? (0–10)" required>
+              <MSlider value={monthlyForm.nps} onChange={v => setMonthlyForm(f => ({ ...f, nps: v }))} />
             </MField>
-          </div>,
-
-          /* Step 4 — פוקוס */
-          <div className="space-y-4" key={4}>
-            <MField label="הנצחון הגדול ביותר עם לקוח החודש" required>
-              <textarea rows={2} placeholder="שתפו אותנו..." value={monthlyForm.biggest_win}
+            <MField label="הנצחון הגדול ביותר החודש" required>
+              <textarea rows={2} placeholder="מה הלך הכי טוב?" value={monthlyForm.biggest_win}
                 onChange={e => setMonthlyForm(f => ({ ...f, biggest_win: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
                 style={{ background: fBg, border: fBorder, color: 'white' }} />
             </MField>
-            <MGrid cols={2}>
-              <MField label="הפוקוס המרכזי החודש" required><MInput placeholder="דבר אחד. ממוקד." value={monthlyForm.main_project} onChange={e => setMonthlyForm(f => ({ ...f, main_project: e.target.value }))} /></MField>
-              <MField label="מה אתם צריכים החודש?"><MInput placeholder="כלי, הכוונה..." value={monthlyForm.systems_needed} onChange={e => setMonthlyForm(f => ({ ...f, systems_needed: e.target.value }))} /></MField>
-            </MGrid>
-            <MField label="כמה תמליץ על התוכנית לחבר? (1-10)" required>
-              <MSlider value={monthlyForm.nps} onChange={v => setMonthlyForm(f => ({ ...f, nps: v }))} />
+            <MField label="למי תמליץ להצטרף לתוכנית?">
+              <MInput placeholder="שם, תחום, מה מתאים לו?" value={monthlyForm.recommendation} onChange={e => setMonthlyForm(f => ({ ...f, recommendation: e.target.value }))} />
             </MField>
-            <MField label="המלצות לשיפור התוכנית">
+            <MField label="כלים / מערכות / הכוונה שצריכים החודש">
+              <MInput placeholder="איפה אתם צריכים תמיכה?" value={monthlyForm.systems_needed} onChange={e => setMonthlyForm(f => ({ ...f, systems_needed: e.target.value }))} />
+            </MField>
+            <MField label="הפוקוס החשוב ביותר לחודש הבא">
+              <MInput placeholder="דבר אחד. ממוקד." value={monthlyForm.focus_next_month} onChange={e => setMonthlyForm(f => ({ ...f, focus_next_month: e.target.value }))} />
+            </MField>
+            <MField label="פידבק לתוכנית">
               <textarea rows={2} placeholder="מה יעזור לך לרוץ מהר יותר?" value={monthlyForm.program_feedback}
                 onChange={e => setMonthlyForm(f => ({ ...f, program_feedback: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
@@ -2246,19 +2286,40 @@ export default function Dashboard() {
           </div>,
         ];
 
+        // gradient bar for 5 steps
+        const gradBar = (() => {
+          const stops = Object.values(MSTEP_COLORS).slice(0, monthlyStep);
+          if (stops.length === 1) return stops[0];
+          return `linear-gradient(to left, ${stops[0]}, ${stops[stops.length - 1]})`;
+        })();
+
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
             <div dir="rtl" className="w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', maxHeight: 'calc(100vh - 2rem)' }}>
 
               {/* Header */}
               <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-base font-bold text-white">
-                    {editingSubmission ? 'עריכת נתונים חודשיים' : 'דיווח חודשי'}
+                    {editingSubmission ? 'עריכת נתונים חודשיים' : 'סיכום חודשי'}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.45)' }}>
-                    {dateStr}
-                  </span>
+                  {/* Month + Year pickers inline in header */}
+                  <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <select value={rmMonth}
+                      onChange={e => setMonthlyForm(f => ({ ...f, report_month: `${rmYear}-${e.target.value}` }))}
+                      className="text-xs font-medium outline-none bg-transparent cursor-pointer"
+                      style={{ color: 'rgba(255,255,255,0.85)' }}>
+                      {HE_MONTHS.map((m, i) => (
+                        <option key={i} value={String(i+1).padStart(2,'0')}>{m}</option>
+                      ))}
+                    </select>
+                    <select value={rmYear}
+                      onChange={e => setMonthlyForm(f => ({ ...f, report_month: `${e.target.value}-${rmMonth}` }))}
+                      className="text-xs font-medium outline-none bg-transparent cursor-pointer"
+                      style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                  </div>
                   {isAdmin && (
                     <button onClick={() => setShowFormEditor(true)}
                       className="text-xs px-2 py-0.5 rounded-full transition hover:opacity-80"
@@ -2273,27 +2334,16 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Sub-header */}
-              <div className="px-5 py-2.5 flex-shrink-0" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>מלאו את הנתונים החשובים שלכם — 4 שלבים קצרים.</p>
-              </div>
-
-              {/* Progress bar — ABOVE tabs, fills right→left for RTL */}
+              {/* Progress bar */}
               <div className="px-5 pt-3 pb-0 flex-shrink-0">
-                <div className="w-full rounded-full overflow-hidden" style={{ height: 5, background: 'rgba(255,255,255,0.08)', display: 'flex' }}>
-                  <div style={{ marginLeft: 'auto', marginRight: 0, flexShrink: 0, borderRadius: 999, transition: 'width 0.5s ease',
-                    width: `${(monthlyStep / mTotal) * 100}%`,
-                    background: monthlyStep === 1 ? MSTEP_COLORS[1]
-                      : monthlyStep === 2 ? `linear-gradient(to left, ${MSTEP_COLORS[1]}, ${MSTEP_COLORS[2]})`
-                      : monthlyStep === 3 ? `linear-gradient(to left, ${MSTEP_COLORS[1]}, ${MSTEP_COLORS[3]})`
-                      : `linear-gradient(to left, ${MSTEP_COLORS[1]}, ${MSTEP_COLORS[4]})`,
-                  }} />
+                <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: 'rgba(255,255,255,0.08)', display: 'flex' }}>
+                  <div style={{ marginLeft: 'auto', marginRight: 0, flexShrink: 0, borderRadius: 999, transition: 'width 0.5s ease', width: `${(monthlyStep / mTotal) * 100}%`, background: gradBar }} />
                 </div>
               </div>
 
               {/* Step tabs */}
               <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                {MSTEP_META.map(({ n, icon, label }) => (
+                {MSTEP_META.map(({ n, label }) => (
                   <button key={n} onClick={() => setMonthlyStep(n)}
                     className="flex-1 py-2.5 text-xs font-medium transition"
                     style={{
@@ -2301,24 +2351,26 @@ export default function Dashboard() {
                       borderBottom: monthlyStep === n ? `2px solid ${MSTEP_COLORS[n]}` : '2px solid transparent',
                       background: 'transparent',
                     }}>
-                    {icon} {label}
+                    {label}
                   </button>
                 ))}
               </div>
 
               {/* Body */}
               <div className="flex overflow-hidden flex-1">
-                {/* Left — context */}
+                {/* Left — context panel */}
                 <div className="flex-none w-44 p-5 space-y-3 flex-shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
                   <p className="text-xs font-bold tabular-nums" style={{ color: mAccent }}>
                     {String(monthlyStep).padStart(2,'0')} / {String(mTotal).padStart(2,'0')}
                   </p>
-                  <p className="text-sm font-bold text-white">
-                    {MSTEP_META[monthlyStep-1].icon} {MSTEP_META[monthlyStep-1].label}
-                  </p>
+                  <p className="text-sm font-bold text-white">{MSTEP_META[monthlyStep-1].label}</p>
                   <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
                     {MSTEP_META[monthlyStep-1].desc}
                   </p>
+                  <div className="pt-2 space-y-1">
+                    <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.2)' }}>החודש המדווח</p>
+                    <p className="text-sm font-bold" style={{ color: mAccent }}>{monthLabel} {rmYear}</p>
+                  </div>
                 </div>
 
                 {/* Right — form */}
@@ -2333,20 +2385,20 @@ export default function Dashboard() {
                   onClick={() => monthlyStep === 1 ? (setModal(null), setEditingSubmission(null), setMonthlyStep(1)) : setMonthlyStep(s => s - 1)}
                   className="rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
                   style={{ color: 'rgba(255,255,255,0.55)' }}>
-                  {monthlyStep === 1 ? 'ביטול' : 'חזרה →'}
+                  {monthlyStep === 1 ? '← ביטול' : '← חזרה'}
                 </button>
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>שלב {monthlyStep} מתוך {mTotal}</span>
                 {canNext ? (
                   <button onClick={() => setMonthlyStep(s => s + 1)}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90"
-                    style={{ background: mAccent, color: '#1e3a8a' }}>
-                    ← הבא: {MSTEP_META[monthlyStep].label}
+                    style={{ background: MSTEP_COLORS[monthlyStep + 1], color: '#1e3a8a' }}>
+                    הבא: {MSTEP_META[monthlyStep].label} →
                   </button>
                 ) : (
                   <button onClick={() => { submitMonthly(); setMonthlyStep(1); }}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90"
-                    style={{ background: mAccent, color: '#1e3a8a' }}>
-                    שלח נתונים חודשיים 🚀
+                    style={{ background: mAccent, color: '#fff' }}>
+                    שלח סיכום {monthLabel} ✓
                   </button>
                 )}
               </div>
