@@ -2194,10 +2194,6 @@ export default function Dashboard() {
               <MField label="חשיפה (Reach)" required><MInput placeholder="0" type="number" value={monthlyForm.reach} onChange={e => setMonthlyForm(f => ({ ...f, reach: e.target.value }))} /></MField>
               <MField label="פוסטים שפורסמו" required><MInput placeholder="0" type="number" value={monthlyForm.posts_count} onChange={e => setMonthlyForm(f => ({ ...f, posts_count: e.target.value }))} /></MField>
             </MGrid>
-            <MGrid cols={2}>
-              <MField label="ממוצע צפיות לפוסט"><MInput placeholder="0" type="number" value={monthlyForm.avg_views} onChange={e => setMonthlyForm(f => ({ ...f, avg_views: e.target.value }))} /></MField>
-              <MField label="אחוז מעורבות ממוצע (%)"><MInput placeholder="0.0" type="number" value={monthlyForm.engagement_rate} onChange={e => setMonthlyForm(f => ({ ...f, engagement_rate: e.target.value }))} /></MField>
-            </MGrid>
             <MField label="ביטחון בתוכן החודש (1–10)" required>
               <MSlider value={monthlyForm.content_confidence} onChange={v => setMonthlyForm(f => ({ ...f, content_confidence: v }))} />
             </MField>
