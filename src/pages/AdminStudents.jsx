@@ -405,21 +405,14 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
 }
 
 // ── Student card ─────────────────────────────────────────────
-function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile, open, onToggle }) {
+function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }) {
   const [approving, setApproving] = useState(false);
 
-  const { name, email, monthly, latest_income, latest_rank, health_status,
-    rank_request, has_revenue_drop, revenue_drop_pct, missing_report,
-    has_data, enrolled_at, total_paid, is_active } = student;
+  const { name, latest_rank, health_status, rank_request,
+    enrolled_at, total_paid, is_active } = student;
 
   const rankColor = getRankColor(latest_rank);
   const h = health_status ? HEALTH[health_status] : null;
-
-  const alertItems = [
-    rank_request     && { icon: ArrowUp,      color: '#F5C118', tip: 'שדרוג דרגה ממתין' },
-    has_revenue_drop && { icon: TrendingDown, color: '#ff5a72', tip: `ירידה -${revenue_drop_pct}%` },
-    missing_report   && { icon: Calendar,     color: '#f97316', tip: 'חסר דיווח חודשי' },
-  ].filter(Boolean);
 
   async function handleApprove(e) {
     e.stopPropagation();
@@ -429,87 +422,85 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile, 
   }
 
   return (
-    <div className="rounded-2xl overflow-hidden"
+    <div className="rounded-2xl"
       style={{
         background: 'rgb(var(--bg-surface))',
         border: `1px solid ${h ? h.color + '28' : 'rgba(255,255,255,0.07)'}`,
         borderRight: `3px solid ${h ? h.color : 'rgba(255,255,255,0.08)'}`,
       }}>
 
-      {/* ── Row ── */}
-      <div className="flex items-center gap-2.5 px-3 py-3">
+      <div className="flex items-center gap-3 px-4 py-3">
 
         {/* Avatar */}
-        <div className="h-8 w-8 rounded-full flex-none flex items-center justify-center text-sm font-black"
+        <div className="h-9 w-9 rounded-full flex-none flex items-center justify-center text-sm font-black"
           style={{ background: h?.bg || 'rgba(255,255,255,0.08)', color: h?.color || 'rgba(255,255,255,0.5)' }}>
           {(name || '?').slice(0, 1).toUpperCase()}
         </div>
 
-        {/* Name + meta */}
-        <button onClick={() => has_data && onToggle()}
-          className="flex-1 text-right min-w-0 transition hover:opacity-80"
-          style={{ cursor: has_data ? 'pointer' : 'default' }}>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-white leading-tight">{name}</span>
-            {latest_rank && (
-              <span className="text-[9px] rounded px-1.5 py-0.5 font-bold hidden sm:inline"
-                style={{ background: rankColor + '22', color: rankColor }}>
-                {latest_rank}
-              </span>
-            )}
-            {alertItems.length > 0 && (
-              <div className="flex items-center gap-1">
-                {alertItems.map((a, i) => <a.icon key={i} size={11} style={{ color: a.color }} title={a.tip} />)}
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            <span className="text-[11px] truncate max-w-[140px]" style={{ color: 'rgba(255,255,255,0.28)' }}>{email}</span>
-            {has_data && latest_income != null && (
-              <span className="text-[11px] font-bold" style={{ color: '#F5C118' }}>{fmtILS(latest_income)}</span>
-            )}
-            {enrolled_at && (
-              <span className="text-[10px] hidden sm:inline" style={{ color: 'rgba(255,255,255,0.22)' }}>
-                {fmtDate(enrolled_at)}
-              </span>
-            )}
-          </div>
-        </button>
+        {/* Name */}
+        <div className="flex-1 min-w-0 text-right">
+          <p className="text-sm font-semibold text-white truncate">{name}</p>
+        </div>
 
-        {/* Right controls */}
-        <div className="flex items-center gap-1.5 flex-shrink-0" onClick={e => e.stopPropagation()}>
+        {/* 4 fields */}
+        <div className="hidden sm:flex items-center gap-5 flex-shrink-0">
+          {/* בריאות */}
+          <HealthPicker current={health_status} onChange={v => onHealthChange(student.id, v)} />
+
+          {/* דרגה */}
+          {latest_rank ? (
+            <span className="text-[10px] rounded px-2 py-0.5 font-bold whitespace-nowrap"
+              style={{ background: rankColor + '22', color: rankColor }}>
+              {latest_rank}
+            </span>
+          ) : (
+            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
+          )}
+
+          {/* תאריך הצטרפות */}
+          <span className="text-[11px] whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            {enrolled_at ? fmtDate(enrolled_at) : '—'}
+          </span>
+
+          {/* סכום ששילם */}
+          <span className="text-sm font-bold whitespace-nowrap" style={{ color: total_paid ? '#4fc38a' : 'rgba(255,255,255,0.2)' }}>
+            {total_paid ? fmtFull(total_paid) : '—'}
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
           {rank_request && (
             <button onClick={handleApprove} disabled={approving}
               className="rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition hover:opacity-80"
               style={{ background: '#F5C118', color: '#13152A' }}>
-              {approving ? '...' : '✓ אשר'}
+              {approving ? '...' : '✓ אשר דרגה'}
             </button>
           )}
-          <HealthPicker current={health_status} onChange={v => onHealthChange(student.id, v)} />
           <button onClick={() => onUpdateProfile(student.id, { is_active: !is_active })}
             title={is_active ? 'ארכיון' : 'שחזר'}
             className="p-1.5 rounded-lg transition hover:bg-white/10"
             style={{ color: is_active ? 'rgba(255,255,255,0.18)' : '#4fc38a' }}>
             {is_active ? <Archive size={13} /> : <RotateCcw size={13} />}
           </button>
-          {has_data && (
-            <button onClick={onToggle} className="p-1 rounded transition hover:bg-white/10">
-              <ChevronDown size={14} className="transition-transform duration-200"
-                style={{ color: 'rgba(255,255,255,0.3)', transform: open ? 'rotate(180deg)' : 'none' }} />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* ── Expanded panel ── FIX: key resets idx when student changes */}
-      {open && (
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+      {/* Mobile: show fields below */}
+      <div className="sm:hidden flex flex-wrap gap-3 px-4 pb-3" onClick={e => e.stopPropagation()}>
+        <HealthPicker current={health_status} onChange={v => onHealthChange(student.id, v)} />
+        {latest_rank && <span className="text-[10px] rounded px-2 py-0.5 font-bold" style={{ background: rankColor + '22', color: rankColor }}>{latest_rank}</span>}
+        {enrolled_at && <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{fmtDate(enrolled_at)}</span>}
+        {total_paid && <span className="text-sm font-bold" style={{ color: '#4fc38a' }}>{fmtFull(total_paid)}</span>}
+      </div>
+
+      {false && ( // keep MonthlyPanel import alive
+        <div>
           <MonthlyPanel
-            key={student.id}
-            monthly={monthly || []}
-            studentId={student.id}
-            enrolled_at={enrolled_at}
-            total_paid={total_paid}
+            monthly={[]}
+            studentId=""
+            enrolled_at={null}
+            total_paid={null}
             onUpdateProfile={onUpdateProfile}
           />
         </div>
@@ -1065,20 +1056,15 @@ export default function AdminStudents() {
   function StudentList({ list }) {
     return (
       <div className="space-y-2 w-full">
-        {list.map(s => {
-          const isOpen = openStudentId === s.id;
-          return (
-            <StudentCard
-              key={s.id}
-              student={s}
-              open={isOpen}
-              onToggle={() => toggleStudent(s.id)}
-              onHealthChange={handleHealthChange}
-              onApproveRank={handleApproveRank}
-              onUpdateProfile={updateProfile}
-            />
-          );
-        })}
+        {list.map(s => (
+          <StudentCard
+            key={s.id}
+            student={s}
+            onHealthChange={handleHealthChange}
+            onApproveRank={handleApproveRank}
+            onUpdateProfile={updateProfile}
+          />
+        ))}
       </div>
     );
   }
