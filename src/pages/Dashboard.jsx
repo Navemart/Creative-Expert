@@ -2227,10 +2227,9 @@ export default function Dashboard() {
             <MField label="הפרויקט / לקוח המרכזי החודש">
               <MInput placeholder="על מה הכי השקעתם?" value={monthlyForm.main_project} onChange={e => setMonthlyForm(f => ({ ...f, main_project: e.target.value }))} />
             </MField>
-            <MGrid cols={2}>
-              <MField label="שביעות רצון לקוחות (1–10)" hint="תחושה כוללת"><MSlider value={monthlyForm.client_satisfaction} onChange={v => setMonthlyForm(f => ({ ...f, client_satisfaction: v }))} /></MField>
-              <MField label="עמידה בלוחות זמנים (1–10)"><MSlider value={monthlyForm.on_time_delivery} onChange={v => setMonthlyForm(f => ({ ...f, on_time_delivery: v }))} /></MField>
-            </MGrid>
+            <MField label="שביעות רצון של הלקוחות (1–10)" hint="הערכה שלכם">
+              <MSlider value={monthlyForm.client_satisfaction} onChange={v => setMonthlyForm(f => ({ ...f, client_satisfaction: v }))} />
+            </MField>
           </div>,
 
           /* Step 4 — לספק */
