@@ -682,7 +682,7 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
   // Delta within selected range
   // index-0 = newest (after RTL reverse), so delta = newest - oldest
   const delta = chartData.length >= 2
-    ? chartData[0].value - chartData[chartData.length - 1].value
+    ? parseFloat((chartData[0].value - chartData[chartData.length - 1].value).toFixed(2))
     : null;
 
   const hasData = chartData.length > 1;
