@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import { useIsAdmin } from '../hooks/useIsAdmin.js';
 import confettiLib from 'canvas-confetti';
-import { Plus, Trophy, Calendar, Edit2, X, TrendingUp, Users, Image, Banknote, Settings2, FolderPlus, ExternalLink, Zap, ListChecks, ChevronLeft, Video, ToggleLeft, ToggleRight, GripVertical } from 'lucide-react';
+import { Plus, Trophy, Calendar, Edit2, X, TrendingUp, Users, Image, Banknote, Settings2, FolderPlus, ExternalLink, Zap, ListChecks, ChevronLeft, ChevronDown, Video, ToggleLeft, ToggleRight, GripVertical } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
@@ -1733,16 +1733,26 @@ export default function Dashboard() {
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div className="flex items-center gap-3">
                 <span className="text-base font-bold text-white">נצחון עסקה חדשה 🛡️</span>
-                <label className="relative cursor-pointer">
-                  <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 hover:bg-white/15 transition"
+                <div className="relative">
+                  <button
+                    onClick={() => setDealForm(f => ({ ...f, _datePicker: !f._datePicker }))}
+                    className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 hover:bg-white/15 transition"
                     style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)' }}>
                     <Calendar size={11} />
                     {new Date(dealForm.deal_date + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
-                  </span>
-                  <input type="date" value={dealForm.deal_date}
-                    onChange={e => setDealForm(f => ({ ...f, deal_date: e.target.value }))}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full" />
-                </label>
+                    <ChevronDown size={10} />
+                  </button>
+                  {dealForm._datePicker && (
+                    <div className="absolute top-full mt-2 right-0 z-50 rounded-xl p-4 shadow-2xl"
+                      style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.15)', minWidth: 220 }}>
+                      <p className="text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>מתי נסגרה העסקה?</p>
+                      <input type="date" value={dealForm.deal_date}
+                        onChange={e => setDealForm(f => ({ ...f, deal_date: e.target.value, _datePicker: false }))}
+                        className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
+                        style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.15)' }} />
+                    </div>
+                  )}
+                </div>
               </div>
               <button onClick={() => setModal(null)} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 <X size={18} />
