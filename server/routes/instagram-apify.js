@@ -112,15 +112,11 @@ router.post('/connect', async (req, res) => {
 
   try {
     const cleanUsername = username.replace('@', '');
-    const [raw, rawPostsFromScraper] = await Promise.all([
-      scrapeInstagramProfile(cleanUsername),
-      scrapeInstagramPosts(cleanUsername),
-    ]);
+    // connect: only profile scraper (fast ~10s). User hits refresh for full post history.
+    const raw = await scrapeInstagramProfile(cleanUsername);
     const now = new Date().toISOString();
 
-    // Prefer Post Scraper (more history), fall back to Profile Scraper's latestPosts
-    const postSource = rawPostsFromScraper?.length ? rawPostsFromScraper : (raw.latestPosts || []);
-    const posts = normalizePosts(postSource);
+    const posts = normalizePosts(raw.latestPosts || []);
     const { avgViews, avgEng } = computePostStats(posts);
 
     const row = {
