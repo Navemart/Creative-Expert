@@ -123,24 +123,53 @@ function Delta({ value, prev }) {
   );
 }
 
+// ── Stat chip ────────────────────────────────────────────────
+function Chip({ label, value, prev, color = 'rgba(255,255,255,0.85)', fmt = v => v }) {
+  const display = value == null || value === '' ? '—' : fmt(value);
+  return (
+    <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <p className="text-[10px] mb-1 leading-tight" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
+      <p className="text-sm font-black leading-none" style={{ color }}>{display}</p>
+      {prev != null && prev !== '' && value != null && <Delta value={num(value)} prev={num(prev)} />}
+    </div>
+  );
+}
+
+// ── Slider display ────────────────────────────────────────────
+function SliderDisplay({ value, color = '#F5C118' }) {
+  const v = num(value);
+  if (!v) return <span style={{ color: 'rgba(255,255,255,0.25)' }}>—</span>;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 rounded-full overflow-hidden" style={{ height: 4, background: 'rgba(255,255,255,0.08)' }}>
+        <div style={{ width: `${v * 10}%`, height: '100%', background: color, borderRadius: 999 }} />
+      </div>
+      <span className="text-xs font-bold" style={{ color }}>{v}/10</span>
+    </div>
+  );
+}
+
+// ── Section header ────────────────────────────────────────────
+function SectionHeader({ label }) {
+  return (
+    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 mt-1" style={{ color: 'rgba(255,255,255,0.28)' }}>
+      {label}
+    </p>
+  );
+}
+
 // ── Monthly stats panel ─────────────────────────────────────
 function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_paid }) {
-  // Ascending: oldest (left) → newest (right)
   const sorted = [...monthly].sort((a, b) => a.month.localeCompare(b.month));
-  // Start at the newest month (rightmost tab)
   const [idx, setIdx] = useState(() => Math.max(0, sorted.length - 1));
-
-  // Reset to newest when student changes
   useEffect(() => { setIdx(Math.max(0, sorted.length - 1)); }, [studentId, sorted.length]);
 
   const cur  = sorted[idx]     ?? null;
-  const prev = sorted[idx - 1] ?? null;  // month before current
+  const prev = sorted[idx - 1] ?? null;
 
-  // Sparkline — last 6 months, chronological (already ascending)
   const sparkData = sorted.slice(-6);
   const maxIncome = Math.max(...sparkData.map(m => num(m.total_income || m.amount)), 1);
-
-  const curIncome  = cur ? num(cur.total_income  || cur.amount) : 0;
+  const curIncome  = cur ? num(cur.total_income || cur.amount) : 0;
   const prevIncome = prev ? num(prev.total_income || prev.amount) : null;
   const curExp     = cur ? num(cur.software_expenses) + num(cur.variable_expenses) + num(cur.paid_ads) : 0;
   const curNet     = curIncome - curExp;
@@ -148,28 +177,21 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
   const incomeD    = prevIncome != null && prevIncome !== 0 ? Math.round((curIncome - prevIncome) / Math.abs(prevIncome) * 100) : null;
 
   return (
-    <div className="px-4 pb-5 pt-3 space-y-4">
+    <div className="px-4 pb-6 pt-3 space-y-5">
 
-      {/* ── Profile fields (enrolled / paid) ── */}
-      <div className="flex flex-wrap items-center gap-3 pb-3"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      {/* ── Profile meta ── */}
+      <div className="flex flex-wrap items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider"
-            style={{ color: 'rgba(255,255,255,0.3)' }}>הצטרף</span>
-          {/* FIX: use key to force re-mount when value changes */}
-          <input key={`enroll-${studentId}-${enrolled_at}`}
-            type="date" defaultValue={enrolled_at || ''}
+          <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>הצטרף</span>
+          <input key={`enroll-${studentId}-${enrolled_at}`} type="date" defaultValue={enrolled_at || ''}
             onBlur={e => onUpdateProfile(studentId, { enrolled_at: e.target.value || null })}
             className="rounded-lg px-2 py-1 text-xs outline-none"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', colorScheme: 'dark' }} />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider"
-            style={{ color: 'rgba(255,255,255,0.3)' }}>שילם ₪</span>
-          <input key={`paid-${studentId}-${total_paid}`}
-            type="number" defaultValue={total_paid ?? ''}
+          <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>שילם ₪</span>
+          <input key={`paid-${studentId}-${total_paid}`} type="number" defaultValue={total_paid ?? ''} placeholder="0"
             onBlur={e => onUpdateProfile(studentId, { total_paid: e.target.value ? parseInt(e.target.value, 10) : null })}
-            placeholder="0"
             className="w-24 rounded-lg px-2 py-1 text-xs outline-none text-white"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', colorScheme: 'dark' }} />
         </div>
@@ -180,19 +202,15 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
       ) : (<>
 
         {/* ── Month tabs ── */}
-        <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+        <div className="overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           <div className="flex gap-1.5 pb-1" style={{ minWidth: 'max-content' }}>
             {sorted.map((m, i) => {
               const isActive = i === idx;
               return (
                 <button key={m.month} onClick={() => setIdx(i)}
                   className="rounded-lg px-3 py-1.5 transition-all whitespace-nowrap"
-                  style={{
-                    background: isActive ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)',
-                    border: `1px solid ${isActive ? 'rgba(245,193,24,0.45)' : 'rgba(255,255,255,0.07)'}`,
-                  }}>
-                  <span className="text-[11px] font-semibold"
-                    style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.45)' }}>
+                  style={{ background: isActive ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isActive ? 'rgba(245,193,24,0.45)' : 'rgba(255,255,255,0.07)'}` }}>
+                  <span className="text-[11px] font-semibold" style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.45)' }}>
                     {fmtMonth(m.month)}
                   </span>
                 </button>
@@ -205,130 +223,136 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
         <div className="rounded-2xl px-4 py-3 flex items-end justify-between gap-4"
           style={{ background: 'rgba(245,193,24,0.05)', border: '1px solid rgba(245,193,24,0.15)' }}>
           <div>
-            <p className="text-[10px] uppercase tracking-wider mb-1"
-              style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה — {fmtMonth(cur.month)}</p>
+            <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה — {fmtMonth(cur.month)}</p>
             <p className="text-3xl font-black leading-none" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
             {prevIncome != null && (
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 {incomeD != null && (
                   <span className="text-xs font-bold rounded-md px-1.5 py-0.5"
-                    style={{
-                      background: incomeD > 0 ? 'rgba(134,239,172,0.15)' : incomeD < 0 ? 'rgba(252,165,165,0.15)' : 'rgba(255,255,255,0.08)',
-                      color: incomeD > 0 ? '#86efac' : incomeD < 0 ? '#fca5a5' : 'rgba(255,255,255,0.4)',
-                    }}>
+                    style={{ background: incomeD > 0 ? 'rgba(134,239,172,0.15)' : incomeD < 0 ? 'rgba(252,165,165,0.15)' : 'rgba(255,255,255,0.08)', color: incomeD > 0 ? '#86efac' : incomeD < 0 ? '#fca5a5' : 'rgba(255,255,255,0.4)' }}>
                     {incomeD > 0 ? '↑' : incomeD < 0 ? '↓' : '–'} {Math.abs(incomeD)}%
                   </span>
                 )}
-                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                  לעומת {fmtFull(prevIncome)} ({fmtMonth(prev?.month)})
-                </span>
+                <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>לעומת {fmtFull(prevIncome)} ({fmtMonth(prev?.month)})</span>
               </div>
             )}
           </div>
-          {/* Sparkline bars */}
           {sparkData.length > 1 && (
             <div className="flex items-end gap-1 h-10 flex-shrink-0">
               {sparkData.map((m, i) => {
-                const barH  = Math.max(4, Math.round(num(m.total_income || m.amount) / maxIncome * 40));
-                const isBar = m.month === cur.month;
+                const barH = Math.max(4, Math.round(num(m.total_income || m.amount) / maxIncome * 40));
                 return (
-                  <div key={i}
-                    onClick={() => setIdx(sorted.findIndex(s => s.month === m.month))}
+                  <div key={i} onClick={() => setIdx(sorted.findIndex(s => s.month === m.month))}
                     title={`${fmtMonth(m.month)}: ${fmtFull(num(m.total_income || m.amount))}`}
                     className="cursor-pointer rounded-sm transition-opacity hover:opacity-80"
-                    style={{ width: 8, height: barH, background: isBar ? '#F5C118' : 'rgba(245,193,24,0.25)', flexShrink: 0 }} />
+                    style={{ width: 8, height: barH, background: m.month === cur.month ? '#F5C118' : 'rgba(245,193,24,0.25)', flexShrink: 0 }} />
                 );
               })}
             </div>
           )}
         </div>
 
-        {/* ── Financials ── */}
+        {/* ══ לבלוט ══ */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2"
-            style={{ color: 'rgba(255,255,255,0.3)' }}>💰 כספים</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {[
-              { label: 'הכנסה',          value: curIncome,            prev: prevIncome,            color: '#F5C118',              bgCol: 'rgba(245,193,24,0.07)',   bdCol: 'rgba(245,193,24,0.2)',   fmt: fmtFull },
-              { label: 'עסקאות חדשות',   value: num(cur.total_new_deals), prev: num(prev?.total_new_deals), color: 'rgba(255,255,255,0.85)', bgCol: 'rgba(255,255,255,0.04)', bdCol: 'rgba(255,255,255,0.07)', fmt: fmtFull },
-              { label: 'הוצאות',          value: curExp,               prev: null,                  color: 'rgba(252,165,165,0.85)', bgCol: 'rgba(252,165,165,0.06)', bdCol: 'rgba(252,165,165,0.15)', fmt: fmtFull },
-              { label: 'רווח נטו',        value: curNet,               prev: prevNet,               color: curNet >= 0 ? '#4fc38a' : '#ff5a72', bgCol: curNet >= 0 ? 'rgba(79,195,138,0.07)' : 'rgba(255,90,114,0.07)', bdCol: curNet >= 0 ? 'rgba(79,195,138,0.2)' : 'rgba(255,90,114,0.2)', fmt: fmtFull },
-            ].map(({ label, value, prev: p, color, bgCol, bdCol, fmt }) => (
-              <div key={label} className="rounded-xl p-3" style={{ background: bgCol, border: `1px solid ${bdCol}` }}>
-                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: color + '99' }}>{label}</p>
-                <p className="text-base font-black leading-none" style={{ color }}>{fmt(value)}</p>
-                <Delta value={value} prev={p} />
-              </div>
-            ))}
+          <SectionHeader label="🎬 לבלוט — תוכן" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+            <Chip label="עוקבים"       value={cur.followers}    prev={prev?.followers}    color="#e1306c" fmt={v => Number(v).toLocaleString('he-IL')} />
+            <Chip label="חשיפה (Reach)" value={cur.reach}       prev={prev?.reach}        color="#38bdf8" fmt={v => num(v) >= 1000 ? `${Math.round(num(v)/1000)}K` : String(v)} />
+            <Chip label="פוסטים"        value={cur.posts_count} prev={prev?.posts_count}  color="#fcd34d" />
+            <Chip label="ממומן (₪)"     value={cur.paid_ads}    prev={prev?.paid_ads}     color="#f97316" fmt={fmtFull} />
+          </div>
+          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתוכן</p>
+            <SliderDisplay value={cur.content_confidence} color="#f97316" />
           </div>
         </div>
 
-        {/* ── Sales ── */}
+        {/* ══ להוביל ══ */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2"
-            style={{ color: 'rgba(255,255,255,0.3)' }}>📊 מכירות</p>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-            {[
-              { label: 'הצעות',  value: num(cur.proposals),       prev: num(prev?.proposals),       color: '#818cf8' },
-              { label: 'לידים',  value: num(cur.leads),           prev: num(prev?.leads),           color: '#a78bfa' },
-              { label: 'שיחות',  value: num(cur.sales_calls_set), prev: num(prev?.sales_calls_set), color: '#6366f1' },
-              { label: 'לקוחות', value: num(cur.active_clients),  prev: num(prev?.active_clients),  color: '#34d399' },
-              { label: 'דרגה',   value: cur.current_rank || null,  prev: null,                       color: getRankColor(cur.current_rank) },
-            ].map(({ label, value, prev: p, color }) => (
-              <div key={label} className="rounded-xl p-3"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{label}</p>
-                <p className="text-base font-black leading-none" style={{ color }}>{value ?? '—'}</p>
-                {p != null && p !== 0 && <Delta value={value ?? 0} prev={p} />}
-              </div>
-            ))}
+          <SectionHeader label="🤝 להוביל — מכירות" />
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-2">
+            <Chip label="לידים"            value={cur.leads}               prev={prev?.leads}               color="#a78bfa" />
+            <Chip label="הצעות"            value={cur.proposals}           prev={prev?.proposals}           color="#818cf8" />
+            <Chip label="שיחות נקבעו"      value={cur.sales_calls_set}     prev={prev?.sales_calls_set}     color="#6366f1" />
+            <Chip label="הגיעו לשיחה"      value={cur.sales_calls_showed}  prev={prev?.sales_calls_showed}  color="#6366f1" />
+            <Chip label="נסגרו"            value={cur.closings_count}      prev={prev?.closings_count}      color="#4ade80" />
+          </div>
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <Chip label="הצ״מ נשלחו"       value={cur.price_quotes_sent}    prev={prev?.price_quotes_sent}   color="#c4b5fd" />
+            <Chip label="הצ״מ אושרו"       value={cur.price_quotes_approved} prev={prev?.price_quotes_approved} color="#c4b5fd" />
+            <Chip label="שיחות אסטרטגיה"   value={cur.strategy_calls}      prev={prev?.strategy_calls}      color="#818cf8" />
+          </div>
+          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתהליך המכירה</p>
+            <SliderDisplay value={cur.sales_confidence} color="#8b5cf6" />
           </div>
         </div>
 
-        {/* ── Content ── */}
+        {/* ══ לשלוט ══ */}
         <div>
-          <p className="text-[10px] uppercase tracking-widest font-semibold mb-2"
-            style={{ color: 'rgba(255,255,255,0.3)' }}>📱 תוכן</p>
-          <div className="grid grid-cols-3 gap-2">
-            {/* FIX: use raw numeric fields for Delta, format for display separately */}
-            {[
-              {
-                label: 'פוסטים',
-                rawVal: num(cur.posts_count), rawPrev: num(prev?.posts_count),
-                display: cur.posts_count ?? '—',
-                color: '#fcd34d',
-              },
-              {
-                label: 'עוקבים',
-                rawVal: num(cur.followers), rawPrev: num(prev?.followers),
-                display: cur.followers != null ? Number(cur.followers).toLocaleString('he-IL') : '—',
-                color: '#e1306c',
-              },
-              {
-                label: 'ריץ׳',
-                rawVal: num(cur.reach), rawPrev: num(prev?.reach),
-                display: cur.reach >= 1000 ? `${Math.round(cur.reach / 1000)}K` : (cur.reach || '—'),
-                color: '#38bdf8',
-              },
-            ].map(({ label, rawVal, rawPrev, display, color }) => (
-              <div key={label} className="rounded-xl p-3"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <p className="text-[10px] uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>{label}</p>
-                <p className="text-base font-black leading-none" style={{ color }}>{display}</p>
-                {rawPrev > 0 && <Delta value={rawVal} prev={rawPrev} />}
-              </div>
-            ))}
+          <SectionHeader label="📋 לשלוט — לקוחות ופרויקטים" />
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <Chip label="לקוחות חדשים"   value={cur.new_clients}     prev={prev?.new_clients}     color="#4ade80" />
+            <Chip label="לקוחות פעילים"  value={cur.active_clients}  prev={prev?.active_clients}  color="#34d399" />
+            <Chip label="ריטיינרים (מס׳)" value={cur.retainers_count} prev={prev?.retainers_count} color="#2dd4bf" />
+          </div>
+          {cur.main_project && (
+            <div className="rounded-xl px-3 py-2.5 mb-2" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>פרויקט מרכזי</p>
+              <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{cur.main_project}</p>
+            </div>
+          )}
+          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>שביעות רצון לקוחות</p>
+            <SliderDisplay value={cur.client_satisfaction} color="#22c55e" />
           </div>
         </div>
 
-        {/* Biggest win */}
-        {cur.biggest_win && (
-          <div className="rounded-xl px-4 py-3"
-            style={{ background: 'rgba(245,193,24,0.06)', border: '1px solid rgba(245,193,24,0.2)' }}>
-            <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: '#F5C118' }}>🏆 הנצחון הגדול</p>
-            <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.78)' }}>{cur.biggest_win}</p>
+        {/* ══ לספק ══ */}
+        <div>
+          <SectionHeader label="💰 לספק — נתונים עסקיים" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+            <Chip label="הכנסה כוללת"      value={curIncome}                prev={prevIncome}                color="#F5C118" fmt={fmtFull} />
+            <Chip label="עסקאות חדשות"      value={cur.total_new_deals}      prev={prev?.total_new_deals}     color="rgba(255,255,255,0.8)" fmt={fmtFull} />
+            <Chip label="ריטיינרים (₪)"    value={cur.retainers}            prev={prev?.retainers}           color="#fcd34d" fmt={fmtFull} />
+            <Chip label="רווח נטו"          value={curNet}                   prev={prevNet}                   color={curNet >= 0 ? '#4fc38a' : '#ff5a72'} fmt={fmtFull} />
           </div>
-        )}
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <Chip label="הוצאות תוכנות"    value={cur.software_expenses}    prev={null}                      color="#fca5a5" fmt={fmtFull} />
+            <Chip label="הוצאות משתנות"    value={cur.variable_expenses}    prev={null}                      color="#fca5a5" fmt={fmtFull} />
+            <div className="rounded-xl p-3" style={{ background: getRankColor(cur.current_rank) + '18', border: `1px solid ${getRankColor(cur.current_rank)}44` }}>
+              <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>דרגה</p>
+              <p className="text-sm font-black" style={{ color: getRankColor(cur.current_rank) }}>{cur.current_rank || '—'}</p>
+            </div>
+          </div>
+          <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בביצועים העסקיים</p>
+            <SliderDisplay value={cur.business_confidence} color="#3b82f6" />
+          </div>
+        </div>
+
+        {/* ══ רפלקשן ══ */}
+        <div>
+          <SectionHeader label="🔮 רפלקשן" />
+          <div className="rounded-xl p-3 mb-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[10px] mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>NPS — כמה ימליץ על התוכנית</p>
+            <SliderDisplay value={cur.nps} color="#ec4899" />
+          </div>
+          {[
+            { label: '🏆 הנצחון הגדול',              value: cur.biggest_win,      color: '#F5C118' },
+            { label: '👤 למי ימליץ להצטרף',          value: cur.recommendation,   color: 'rgba(255,255,255,0.78)' },
+            { label: '🛠 כלים / הכוונה שצריך',       value: cur.systems_needed,   color: 'rgba(255,255,255,0.78)' },
+            { label: '🎯 פוקוס לחודש הבא',            value: cur.focus_next_month, color: '#38bdf8' },
+            { label: '💬 פידבק לתוכנית',             value: cur.program_feedback, color: 'rgba(255,255,255,0.6)' },
+          ].filter(f => f.value).map(({ label, value, color }) => (
+            <div key={label} className="rounded-xl px-3 py-2.5 mb-2"
+              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
+              <p className="text-sm leading-relaxed" style={{ color }}>{value}</p>
+            </div>
+          ))}
+        </div>
+
       </>)}
     </div>
   );
