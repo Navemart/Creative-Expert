@@ -2194,6 +2194,9 @@ export default function Dashboard() {
               <MField label="חשיפה (Reach)" required><MInput placeholder="0" type="number" value={monthlyForm.reach} onChange={e => setMonthlyForm(f => ({ ...f, reach: e.target.value }))} /></MField>
               <MField label="פוסטים שפורסמו" required><MInput placeholder="0" type="number" value={monthlyForm.posts_count} onChange={e => setMonthlyForm(f => ({ ...f, posts_count: e.target.value }))} /></MField>
             </MGrid>
+            <MField label="השקעה על ממומן (₪)" hint="פרסום ממומן על תוכן">
+              <MInput placeholder="0" type="number" value={monthlyForm.paid_ads} onChange={e => setMonthlyForm(f => ({ ...f, paid_ads: e.target.value }))} />
+            </MField>
             <MField label="ביטחון בתוכן החודש (1–10)" required>
               <MSlider value={monthlyForm.content_confidence} onChange={v => setMonthlyForm(f => ({ ...f, content_confidence: v }))} />
             </MField>
@@ -2241,10 +2244,9 @@ export default function Dashboard() {
             <MField label="הכנסה כוללת (₪)" required>
               <MInput placeholder="כמה כסף נכנס לבנק החודש?" type="number" value={monthlyForm.total_income} onChange={e => setMonthlyForm(f => ({ ...f, total_income: e.target.value }))} />
             </MField>
-            <MGrid cols={3}>
+            <MGrid cols={2}>
               <MField label="הוצאות תוכנות (₪)"><MInput placeholder="0" type="number" value={monthlyForm.software_expenses} onChange={e => setMonthlyForm(f => ({ ...f, software_expenses: e.target.value }))} /></MField>
               <MField label="הוצאות משתנות (₪)"><MInput placeholder="0" type="number" value={monthlyForm.variable_expenses} onChange={e => setMonthlyForm(f => ({ ...f, variable_expenses: e.target.value }))} /></MField>
-              <MField label="ממומן (₪)"><MInput placeholder="0" type="number" value={monthlyForm.paid_ads} onChange={e => setMonthlyForm(f => ({ ...f, paid_ads: e.target.value }))} /></MField>
             </MGrid>
             {rankBlock}
             <MField label="ביטחון בביצועים העסקיים (1–10)" required>
