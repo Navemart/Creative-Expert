@@ -52,6 +52,24 @@ function getRank(amount) {
   return [...SEGMENTS].reverse().find(s => amount >= s.min) || SEGMENTS[0];
 }
 
+// מחשב את הדרגה הגבוהה ביותר שהושגה לאורך כל ההיסטוריה
+// לוגיקה: עובר על כל זוגות של חודשים עוקבים (החל מהשני),
+// מחשב ממוצע, ולוקח את הדרגה הגבוהה ביותר שנראתה — אף פעם לא יורד.
+function calcBestHistoricalRank(submissions) {
+  const sorted = [...submissions].sort((a, b) => new Date(a.month) - new Date(b.month));
+  if (sorted.length < 2) return null; // צריך לפחות 2 חודשים
+  let bestMin = 0;
+  // מתחיל מאינדקס 1 (זוג עם הקודם לו)
+  for (let i = 1; i < sorted.length; i++) {
+    const inc1 = sorted[i-1].total_income ?? sorted[i-1].amount ?? 0;
+    const inc2 = sorted[i].total_income   ?? sorted[i].amount   ?? 0;
+    const avg  = (inc1 + inc2) / 2;
+    const rankObj = getRank(avg);
+    if (rankObj.min > bestMin) bestMin = rankObj.min;
+  }
+  return [...SEGMENTS].reverse().find(s => bestMin >= s.min) || SEGMENTS[0];
+}
+
 // מחזיר טקסט כהה או בהיר לפי בהירות הרקע
 function contrastText(hex) {
   const r = parseInt(hex.slice(1,3),16);
@@ -871,9 +889,31 @@ export default function Dashboard() {
       supabase.from('roadmap_tasks').select('id, week_id, title, link, sort_order').order('sort_order'),
       supabase.from('roadmap_completions').select('task_id').eq('user_id', userId),
     ]);
-    setMonthlyData(md || []);
+    const submissions = md || [];
+    setMonthlyData(submissions);
     setWins(wd || []);
     setDeals(dd || []);
+
+    // ── Retroactive rank fix for imported users ──────────────────
+    // If the best historical rank is higher than what's stored, fix it silently.
+    if (submissions.length >= 2) {
+      const bestRank   = calcBestHistoricalRank(submissions);
+      const sortedSubs = [...submissions].sort((a, b) => new Date(a.month) - new Date(b.month));
+      const latestSub  = sortedSubs[sortedSubs.length - 1];
+      const storedRankObj = SEGMENTS.find(s => s.label === latestSub.current_rank);
+      if (bestRank && (!storedRankObj || bestRank.min > (storedRankObj?.min ?? 0))) {
+        // Update the most recent submission's rank in the DB
+        supabase
+          .from('monthly_submissions')
+          .update({ current_rank: bestRank.label })
+          .eq('id', latestSub.id)
+          .then(() => {
+            setMonthlyData(prev =>
+              prev.map(m => m.id === latestSub.id ? { ...m, current_rank: bestRank.label } : m)
+            );
+          });
+      }
+    }
 
     // Compute next uncompleted roadmap task (phase → week → task order)
     const completedIds = new Set((cData || []).map(c => c.task_id));
@@ -1226,46 +1266,35 @@ export default function Dashboard() {
     if (!editingSubmission && !isFirstSubmission) {
       const sorted = [...monthlyData].sort((a, b) => new Date(a.month) - new Date(b.month));
 
-      // Current rank = taken from the most recent stored submission
-      const latestSub        = sorted[sorted.length - 1];
-      const currentRankLabel = latestSub.current_rank || SEGMENTS[0].label;
-      const currentRankObj   = SEGMENTS.find(s => s.label === currentRankLabel) || SEGMENTS[0];
+      // Current rank floor = best rank ever achieved historically (never downgrade)
+      const historicalBest    = calcBestHistoricalRank(sorted);
+      const currentRankLabel  = historicalBest?.label || sorted[sorted.length - 1]?.current_rank || SEGMENTS[0].label;
+      const currentRankObj    = SEGMENTS.find(s => s.label === currentRankLabel) || SEGMENTS[0];
 
-      // "Real" submissions = everything AFTER the first (manual) submission.
-      // The first submission is just a starting-point selection — its income
-      // does NOT participate in the 2-month average.
-      const realSubmissions = sorted.slice(1);
+      // Check new pair: last stored month + new submission
+      const lastSub      = sorted[sorted.length - 1];
+      const lastIncome   = lastSub.total_income ?? lastSub.amount ?? 0;
+      const newIncome    = parseFloat(monthlyForm.total_income) || 0;
+      const avg          = (lastIncome + newIncome) / 2;
+      const newRankObj   = getRank(avg);
 
-      if (realSubmissions.length === 0) {
-        // This is the 2nd submission overall (1st real data month).
-        // Need TWO consecutive real months before we can upgrade → keep rank.
-        finalRank = currentRankLabel;
+      if (newRankObj.min > currentRankObj.min) {
+        // Rank upgrade!
+        finalRank = newRankObj.label;
+        pendingUpgradeData = {
+          user_id:        userId,
+          first_name:     user?.firstName || '',
+          current_rank:   currentRankLabel,
+          proposed_rank:  newRankObj.label,
+          month_1:        lastSub.month,
+          month_1_income: lastIncome,
+          month_2:        fullDate,
+          month_2_income: newIncome,
+          avg_income:     avg,
+        };
       } else {
-        // 3rd+ submission: avg of last real month income + new income
-        const lastReal       = realSubmissions[realSubmissions.length - 1];
-        const lastRealIncome = lastReal.total_income ?? lastReal.amount ?? 0;
-        const newIncome      = parseFloat(monthlyForm.total_income) || 0;
-        const avg            = (lastRealIncome + newIncome) / 2;
-
-        const newRankObj = getRank(avg);
-        if (newRankObj.min > currentRankObj.min) {
-          // Rank upgrade! Apply immediately + queue for admin Slack approval
-          finalRank = newRankObj.label;
-          pendingUpgradeData = {
-            user_id:        userId,
-            first_name:     user?.firstName || '',
-            current_rank:   currentRankLabel,
-            proposed_rank:  newRankObj.label,
-            month_1:        lastReal.month,
-            month_1_income: lastRealIncome,
-            month_2:        fullDate,
-            month_2_income: newIncome,
-            avg_income:     avg,
-          };
-        } else {
-          // Never downgrade — keep current rank
-          finalRank = currentRankLabel;
-        }
+        // Never downgrade — keep best historical rank
+        finalRank = currentRankLabel;
       }
     }
     // ─────────────────────────────────────────────────────────
