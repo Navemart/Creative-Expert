@@ -3,6 +3,7 @@ import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, Extern
 import { NavLink } from 'react-router-dom';
 import { useUser, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import { usePaymentAlerts } from '../hooks/usePaymentAlerts.js';
+import { useNpsAlerts }     from '../hooks/useNpsAlerts.js';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -38,32 +39,70 @@ function AlertRow({ item, type, onDismiss }) {
   );
 }
 
+// ── NPS alert row ──────────────────────────────────────────────
+function NpsAlertRow({ item, onDismiss }) {
+  return (
+    <div className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03]"
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div className="h-2 w-2 rounded-full flex-none" style={{ background: '#ef4444', boxShadow: '0 0 6px #ef444455' }} />
+      <div className="flex-1 min-w-0">
+        <div className="text-xs font-semibold truncate" style={{ color: 'rgba(255,255,255,0.88)' }}>{item.name}</div>
+        <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.38)' }}>NPS {item.nps}/10 · {item.month}</div>
+      </div>
+      <span className="text-[11px] font-bold flex-none rounded-md px-2 py-0.5"
+        style={{ background: 'rgba(239,68,68,0.18)', color: '#f87171', border: '1px solid rgba(239,68,68,0.35)' }}>
+        ⚠️ {item.nps}
+      </span>
+      <button onClick={e => { e.stopPropagation(); onDismiss(item.id); }}
+        className="flex-none rounded-full p-1 transition-all"
+        style={{ color: 'rgba(255,255,255,0.2)' }}
+        onMouseEnter={e => { e.currentTarget.style.color='rgba(255,255,255,0.7)'; e.currentTarget.style.background='rgba(255,255,255,0.08)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.2)'; e.currentTarget.style.background='transparent'; }}>
+        <X size={13} />
+      </button>
+    </div>
+  );
+}
+
 // ── Notification panel ─────────────────────────────────────────
-function NotificationPanel({ upcoming, overdue, onDismiss }) {
-  const total = upcoming.length + overdue.length;
+function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps }) {
+  const payTotal = upcoming.length + overdue.length;
+  const total    = payTotal + npsAlerts.length;
   return (
     <div className="absolute right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
-      style={{ width: 320, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
+      style={{ width: 340, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <span className="text-sm font-bold text-white">התראות תשלומים</span>
+        <span className="text-sm font-bold text-white">התראות</span>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{total === 0 ? 'הכל תקין ✓' : `${total} התראות`}</span>
       </div>
       {total === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10">
           <span style={{ fontSize: 28 }}>🎉</span>
-          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.32)' }}>אין תשלומים קרובים או באיחור</span>
+          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.32)' }}>אין התראות פתוחות</span>
         </div>
       ) : (
-        <div style={{ maxHeight: 380, overflowY: 'auto' }}>
+        <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+          {/* NPS נמוך */}
+          {npsAlerts.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
+                style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
+                <AlertCircle size={11} /> NPS נמוך — {npsAlerts.length}
+              </div>
+              {npsAlerts.map(item => <NpsAlertRow key={item.id} item={item} onDismiss={dismissNps} />)}
+            </>
+          )}
+          {/* תשלומים באיחור */}
           {overdue.length > 0 && (
             <>
               <div className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
                 style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
-                <AlertCircle size={11} /> באיחור — {overdue.length}
+                <AlertCircle size={11} /> תשלומים באיחור — {overdue.length}
               </div>
               {overdue.map((item, i) => <AlertRow key={i} item={item} type="overdue" onDismiss={onDismiss} />)}
             </>
           )}
+          {/* קרוב לפירעון */}
           {upcoming.length > 0 && (
             <>
               <div className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
@@ -78,7 +117,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss }) {
       {total > 0 && (
         <div className="px-4 py-2.5 text-center text-[10px]"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.2)' }}>
-          ✕ לחיצה על X מסמנת כנקרא
+          ✕ לחיצה על X מסמנת כטופל
         </div>
       )}
     </div>
@@ -242,8 +281,10 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
   const bellRef  = useRef(null);
   const toolsRef = useRef(null);
 
-  const { upcoming, overdue, total, dismiss, reload } = usePaymentAlerts();
-  const hasOverdue = overdue.length > 0;
+  const { upcoming, overdue, total: payTotal, dismiss, reload } = usePaymentAlerts();
+  const { npsAlerts, dismissNps, npsTotal } = useNpsAlerts();
+  const total      = payTotal + npsTotal;
+  const hasOverdue = overdue.length > 0 || npsTotal > 0;
   const badgeColor = hasOverdue ? '#ef4444' : '#f97316';
 
   useEffect(() => { if (bellOpen) reload(); }, [bellOpen]);
@@ -288,7 +329,7 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
             </span>
           )}
         </button>
-        {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} />}
+        {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} />}
       </div>
 
       {/* Spacer */}

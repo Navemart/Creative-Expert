@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { SignedIn, SignedOut, RedirectToSignIn, useUser } from '@clerk/clerk-react';
+import LandingPage from './pages/LandingPage.jsx';
 import Layout from './components/Layout.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Members from './pages/Members.jsx';
@@ -32,6 +33,9 @@ function AdminRoute({ children }) {
 export default function App() {
   return (
     <>
+      <Routes>
+        <Route path="landing" element={<LandingPage />} />
+      </Routes>
       <SignedIn>
         <Routes>
           <Route element={<Layout />}>

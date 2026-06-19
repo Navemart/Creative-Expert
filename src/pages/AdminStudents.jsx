@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useLocation } from 'react-router-dom';
+import { supabase } from '../lib/supabase.js';
 import {
   TrendingDown, Calendar, ArrowUp, Users, RefreshCw,
   Circle, ArrowUpRight, ArrowDownRight, Minus,
@@ -850,13 +851,20 @@ const MT_COLS = [
   { key: 'sales_calls_showed',  label: 'הגיעו',           fmt: v => v ?? '—', align: 'center' },
   { key: 'closings_count',      label: 'סגירות',          fmt: v => v ?? '—', align: 'center' },
   { key: 'current_rank',        label: 'דרגה',            fmt: v => v || '—', align: 'center' },
+  { key: 'nps',                 label: 'NPS',             fmt: v => v ?? '—', align: 'center' },
 ];
 
 function MonthlyTable({ students }) {
-  const [search,  setSearch]  = useState('');
-  const [period,  setPeriod]  = useState('all');
-  const [sortKey, setSortKey] = useState('month');
-  const [sortDir, setSortDir] = useState(-1); // -1 = desc
+  const [search,   setSearch]   = useState('');
+  const [period,   setPeriod]   = useState('all');
+  const [sortKey,  setSortKey]  = useState('month');
+  const [sortDir,  setSortDir]  = useState(-1); // -1 = desc
+  const [handled,  setHandled]  = useState(new Set()); // IDs שטופלו מקומית
+
+  async function markHandled(rowId) {
+    setHandled(prev => new Set([...prev, rowId]));
+    await supabase.from('monthly_submissions').update({ nps_handled: true }).eq('id', rowId);
+  }
 
   const allMonths = useMemo(() => {
     const months = new Set();
@@ -971,6 +979,29 @@ function MonthlyTable({ students }) {
                           style={{ background: getRankColor(val) + '20', color: getRankColor(val), border: `1px solid ${getRankColor(val)}40` }}>
                           {val}
                         </span>
+                      ) : col.key === 'nps' && val != null && val !== '' ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                          <span className="rounded-md px-2 py-0.5 text-xs font-bold"
+                            style={{
+                              background: Number(val) <= 8 ? 'rgba(239,68,68,0.18)' : 'rgba(34,197,94,0.15)',
+                              color:      Number(val) <= 8 ? '#f87171'              : '#4ade80',
+                              border:     `1px solid ${Number(val) <= 8 ? 'rgba(239,68,68,0.4)' : 'rgba(34,197,94,0.35)'}`,
+                            }}>
+                            {Number(val) <= 8 && !r.nps_handled && !handled.has(r.id) && '⚠️ '}{val}
+                          </span>
+                          {Number(val) <= 8 && (
+                            r.nps_handled || handled.has(r.id) ? (
+                              <span className="text-[11px] font-semibold" style={{ color: '#4ade80' }}>✓ טופל</span>
+                            ) : (
+                              <button
+                                onClick={() => markHandled(r.id)}
+                                className="rounded-md px-2 py-0.5 text-[11px] font-semibold transition hover:opacity-80"
+                                style={{ background: 'rgba(34,197,94,0.12)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)' }}>
+                                סמן טופל
+                              </button>
+                            )
+                          )}
+                        </div>
                       ) : display}
                     </td>
                   );
@@ -1027,6 +1058,17 @@ export default function AdminStudents() {
   }
 
   useEffect(() => { fetchStudents(); }, []);
+
+  // ── Realtime: רענון פאנל כשמגיע דיווח חדש ─────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-monthly-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'monthly_submissions' }, () => {
+        fetchStudents();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   async function updateProfile(userId, updates) {
     setStudents(prev => prev.map(s => s.id === userId ? { ...s, ...updates } : s));

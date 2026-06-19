@@ -1134,6 +1134,7 @@ export default function Dashboard() {
       total_amount:     parseFloat(dealForm.total_amount),
       received_amount:  parseFloat(dealForm.received_amount) || 0,
       next_rank:        dealForm.next_rank,
+      notes:            dealForm.notes || null,
       created_at:       date + 'T12:00:00.000Z',
     });
 
@@ -1147,6 +1148,7 @@ export default function Dashboard() {
           total_amount:     dealForm.total_amount,
           received_amount:  dealForm.received_amount,
           next_rank:        dealForm.next_rank,
+          notes:            dealForm.notes || '',
           date,
         }),
       });

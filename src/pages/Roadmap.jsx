@@ -606,54 +606,52 @@ export default function Roadmap() {
               onDragLeave={editMode ? () => setDragOverId(null) : undefined}
               onDrop={editMode ? e => dropWeekOnPhase(e, phase.id) : undefined}
             >
-              {/* Phase header */}
+              {/* Phase header — Scale20 style */}
               <div
-                className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-white/[0.03] transition select-none"
+                className="flex items-center justify-between px-6 py-5 cursor-pointer hover:bg-white/[0.03] transition select-none"
                 onClick={() => togglePhase(phase.id)}
               >
-                {/* Month badge — compact horizontal, number editable in edit mode */}
-                <div className="flex-none flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
-                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', minWidth: 72 }}
-                  onClick={e => editMode && e.stopPropagation()}>
-                  <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש</span>
-                  <InlineEdit
-                    value={String(phase.month_number)}
-                    onSave={v => updatePhaseMonth(phase.id, v)}
-                    active={editMode}
-                    className="text-base font-bold"
-                    style={{ color: 'white', lineHeight: 1 }}
-                  />
-                </div>
-
-                {/* Title + meta */}
-                <div className="flex-1 min-w-0" onClick={e => editMode && e.stopPropagation()}>
-                  <InlineEdit
-                    value={phase.title}
-                    onSave={t => updatePhaseTitle(phase.id, t)}
-                    active={editMode}
-                    className="text-sm font-bold"
-                    style={{ color: 'rgba(255,255,255,0.92)' }}
-                  />
-                  <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)' }}>
-                    {phaseCompleted} מתוך {phaseTotal} משימות · {phasePct}%
+                {/* Left: MONTH label + big number + title + progress text */}
+                <div className="flex items-center gap-5 flex-1 min-w-0">
+                  <div className="flex-none" onClick={e => editMode && e.stopPropagation()}>
+                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>MONTH</div>
+                    <InlineEdit
+                      value={String(phase.month_number)}
+                      onSave={v => updatePhaseMonth(phase.id, v)}
+                      active={editMode}
+                      className="text-5xl font-bold leading-none"
+                      style={{ color: 'white' }}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0" onClick={e => editMode && e.stopPropagation()}>
+                    <InlineEdit
+                      value={phase.title}
+                      onSave={t => updatePhaseTitle(phase.id, t)}
+                      active={editMode}
+                      className="text-lg font-bold"
+                      style={{ color: 'rgba(255,255,255,0.92)' }}
+                    />
+                    <div className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                      {phaseCompleted} of {phaseTotal} tasks complete: {phasePct}%
+                    </div>
                   </div>
                 </div>
 
-                {/* Circular progress + controls */}
-                <div className="flex items-center gap-2 flex-none">
-                  <svg width="44" height="44">
-                    <circle cx="22" cy="22" r={circleR} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+                {/* Right: circular ring + delete + chevron */}
+                <div className="flex items-center gap-3 flex-none">
+                  <svg width="52" height="52">
+                    <circle cx="26" cy="26" r={circleR} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3.5" />
                     <circle
-                      cx="22" cy="22" r={circleR} fill="none"
+                      cx="26" cy="26" r={circleR} fill="none"
                       stroke={phasePct === 100 ? '#22c55e' : '#F5C118'}
-                      strokeWidth="3"
+                      strokeWidth="3.5"
                       strokeDasharray={circumference}
                       strokeDashoffset={circumference * (1 - phasePct / 100)}
                       strokeLinecap="round"
-                      transform="rotate(-90 22 22)"
+                      transform="rotate(-90 26 26)"
                       style={{ transition: 'stroke-dashoffset 0.5s' }}
                     />
-                    <text x="22" y="26" textAnchor="middle" fontSize="10"
+                    <text x="26" y="30" textAnchor="middle" fontSize="10"
                       fill={phasePct === 100 ? '#22c55e' : '#F5C118'} fontWeight="bold">
                       {phasePct}%
                     </text>
@@ -662,15 +660,15 @@ export default function Roadmap() {
                   {editMode && (
                     <button
                       onClick={e => { e.stopPropagation(); deletePhase(phase.id); }}
-                      className="rounded-md p-1 transition hover:bg-red-500/20"
+                      className="rounded-md p-1.5 transition hover:bg-red-500/20"
                       style={{ color: 'rgba(255,255,255,0.3)' }}
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={15} />
                     </button>
                   )}
 
-                  <ChevronDown size={16} className="transition-transform duration-200"
-                    style={{ color: 'rgba(255,255,255,0.35)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                  <ChevronDown size={18} className="transition-transform duration-200"
+                    style={{ color: 'rgba(255,255,255,0.4)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
               </div>
 
@@ -703,32 +701,32 @@ export default function Roadmap() {
                         transition: 'opacity 0.15s, border-right-color 0.2s',
                       }}>
 
-                      {/* Week header — clickable */}
+                      {/* Week header — Scale20 style */}
                       <div
-                        className="flex items-center justify-between px-4 py-2 cursor-pointer hover:bg-white/[0.03] transition select-none"
-                        style={{ background: weekActive ? 'rgba(245,193,24,0.04)' : 'rgba(255,255,255,0.025)' }}
+                        className="flex items-center justify-between px-6 py-3.5 cursor-pointer hover:bg-white/[0.03] transition select-none"
+                        style={{ background: weekActive ? 'rgba(245,193,24,0.03)' : 'transparent' }}
                         onClick={() => toggleWeek(week.id)}
                         onDrop={editMode ? e => dropTaskOnWeek(e, week.id) : undefined}
                         onDragOver={editMode && dragging?.type === 'task' ? e => dndOver(e, `weekhdr-${week.id}`) : undefined}
                       >
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
                           {editMode && (
-                            <GripVertical size={13} className="flex-none cursor-grab"
+                            <GripVertical size={14} className="flex-none cursor-grab"
                               style={{ color: 'rgba(255,255,255,0.2)' }} />
                           )}
                           {!editMode && (
-                            <ChevronDown size={13} className="flex-none transition-transform duration-200"
-                              style={{ color: 'rgba(255,255,255,0.3)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
+                            <ChevronDown size={15} className="flex-none transition-transform duration-200"
+                              style={{ color: 'rgba(255,255,255,0.35)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
                           )}
-                          <div className="flex items-center gap-1 flex-none" onClick={e => editMode && e.stopPropagation()}>
-                            <span className="text-[10px] font-bold uppercase tracking-widest"
-                              style={{ color: 'rgba(255,255,255,0.25)' }}>שבוע</span>
+                          <div className="flex items-center gap-2 flex-none" onClick={e => editMode && e.stopPropagation()}>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.15em]"
+                              style={{ color: 'rgba(255,255,255,0.28)' }}>WEEK</span>
                             <InlineEdit
                               value={String(week.week_number)}
                               onSave={v => updateWeekNumber(week.id, v)}
                               active={editMode}
                               className="text-[10px] font-bold"
-                              style={{ color: 'rgba(255,255,255,0.5)' }}
+                              style={{ color: 'rgba(255,255,255,0.45)' }}
                             />
                           </div>
                           <div onClick={e => editMode && e.stopPropagation()}>
@@ -736,18 +734,15 @@ export default function Roadmap() {
                               value={week.title}
                               onSave={t => updateWeekTitle(week.id, t)}
                               active={editMode}
-                              className="text-xs font-semibold"
-                              style={{ color: weekActive ? 'rgba(245,193,24,0.9)' : 'rgba(255,255,255,0.75)' }}
+                              className="text-sm font-bold"
+                              style={{ color: weekActive ? 'rgba(245,193,24,0.9)' : 'rgba(255,255,255,0.8)' }}
                             />
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-none">
-                          {/* Progress pill */}
-                          <span className="text-[10px] font-semibold tabular-nums px-1.5 py-0.5 rounded-md"
-                            style={{
-                              background: weekPct === 100 ? 'rgba(34,197,94,0.15)' : 'rgba(255,255,255,0.06)',
-                              color: weekPct === 100 ? '#86efac' : 'rgba(255,255,255,0.3)',
-                            }}>
+                        <div className="flex items-center gap-3 flex-none">
+                          {/* X/Y count */}
+                          <span className="text-sm font-semibold tabular-nums"
+                            style={{ color: weekPct === 100 ? '#86efac' : 'rgba(255,255,255,0.35)' }}>
                             {weekDone}/{weekTotal}
                           </span>
                           {editMode && (
@@ -756,13 +751,13 @@ export default function Roadmap() {
                                 onClick={e => { e.stopPropagation(); setTaskModal({ mode: 'add', weekId: week.id }); setTaskForm({ title: '', level_label: '', category_label: '', link: '' }); }}
                                 className="rounded-md p-1 hover:bg-white/10 transition"
                                 style={{ color: 'rgba(255,255,255,0.4)' }} title="הוסף משימה">
-                                <Plus size={13} />
+                                <Plus size={14} />
                               </button>
                               <button
                                 onClick={e => { e.stopPropagation(); deleteWeek(phase.id, week.id); }}
                                 className="rounded-md p-1 hover:bg-red-500/20 transition"
                                 style={{ color: 'rgba(255,255,255,0.3)' }} title="מחק שבוע">
-                                <Trash2 size={13} />
+                                <Trash2 size={14} />
                               </button>
                             </>
                           )}
@@ -792,103 +787,132 @@ export default function Roadmap() {
                             onDragOver={editMode ? e => dndOver(e, `task-${task.id}`) : undefined}
                             onDragLeave={editMode ? () => setDragOverId(null) : undefined}
                             onDrop={editMode ? e => dropTaskOnTask(e, task.id, week.id) : undefined}
-                            className="flex items-center px-4 py-2 hover:bg-white/[0.03] transition group"
+                            className="group hover:bg-white/[0.025] transition"
                             style={{
+                              display: 'grid',
+                              gridTemplateColumns: editMode
+                                ? '20px 36px 1fr 190px 160px 64px 44px 60px'
+                                : '36px 1fr 190px 160px 64px 44px',
+                              alignItems: 'center',
+                              padding: '10px 24px',
                               borderTop: isDropTarget ? '2px solid rgba(245,193,24,0.5)' : '1px solid rgba(255,255,255,0.04)',
-                              background: 'transparent',
                               opacity: isDraggingThis ? 0.35 : 1,
-                              gap: 0,
                               cursor: editMode ? 'grab' : 'default',
+                              direction: 'rtl',
                             }}
                           >
-                            {/* Grip handle — only in edit mode */}
+                            {/* Grip */}
                             {editMode && (
-                              <div style={{ width: 18, flexShrink: 0 }}>
-                                <GripVertical size={12} style={{ color: 'rgba(255,255,255,0.18)' }} />
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <GripVertical size={13} style={{ color: 'rgba(255,255,255,0.18)' }} />
                               </div>
                             )}
+
                             {/* Checkbox */}
-                            <div style={{ width: 30, flexShrink: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
                               <button
                                 onClick={() => toggleCompletion(task.id)}
-                                className="h-[18px] w-[18px] rounded-full border-2 flex items-center justify-center transition"
+                                className="h-5 w-5 rounded-full border-2 flex items-center justify-center transition"
                                 style={{
-                                  borderColor: done ? '#22c55e' : 'rgba(255,255,255,0.18)',
+                                  borderColor: done ? '#22c55e' : 'rgba(255,255,255,0.2)',
                                   background:  done ? '#22c55e' : 'transparent',
                                 }}
                               >
-                                {done && <Check size={9} strokeWidth={3} color="#fff" />}
+                                {done && <Check size={10} strokeWidth={3} color="#fff" />}
                               </button>
                             </div>
 
                             {/* Title */}
-                            <span className="flex-1 text-xs px-1.5"
-                              style={{
-                                color: done ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.82)',
-                                textDecoration: done ? 'line-through' : 'none',
-                              }}>
-                              {task.title}
-                            </span>
+                            <div style={{ overflow: 'hidden', paddingLeft: 8, paddingRight: 8 }}>
+                              <span
+                                className="text-sm"
+                                style={{
+                                  color: done ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)',
+                                  textDecoration: done ? 'line-through' : 'none',
+                                  direction: 'rtl',
+                                  display: 'block',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}>
+                                {task.title}
+                              </span>
+                            </div>
 
-                            {/* Level label — colored badge */}
-                            <div className="hidden sm:flex items-center" style={{ width: 170, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: 8 }}>
-                              {task.level_label && (
-                                <span className="text-[10px] px-2 py-0.5 rounded font-semibold truncate"
-                                  style={{ background: levelStyle(task.level_label).bg, color: levelStyle(task.level_label).color, border: `1px solid ${levelStyle(task.level_label).color}33` }}>
+                            {/* Level badge */}
+                            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
+                              {task.level_label ? (
+                                <span style={{
+                                  fontSize: 11, lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
+                                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
+                                  background: levelStyle(task.level_label).bg,
+                                  color: levelStyle(task.level_label).color,
+                                  border: `1px solid ${levelStyle(task.level_label).color}40`,
+                                }}>
                                   {task.level_label}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
 
                             {/* Category badge */}
-                            <div className="hidden sm:flex items-center" style={{ width: 130, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: 8 }}>
-                              {task.category_label && (
-                                <span className="text-[10px] px-2 py-0.5 rounded font-semibold truncate"
-                                  style={{ background: categoryStyle(task.category_label).bg, color: categoryStyle(task.category_label).color, border: `1px solid ${categoryStyle(task.category_label).color}33` }}>
+                            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
+                              {task.category_label ? (
+                                <span style={{
+                                  fontSize: 11, lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
+                                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
+                                  background: categoryStyle(task.category_label).bg,
+                                  color: categoryStyle(task.category_label).color,
+                                  border: `1px solid ${categoryStyle(task.category_label).color}40`,
+                                }}>
                                   {task.category_label}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
 
-                            {/* Tag chip (e.g. S3, F1) */}
-                            <div className="hidden sm:flex items-center justify-center" style={{ width: 46, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                              {task.tag && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
-                                  style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', letterSpacing: '0.02em', fontFamily: 'monospace' }}>
+                            {/* Tag chip */}
+                            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
+                              {task.tag ? (
+                                <span style={{
+                                  fontSize: 11, lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  borderRadius: 6, fontWeight: 700, fontFamily: 'monospace', display: 'inline-block',
+                                  background: 'rgba(245,193,24,0.12)',
+                                  color: '#F5C118',
+                                  border: '1px solid rgba(245,193,24,0.3)',
+                                }}>
                                   {task.tag}
                                 </span>
-                              )}
+                              ) : null}
                             </div>
 
-                            {/* Link — truncated URL */}
-                            <div className="hidden sm:flex items-center gap-1" style={{ width: 160, flexShrink: 0 }}>
+                            {/* Link */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               {task.link ? (
                                 <a href={task.link} target="_blank" rel="noopener noreferrer"
                                   onClick={e => e.stopPropagation()}
-                                  className="flex items-center gap-1 hover:opacity-80 transition truncate"
-                                  style={{ color: 'rgba(255,255,255,0.28)', maxWidth: '100%' }}>
-                                  <ExternalLink size={10} style={{ flexShrink: 0 }} />
-                                  <span className="text-[10px] truncate">
-                                    {task.link.replace(/^https?:\/\//, '')}
-                                  </span>
+                                  className="hover:opacity-80 transition"
+                                  style={{ color: 'rgba(255,255,255,0.32)' }}>
+                                  <ExternalLink size={13} />
                                 </a>
-                              ) : <span style={{ width: 160 }} />}
+                              ) : null}
                             </div>
 
-                            {/* Edit/Delete actions */}
+                            {/* Edit/Delete */}
                             {editMode && (
-                              <div className="flex items-center gap-0.5 flex-none opacity-0 group-hover:opacity-100 transition">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end' }}
+                                className="opacity-0 group-hover:opacity-100 transition">
                                 <button
                                   onClick={() => { setTaskModal({ mode: 'edit', weekId: week.id, task }); setTaskForm({ title: task.title, level_label: task.level_label || '', category_label: task.category_label || '', tag: task.tag || '', link: task.link || '' }); }}
-                                  className="rounded-md p-0.5 hover:bg-white/10 transition"
+                                  className="rounded-md p-1 hover:bg-white/10 transition"
                                   style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                  <Edit2 size={12} />
+                                  <Edit2 size={13} />
                                 </button>
                                 <button
                                   onClick={() => deleteTask(week.id, task.id)}
-                                  className="rounded-md p-0.5 hover:bg-red-500/20 transition"
+                                  className="rounded-md p-1 hover:bg-red-500/20 transition"
                                   style={{ color: 'rgba(255,255,255,0.3)' }}>
-                                  <Trash2 size={12} />
+                                  <Trash2 size={13} />
                                 </button>
                               </div>
                             )}

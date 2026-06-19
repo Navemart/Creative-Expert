@@ -56,7 +56,7 @@ const EMPTY_FORM = {
   name: '', phone: '', email: '', status: 'green', notes: '',
 };
 const EMPTY_PROJECT = {
-  name: '', client_id: '', type: 'website', status: 'not_started',
+  name: '', client_id: '', type: [], status: 'not_started',
   total_amount: '', received_amount: '', estimated_hours: '',
   installment_plan: [],
   stages: [],
@@ -1047,7 +1047,10 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
 function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onToggleStage }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const type      = PROJECT_TYPES[project.type] || PROJECT_TYPES.other;
+  const types     = (Array.isArray(project.type) ? project.type : (project.type ? [project.type] : []))
+                      .filter(k => PROJECT_TYPES[k])
+                      .map(k => ({ key: k, ...PROJECT_TYPES[k] }));
+  const type      = types[0] || { color: 'rgba(255,255,255,0.15)' }; // primary color for border
   const pst       = PROJECT_STATUS[project.status] || PROJECT_STATUS.not_started;
   const paidAmt   = projectPaid(project);
   const pct       = project.total_amount > 0 ? Math.min(Math.round(paidAmt / project.total_amount * 100), 100) : 0;
@@ -1076,26 +1079,41 @@ function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onTogg
           <button onClick={() => setIsOpen(o => !o)}
             className="flex-1 flex items-stretch min-w-0 text-right">
 
-            {/* Col A: type dot + name + client */}
-            <div className="flex items-center gap-2 flex-1 min-w-0 px-3 py-2.5">
-              <span className="h-2 w-2 rounded-full flex-none" style={{ background: type.color }} />
+            {/* Col A: name + client */}
+            <div className="flex items-center gap-2 flex-1 min-w-0 px-4 py-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[13px] font-semibold truncate text-white leading-tight">{project.name}</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[15px] font-semibold truncate text-white leading-tight">{project.name}</span>
                   {isOverdue && <span className="text-xs flex-none" style={{ color: '#ef4444' }}>⏰</span>}
                 </div>
                 {client && (
-                  <div className="text-xs truncate leading-tight mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{client.name}</div>
+                  <div className="text-xs mt-0.5 leading-tight" style={{ color: 'rgba(255,255,255,0.38)' }}>{client.name}</div>
                 )}
               </div>
             </div>
 
-            {/* Col B: paid / total — sm+ */}
-            {project.total_amount > 0 && (
-              <div className="hidden sm:flex flex-col justify-center items-end w-36 flex-none px-3 py-2"
+            {/* Col B: type badges */}
+            {types.length > 0 && (
+              <div className="hidden sm:flex items-center flex-none px-4 py-3"
                 style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                <span className="text-[10px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.28)' }}>שולם / סה״כ</span>
-                <span className="text-[12px] font-semibold tabular-nums leading-none">
+                <div className="flex flex-wrap gap-1.5">
+                  {types.map(t => (
+                    <span key={t.key}
+                      className="inline-flex items-center text-[11px] font-bold px-2.5 py-1 rounded-lg leading-none whitespace-nowrap"
+                      style={{ background: t.color + '22', color: t.color, border: `1px solid ${t.color}40` }}>
+                      {t.label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Col C: paid / total */}
+            {project.total_amount > 0 && (
+              <div className="hidden sm:flex flex-col justify-center items-end flex-none px-4 py-3"
+                style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                <span className="text-[11px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.3)' }}>שולם / סה״כ</span>
+                <span className="text-[13px] font-semibold tabular-nums leading-none">
                   <span style={{ color: pct >= 100 ? '#86efac' : '#fcd34d' }}>{fmt(paidAmt)}</span>
                   <span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 400 }}> / {fmt(project.total_amount)}</span>
                 </span>
@@ -1104,21 +1122,21 @@ function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onTogg
 
             {/* Col C: estimated hours — sm+ */}
             {project.estimated_hours > 0 && (
-              <div className="hidden sm:flex flex-col justify-center items-center w-16 flex-none px-2 py-2"
+              <div className="hidden sm:flex flex-col justify-center items-center w-16 flex-none px-3 py-3"
                 style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                <span className="text-[10px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.28)' }}>שעות</span>
-                <span className="flex items-center gap-0.5 text-xs font-bold leading-none" style={{ color: '#c4b5fd' }}>
-                  <Clock size={9} className="flex-none" />{project.estimated_hours}
+                <span className="text-[11px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.28)' }}>שעות</span>
+                <span className="flex items-center gap-0.5 text-sm font-bold leading-none" style={{ color: '#c4b5fd' }}>
+                  <Clock size={10} className="flex-none" />{project.estimated_hours}
                 </span>
               </div>
             )}
 
             {/* Col D: stage completion % — sm+ */}
             {stages.length > 0 && (
-              <div className="hidden sm:flex flex-col justify-center items-center w-14 flex-none px-2 py-2"
+              <div className="hidden sm:flex flex-col justify-center items-center w-14 flex-none px-2 py-3"
                 style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                <span className="text-[10px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.28)' }}>הושלם</span>
-                <span className="text-[12px] font-bold tabular-nums leading-none"
+                <span className="text-[11px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.28)' }}>הושלם</span>
+                <span className="text-sm font-bold tabular-nums leading-none"
                   style={{ color: stagePct === 100 ? '#86efac' : '#34d399' }}>
                   {stagePct === 100 ? '✓' : `${stagePct}%`}
                 </span>
@@ -1127,7 +1145,7 @@ function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onTogg
 
             {/* Chevron */}
             <div className="flex items-center px-2 flex-none">
-              <ChevronDown size={13} className="flex-none transition-transform duration-200"
+              <ChevronDown size={14} className="flex-none transition-transform duration-200"
                 style={{ color: 'rgba(255,255,255,0.25)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
             </div>
           </button>
@@ -1135,17 +1153,17 @@ function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onTogg
           {/* Status badge + edit/delete */}
           <div className="flex items-center gap-1 px-2 flex-none"
             style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition">
+            <ProjectStatusBadge status={project.status} onChange={s => onStatusChange(project.id, s)} />
+            <div className="flex items-center gap-2 mr-2">
               <button onClick={e => { e.stopPropagation(); onEdit(project); }}
-                className="rounded p-1 hover:bg-white/10 transition" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                <Edit2 size={11} />
+                className="rounded-lg p-1.5 hover:bg-white/10 transition" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                <Edit2 size={13} />
               </button>
               <button onClick={e => { e.stopPropagation(); onDelete(project.id); }}
-                className="rounded p-1 hover:bg-red-500/20 transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                <Trash2 size={11} />
+                className="rounded-lg p-1.5 hover:bg-red-500/20 transition" style={{ color: '#ef4444' }}>
+                <Trash2 size={13} />
               </button>
             </div>
-            <ProjectStatusBadge status={project.status} onChange={s => onStatusChange(project.id, s)} />
           </div>
         </div>
 
@@ -1432,7 +1450,7 @@ export default function Clients() {
     setProjectForm({
       name:             project.name       || '',
       client_id:        project.client_id  || '',
-      type:             project.type       || 'website',
+      type:             Array.isArray(project.type) ? project.type : (project.type ? [project.type] : []),
       status:           project.status     || 'not_started',
       total_amount:     project.total_amount     != null ? String(project.total_amount)     : '',
       received_amount:  project.received_amount  != null ? String(project.received_amount)  : '',
@@ -2084,18 +2102,26 @@ export default function Clients() {
               </Field>
             </div>
 
-            {/* Type */}
+            {/* Type — multi-select */}
             <Field label="סוג פרויקט">
               <div className="flex flex-wrap gap-1.5">
-                {Object.entries(PROJECT_TYPES).map(([key, type]) => (
-                  <button key={key} type="button" onClick={() => setProjectForm(f => ({ ...f, type: key }))}
-                    className="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
-                    style={projectForm.type === key
-                      ? { background: `${type.color}20`, color: type.color, border: `1px solid ${type.color}45` }
-                      : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                    {type.label}
-                  </button>
-                ))}
+                {Object.entries(PROJECT_TYPES).map(([key, type]) => {
+                  const selected = Array.isArray(projectForm.type) && projectForm.type.includes(key);
+                  return (
+                    <button key={key} type="button"
+                      onClick={() => setProjectForm(f => {
+                        const cur = Array.isArray(f.type) ? f.type : [];
+                        return { ...f, type: cur.includes(key) ? cur.filter(t => t !== key) : [...cur, key] };
+                      })}
+                      className="rounded-lg px-3 py-1.5 text-xs font-semibold transition flex items-center gap-1"
+                      style={selected
+                        ? { background: `${type.color}20`, color: type.color, border: `1px solid ${type.color}45` }
+                        : { background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                      {selected && <Check size={10} />}
+                      {type.label}
+                    </button>
+                  );
+                })}
               </div>
             </Field>
 

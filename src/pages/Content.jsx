@@ -188,17 +188,27 @@ function PeriodPicker({ value, onChange }) {
 
 // ── main dashboard ────────────────────────────────────────────
 const POST_PERIODS = [
-  { key: 'all', label: 'הכל'      },
-  { key: '7',   label: '7 ימים'   },
-  { key: '30',  label: '30 ימים'  },
-  { key: '90',  label: '90 ימים'  },
-  { key: '120', label: '120 ימים' },
+  { key: 'all', label: 'הכל'       },
+  { key: '30',  label: 'חודש אחרון' },
+  { key: '90',  label: '3 חודשים'  },
+  { key: '180', label: 'חצי שנה'   },
+  { key: '365', label: 'שנה'       },
 ];
+
+const SORT_OPTIONS = [
+  { key: 'recent',     label: 'אחרונים'    },
+  { key: 'engagement', label: 'מעורבות'    },
+  { key: 'views',      label: 'חשיפה'      },
+  { key: 'likes',      label: 'צפיות'      },
+];
+
+const PAGE_SIZE = 25;
 
 function InstagramDashboard({ userId, profile, media, insights, onDisconnect, onRefresh, refreshing }) {
   const [period,       setPeriod]       = useState('28D');
   const [sortBy,       setSortBy]       = useState('recent');
   const [postPeriod,   setPostPeriod]   = useState('all');
+  const [postPage,     setPostPage]     = useState(0);
   const [reachMap,     setReachMap]     = useState(null);   // null=not loaded, {}=loaded/unavailable
   const [reachLoading, setReachLoading] = useState(false);
 
@@ -242,6 +252,16 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
     if (sortBy === 'views')      return (b.reach           || 0) - (a.reach           || 0);
     return 0; // recent — keep API order
   });
+
+  // Pagination
+  const totalPages  = Math.ceil(sortedMedia.length / PAGE_SIZE);
+  const pagedMedia  = sortedMedia.slice(postPage * PAGE_SIZE, (postPage + 1) * PAGE_SIZE);
+
+  function changeFilter(newPeriod, newSort) {
+    if (newPeriod !== undefined) setPostPeriod(newPeriod);
+    if (newSort   !== undefined) setSortBy(newSort);
+    setPostPage(0);
+  }
 
   // Derived from media
   const totalComments = media.reduce((s, p) => s + (p.comments_count || 0), 0);
@@ -458,59 +478,40 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
           className="rounded-2xl p-6"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
         >
-          <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-            {/* Right: title + period pills */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                פוסטים אחרונים
-              </div>
-              <div className="flex gap-1">
+          {/* Toolbar: period + sort */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>תקופה</span>
+              <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 {POST_PERIODS.map(p => (
-                  <button
-                    key={p.key}
-                    type="button"
-                    onClick={() => setPostPeriod(p.key)}
-                    className="rounded-md px-2.5 py-1 text-xs font-semibold transition"
-                    style={{
-                      background: postPeriod === p.key ? 'rgba(255,255,255,0.12)' : 'transparent',
-                      color:      postPeriod === p.key ? 'white' : 'rgba(255,255,255,0.35)',
-                    }}
-                  >
+                  <button key={p.key} type="button" onClick={() => changeFilter(p.key, undefined)}
+                    className="rounded-lg px-3 py-1 text-xs font-semibold transition whitespace-nowrap"
+                    style={{ background: postPeriod === p.key ? 'rgba(255,255,255,0.14)' : 'transparent', color: postPeriod === p.key ? 'white' : 'rgba(255,255,255,0.35)' }}>
                     {p.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Left: sort dropdown + see-all */}
-            <div className="flex items-center gap-2">
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value)}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold outline-none cursor-pointer"
-                style={{
-                  background: 'rgb(var(--bg-elevated))',
-                  color: 'rgba(255,255,255,0.7)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                }}
-              >
-                <option value="recent">אחרונים</option>
-                <option value="likes">הכי הרבה לייקים</option>
-                <option value="comments">הכי הרבה תגובות</option>
-                <option value="engagement">הכי הרבה מעורבות</option>
-                <option value="views">הכי הרבה צפיות</option>
-              </select>
-              <a
-                href={`https://instagram.com/${profile?.username}`}
-                target="_blank"
-                rel="noopener noreferrer"
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>מיון</span>
+              <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                {SORT_OPTIONS.map(s => (
+                  <button key={s.key} type="button" onClick={() => changeFilter(undefined, s.key)}
+                    className="rounded-lg px-3 py-1 text-xs font-semibold transition whitespace-nowrap"
+                    style={{ background: sortBy === s.key ? 'rgba(255,255,255,0.14)' : 'transparent', color: sortBy === s.key ? 'white' : 'rgba(255,255,255,0.35)' }}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+              <a href={`https://instagram.com/${profile?.username}`} target="_blank" rel="noopener noreferrer"
                 className="text-xs flex items-center gap-1 hover:opacity-80 transition"
-                style={{ color: 'rgba(255,255,255,0.35)' }}
-              >
-                ראה הכל <ExternalLink size={11} />
+                style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <ExternalLink size={11} />
               </a>
             </div>
           </div>
+
           {sortBy === 'views' && reachLoading && (
             <p className="text-xs mb-3 flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
               <RefreshCw size={11} className="animate-spin" /> טוען נתוני reach...
@@ -521,13 +522,37 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
               Reach לפי פוסט מצריך אישור Meta — ממוין לפי מעורבות בינתיים
             </p>
           )}
-          {sortedMedia.length > 0 ? (
+
+          {pagedMedia.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-              {sortedMedia.map(post => <PostCard key={post.id} post={post} />)}
+              {pagedMedia.map(post => <PostCard key={post.id} post={post} />)}
             </div>
           ) : (
             <div className="text-center py-8 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
               אין פוסטים בפילטר הנוכחי
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button
+                disabled={postPage === 0}
+                onClick={() => setPostPage(p => p - 1)}
+                className="rounded-lg px-4 py-1.5 text-xs font-semibold transition disabled:opacity-30"
+                style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                ← הקודם
+              </button>
+              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                עמוד {postPage + 1} מתוך {totalPages} · {sortedMedia.length} פוסטים
+              </span>
+              <button
+                disabled={postPage >= totalPages - 1}
+                onClick={() => setPostPage(p => p + 1)}
+                className="rounded-lg px-4 py-1.5 text-xs font-semibold transition disabled:opacity-30"
+                style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                הבא →
+              </button>
             </div>
           )}
         </div>
@@ -783,10 +808,23 @@ function ProxiedImage({ src, alt, className, style }) {
 }
 
 // ── Apify profile dashboard ───────────────────────────────────
+const APIFY_PERIODS = [
+  { key: 'all', label: 'הכל',      days: null },
+  { key: '30',  label: 'חודש',     days: 30   },
+  { key: '90',  label: '3 חודשים', days: 90   },
+  { key: '365', label: 'שנה',      days: 365  },
+];
+
 function ApifyDashboard({ profile, history, onDisconnect, onRefresh, refreshing }) {
-  const [typeFilter, setTypeFilter] = useState('all');
-  const [sortCol,  setSortCol]  = useState('timestamp');
-  const [sortDir,  setSortDir]  = useState('desc');
+  const [typeFilter,   setTypeFilter]   = useState('all');
+  const [sortCol,      setSortCol]      = useState('timestamp');
+  const [sortDir,      setSortDir]      = useState('desc');
+  const [postPeriod,   setPostPeriod]   = useState('all');
+  const [tablePage,    setTablePage]    = useState(0);
+  const [expandedRows, setExpandedRows] = useState(new Set());
+  function toggleRow(id) {
+    setExpandedRows(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  }
 
   const scrapedAt = profile.scraped_at
     ? new Date(profile.scraped_at).toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -804,15 +842,41 @@ function ApifyDashboard({ profile, history, onDisconnect, onRefresh, refreshing 
       }, 0) / posts.length).toFixed(1)) : 0;
 
   // Posts table
-  const filtered = typeFilter === 'all' ? posts : posts.filter(p => p.type === typeFilter);
+  const now = Date.now();
+  const periodFiltered = postPeriod === 'all'
+    ? posts
+    : posts.filter(p => p.timestamp && new Date(p.timestamp).getTime() >= now - Number(postPeriod) * 86_400_000);
+  const filtered = typeFilter === 'all' ? periodFiltered : periodFiltered.filter(p => p.type === typeFilter);
   const sorted = [...filtered].sort((a, b) => {
+    if (sortCol === 'engagement') {
+      const aE = a.views > 0 ? (a.likes + a.comments) / a.views * 100 : (a.likes + a.comments);
+      const bE = b.views > 0 ? (b.likes + b.comments) / b.views * 100 : (b.likes + b.comments);
+      return sortDir === 'desc' ? bE - aE : aE - bE;
+    }
+    if (sortCol === 'type') {
+      return sortDir === 'desc'
+        ? (b.type || '').localeCompare(a.type || '')
+        : (a.type || '').localeCompare(b.type || '');
+    }
     const aVal = sortCol === 'timestamp' ? new Date(a.timestamp) : (a[sortCol] ?? -1);
     const bVal = sortCol === 'timestamp' ? new Date(b.timestamp) : (b[sortCol] ?? -1);
     return sortDir === 'desc' ? bVal - aVal : aVal - bVal;
   });
+
+  const tableTotal = sorted.length;
+  const tablePages = Math.ceil(tableTotal / PAGE_SIZE);
+  const pagedRows  = sorted.slice(tablePage * PAGE_SIZE, (tablePage + 1) * PAGE_SIZE);
+
+  function changeTableFilter(period, sort, type) {
+    if (period !== undefined) setPostPeriod(period);
+    if (sort   !== undefined) setSortCol(sort);
+    if (type   !== undefined) setTypeFilter(type);
+    setTablePage(0);
+  }
   function toggleSort(col) {
     if (sortCol === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
     else { setSortCol(col); setSortDir('desc'); }
+    setTablePage(0);
   }
 
   return (
@@ -882,94 +946,182 @@ function ApifyDashboard({ profile, history, onDisconnect, onRefresh, refreshing 
 
       {/* ── Latest content table ── */}
       <div className="rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
-        {/* Controls */}
+
+        {/* ── Header: title left, filters right ── */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-wrap gap-3">
           <div>
             <p className="text-sm font-bold text-white">תוכן אחרון</p>
-            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.28)' }}>{posts.length} פוסטים</p>
+            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.28)' }}>
+              {postPeriod === 'all' ? 'כל הזמן' : postPeriod === '30' ? 'חודש אחרון' : postPeriod === '90' ? '3 חודשים' : 'שנה אחרונה'} · {tableTotal} פוסטים
+            </p>
           </div>
-          <div className="flex gap-1 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            {['all', 'Video', 'Sidecar', 'Image'].map(t => (
-              <button key={t} onClick={() => setTypeFilter(t)}
-                className="rounded-md px-3 py-1 text-xs font-semibold transition-all"
-                style={{ background: typeFilter === t ? 'rgba(255,255,255,0.12)' : 'transparent', color: typeFilter === t ? 'white' : 'rgba(255,255,255,0.32)' }}>
-                {t === 'all' ? 'הכל' : TYPE_LABEL[t]}
-              </button>
-            ))}
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Type filter */}
+            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              {[
+                { k: 'all',     l: 'הכל'     },
+                { k: 'Video',   l: 'וידאו'   },
+                { k: 'Sidecar', l: 'קרוסלה'  },
+                { k: 'Image',   l: 'תמונה'   },
+              ].map(({ k, l }) => (
+                <button key={k} onClick={() => changeTableFilter(undefined, undefined, k)}
+                  className="rounded-md px-2.5 py-1 text-xs font-semibold transition-all"
+                  style={{
+                    background: typeFilter === k ? 'rgba(255,255,255,0.12)' : 'transparent',
+                    color:      typeFilter === k ? 'white' : 'rgba(255,255,255,0.35)',
+                  }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            {/* Period filter */}
+            <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)' }}>
+              {APIFY_PERIODS.map(p => (
+                <button key={p.key} onClick={() => changeTableFilter(p.key, undefined, undefined)}
+                  className="rounded-md px-2.5 py-1 text-xs font-semibold transition-all"
+                  style={{
+                    background: postPeriod === p.key ? 'rgba(255,255,255,0.12)' : 'transparent',
+                    color:      postPeriod === p.key ? 'white' : 'rgba(255,255,255,0.35)',
+                  }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Table header */}
-        <div className="grid px-5 pb-2" style={{ gridTemplateColumns: '52px 1fr 90px 72px 72px 72px 82px' }}>
+        {/* ── Table header — LTR physical layout, RTL reading order ── */}
+        {/* Column order left→right: פורסם | מעורבות | תגובות | לייקים | צפיות | סוג | כיתוב | thumb */}
+        <div className="grid px-5 pb-2 pt-1 w-full" style={{ gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr 1fr 3fr 52px', direction: 'ltr' }}>
           {[
-            { k: null,        l: '' },
-            { k: null,        l: 'כיתוב' },
-            { k: 'timestamp', l: 'פורסם' },
-            { k: 'views',     l: 'צפיות' },
-            { k: 'likes',     l: 'לייקים' },
-            { k: 'comments',  l: 'תגובות' },
-            { k: null,        l: 'Engagement' },
+            { k: 'timestamp',  l: 'פורסם'   },
+            { k: 'engagement', l: 'מעורבות' },
+            { k: 'comments',   l: 'תגובות'  },
+            { k: 'likes',      l: 'לייקים'  },
+            { k: 'views',      l: 'צפיות'   },
+            { k: 'type',       l: 'סוג'     },
+            { k: null,         l: 'כיתוב'   },
+            { k: null,         l: ''        },
           ].map(({ k, l }) => (
-            <button key={l} onClick={() => k && toggleSort(k)} disabled={!k}
-              className="text-[10px] font-bold uppercase tracking-widest text-right"
-              style={{ color: sortCol === k ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)', cursor: k ? 'pointer' : 'default' }}>
+            <button key={l + (k||'')} onClick={() => k && toggleSort(k)} disabled={!k}
+              className="text-[10px] font-semibold tracking-wider select-none transition-colors text-right"
+              style={{
+                color:  sortCol === k ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.22)',
+                cursor: k ? 'pointer' : 'default',
+              }}>
               {l}{sortCol === k ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
             </button>
           ))}
         </div>
 
-        {/* Rows */}
-        {sorted.length === 0 ? (
+        {/* ── Rows ── */}
+        {pagedRows.length === 0 ? (
           <div className="px-5 py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פוסטים</div>
-        ) : sorted.map((post, i) => {
-          const eng = engPct(post);
-          const daysAgo = post.timestamp
+        ) : pagedRows.map((post, i) => {
+          const rowId    = post.id || i;
+          const isOpen   = expandedRows.has(rowId);
+          const eng      = engPct(post);
+          const daysAgo  = post.timestamp
             ? Math.floor((Date.now() - new Date(post.timestamp)) / 86_400_000)
             : null;
+          const postedLabel = daysAgo === 0 ? 'היום'
+            : daysAgo === 1 ? 'אתמול'
+            : daysAgo != null ? `לפני ${daysAgo}י`
+            : '—';
+          const COLS = '1fr 1fr 1fr 1fr 1fr 1fr 3fr 52px';
+
           return (
-            <div key={post.id || i} className="grid px-5 py-3 items-center hover:bg-white/[0.02] transition"
-              style={{ gridTemplateColumns: '52px 1fr 90px 72px 72px 72px 82px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <div key={rowId} style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+              {/* Main row — same LTR column order as header */}
+              <div className="grid px-5 py-2.5 items-center hover:bg-white/[0.025] transition cursor-pointer w-full"
+                style={{ gridTemplateColumns: COLS, direction: 'ltr' }}
+                onClick={() => toggleRow(rowId)}>
 
-              {/* Thumbnail */}
-              <a href={post.url} target="_blank" rel="noopener noreferrer" className="block">
-                {post.displayUrl ? (
-                  <ProxiedImage src={post.displayUrl} alt=""
-                    className="h-10 w-10 rounded-lg object-cover"
-                    style={{}} />
-                ) : (
-                  <div className="h-10 w-10 rounded-lg flex items-center justify-center"
-                    style={{ background: 'rgba(255,255,255,0.06)', color: TYPE_COLOR[post.type] || 'white' }}>
-                    <TypeIcon type={post.type} size={14} />
-                  </div>
-                )}
-              </a>
+                {/* פורסם */}
+                <p className="text-xs text-right" style={{ color: 'rgba(255,255,255,0.35)' }}>{postedLabel}</p>
 
-              {/* Caption + type badge */}
-              <div className="min-w-0 pr-3">
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded mb-0.5"
-                  style={{ background: (TYPE_COLOR[post.type] || '#fff') + '18', color: TYPE_COLOR[post.type] || 'white' }}>
-                  <TypeIcon type={post.type} size={9} />
-                  {TYPE_LABEL[post.type] || post.type}
-                </span>
-                <p className="text-xs text-white truncate max-w-xs leading-snug" style={{ direction: 'rtl' }}>
-                  {post.caption?.slice(0, 80) || '—'}
+                {/* מעורבות */}
+                <p className="text-sm font-semibold text-right" style={{ color: eng ? '#4ade80' : 'rgba(255,255,255,0.2)' }}>
+                  {eng ? `${eng}%` : '—'}
                 </p>
+
+                {/* תגובות */}
+                <p className="text-sm font-semibold text-white text-right">{fmtK(post.comments)}</p>
+
+                {/* לייקים */}
+                <p className="text-sm font-semibold text-white text-right">{fmtK(post.likes)}</p>
+
+                {/* צפיות */}
+                <p className="text-sm font-semibold text-right" style={{ color: post.views > 0 ? 'white' : 'rgba(255,255,255,0.2)' }}>
+                  {post.views > 0 ? fmtK(post.views) : '—'}
+                </p>
+
+                {/* סוג */}
+                <div className="flex justify-end">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: (TYPE_COLOR[post.type] || '#fff') + '18', color: TYPE_COLOR[post.type] || 'white' }}>
+                    <TypeIcon type={post.type} size={9} />
+                    {TYPE_LABEL[post.type] || post.type || '—'}
+                  </span>
+                </div>
+
+                {/* כיתוב */}
+                <p className="text-xs text-white truncate px-3 leading-snug text-right" style={{ direction: 'rtl' }}>
+                  {post.caption?.slice(0, 120) || '—'}
+                </p>
+
+                {/* Thumbnail */}
+                <a href={post.url} target="_blank" rel="noopener noreferrer"
+                  className="block flex-none" onClick={e => e.stopPropagation()}>
+                  {post.displayUrl ? (
+                    <ProxiedImage src={post.displayUrl} alt=""
+                      className="h-9 w-9 rounded-lg object-cover" style={{}} />
+                  ) : (
+                    <div className="h-9 w-9 rounded-lg flex items-center justify-center"
+                      style={{ background: 'rgba(255,255,255,0.06)', color: TYPE_COLOR[post.type] || 'white' }}>
+                      <TypeIcon type={post.type} size={13} />
+                    </div>
+                  )}
+                </a>
               </div>
 
-              <p className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>
-                {daysAgo === 0 ? 'היום' : daysAgo === 1 ? 'אתמול' : daysAgo != null ? `לפני ${daysAgo}י` : '—'}
-              </p>
-              <p className="text-sm font-semibold" style={{ color: post.views ? 'white' : 'rgba(255,255,255,0.2)' }}>
-                {post.views != null && post.views > 0 ? fmtK(post.views) : '—'}
-              </p>
-              <p className="text-sm font-semibold text-white">{fmtK(post.likes)}</p>
-              <p className="text-sm font-semibold text-white">{fmtK(post.comments)}</p>
-              <p className="text-sm font-semibold" style={{ color: eng ? '#4ade80' : 'rgba(255,255,255,0.2)' }}>
-                {eng ? `${eng}%` : '—'}
-              </p>
+              {/* Expanded caption */}
+              {isOpen && post.caption && (
+                <div className="px-5 pb-3 pt-0" dir="rtl">
+                  <p className="text-xs leading-relaxed rounded-xl p-3"
+                    style={{ color: 'rgba(255,255,255,0.65)', background: 'rgba(255,255,255,0.04)', whiteSpace: 'pre-wrap' }}>
+                    {post.caption}
+                  </p>
+                </div>
+              )}
             </div>
           );
         })}
+
+        {/* ── Pagination ── */}
+        {tablePages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <button
+              disabled={tablePage === 0}
+              onClick={() => setTablePage(p => p - 1)}
+              className="rounded-lg px-4 py-1.5 text-xs font-semibold transition disabled:opacity-30"
+              style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              → הקודם
+            </button>
+            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              עמוד {tablePage + 1} מתוך {tablePages} · {tableTotal} פוסטים
+            </span>
+            <button
+              disabled={tablePage >= tablePages - 1}
+              onClick={() => setTablePage(p => p + 1)}
+              className="rounded-lg px-4 py-1.5 text-xs font-semibold transition disabled:opacity-30"
+              style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              הבא ←
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

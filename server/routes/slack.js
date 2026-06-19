@@ -66,7 +66,7 @@ router.post('/wins', async (req, res) => {
 });
 
 router.post('/deals', async (req, res) => {
-  const { name, total_amount, received_amount, next_rank, date } = req.body;
+  const { name, total_amount, received_amount, next_rank, notes, date } = req.body;
 
   const token   = process.env.SLACK_BOT_TOKEN;
   const channel = 'cha-ching';
@@ -78,6 +78,7 @@ router.post('/deals', async (req, res) => {
     total_amount    ? `*סה"כ סכום העסקה*\n₪${Number(total_amount).toLocaleString()}` : null,
     received_amount ? `*כסף שנכנס בפועל*\n₪${Number(received_amount).toLocaleString()}` : null,
     next_rank       ? `*הדרגה הבאה*\n${RANK_META[next_rank]?.emoji ? RANK_META[next_rank].emoji + ' ' : ''}${next_rank} · ${RANK_META[next_rank]?.amount ?? ''}` : null,
+    notes           ? `*פרטים נוספים*\n${notes}` : null,
     `*תאריך:*\n${date}`,
   ].filter(Boolean);
 
