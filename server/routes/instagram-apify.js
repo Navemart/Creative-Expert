@@ -226,3 +226,52 @@ router.delete('/disconnect', async (req, res) => {
 });
 
 export default router;
+
+// ── Daily auto-refresh — called by cron in server/index.js ────
+export async function dailyRefreshAll() {
+  const { data: profiles } = await supabase
+    .from('instagram_profiles')
+    .select('user_id, username');
+
+  if (!profiles?.length) return 0;
+
+  let count = 0;
+  for (const { user_id, username } of profiles) {
+    try {
+      const [raw, rawPosts] = await Promise.all([
+        scrapeInstagramProfile(username),
+        scrapeInstagramPosts(username),
+      ]);
+      const now = new Date().toISOString();
+      const postSource = rawPosts?.length ? rawPosts : (raw.latestPosts || []);
+      const posts = normalizePosts(postSource);
+      const { avgViews, avgEng } = computePostStats(posts);
+
+      const row = {
+        user_id,
+        username:    raw.username    || username,
+        full_name:   raw.fullName    || null,
+        bio:         raw.biography   || null,
+        followers:   raw.followersCount || 0,
+        following:   raw.followsCount   || 0,
+        posts_count: raw.postsCount     || 0,
+        profile_pic: raw.profilePicUrl  || null,
+        is_verified: raw.verified       || false,
+        is_business: raw.isBusinessAccount || false,
+        posts,
+        scraped_at: now,
+      };
+
+      await supabase.from('instagram_profiles').upsert(row, { onConflict: 'user_id' });
+      await supabase.from('instagram_history').insert({
+        user_id, followers: row.followers, following: row.following,
+        posts_count: row.posts_count, avg_views: avgViews,
+        avg_engagement: avgEng, recorded_at: now,
+      });
+      count++;
+    } catch (e) {
+      console.error(`[dailyRefresh] failed for ${username}:`, e.message);
+    }
+  }
+  return count;
+}

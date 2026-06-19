@@ -815,7 +815,7 @@ const APIFY_PERIODS = [
   { key: '365', label: 'שנה',      days: 365  },
 ];
 
-function ApifyDashboard({ profile, history, onDisconnect, onRefresh, refreshing }) {
+function ApifyDashboard({ profile, history, onDisconnect }) {
   const [typeFilter,   setTypeFilter]   = useState('all');
   const [sortCol,      setSortCol]      = useState('timestamp');
   const [sortDir,      setSortDir]      = useState('desc');
@@ -922,12 +922,6 @@ function ApifyDashboard({ profile, history, onDisconnect, onRefresh, refreshing 
         </div>
 
         <div className="flex items-center gap-1.5 flex-none">
-          <button onClick={onRefresh} disabled={refreshing}
-            className="rounded-lg px-3 py-1.5 text-xs font-medium flex items-center gap-1.5 transition hover:bg-white/10"
-            style={{ border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
-            <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? 'טוען...' : 'רענן'}
-          </button>
           <button onClick={onDisconnect}
             className="rounded-lg p-1.5 hover:bg-white/10 transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <LogOut size={14} />
@@ -1220,8 +1214,6 @@ export default function Content() {
       profile={profile}
       history={history}
       onDisconnect={handleDisconnect}
-      onRefresh={handleRefresh}
-      refreshing={refreshing}
     />
   );
 }

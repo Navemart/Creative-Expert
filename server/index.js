@@ -84,3 +84,19 @@ if (process.env.NOTION_TOKEN) {
   });
   console.log('  ⏰  Notion nightly sync scheduled (03:00)');
 }
+
+// ── Daily Instagram refresh (all connected profiles) ──────────
+// Every day at 06:00 — refresh all users who have a connected Apify Instagram profile
+cron.schedule('0 6 * * *', async () => {
+  try {
+    console.log('[cron] Starting daily Instagram refresh...');
+    const { dailyRefreshAll } = await import('./routes/instagram-apify.js');
+    if (typeof dailyRefreshAll === 'function') {
+      const count = await dailyRefreshAll();
+      console.log(`[cron] Instagram refresh done — ${count} profiles updated`);
+    }
+  } catch (e) {
+    console.error('[cron] Instagram refresh error:', e.message);
+  }
+});
+console.log('  ⏰  Instagram daily refresh scheduled (06:00)');
