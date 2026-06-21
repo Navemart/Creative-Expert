@@ -510,138 +510,159 @@ export default function ZoomRecordings() {
 
   // ── Main render ──────────────────────────────────────────────
   return (
-    <div className="w-full space-y-4" dir="rtl">
+    <div className="w-full space-y-5" dir="rtl">
 
-      {/* Page title + search */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">קלטות ופגישות</h1>
-          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            {meetings.length} הקלטות · Creative Expert
-          </p>
-        </div>
-        <div className="relative flex-none" style={{ width: 220 }}>
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="חיפוש..."
-            dir="rtl"
-            className="w-full rounded-xl px-4 py-2 text-sm outline-none"
-            style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)' }}
-          />
-        </div>
-      </div>
+      {/* ── Title ── */}
+      <h1 className="text-2xl sm:text-3xl font-bold text-white">קלטות ופגישות</h1>
 
-      {/* ── 2 Upcoming meetings — always visible ── */}
-      <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      {/* ── 2 Upcoming featured cards ── */}
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
         {upcoming === null ? (
-          // Loading
           [0,1].map(i => (
-            <div key={i} className="rounded-2xl p-5 flex flex-col gap-3 animate-pulse"
-              style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)', minHeight: 130 }}>
-              <div className="h-3 w-20 rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
-              <div className="h-4 w-3/4 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
-              <div className="h-9 w-full rounded-xl mt-auto" style={{ background: 'rgba(255,255,255,0.05)' }} />
+            <div key={i} className="rounded-2xl p-6 flex flex-col gap-4 animate-pulse"
+              style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)', minHeight: 140 }}>
+              <div className="h-4 w-3/4 rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
+              <div className="h-3 w-1/2 rounded-full" style={{ background: 'rgba(255,255,255,0.04)' }} />
+              <div className="h-10 w-full rounded-xl mt-auto" style={{ background: 'rgba(255,255,255,0.05)' }} />
             </div>
           ))
         ) : nextTwo.length === 0 ? (
-          <div className="col-span-2 rounded-2xl p-6 flex items-center justify-center"
+          <div className="col-span-2 rounded-2xl p-8 flex items-center justify-center"
             style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
             <p className="text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פגישות קרובות</p>
           </div>
-        ) : (
-          nextTwo.map(m => {
-            const ts      = getTypeStyle(getBadge(m.topic || ''));
-            const start   = m.start_time ? new Date(m.start_time) : null;
-            const dateStr = start ? start.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
-            const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
-            const endTime = start && m.duration ? new Date(start.getTime() + m.duration * 60000).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
-            const title   = cleanTopic(m.topic || '');
-            return (
-              <div key={m.id} className="rounded-2xl p-5 flex flex-col gap-4"
-                style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.09)' }}>
-                <div className="flex-1">
-                  <p className="text-base font-bold text-white leading-snug mb-1">{title}</p>
-                  {dateStr && (
-                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                      {dateStr}{timeStr ? ` · ${timeStr}${endTime ? ` - ${endTime}` : ''}` : ''}
-                    </p>
-                  )}
-                </div>
-                {m.join_url ? (
-                  <a href={m.join_url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition hover:opacity-85"
-                    style={{ background: '#F5C118', color: '#13152A' }}>
-                    הצטרף לפגישה <ExternalLink size={14} color="#13152A" />
-                  </a>
-                ) : (
-                  <div className="rounded-xl py-2.5 text-center text-sm font-medium"
-                    style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)' }}>
-                    אין קישור עדיין
-                  </div>
-                )}
+        ) : nextTwo.map(m => {
+          const start   = m.start_time ? new Date(m.start_time) : null;
+          const dateStr = start ? start.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
+          const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
+          const endTime = start && m.duration ? new Date(start.getTime() + m.duration * 60000).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
+          const title   = cleanTopic(m.topic || '');
+          return (
+            <div key={m.id} className="rounded-2xl p-6 flex flex-col gap-4"
+              style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.09)' }}>
+              <div className="flex-1 space-y-1">
+                <p className="text-base font-bold text-white leading-snug">{title}</p>
+                {dateStr && <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  {dateStr}{timeStr ? ` · ${timeStr}${endTime ? ` - ${endTime}` : ''}` : ''}
+                </p>}
               </div>
-            );
-          })
-        )}
+              {m.join_url ? (
+                <a href={m.join_url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition hover:opacity-85"
+                  style={{ background: '#F5C118', color: '#13152A' }}>
+                  הצטרף לפגישה <ExternalLink size={14} color="#13152A" />
+                </a>
+              ) : (
+                <div className="rounded-xl py-2.5 text-center text-sm"
+                  style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' }}>
+                  אין קישור עדיין
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        {[
-          { k: 'recordings', l: `הקלטות${meetings.length ? ` ${meetings.length}` : ''}` },
-          { k: 'upcoming',   l: `פגישות קרובות${upcoming?.length ? ` ${upcoming.length}` : ''}` },
-          { k: 'starred',    l: `שמורות${starred.size > 0 ? ` (${starred.size})` : ''}`, icon: true },
-        ].map(t => (
-          <button key={t.k} onClick={() => setActiveTab(t.k)}
-            className="pb-3 px-4 text-sm font-semibold transition-all relative flex items-center gap-1.5"
-            style={{ color: activeTab === t.k ? 'white' : 'rgba(255,255,255,0.35)' }}>
-            {t.icon && <Star size={12} fill={activeTab === t.k ? '#F5C118' : 'none'} style={{ color: activeTab === t.k ? '#F5C118' : 'rgba(255,255,255,0.35)' }} />}
-            {t.l}
-            {activeTab === t.k && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: '#F5C118' }} />
-            )}
-          </button>
-        ))}
+      {/* ── Tabs + Search ── */}
+      <div className="flex items-center justify-between gap-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="flex gap-0">
+          {[
+            { k: 'recordings', l: 'הקלטות',       count: meetings.length },
+            { k: 'upcoming',   l: 'פגישות קרובות', count: upcoming?.length ?? null },
+            { k: 'starred',    l: 'שמורות',        count: starred.size || null, icon: true },
+          ].map(t => {
+            const active = activeTab === t.k;
+            return (
+              <button key={t.k} onClick={() => setActiveTab(t.k)}
+                className="pb-3 px-4 text-sm font-semibold transition-all relative flex items-center gap-2"
+                style={{ color: active ? 'white' : 'rgba(255,255,255,0.38)' }}>
+                {t.icon && <Star size={12} fill={active ? '#F5C118' : 'none'} style={{ color: active ? '#F5C118' : 'rgba(255,255,255,0.35)' }} />}
+                {t.l}
+                {t.count !== null && t.count > 0 && (
+                  <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                    style={{ background: active ? '#F5C118' : 'rgba(255,255,255,0.1)', color: active ? '#13152A' : 'rgba(255,255,255,0.5)' }}>
+                    {t.count}
+                  </span>
+                )}
+                {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: '#F5C118' }} />}
+              </button>
+            );
+          })}
+        </div>
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="חיפוש..."
+          dir="rtl"
+          className="rounded-xl px-4 py-1.5 text-sm outline-none mb-2 flex-none"
+          style={{ width: 200, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)' }}
+        />
       </div>
 
       {/* ── Upcoming tab ── */}
       {activeTab === 'upcoming' && (
-        <div className="space-y-2">
-          {!filteredUpcoming && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
-          {filteredUpcoming?.length === 0 && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p>}
-          {filteredUpcoming?.map(m => {
-            const ts      = getTypeStyle(getBadge(m.topic || ''));
-            const start   = m.start_time ? new Date(m.start_time) : null;
-            const dateStr = start ? start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
-            const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
-            const title   = cleanTopic(m.topic || '');
-            return (
-              <div key={m.id} className="flex items-center gap-4 rounded-2xl px-5 py-4"
-                style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)', borderRight: `3px solid ${ts.rowBorder}` }}>
-                {start && (
-                  <div className="flex-none text-center" style={{ minWidth: 36 }}>
-                    <p className="text-2xl font-black text-white leading-none">{start.getDate()}</p>
-                    <p className="text-[10px] uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                      {MONTH_HE[start.getMonth()].slice(0, 3)}
-                    </p>
+        <div className="rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
+          {!filteredUpcoming && <p className="text-xs text-center py-10" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
+          {filteredUpcoming?.length === 0 && <p className="text-xs text-center py-10" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p>}
+          {filteredUpcoming && (() => {
+            // Group by month
+            const byMonth = {};
+            filteredUpcoming.forEach(m => {
+              const d = new Date(m.start_time);
+              const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+              if (!byMonth[key]) byMonth[key] = [];
+              byMonth[key].push(m);
+            });
+            return Object.keys(byMonth).sort().map(mk => {
+              const [yr, mo] = mk.split('-').map(Number);
+              const label = `${MONTH_HE[mo-1].toUpperCase()} ${yr}`;
+              const items = byMonth[mk];
+              return (
+                <div key={mk}>
+                  <div className="flex items-center justify-between px-6 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</span>
+                    <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{items.length} פגישות</span>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1 inline-block"
-                    style={{ background: ts.bg, color: ts.color }}>{getBadge(m.topic || '')}</span>
-                  <p className="text-sm font-semibold text-white leading-snug">{title}</p>
-                  {dateStr && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>{dateStr} · {timeStr}{m.duration ? ` · ${m.duration} דק׳` : ''}</p>}
+                  {items.map((m, idx) => {
+                    const ts      = getTypeStyle(getBadge(m.topic || ''));
+                    const start   = m.start_time ? new Date(m.start_time) : null;
+                    const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
+                    const endTime = start && m.duration ? new Date(start.getTime() + m.duration * 60000).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
+                    const title   = cleanTopic(m.topic || '');
+                    return (
+                      <div key={m.id} className="flex items-center gap-0"
+                        style={{ borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                        {/* Day number */}
+                        <div className="flex-none flex items-center justify-center" style={{ width: 80, padding: '16px 0' }}>
+                          <span className="text-5xl font-black leading-none select-none" style={{ color: 'rgba(255,255,255,0.15)' }}>
+                            {start?.getDate()}
+                          </span>
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 flex items-center gap-4 px-4 py-4" style={{ borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="h-2 w-2 rounded-full flex-none" style={{ background: ts.rowBorder }} />
+                              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: ts.color }}>{getBadge(m.topic || '')}</span>
+                            </div>
+                            <p className="text-sm font-semibold text-white leading-snug">{title}</p>
+                            {timeStr && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                              {timeStr}{endTime ? ` - ${endTime}` : ''}{m.duration ? ` · ${m.duration} דק׳` : ''}
+                            </p>}
+                          </div>
+                          {m.join_url && (
+                            <a href={m.join_url} target="_blank" rel="noopener noreferrer"
+                              className="flex-none flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition hover:opacity-85"
+                              style={{ background: '#F5C118', color: '#13152A' }}>
+                              הצטרף <ExternalLink size={13} color="#13152A" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-                {m.join_url && (
-                  <a href={m.join_url} target="_blank" rel="noopener noreferrer"
-                    className="flex-none flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition hover:opacity-80"
-                    style={{ background: '#F5C118', color: '#13152A' }}>
-                    <Video size={14} /> הצטרף
-                  </a>
-                )}
-              </div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
       )}
 
@@ -671,14 +692,19 @@ export default function ZoomRecordings() {
             {/* Month header */}
             <button
               onClick={() => toggleMonth(monthKey)}
-              className="w-full flex items-center gap-2 py-3 text-right transition hover:opacity-80"
+              className="w-full flex items-center justify-between py-3 text-right transition hover:opacity-80"
             >
-              {isCollapsed
-                ? <ChevronDown size={15} style={{ color: 'rgba(255,255,255,0.4)' }} />
-                : <ChevronUp   size={15} style={{ color: 'rgba(255,255,255,0.4)' }} />
-              }
-              <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                {monthLabel}
+              <div className="flex items-center gap-2">
+                {isCollapsed
+                  ? <ChevronDown size={14} style={{ color: 'rgba(255,255,255,0.35)' }} />
+                  : <ChevronUp   size={14} style={{ color: 'rgba(255,255,255,0.35)' }} />
+                }
+                <span className="text-[11px] font-bold tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                  {monthLabel}
+                </span>
+              </div>
+              <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                {days.reduce((s, d) => s + dayMap[d].length, 0)} הקלטות
               </span>
             </button>
 
