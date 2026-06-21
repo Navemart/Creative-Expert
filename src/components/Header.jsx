@@ -163,31 +163,14 @@ function loadStreak() {
 }
 
 const LEVELS = [
-  { v: 0, label: '',        dot: 'rgba(255,255,255,0.12)' },
-  { v: 1, label: 'קצת',    dot: '#f97316' },
-  { v: 2, label: 'הרבה',   dot: '#F5C118' },
-  { v: 3, label: 'מושלם',  dot: '#4ade80' },
+  { v: 1, label: 'קצת',   dot: '#f97316' },
+  { v: 2, label: 'הרבה',  dot: '#F5C118' },
+  { v: 3, label: 'מושלם', dot: '#4ade80' },
 ];
 
 function DailyPanel({ onClose }) {
   const [scores, setScores] = useState(loadDaily);
   const [streak, setStreak] = useState(loadStreak);
-
-  function cycle(id) {
-    setScores(prev => {
-      const next = { ...prev, [id]: ((prev[id] || 0) + 1) % 4 };
-      localStorage.setItem(todayKey(), JSON.stringify(next));
-      const allDone = DAILY_ITEMS.every(i => (next[i.id] || 0) > 0);
-      const today = new Date().toISOString().slice(0, 10);
-      if (allDone && streak.last !== today) {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-        const newStreak = { count: streak.last === yesterday ? streak.count + 1 : 1, last: today };
-        setStreak(newStreak);
-        localStorage.setItem('daily_streak', JSON.stringify(newStreak));
-      }
-      return next;
-    });
-  }
 
   const totalScore  = DAILY_ITEMS.reduce((s, i) => s + (scores[i.id] || 0), 0);
   const maxScore    = DAILY_ITEMS.length * 3;
@@ -220,27 +203,49 @@ function DailyPanel({ onClose }) {
         <div className="h-full transition-all duration-300" style={{ width: `${pct}%`, background: barColor }} />
       </div>
 
+      {/* Legend */}
+      <div className="flex items-center gap-3 px-4 pt-2.5 pb-1">
+        {LEVELS.map(l => (
+          <span key={l.v} className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <span className="h-2 w-2 rounded-full flex-none" style={{ background: l.dot }} />
+            {l.label}
+          </span>
+        ))}
+      </div>
+
       {/* Items */}
-      <div className="py-1.5">
+      <div className="py-1">
         {DAILY_ITEMS.map(item => {
-          const v     = scores[item.id] || 0;
-          const level = LEVELS[v];
+          const v = scores[item.id] || 0;
           return (
-            <button key={item.id} onClick={() => cycle(item.id)}
-              className="flex items-center gap-3 w-full px-4 py-2.5 text-right transition hover:bg-white/[0.04]">
-              {/* Dot */}
-              <div className="flex-none h-2.5 w-2.5 rounded-full transition-all" style={{ background: level.dot, boxShadow: v === 3 ? '0 0 6px #4ade8088' : 'none' }} />
-              {/* Label */}
-              <span className="flex-1 text-sm" style={{ color: v > 0 ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)' }}>
+            <div key={item.id} className="flex items-center gap-2 px-4 py-2">
+              <span className="flex-1 text-sm" style={{ color: v > 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)' }}>
                 {item.emoji} {item.label}
               </span>
-              {/* Level badge */}
-              {v > 0 && (
-                <span className="text-[10px] font-semibold rounded-md px-1.5 py-0.5 flex-none" style={{ background: level.dot + '22', color: level.dot }}>
-                  {level.label}
-                </span>
-              )}
-            </button>
+              <div className="flex gap-1.5 flex-none">
+                {LEVELS.map(l => (
+                  <button key={l.v} onClick={() => setScores(prev => {
+                    const next = { ...prev, [item.id]: prev[item.id] === l.v ? 0 : l.v };
+                    localStorage.setItem(todayKey(), JSON.stringify(next));
+                    const allDone = DAILY_ITEMS.every(i => (next[i.id] || 0) > 0);
+                    const today = new Date().toISOString().slice(0, 10);
+                    if (allDone && streak.last !== today) {
+                      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+                      const newStreak = { count: streak.last === yesterday ? streak.count + 1 : 1, last: today };
+                      setStreak(newStreak);
+                      localStorage.setItem('daily_streak', JSON.stringify(newStreak));
+                    }
+                    return next;
+                  })}
+                    className="h-3 w-3 rounded-full transition-all hover:scale-125"
+                    style={{
+                      background: v >= l.v ? l.dot : 'rgba(255,255,255,0.1)',
+                      boxShadow: v === l.v && l.v === 3 ? '0 0 6px #4ade8088' : 'none',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
           );
         })}
       </div>
