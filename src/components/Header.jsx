@@ -163,8 +163,8 @@ function loadStreak() {
 }
 
 const LEVELS = [
-  { v: 1, label: 'קצת',   dot: '#f97316' },
-  { v: 2, label: 'הרבה',  dot: '#F5C118' },
+  { v: 1, label: 'מעט',   dot: '#f97316' },
+  { v: 2, label: 'חלקי',  dot: '#F5C118' },
   { v: 3, label: 'מושלם', dot: '#4ade80' },
 ];
 
