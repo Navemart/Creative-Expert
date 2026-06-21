@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, ExternalLink, ChevronLeft, Plus, Trash2, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, ExternalLink, ChevronLeft, Plus, Trash2, Pencil, ToggleLeft, ToggleRight, Flame } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useUser, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import { usePaymentAlerts } from '../hooks/usePaymentAlerts.js';
@@ -137,6 +137,108 @@ function loadTools() {
   catch { return TOOLS_DEFAULT; }
 }
 function saveTools(t) { localStorage.setItem(TOOLS_KEY, JSON.stringify(t)); }
+
+// ── Daily Standard ─────────────────────────────────────────────
+const DAILY_ITEMS = [
+  { id: 'steps',   emoji: '🧠', label: '10,000 צעדים' },
+  { id: 'reading', emoji: '📚', label: '10 עמודים בספר' },
+  { id: 'soul',    emoji: '🧘', label: '20 דק׳ לנפש' },
+  { id: 'goals',   emoji: '🎯', label: 'מטרות — 3 פעמים' },
+  { id: 'content', emoji: '📲', label: '100 דק׳ תוכן' },
+  { id: 'outreach',emoji: '🤝', label: '30 דק׳ פניות יזומות' },
+];
+
+function todayKey() { return 'daily_' + new Date().toISOString().slice(0, 10); }
+
+function loadDaily() {
+  try {
+    const raw = localStorage.getItem(todayKey());
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function loadStreak() {
+  try { return JSON.parse(localStorage.getItem('daily_streak') || '{"count":0,"last":""}'); }
+  catch { return { count: 0, last: '' }; }
+}
+
+function DailyPanel({ onClose }) {
+  const [checked, setChecked] = useState(loadDaily);
+  const [streak,  setStreak]  = useState(loadStreak);
+
+  function toggle(id) {
+    setChecked(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      localStorage.setItem(todayKey(), JSON.stringify(next));
+      // Update streak when all done
+      const allDone = DAILY_ITEMS.every(i => next[i.id]);
+      const today = new Date().toISOString().slice(0, 10);
+      if (allDone && streak.last !== today) {
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        const newStreak = { count: streak.last === yesterday ? streak.count + 1 : 1, last: today };
+        setStreak(newStreak);
+        localStorage.setItem('daily_streak', JSON.stringify(newStreak));
+      }
+      return next;
+    });
+  }
+
+  const doneCount = DAILY_ITEMS.filter(i => checked[i.id]).length;
+  const allDone   = doneCount === DAILY_ITEMS.length;
+
+  return (
+    <div className="absolute left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" dir="rtl"
+      style={{ width: 260, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>סטנדרט יומי</p>
+          {streak.count > 0 && (
+            <span className="flex items-center gap-0.5 text-[11px] font-bold" style={{ color: '#F5C118' }}>
+              <Flame size={11} /> {streak.count}
+            </span>
+          )}
+        </div>
+        <span className="text-[11px] font-semibold" style={{ color: allDone ? '#4ade80' : 'rgba(255,255,255,0.25)' }}>
+          {doneCount}/{DAILY_ITEMS.length}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-0.5 w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div className="h-full transition-all duration-300" style={{ width: `${(doneCount / DAILY_ITEMS.length) * 100}%`, background: allDone ? '#4ade80' : '#F5C118' }} />
+      </div>
+
+      {/* Items */}
+      <div className="py-1.5">
+        {DAILY_ITEMS.map(item => {
+          const done = !!checked[item.id];
+          return (
+            <button key={item.id} onClick={() => toggle(item.id)}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-right transition hover:bg-white/[0.04]">
+              <div className="flex-none h-5 w-5 rounded-full flex items-center justify-center transition-all" style={{
+                background: done ? '#F5C118' : 'transparent',
+                border: done ? 'none' : '1.5px solid rgba(255,255,255,0.2)',
+              }}>
+                {done && <span className="text-[9px] font-black" style={{ color: '#13152A' }}>✓</span>}
+              </div>
+              <span className="text-sm flex-1" style={{ color: done ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)', textDecoration: done ? 'line-through' : 'none' }}>
+                {item.emoji} {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {allDone && (
+        <div className="px-4 py-3 text-center text-xs font-semibold" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: '#4ade80' }}>
+          🎉 סיימת את הסטנדרט היומי!
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ToolsPanel({ onClose, isAdmin }) {
   const [tools,      setTools]      = useState(loadTools);
@@ -278,8 +380,10 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
   const isAdmin = user?.id === ADMIN_ID;
   const [bellOpen,  setBellOpen]  = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [dailyOpen, setDailyOpen] = useState(false);
   const bellRef  = useRef(null);
   const toolsRef = useRef(null);
+  const dailyRef = useRef(null);
 
   const { upcoming, overdue, total: payTotal, dismiss, reload } = usePaymentAlerts();
   const { npsAlerts, dismissNps, npsTotal } = useNpsAlerts();
@@ -293,6 +397,7 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
     function handle(e) {
       if (bellRef.current  && !bellRef.current.contains(e.target))  setBellOpen(false);
       if (toolsRef.current && !toolsRef.current.contains(e.target)) setToolsOpen(false);
+      if (dailyRef.current && !dailyRef.current.contains(e.target)) setDailyOpen(false);
     }
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
@@ -337,9 +442,20 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
 
       <div className="flex items-center gap-2">
 
+        {/* ── Daily Standard (flame) ── */}
+        <div ref={dailyRef} className="relative">
+          <button type="button" onClick={() => { setDailyOpen(o => !o); setToolsOpen(false); }}
+            className="rounded-md p-2 hover:bg-white/10 transition-colors"
+            style={{ color: dailyOpen ? '#F5C118' : 'rgba(255,255,255,0.75)' }}
+            title="סטנדרט יומי">
+            <Flame size={18} />
+          </button>
+          {dailyOpen && <DailyPanel onClose={() => setDailyOpen(false)} />}
+        </div>
+
         {/* ── Tools (wrench) ── */}
         <div ref={toolsRef} className="relative">
-          <button type="button" onClick={() => setToolsOpen(o => !o)}
+          <button type="button" onClick={() => { setToolsOpen(o => !o); setDailyOpen(false); }}
             className="rounded-md p-2 hover:bg-white/10 transition-colors"
             style={{ color: toolsOpen ? '#F5C118' : 'rgba(255,255,255,0.75)' }}
             title="כלי עבודה">
