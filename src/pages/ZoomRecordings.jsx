@@ -531,38 +531,59 @@ export default function ZoomRecordings() {
         </div>
       </div>
 
-      {/* ── 2 Upcoming meetings banner ── */}
-      {nextTwo.length > 0 && (
-        <div className="grid gap-3" style={{ gridTemplateColumns: nextTwo.length > 1 ? '1fr 1fr' : '1fr' }}>
-          {nextTwo.map(m => {
+      {/* ── 2 Upcoming meetings — always visible ── */}
+      <div className="grid gap-3" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        {upcoming === null ? (
+          // Loading
+          [0,1].map(i => (
+            <div key={i} className="rounded-2xl p-5 flex flex-col gap-3 animate-pulse"
+              style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)', minHeight: 130 }}>
+              <div className="h-3 w-20 rounded-full" style={{ background: 'rgba(255,255,255,0.07)' }} />
+              <div className="h-4 w-3/4 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
+              <div className="h-9 w-full rounded-xl mt-auto" style={{ background: 'rgba(255,255,255,0.05)' }} />
+            </div>
+          ))
+        ) : nextTwo.length === 0 ? (
+          <div className="col-span-2 rounded-2xl p-6 flex items-center justify-center"
+            style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פגישות קרובות</p>
+          </div>
+        ) : (
+          nextTwo.map(m => {
             const ts      = getTypeStyle(getBadge(m.topic || ''));
             const start   = m.start_time ? new Date(m.start_time) : null;
-            const dateStr = start ? start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
+            const dateStr = start ? start.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
             const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
+            const endTime = start && m.duration ? new Date(start.getTime() + m.duration * 60000).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
             const title   = cleanTopic(m.topic || '');
             return (
-              <div key={m.id} className="rounded-2xl p-4 flex flex-col gap-3"
-                style={{ background: 'rgb(var(--bg-surface))', border: `1px solid ${ts.rowBorder}30`, borderRight: `3px solid ${ts.rowBorder}` }}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-2 inline-block"
-                      style={{ background: ts.bg, color: ts.color }}>{getBadge(m.topic || '')}</span>
-                    <p className="text-sm font-bold text-white leading-snug">{title}</p>
-                    {dateStr && <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>{dateStr} · {timeStr}</p>}
-                  </div>
+              <div key={m.id} className="rounded-2xl p-5 flex flex-col gap-4"
+                style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.09)' }}>
+                <div className="flex-1">
+                  <p className="text-base font-bold text-white leading-snug mb-1">{title}</p>
+                  {dateStr && (
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      {dateStr}{timeStr ? ` · ${timeStr}${endTime ? ` - ${endTime}` : ''}` : ''}
+                    </p>
+                  )}
                 </div>
-                {m.join_url && (
+                {m.join_url ? (
                   <a href={m.join_url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition hover:opacity-80"
+                    className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition hover:opacity-85"
                     style={{ background: '#F5C118', color: '#13152A' }}>
-                    <Video size={15} /> הצטרף לפגישה
+                    הצטרף לפגישה <ExternalLink size={14} color="#13152A" />
                   </a>
+                ) : (
+                  <div className="rounded-xl py-2.5 text-center text-sm font-medium"
+                    style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)' }}>
+                    אין קישור עדיין
+                  </div>
                 )}
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-1 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
