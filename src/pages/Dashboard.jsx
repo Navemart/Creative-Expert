@@ -1735,36 +1735,87 @@ export default function Dashboard() {
       {/* ── 6. צ'קליסט יישום (ימין) | פגישות קרובות (שמאל) ── */}
       <div className="flex gap-5" style={{ alignItems: 'stretch' }}>
 
-        {/* ימין: צ'קליסט מפת הדרכים */}
-        <div className="flex-1 rounded-2xl p-5 flex flex-col gap-4" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div>
-            <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>יישום</span>
-            <div className="flex items-baseline gap-2 mt-1.5">
-              <p className="text-sm font-bold text-white">{rdCurrentPhase?.title || '...'}</p>
-              {rdPhases.length > 0 && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש {rdCurrentPhaseIndex} מתוך {rdPhases.length}</span>}
-            </div>
-            {rdWeekTitle && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{rdWeekTitle}</p>}
-          </div>
-          <div className="flex flex-col gap-0.5 flex-1">
-            {!roadmapAllData && <p className="text-xs text-center py-4" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
-            {rdDisplayTasks.map((task, i) => {
-              const done = rdDone.has(task.id);
-              return (
-                <div key={task.id} className="flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-white/[0.03] transition group">
-                  <div className="flex-none h-5 w-5 rounded-full flex items-center justify-center" style={{ background: done ? '#F5C118' : 'transparent', border: done ? 'none' : '1.5px solid rgba(255,255,255,0.2)' }}>
-                    {done && <span className="text-[9px] font-bold" style={{ color: '#13152A' }}>✓</span>}
+        {/* ימין: מפת דרכים מינימלית */}
+        {(() => {
+          // בנה רשימה שטוחה מסודרת של כל המשימות
+          const allOrderedTasks = rdPhases.flatMap(phase =>
+            rdWeeks.filter(w => w.phase_id === phase.id)
+              .sort((a,b) => (a.sort_order??0)-(b.sort_order??0))
+              .flatMap(week =>
+                rdTasks.filter(t => t.week_id === week.id)
+                  .sort((a,b) => (a.sort_order??0)-(b.sort_order??0))
+                  .map(t => ({ ...t, weekTitle: week.title, phaseTitle: phase.title }))
+              )
+          );
+          const currentIdx = allOrderedTasks.findIndex(t => !rdDone.has(t.id));
+          const anchor = currentIdx === -1 ? allOrderedTasks.length - 1 : currentIdx;
+          const from = Math.max(0, anchor - 2);
+          const to   = Math.min(allOrderedTasks.length, anchor + 3);
+          const visible = allOrderedTasks.slice(from, to);
+          const doneCount = allOrderedTasks.filter(t => rdDone.has(t.id)).length;
+          const pct = allOrderedTasks.length > 0 ? Math.round(doneCount / allOrderedTasks.length * 100) : 0;
+          return (
+            <div className="flex-1 rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>מפת דרכים</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <p className="text-sm font-bold text-white">{rdCurrentPhase?.title || '...'}</p>
+                    {rdPhases.length > 0 && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש {rdCurrentPhaseIndex} מתוך {rdPhases.length}</span>}
                   </div>
-                  <span className="text-[10px] font-mono w-4 flex-none" style={{ color: 'rgba(255,255,255,0.2)' }}>{String(i+1).padStart(2,'0')}</span>
-                  <span className="flex-1 text-sm" style={{ color: done ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)', textDecoration: done ? 'line-through' : 'none' }}>{task.title}</span>
-                  {task.link && <a href={task.link} target="_blank" rel="noopener noreferrer" className="flex-none opacity-0 group-hover:opacity-100 transition" style={{ color: 'rgba(255,255,255,0.3)' }}><ExternalLink size={12} /></a>}
                 </div>
-              );
-            })}
-          </div>
-          <button onClick={() => navigate('/roadmap')} className="text-xs font-medium transition text-start mt-auto" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            הצג מפת דרכים מלאה ←
-          </button>
-        </div>
+                <button onClick={() => navigate('/roadmap')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition flex-none mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  מלאה <ChevronLeft size={13} />
+                </button>
+              </div>
+
+              {/* Progress bar */}
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#F5C118' }} />
+                </div>
+                <span className="text-[11px] font-semibold flex-none" style={{ color: 'rgba(255,255,255,0.35)' }}>{doneCount}/{allOrderedTasks.length}</span>
+              </div>
+
+              {/* Tasks window */}
+              <div className="flex flex-col gap-0.5 flex-1">
+                {!roadmapAllData && <p className="text-xs text-center py-4" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
+                {from > 0 && (
+                  <p className="text-[10px] px-2 pb-1" style={{ color: 'rgba(255,255,255,0.18)' }}>· · · {from} משימות קודמות</p>
+                )}
+                {visible.map((task) => {
+                  const done    = rdDone.has(task.id);
+                  const isCur   = allOrderedTasks.indexOf(task) === anchor && currentIdx !== -1;
+                  return (
+                    <div key={task.id}
+                      className="flex items-center gap-3 py-2 px-2.5 rounded-xl transition group"
+                      style={{
+                        background: isCur ? 'rgba(245,193,24,0.08)' : 'transparent',
+                        border: isCur ? '1px solid rgba(245,193,24,0.2)' : '1px solid transparent',
+                      }}>
+                      <div className="flex-none h-5 w-5 rounded-full flex items-center justify-center" style={{
+                        background: done ? '#F5C118' : isCur ? 'rgba(245,193,24,0.15)' : 'transparent',
+                        border: done ? 'none' : isCur ? '1.5px solid rgba(245,193,24,0.6)' : '1.5px solid rgba(255,255,255,0.18)',
+                      }}>
+                        {done && <span className="text-[9px] font-bold" style={{ color: '#13152A' }}>✓</span>}
+                        {isCur && !done && <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#F5C118', display:'block' }} />}
+                      </div>
+                      <span className="flex-1 text-sm leading-snug" style={{
+                        color: done ? 'rgba(255,255,255,0.25)' : isCur ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.55)',
+                        textDecoration: done ? 'line-through' : 'none',
+                        fontWeight: isCur ? 600 : 400,
+                      }}>{task.title}</span>
+                      {task.link && <a href={task.link} target="_blank" rel="noopener noreferrer" className="flex-none opacity-0 group-hover:opacity-100 transition" style={{ color: 'rgba(255,255,255,0.3)' }}><ExternalLink size={12} /></a>}
+                    </div>
+                  );
+                })}
+                {to < allOrderedTasks.length && (
+                  <p className="text-[10px] px-2 pt-1" style={{ color: 'rgba(255,255,255,0.18)' }}>· · · {allOrderedTasks.length - to} משימות קדימה</p>
+                )}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* שמאל: פגישות קרובות */}
         <div className="flex-1 rounded-2xl p-5 flex flex-col gap-4" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
