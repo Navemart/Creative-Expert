@@ -422,7 +422,7 @@ export default function ZoomRecordings() {
         if (recordings.error) throw new Error(recordings.error);
         setMeetings(recordings.meetings || []);
         setMeta(metaData || {});
-        setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
+        setUpcoming(upcomingData?.meetings || (Array.isArray(upcomingData) ? upcomingData : []));
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
