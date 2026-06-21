@@ -389,15 +389,19 @@ function ProfileAvatar() {
   const navigate = useNavigate();
   const initial = (user?.firstName || user?.primaryEmailAddress?.emailAddress || '?')[0].toUpperCase();
   const photo   = user?.imageUrl;
+  const firstName = user?.firstName || '';
   return (
     <button onClick={() => navigate('/settings')} title="פרופיל"
-      className="flex-none rounded-full hover:ring-2 hover:ring-white/20 transition-all overflow-hidden"
-      style={{ width: 32, height: 32 }}>
-      {photo
-        ? <img src={photo} alt="avatar" style={{ width: 32, height: 32, objectFit: 'cover' }} />
-        : <div className="w-full h-full flex items-center justify-center text-sm font-bold"
-            style={{ background: 'rgba(245,193,24,0.2)', color: '#F5C118' }}>{initial}</div>
-      }
+      className="flex items-center gap-2 rounded-xl px-2.5 py-1.5 transition hover:bg-white/[0.06]"
+      style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+      <div className="flex-none rounded-full overflow-hidden" style={{ width: 26, height: 26 }}>
+        {photo
+          ? <img src={photo} alt="avatar" style={{ width: 26, height: 26, objectFit: 'cover' }} />
+          : <div className="w-full h-full flex items-center justify-center text-xs font-bold"
+              style={{ background: 'rgba(245,193,24,0.2)', color: '#F5C118' }}>{initial}</div>
+        }
+      </div>
+      {firstName && <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>{firstName}</span>}
     </button>
   );
 }
