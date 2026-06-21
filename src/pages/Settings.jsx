@@ -120,7 +120,7 @@ export default function Settings() {
         </div>
         <button onClick={() => signOut({ redirectUrl: '/' })}
           className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-white/[0.06]"
-          style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          style={{ color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
           <LogOut size={14} /> התנתקות
         </button>
       </div>
