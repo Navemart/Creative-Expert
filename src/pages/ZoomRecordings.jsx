@@ -400,7 +400,8 @@ export default function ZoomRecordings() {
   const [loading,   setLoading]   = useState(true);
   const [error,     setError]     = useState(null);
   const [collapsed, setCollapsed] = useState({});
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('recordings');
+  const [upcoming,  setUpcoming]  = useState(null);
   const [starred,   setStarred]   = useState(() => {
     try {
       const key = user?.id ? `starred_recordings_${user.id}` : null;
@@ -414,11 +415,13 @@ export default function ZoomRecordings() {
     Promise.all([
       fetch('/api/zoom/recordings').then(r => r.json()),
       fetch('/api/zoom/meta').then(r => r.json()).catch(() => ({})),
+      fetch('/api/zoom/upcoming').then(r => r.json()).catch(() => []),
     ])
-      .then(([recordings, metaData]) => {
+      .then(([recordings, metaData, upcomingData]) => {
         if (recordings.error) throw new Error(recordings.error);
         setMeetings(recordings.meetings || []);
         setMeta(metaData || {});
+        setUpcoming(Array.isArray(upcomingData) ? upcomingData : []);
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
@@ -490,24 +493,59 @@ export default function ZoomRecordings() {
 
   const grouped   = groupByMonth(visibleMeetings);
   const monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+  const nextTwo   = (upcoming || []).slice(0, 2);
 
   // ── Main render ──────────────────────────────────────────────
   return (
-    <div className="w-full space-y-2" dir="rtl">
+    <div className="w-full space-y-4" dir="rtl">
 
       {/* Page title */}
-      <div className="mb-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות</h1>
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות ופגישות</h1>
         <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
           {meetings.length} הקלטות · Creative Expert
         </p>
       </div>
 
+      {/* ── 2 Upcoming meetings banner ── */}
+      {nextTwo.length > 0 && (
+        <div className="grid gap-3" style={{ gridTemplateColumns: nextTwo.length > 1 ? '1fr 1fr' : '1fr' }}>
+          {nextTwo.map(m => {
+            const ts      = getTypeStyle(getBadge(m.topic || ''));
+            const start   = m.start_time ? new Date(m.start_time) : null;
+            const dateStr = start ? start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
+            const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
+            const title   = cleanTitle(m.topic || '');
+            return (
+              <div key={m.id} className="rounded-2xl p-4 flex flex-col gap-3"
+                style={{ background: 'rgb(var(--bg-surface))', border: `1px solid ${ts.rowBorder}30`, borderRight: `3px solid ${ts.rowBorder}` }}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-2 inline-block"
+                      style={{ background: ts.bg, color: ts.color }}>{getBadge(m.topic || '')}</span>
+                    <p className="text-sm font-bold text-white leading-snug">{title}</p>
+                    {dateStr && <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>{dateStr} · {timeStr}</p>}
+                  </div>
+                </div>
+                {m.join_url && (
+                  <a href={m.join_url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition hover:opacity-80"
+                    style={{ background: '#F5C118', color: '#13152A' }}>
+                    <Video size={15} /> הצטרף לפגישה
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Tabs */}
-      <div className="flex gap-1 border-b mb-4" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+      <div className="flex gap-1 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
         {[
-          { k: 'all',     l: 'כל ההקלטות' },
-          { k: 'starred', l: `שמורות${starred.size > 0 ? ` (${starred.size})` : ''}`, icon: true },
+          { k: 'recordings', l: 'הקלטות' },
+          { k: 'starred',    l: `שמורות${starred.size > 0 ? ` (${starred.size})` : ''}`, icon: true },
+          { k: 'upcoming',   l: `פגישות קרובות${upcoming?.length ? ` (${upcoming.length})` : ''}` },
         ].map(t => (
           <button key={t.k} onClick={() => setActiveTab(t.k)}
             className="pb-3 px-4 text-sm font-semibold transition-all relative flex items-center gap-1.5"
@@ -520,6 +558,50 @@ export default function ZoomRecordings() {
           </button>
         ))}
       </div>
+
+      {/* ── Upcoming tab ── */}
+      {activeTab === 'upcoming' && (
+        <div className="space-y-2">
+          {!upcoming && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
+          {upcoming?.length === 0 && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p>}
+          {upcoming?.map(m => {
+            const ts      = getTypeStyle(getBadge(m.topic || ''));
+            const start   = m.start_time ? new Date(m.start_time) : null;
+            const dateStr = start ? start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
+            const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
+            const title   = cleanTitle(m.topic || '');
+            return (
+              <div key={m.id} className="flex items-center gap-4 rounded-2xl px-5 py-4"
+                style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)', borderRight: `3px solid ${ts.rowBorder}` }}>
+                {start && (
+                  <div className="flex-none text-center" style={{ minWidth: 36 }}>
+                    <p className="text-2xl font-black text-white leading-none">{start.getDate()}</p>
+                    <p className="text-[10px] uppercase mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      {MONTH_HE[start.getMonth()].slice(0, 3)}
+                    </p>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mb-1 inline-block"
+                    style={{ background: ts.bg, color: ts.color }}>{getBadge(m.topic || '')}</span>
+                  <p className="text-sm font-semibold text-white leading-snug">{title}</p>
+                  {dateStr && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>{dateStr} · {timeStr}{m.duration ? ` · ${m.duration} דק׳` : ''}</p>}
+                </div>
+                {m.join_url && (
+                  <a href={m.join_url} target="_blank" rel="noopener noreferrer"
+                    className="flex-none flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition hover:opacity-80"
+                    style={{ background: '#F5C118', color: '#13152A' }}>
+                    <Video size={14} /> הצטרף
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Recordings + starred tabs */}
+      {(activeTab === 'recordings' || activeTab === 'starred') && <>
 
       {/* Empty state for starred tab */}
       {monthKeys.length === 0 && activeTab === 'starred' && (
@@ -607,6 +689,8 @@ export default function ZoomRecordings() {
           </div>
         );
       })}
+      </> }
+
     </div>
   );
 }

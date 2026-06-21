@@ -1821,7 +1821,9 @@ export default function Dashboard() {
         <div className="flex-1 rounded-2xl p-5 flex flex-col gap-4" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
-            <Video size={15} className="text-white/25" />
+            <button onClick={() => navigate('/zoom')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              כל הפגישות <ChevronLeft size={13} />
+            </button>
           </div>
           <div className="flex flex-col gap-2 flex-1">
             {upcomingMeetings === null && <div className="flex-1 flex items-center justify-center"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
