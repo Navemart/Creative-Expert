@@ -486,8 +486,7 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
 
         {/* ── Profile avatar → Settings ── */}
         <SignedIn>
-          <ProfileAvatar user={user} />
-          <UserButton afterSignOutUrl="/" />
+          <UserButton afterSignOutUrl="/" userProfileUrl="/settings" />
         </SignedIn>
         <SignedOut>
           <SignInButton mode="modal" />
