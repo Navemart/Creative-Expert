@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useClerk } from '@clerk/clerk-react';
 import { supabase } from '../lib/supabase.js';
-import { User, Briefcase, MapPin, Globe, Instagram, Phone, Save, Check, Loader2 } from 'lucide-react';
+import { User, Briefcase, MapPin, Globe, Instagram, Phone, Save, Check, Loader2, LogOut } from 'lucide-react';
 
 const BUSINESS_TYPES = [
   'מיתוג וזהות מותגית','בניית אתרים','UX/UI Design',
@@ -41,6 +41,7 @@ const inp = {
 
 export default function Settings() {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const userId   = user?.id;
 
   const [form, setForm] = useState({
@@ -201,6 +202,13 @@ export default function Settings() {
         {saving  ? <><Loader2 size={16} className="animate-spin" /> שומר...</>
         : saved   ? <><Check size={16} /> נשמר בהצלחה! ✓</>
         :            <><Save size={16} /> שמור פרופיל</>}
+      </button>
+
+      {/* Sign out */}
+      <button onClick={() => signOut({ redirectUrl: '/' })}
+        className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition hover:bg-white/[0.06]"
+        style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <LogOut size={15} /> התנתקות
       </button>
 
     </div>

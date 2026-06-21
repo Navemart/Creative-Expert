@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, ExternalLink, ChevronLeft, Plus, Trash2, Pencil, ToggleLeft, ToggleRight, Flame } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
-import { useUser, SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
+import { useUser, SignedIn, SignedOut, SignInButton, useClerk } from '@clerk/clerk-react';
+import { useNavigate } from 'react-router-dom';
 import { usePaymentAlerts } from '../hooks/usePaymentAlerts.js';
 import { useNpsAlerts }     from '../hooks/useNpsAlerts.js';
 
@@ -382,15 +383,22 @@ function ToolsPanel({ onClose, isAdmin }) {
   );
 }
 
-// ── Profile icon ───────────────────────────────────────────────
+// ── Profile avatar ─────────────────────────────────────────────
 function ProfileAvatar() {
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const initial = (user?.firstName || user?.primaryEmailAddress?.emailAddress || '?')[0].toUpperCase();
+  const photo   = user?.imageUrl;
   return (
-    <NavLink to="/settings"
-      className="rounded-md p-2 hover:bg-white/10 transition-colors"
-      style={({ isActive }) => ({ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.75)' })}
-      title="פרופיל">
-      <User size={18} />
-    </NavLink>
+    <button onClick={() => navigate('/settings')} title="פרופיל"
+      className="flex-none rounded-full hover:ring-2 hover:ring-white/20 transition-all overflow-hidden"
+      style={{ width: 32, height: 32 }}>
+      {photo
+        ? <img src={photo} alt="avatar" style={{ width: 32, height: 32, objectFit: 'cover' }} />
+        : <div className="w-full h-full flex items-center justify-center text-sm font-bold"
+            style={{ background: 'rgba(245,193,24,0.2)', color: '#F5C118' }}>{initial}</div>
+      }
+    </button>
   );
 }
 
@@ -486,7 +494,7 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
 
         {/* ── Profile avatar → Settings ── */}
         <SignedIn>
-          <UserButton afterSignOutUrl="/" userProfileUrl="/settings" />
+          <ProfileAvatar />
         </SignedIn>
         <SignedOut>
           <SignInButton mode="modal" />
