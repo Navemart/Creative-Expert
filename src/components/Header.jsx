@@ -162,16 +162,22 @@ function loadStreak() {
   catch { return { count: 0, last: '' }; }
 }
 
-function DailyPanel({ onClose }) {
-  const [checked, setChecked] = useState(loadDaily);
-  const [streak,  setStreak]  = useState(loadStreak);
+const LEVELS = [
+  { v: 0, label: '',        dot: 'rgba(255,255,255,0.12)' },
+  { v: 1, label: 'קצת',    dot: '#f97316' },
+  { v: 2, label: 'הרבה',   dot: '#F5C118' },
+  { v: 3, label: 'מושלם',  dot: '#4ade80' },
+];
 
-  function toggle(id) {
-    setChecked(prev => {
-      const next = { ...prev, [id]: !prev[id] };
+function DailyPanel({ onClose }) {
+  const [scores, setScores] = useState(loadDaily);
+  const [streak, setStreak] = useState(loadStreak);
+
+  function cycle(id) {
+    setScores(prev => {
+      const next = { ...prev, [id]: ((prev[id] || 0) + 1) % 4 };
       localStorage.setItem(todayKey(), JSON.stringify(next));
-      // Update streak when all done
-      const allDone = DAILY_ITEMS.every(i => next[i.id]);
+      const allDone = DAILY_ITEMS.every(i => (next[i.id] || 0) > 0);
       const today = new Date().toISOString().slice(0, 10);
       if (allDone && streak.last !== today) {
         const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -183,12 +189,16 @@ function DailyPanel({ onClose }) {
     });
   }
 
-  const doneCount = DAILY_ITEMS.filter(i => checked[i.id]).length;
-  const allDone   = doneCount === DAILY_ITEMS.length;
+  const totalScore  = DAILY_ITEMS.reduce((s, i) => s + (scores[i.id] || 0), 0);
+  const maxScore    = DAILY_ITEMS.length * 3;
+  const pct         = Math.round((totalScore / maxScore) * 100);
+  const allDone     = DAILY_ITEMS.every(i => (scores[i.id] || 0) > 0);
+  const allPerfect  = DAILY_ITEMS.every(i => scores[i.id] === 3);
+  const barColor    = pct >= 100 ? '#4ade80' : pct >= 60 ? '#F5C118' : '#f97316';
 
   return (
     <div className="absolute left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" dir="rtl"
-      style={{ width: 260, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
+      style={{ width: 270, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -200,40 +210,45 @@ function DailyPanel({ onClose }) {
             </span>
           )}
         </div>
-        <span className="text-[11px] font-semibold" style={{ color: allDone ? '#4ade80' : 'rgba(255,255,255,0.25)' }}>
-          {doneCount}/{DAILY_ITEMS.length}
+        <span className="text-[11px] font-bold tabular-nums" style={{ color: pct === 0 ? 'rgba(255,255,255,0.2)' : barColor }}>
+          {pct}%
         </span>
       </div>
 
       {/* Progress bar */}
       <div className="h-0.5 w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
-        <div className="h-full transition-all duration-300" style={{ width: `${(doneCount / DAILY_ITEMS.length) * 100}%`, background: allDone ? '#4ade80' : '#F5C118' }} />
+        <div className="h-full transition-all duration-300" style={{ width: `${pct}%`, background: barColor }} />
       </div>
 
       {/* Items */}
       <div className="py-1.5">
         {DAILY_ITEMS.map(item => {
-          const done = !!checked[item.id];
+          const v     = scores[item.id] || 0;
+          const level = LEVELS[v];
           return (
-            <button key={item.id} onClick={() => toggle(item.id)}
+            <button key={item.id} onClick={() => cycle(item.id)}
               className="flex items-center gap-3 w-full px-4 py-2.5 text-right transition hover:bg-white/[0.04]">
-              <div className="flex-none h-5 w-5 rounded-full flex items-center justify-center transition-all" style={{
-                background: done ? '#F5C118' : 'transparent',
-                border: done ? 'none' : '1.5px solid rgba(255,255,255,0.2)',
-              }}>
-                {done && <span className="text-[9px] font-black" style={{ color: '#13152A' }}>✓</span>}
-              </div>
-              <span className="text-sm flex-1" style={{ color: done ? 'rgba(255,255,255,0.28)' : 'rgba(255,255,255,0.82)', textDecoration: done ? 'line-through' : 'none' }}>
+              {/* Dot */}
+              <div className="flex-none h-2.5 w-2.5 rounded-full transition-all" style={{ background: level.dot, boxShadow: v === 3 ? '0 0 6px #4ade8088' : 'none' }} />
+              {/* Label */}
+              <span className="flex-1 text-sm" style={{ color: v > 0 ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.45)' }}>
                 {item.emoji} {item.label}
               </span>
+              {/* Level badge */}
+              {v > 0 && (
+                <span className="text-[10px] font-semibold rounded-md px-1.5 py-0.5 flex-none" style={{ background: level.dot + '22', color: level.dot }}>
+                  {level.label}
+                </span>
+              )}
             </button>
           );
         })}
       </div>
 
+      {/* Footer */}
       {allDone && (
-        <div className="px-4 py-3 text-center text-xs font-semibold" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: '#4ade80' }}>
-          🎉 סיימת את הסטנדרט היומי!
+        <div className="px-4 py-2.5 text-center text-xs font-semibold" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: allPerfect ? '#4ade80' : '#F5C118' }}>
+          {allPerfect ? '🔥 יום מושלם!' : '✅ סיימת את הסטנדרט היומי'}
         </div>
       )}
     </div>
