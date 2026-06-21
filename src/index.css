@@ -67,9 +67,6 @@ body {
   color: rgba(255,255,255,0.92);
 }
 
-/* ── Yellow button text always dark ─────────────────────────── */
-a.btn-recording, a.btn-yellow, button.btn-yellow { color: #13152A !important; }
-
 /* ── Global dark overrides so all existing Tailwind classes retheme ── */
 
 /* Backgrounds */
@@ -92,16 +89,18 @@ a.btn-recording, a.btn-yellow, button.btn-yellow { color: #13152A !important; }
 .text-slate-400    { color: rgba(255,255,255,0.35) !important; }
 
 /* טקסטים מודגשים — לבן מלא (למעט כפתורים צהובים) */
-.font-bold:not(.bg-accent):not(.bg-accent *),
-.font-semibold:not(.bg-accent):not(.bg-accent *),
-.font-extrabold:not(.bg-accent):not(.bg-accent *),
-.font-black:not(.bg-accent):not(.bg-accent *) {
+.font-bold:not(.bg-accent):not(.bg-accent *):not(.btn-yellow):not(.btn-yellow *),
+.font-semibold:not(.bg-accent):not(.bg-accent *):not(.btn-yellow):not(.btn-yellow *),
+.font-extrabold:not(.bg-accent):not(.bg-accent *):not(.btn-yellow):not(.btn-yellow *),
+.font-black:not(.bg-accent):not(.bg-accent *):not(.btn-yellow):not(.btn-yellow *) {
   color: rgba(255,255,255,1) !important;
 }
 
-/* כפתורים צהובים — טקסט כחול תמיד */
+/* ── כפתורים צהובים — טקסט כהה תמיד, ללא יוצא מן הכלל ──── */
+.btn-yellow, .btn-yellow *,
+a.btn-recording, a.btn-recording *,
 .bg-accent, .bg-accent * {
-  color: rgb(var(--accent-foreground)) !important;
+  color: #13152A !important;
 }
 
 /* Hover backgrounds */
