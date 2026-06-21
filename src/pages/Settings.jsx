@@ -113,9 +113,16 @@ export default function Settings() {
     <div className="w-full max-w-2xl mx-auto space-y-5 pb-10" dir="rtl">
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">פרופיל</h1>
-        <p className="text-sm mt-1" style={{ color:'rgba(255,255,255,0.4)' }}>פרטים אישיים ועסקיים</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">פרופיל</h1>
+          <p className="text-sm mt-1" style={{ color:'rgba(255,255,255,0.4)' }}>פרטים אישיים ועסקיים</p>
+        </div>
+        <button onClick={() => signOut({ redirectUrl: '/' })}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-white/[0.06]"
+          style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <LogOut size={14} /> התנתקות
+        </button>
       </div>
 
       {/* Preview card */}
@@ -204,12 +211,6 @@ export default function Settings() {
         :            <><Save size={16} /> שמור פרופיל</>}
       </button>
 
-      {/* Sign out */}
-      <button onClick={() => signOut({ redirectUrl: '/' })}
-        className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-medium transition hover:bg-white/[0.06]"
-        style={{ color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        <LogOut size={15} /> התנתקות
-      </button>
 
     </div>
   );
