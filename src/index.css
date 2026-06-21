@@ -67,8 +67,8 @@ body {
   color: rgba(255,255,255,0.92);
 }
 
-/* ── Recording button text color ────────────────────────────── */
-a.btn-recording { color: #13152A !important; }
+/* ── Yellow button text always dark ─────────────────────────── */
+a.btn-recording, a.btn-yellow, button.btn-yellow { color: #13152A !important; }
 
 /* ── Global dark overrides so all existing Tailwind classes retheme ── */
 

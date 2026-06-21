@@ -254,8 +254,8 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin,
           href={watchUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold transition hover:opacity-85"
-          style={{ background: '#F5C118', color: '#13152A', WebkitTextFillColor: '#13152A' }}
+          className="btn-yellow flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold transition hover:opacity-85"
+          style={{ background: '#F5C118' }}
         >
           הקלטה
           <ExternalLink size={12} color="#13152A" />
@@ -548,12 +548,12 @@ export default function ZoomRecordings() {
               </div>
               {m.join_url ? (
                 <a href={m.join_url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition hover:opacity-85"
-                  style={{ background: '#F5C118', color: '#13152A' }}>
-                  הצטרף לפגישה <ExternalLink size={14} color="#13152A" />
+                  className="btn-yellow inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-85 self-start"
+                  style={{ background: '#F5C118' }}>
+                  הצטרף לפגישה <ExternalLink size={13} color="#13152A" />
                 </a>
               ) : (
-                <div className="rounded-xl py-2.5 text-center text-sm"
+                <div className="rounded-lg px-4 py-2 text-sm self-start"
                   style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' }}>
                   אין קישור עדיין
                 </div>
@@ -650,8 +650,8 @@ export default function ZoomRecordings() {
                           </div>
                           {m.join_url && (
                             <a href={m.join_url} target="_blank" rel="noopener noreferrer"
-                              className="flex-none flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold transition hover:opacity-85"
-                              style={{ background: '#F5C118', color: '#13152A' }}>
+                              className="btn-yellow flex-none inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-85"
+                              style={{ background: '#F5C118' }}>
                               הצטרף <ExternalLink size={13} color="#13152A" />
                             </a>
                           )}
