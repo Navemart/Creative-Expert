@@ -402,6 +402,7 @@ export default function ZoomRecordings() {
   const [collapsed, setCollapsed] = useState({});
   const [activeTab, setActiveTab] = useState('recordings');
   const [upcoming,  setUpcoming]  = useState(null);
+  const [search,    setSearch]    = useState('');
   const [starred,   setStarred]   = useState(() => {
     try {
       const key = user?.id ? `starred_recordings_${user.id}` : null;
@@ -487,9 +488,21 @@ export default function ZoomRecordings() {
     </div>
   );
 
-  const visibleMeetings = activeTab === 'starred'
-    ? meetings.filter(m => starred.has(m.uuid))
-    : meetings;
+  const visibleMeetings = (() => {
+    let list = activeTab === 'starred' ? meetings.filter(m => starred.has(m.uuid)) : meetings;
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter(m => (m.topic || '').toLowerCase().includes(q));
+    }
+    return list;
+  })();
+
+  const filteredUpcoming = (() => {
+    if (!upcoming) return null;
+    if (!search.trim()) return upcoming;
+    const q = search.trim().toLowerCase();
+    return upcoming.filter(m => (m.topic || '').toLowerCase().includes(q));
+  })();
 
   const grouped   = groupByMonth(visibleMeetings);
   const monthKeys = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
@@ -499,12 +512,23 @@ export default function ZoomRecordings() {
   return (
     <div className="w-full space-y-4" dir="rtl">
 
-      {/* Page title */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות ופגישות</h1>
-        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
-          {meetings.length} הקלטות · Creative Expert
-        </p>
+      {/* Page title + search */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">קלטות ופגישות</h1>
+          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            {meetings.length} הקלטות · Creative Expert
+          </p>
+        </div>
+        <div className="relative flex-none" style={{ width: 220 }}>
+          <input
+            value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="חיפוש..."
+            dir="rtl"
+            className="w-full rounded-xl px-4 py-2 text-sm outline-none"
+            style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)' }}
+          />
+        </div>
       </div>
 
       {/* ── 2 Upcoming meetings banner ── */}
@@ -515,7 +539,7 @@ export default function ZoomRecordings() {
             const start   = m.start_time ? new Date(m.start_time) : null;
             const dateStr = start ? start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
             const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
-            const title   = cleanTitle(m.topic || '');
+            const title   = cleanTopic(m.topic || '');
             return (
               <div key={m.id} className="rounded-2xl p-4 flex flex-col gap-3"
                 style={{ background: 'rgb(var(--bg-surface))', border: `1px solid ${ts.rowBorder}30`, borderRight: `3px solid ${ts.rowBorder}` }}>
@@ -543,9 +567,9 @@ export default function ZoomRecordings() {
       {/* Tabs */}
       <div className="flex gap-1 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
         {[
-          { k: 'recordings', l: 'הקלטות' },
+          { k: 'recordings', l: `הקלטות${meetings.length ? ` ${meetings.length}` : ''}` },
+          { k: 'upcoming',   l: `פגישות קרובות${upcoming?.length ? ` ${upcoming.length}` : ''}` },
           { k: 'starred',    l: `שמורות${starred.size > 0 ? ` (${starred.size})` : ''}`, icon: true },
-          { k: 'upcoming',   l: `פגישות קרובות${upcoming?.length ? ` (${upcoming.length})` : ''}` },
         ].map(t => (
           <button key={t.k} onClick={() => setActiveTab(t.k)}
             className="pb-3 px-4 text-sm font-semibold transition-all relative flex items-center gap-1.5"
@@ -562,14 +586,14 @@ export default function ZoomRecordings() {
       {/* ── Upcoming tab ── */}
       {activeTab === 'upcoming' && (
         <div className="space-y-2">
-          {!upcoming && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
-          {upcoming?.length === 0 && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p>}
-          {upcoming?.map(m => {
+          {!filteredUpcoming && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
+          {filteredUpcoming?.length === 0 && <p className="text-xs text-center py-8" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p>}
+          {filteredUpcoming?.map(m => {
             const ts      = getTypeStyle(getBadge(m.topic || ''));
             const start   = m.start_time ? new Date(m.start_time) : null;
             const dateStr = start ? start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' }) : '';
             const timeStr = start ? start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) : '';
-            const title   = cleanTitle(m.topic || '');
+            const title   = cleanTopic(m.topic || '');
             return (
               <div key={m.id} className="flex items-center gap-4 rounded-2xl px-5 py-4"
                 style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)', borderRight: `3px solid ${ts.rowBorder}` }}>
