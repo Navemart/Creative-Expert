@@ -48,10 +48,10 @@ function getBadge(topic) {
 
 const TYPE_STYLES = {
   'מעבדת יכולות': {
-    color:       '#67e8f9',
-    badgeBg:     'rgba(103,232,249,0.1)',
-    badgeBorder: 'rgba(103,232,249,0.22)',
-    rowBorder:   '#67e8f9',
+    color:       '#34d399',
+    badgeBg:     'rgba(52,211,153,0.1)',
+    badgeBorder: 'rgba(52,211,153,0.22)',
+    rowBorder:   '#34d399',
   },
   'פגישה שבועית': {
     color:       '#F5C118',
@@ -199,93 +199,55 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin,
   }
 
   return (
-    <div
-      className="flex flex-col gap-2 py-4 pr-3"
-      style={{
-        borderBottom:  '1px solid rgba(255,255,255,0.05)',
-        borderRight:   `3px solid ${ts.rowBorder}`,
-      }}
-    >
-      {/* Badge */}
-      <span
-        className="w-fit rounded-full px-3 py-0.5 text-[11px] font-semibold"
-        style={{
-          background: ts.badgeBg,
-          color:      ts.color,
-          border:     `1px solid ${ts.badgeBorder}`,
-        }}
-      >
-        {badge}
-      </span>
-
-      {/* Title row */}
-      <div className="flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full flex-none" style={{ background: ts.color }} />
-
-        {editing === 'title' ? (
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <input
-              autoFocus
-              value={inputVal}
-              onChange={e => setInputVal(e.target.value)}
-              onKeyDown={e => onKey(e, 'title')}
-              className="flex-1 min-w-0 rounded-md px-2 py-0.5 text-sm font-semibold text-white"
-              style={{
-                background: 'rgba(255,255,255,0.07)',
-                border: '1px solid rgba(245,193,24,0.4)',
-                outline: 'none',
-              }}
-              dir="rtl"
-            />
-            <button onClick={() => save('title')} disabled={saving} className="hover:opacity-80 transition-opacity">
-              <Check size={14} style={{ color: '#F5C118' }} />
-            </button>
-            <button onClick={cancel} className="hover:opacity-80 transition-opacity">
-              <X size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5 flex-1 min-w-0">
-            <span className="text-sm font-semibold text-white leading-snug">
-              {displayTitle}
-            </span>
-            {isAdmin && (
-              <button
-                onClick={() => startEdit('title')}
-                className="flex-none opacity-25 hover:opacity-60 transition-opacity"
-                title="ערוך שם"
-                style={{ color: 'rgba(255,255,255,0.9)' }}
-              >
-                <Pencil size={12} />
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Date / time */}
-      <p className="text-xs pr-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
-        {fullDate} · {start} - {end}
-      </p>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2 pr-4 mt-1 flex-wrap">
-
-        {/* Star button */}
-        <button
-          onClick={() => onToggleStar(meeting.uuid)}
-          className="flex items-center justify-center rounded-lg p-1.5 transition hover:opacity-80"
-          title={isStarred ? 'הסר מהשמורות' : 'שמור הקלטה'}
-          style={{
-            background: isStarred ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)',
-            border: `1px solid ${isStarred ? 'rgba(245,193,24,0.3)' : 'rgba(255,255,255,0.1)'}`,
-          }}
-        >
-          <Star size={13} fill={isStarred ? '#F5C118' : 'none'} style={{ color: isStarred ? '#F5C118' : 'rgba(255,255,255,0.3)' }} />
-          <span className="text-xs font-medium" style={{ color: isStarred ? '#F5C118' : 'rgba(255,255,255,0.4)' }}>
-            {isStarred ? 'שמור' : 'שמור הקלטה'}
+    <div className="relative" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', borderRight: `3px solid ${ts.rowBorder}` }}>
+    <div className="flex items-center gap-3 py-4 pr-3">
+      {/* Right: badge + title + date */}
+      <div className="flex-1 min-w-0">
+        <div className="mb-1">
+          <span
+            className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+            style={{ background: ts.badgeBg, color: ts.color, border: `1px solid ${ts.badgeBorder}` }}
+          >
+            {badge}
           </span>
-        </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full flex-none" style={{ background: ts.color }} />
+
+          {editing === 'title' ? (
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <input autoFocus value={inputVal} onChange={e => setInputVal(e.target.value)}
+                onKeyDown={e => onKey(e, 'title')}
+                className="flex-1 min-w-0 rounded-md px-2 py-0.5 text-sm font-semibold text-white"
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(245,193,24,0.4)', outline: 'none' }}
+                dir="rtl" />
+              <button onClick={() => save('title')} disabled={saving} className="hover:opacity-80 transition-opacity">
+                <Check size={14} style={{ color: '#F5C118' }} />
+              </button>
+              <button onClick={cancel} className="hover:opacity-80 transition-opacity">
+                <X size={14} style={{ color: 'rgba(255,255,255,0.4)' }} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-sm font-semibold text-white leading-snug truncate">{displayTitle}</span>
+              {isAdmin && (
+                <button onClick={() => startEdit('title')}
+                  className="flex-none opacity-25 hover:opacity-60 transition-opacity"
+                  title="ערוך שם" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                  <Pencil size={11} />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+        <p className="text-xs mt-0.5 pr-4" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          {fullDate} · {start} - {end}
+        </p>
+
+        {/* Action buttons — below title */}
+        <div className="flex items-center gap-2 mt-2.5 flex-wrap pr-4">
 
         {/* Recording button */}
         <a
@@ -380,33 +342,50 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin,
           )
         )}
 
-        {/* Delete button — admin only */}
+        </div>
+      </div>
+
+      {/* Corner: star + trash */}
+      <div className="absolute top-2 left-2 flex flex-row gap-1">
+        <button
+          onClick={() => onToggleStar(meeting.uuid)}
+          className="rounded-md p-1.5 transition hover:opacity-80"
+          title={isStarred ? 'הסר מהשמורות' : 'שמור הקלטה'}
+          style={{
+            background: isStarred ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)',
+            border: `1px solid ${isStarred ? 'rgba(245,193,24,0.4)' : 'rgba(245,193,24,0.25)'}`,
+          }}
+        >
+          <Star size={16} fill={isStarred ? '#F5C118' : 'none'}
+            style={{ color: '#F5C118', filter: isStarred ? 'drop-shadow(0 0 4px rgba(245,193,24,0.5))' : 'none' }} />
+        </button>
         {isAdmin && (
           <button
             onClick={() => onDelete(meeting.uuid)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition hover:opacity-80 mr-auto"
+            className="rounded-md p-1.5 transition hover:opacity-80"
             title="הסתר הקלטה"
-            style={{ color: 'rgba(252,165,165,0.5)', border: '1px solid rgba(252,165,165,0.15)' }}
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(252,165,165,0.2)' }}
           >
-            <Trash2 size={11} />
+            <Trash2 size={16} style={{ color: 'rgba(252,165,165,0.5)' }} />
           </button>
         )}
       </div>
+    </div>
 
-      {/* AI Companion summary panel */}
-      {aiOpen && aiSummary && (
-        <div
-          className="mx-4 mt-1 rounded-xl p-3 text-xs leading-relaxed whitespace-pre-wrap"
-          style={{
-            background: 'rgba(253,230,138,0.04)',
-            border:     '1px solid rgba(253,230,138,0.12)',
-            color:      'rgba(255,255,255,0.75)',
-          }}
-          dir="rtl"
-        >
-          {aiSummary}
-        </div>
-      )}
+    {/* AI Companion summary panel */}
+    {aiOpen && aiSummary && (
+      <div
+        className="mx-4 mt-1 mb-2 rounded-xl p-3 text-xs leading-relaxed whitespace-pre-wrap"
+        style={{
+          background: 'rgba(253,230,138,0.04)',
+          border:     '1px solid rgba(253,230,138,0.12)',
+          color:      'rgba(255,255,255,0.75)',
+        }}
+        dir="rtl"
+      >
+        {aiSummary}
+      </div>
+    )}
     </div>
   );
 }
@@ -591,7 +570,7 @@ export default function ZoomRecordings() {
                     >
                       {/* Large day number */}
                       <div
-                        className="flex-none flex items-start pt-5 pl-6 pr-3"
+                        className="flex-none flex items-center pl-6 pr-3"
                         style={{ width: 96 }}
                       >
                         <span

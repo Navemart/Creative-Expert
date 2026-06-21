@@ -388,20 +388,12 @@ export default function Analytics() {
     return Math.round(p.reduce((s,p) => s + num(p.total_amount), 0) / p.length);
   }, [projects]);
 
-  // ── Next month expected income (from installment dates) ──────
-  const nextMonthExpected = useMemo(() => {
-    const now = new Date();
-    const nextMonth = now.getMonth() + 1; // 0-indexed, could be 12
-    const nextYear  = nextMonth === 12 ? now.getFullYear() + 1 : now.getFullYear();
-    const nm        = nextMonth === 12 ? 0 : nextMonth;
-    return outstandingItems
-      .filter(item => {
-        if (!item.date) return false;
-        const d = new Date(item.date);
-        return d.getMonth() === nm && d.getFullYear() === nextYear;
-      })
-      .reduce((s, item) => s + item.amount, 0);
-  }, [outstandingItems]);
+  // ── כסף שנשאר לגביה = סך עסקאות (כל הדיווחים) פחות סך כסף שנכנס בפועל ──
+  const remainingToCollect = useMemo(() => {
+    const totalDeals    = sorted.reduce((s, m) => s + num(m.total_new_deals), 0);
+    const totalReceived = sorted.reduce((s, m) => s + num(m.total_income || m.amount), 0);
+    return Math.max(0, totalDeals - totalReceived);
+  }, [sorted]);
 
   // ── Annual goal progress ──────────────────────────────────────
   const goalPct = annualGoal > 0 ? Math.min(100, Math.round(ytdIncome / annualGoal * 100)) : 0;
@@ -549,10 +541,10 @@ export default function Analytics() {
           icon={DollarSign}
         />
         <KpiCard
-          label="צפוי לחודש הבא"
-          value={nextMonthExpected > 0 ? fmtFull(nextMonthExpected) : '—'}
-          sub={nextMonthExpected > 0 ? 'לפי תשלומים מתוזמנים' : 'אין תשלומים מתוזמנים'}
-          color="#38bdf8"
+          label="הוצאות החודש"
+          value={selExp > 0 ? fmtFull(selExp) : '—'}
+          sub={fmtMonth(selMonth?.month)}
+          color="#f87171"
           icon={Clock}
         />
         <KpiCard

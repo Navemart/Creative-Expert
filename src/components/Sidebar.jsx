@@ -169,12 +169,10 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
       >
         <div className="flex h-16 items-center justify-between px-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center gap-2 overflow-hidden">
-            <img src="/icon.png" alt="Creative Expert" className="h-8 w-8 flex-none rounded-md object-cover" />
-            {!collapsed && (
-              <span className="truncate text-sm font-semibold tracking-tight text-white">
-                Creative Expert 3.0
-              </span>
-            )}
+            {collapsed
+              ? <img src="/icon.png" alt="Creative Expert" className="h-8 w-8 flex-none rounded-md object-cover" />
+              : <img src="/logo.png" alt="Creative Expert 3.0" className="h-7 w-auto flex-none object-contain" />
+            }
           </div>
           <button
             type="button"
