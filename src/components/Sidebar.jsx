@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { to: '/pipeline', label: 'לידים ומכירות', icon: Filter },
   { to: '/content', label: 'תוכן', icon: FileText },
   { to: '/clients', label: 'לקוחות ופרויקטים', icon: Briefcase },
-  { to: '/recordings', label: 'הקלטות פגישות', icon: Video },
+  { to: '/recordings', label: 'פגישות', icon: Video },
 ];
 
 const ENGINE_ITEMS = [

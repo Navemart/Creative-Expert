@@ -1,23 +1,42 @@
 import express from 'express';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createClient } from '@supabase/supabase-js';
 
 const router  = express.Router();
 const __dir   = dirname(fileURLToPath(import.meta.url));
 const META_FILE = join(__dir, '..', 'data', 'zoom-meta.json');
 
-// ── Metadata helpers (custom titles + playbook URLs) ──────────
-function readMeta() {
-  if (!existsSync(META_FILE)) return {};
-  try { return JSON.parse(readFileSync(META_FILE, 'utf8')); }
-  catch { return {}; }
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
+);
+
+// ── Metadata helpers — Supabase (with file fallback for seeding) ──
+async function readMeta() {
+  const { data, error } = await supabase.from('zoom_meta').select('*');
+  if (error || !data) {
+    // fallback: read from file (for seeding / local dev without Supabase)
+    if (!existsSync(META_FILE)) return {};
+    try { return JSON.parse(readFileSync(META_FILE, 'utf8')); }
+    catch { return {}; }
+  }
+  // Convert rows array → { uuid: { custom_title, attachments, ... } }
+  const map = {};
+  for (const row of data) {
+    const { uuid, ...rest } = row;
+    map[uuid] = rest;
+  }
+  return map;
 }
 
-function writeMeta(data) {
-  const dir = join(__dir, '..', 'data');
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(META_FILE, JSON.stringify(data, null, 2));
+async function upsertMeta(uuid, updates) {
+  const { error } = await supabase.from('zoom_meta').upsert(
+    { uuid, ...updates, updated_at: new Date().toISOString() },
+    { onConflict: 'uuid' }
+  );
+  return !error;
 }
 
 // ── Zoom Server-to-Server OAuth token ────────────────────────
@@ -94,18 +113,17 @@ router.get('/recordings', async (req, res) => {
       return year >= 2026 || (year === 2025 && month === 11);
     });
 
-    const meta   = readMeta();
+    const meta   = await readMeta();
     const seen   = new Set();
     const unique = filtered.filter(m => {
       if (seen.has(m.uuid)) return false;
       seen.add(m.uuid);
-      if (meta[m.uuid]?.hidden) return false;   // admin-deleted recordings
+      if (meta[m.uuid]?.hidden) return false;
       return true;
     });
 
     unique.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
 
-    // Annotate each meeting with whether a Notion summary is available in cache
     const annotated = unique.map(m => ({
       ...m,
       has_notion_summary: !!(meta[m.uuid]?.summary_he),
@@ -119,15 +137,12 @@ router.get('/recordings', async (req, res) => {
 });
 
 // ── GET /api/zoom/meta ───────────────────────────────────────
-// Returns custom titles and playbook URLs keyed by meeting uuid
-router.get('/meta', (req, res) => {
-  res.json(readMeta());
+router.get('/meta', async (req, res) => {
+  res.json(await readMeta());
 });
 
 // ── PUT /api/zoom/meta ───────────────────────────────────────
-// Body: { uuid, custom_title?, playbook_url? }
-// Requires x-admin-id header matching VITE_ADMIN_USER_ID env var.
-router.put('/meta', (req, res) => {
+router.put('/meta', async (req, res) => {
   const adminId = process.env.VITE_ADMIN_USER_ID;
   if (!adminId || req.headers['x-admin-id'] !== adminId) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -136,31 +151,13 @@ router.put('/meta', (req, res) => {
   const { uuid, custom_title, playbook_url, attachments } = req.body;
   if (!uuid) return res.status(400).json({ error: 'uuid required' });
 
-  const meta = readMeta();
-  meta[uuid] = { ...(meta[uuid] || {}) };
+  const updates = {};
+  if (custom_title  !== undefined) updates.custom_title  = custom_title  || null;
+  if (playbook_url  !== undefined) updates.playbook_url  = playbook_url  || null;
+  if (attachments   !== undefined) updates.attachments   = Array.isArray(attachments) && attachments.length ? attachments : [];
 
-  if (custom_title !== undefined) {
-    if (custom_title) meta[uuid].custom_title = custom_title;
-    else delete meta[uuid].custom_title;
-  }
-  if (playbook_url !== undefined) {
-    if (playbook_url) meta[uuid].playbook_url = playbook_url;
-    else delete meta[uuid].playbook_url;
-  }
-  if (attachments !== undefined) {
-    if (Array.isArray(attachments) && attachments.length > 0) {
-      meta[uuid].attachments = attachments;
-      delete meta[uuid].playbook_url; // migrate to new format
-    } else {
-      delete meta[uuid].attachments;
-    }
-  }
-
-  // Remove empty entry
-  if (Object.keys(meta[uuid]).length === 0) delete meta[uuid];
-
-  writeMeta(meta);
-  res.json({ ok: true, data: meta[uuid] || {} });
+  const ok = await upsertMeta(uuid, updates);
+  res.json({ ok, data: updates });
 });
 
 // ── Notion helpers ────────────────────────────────────────────
@@ -258,18 +255,16 @@ router.post('/ai-summary', async (req, res) => {
   if (!uuid) return res.status(400).json({ error: 'uuid required' });
 
   // Return cached summary if exists
-  const meta = readMeta();
+  const meta = await readMeta();
   if (meta[uuid]?.summary_he) {
     return res.json({ summary: meta[uuid].summary_he, cached: true });
   }
 
   try {
-    // Fetch from Notion by date + topic
     const summary = await findNotionSummaryForRecording(start_time || '', topic || '');
 
     if (summary) {
-      meta[uuid] = { ...(meta[uuid] || {}), summary_he: summary };
-      writeMeta(meta);
+      await upsertMeta(uuid, { summary_he: summary });
       return res.json({ summary });
     }
 
@@ -292,9 +287,8 @@ export async function syncAllNotionSummaries() {
     const zoomToken = await getZoomToken();
     const userId    = getZoomUser();
     const now       = new Date();
-    const meta      = readMeta();
+    const meta      = await readMeta();
 
-    // Collect all recent recordings (last 3 months)
     const allMeetings = [];
     for (let i = 0; i < 3; i++) {
       const to   = new Date(now); to.setMonth(to.getMonth() - i);
@@ -312,16 +306,14 @@ export async function syncAllNotionSummaries() {
     for (const m of allMeetings) {
       if (!m.uuid || !m.topic) continue;
       if (!RELEVANT.some(t => m.topic.includes(t))) continue;
-      if (meta[m.uuid]?.summary_he) continue;   // already cached
+      if (meta[m.uuid]?.summary_he) continue;
 
       const summary = await findNotionSummaryForRecording(m.start_time, m.topic);
       if (summary) {
-        meta[m.uuid] = { ...(meta[m.uuid] || {}), summary_he: summary };
+        await upsertMeta(m.uuid, { summary_he: summary });
         count++;
       }
     }
-
-    if (count > 0) writeMeta(meta);
   } catch (e) {
     console.error('[syncAllNotionSummaries]', e.message);
   }
@@ -331,7 +323,7 @@ export async function syncAllNotionSummaries() {
 // ── DELETE /api/zoom/recordings/:uuid ───────────────────────
 // Admin-only: hides a recording from the list (sets hidden: true in meta).
 // Does NOT delete from Zoom — can be restored by removing the flag manually.
-router.delete('/recordings/:uuid', (req, res) => {
+router.delete('/recordings/:uuid', async (req, res) => {
   const adminId = process.env.VITE_ADMIN_USER_ID;
   if (!adminId || req.headers['x-admin-id'] !== adminId) {
     return res.status(403).json({ error: 'Forbidden' });
@@ -339,9 +331,7 @@ router.delete('/recordings/:uuid', (req, res) => {
   const { uuid } = req.params;
   if (!uuid) return res.status(400).json({ error: 'uuid required' });
 
-  const meta = readMeta();
-  meta[uuid] = { ...(meta[uuid] || {}), hidden: true };
-  writeMeta(meta);
+  await upsertMeta(uuid, { hidden: true });
   res.json({ ok: true });
 });
 
@@ -353,7 +343,7 @@ router.post('/summary', async (req, res) => {
   if (!uuid) return res.status(400).json({ error: 'uuid required' });
 
   // Return cached summary if exists
-  const meta = readMeta();
+  const meta = await readMeta();
   if (meta[uuid]?.summary) {
     return res.json({ summary: meta[uuid].summary, cached: true });
   }
@@ -370,8 +360,7 @@ router.post('/summary', async (req, res) => {
       if (r.ok) {
         const text = (await r.text()).trim();
         if (text) {
-          meta[uuid] = { ...(meta[uuid] || {}), summary: text };
-          writeMeta(meta);
+          await upsertMeta(uuid, { summary: text });
           return res.json({ summary: text, source: 'zoom' });
         }
       }
@@ -467,8 +456,7 @@ router.post('/summary', async (req, res) => {
     const summary = openaiData.choices?.[0]?.message?.content?.trim();
     if (!summary) return res.status(502).json({ error: 'שגיאה ביצירת הסיכום' });
 
-    meta[uuid] = { ...(meta[uuid] || {}), summary };
-    writeMeta(meta);
+    await upsertMeta(uuid, { summary });
     res.json({ summary, source: 'openai' });
 
   } catch (err) {
