@@ -1,29 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { supabase } from '../lib/supabase.js';
-import { AlertCircle, CheckCircle2, X } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
 // ── Questions ─────────────────────────────────────────────────
 const OFFER_QUESTIONS = [
-  'יש לי חבילה/שירות אחד ברור שאני מציע (לא "כל עבודה לפי מה שהלקוח רוצה")',
-  'ב-3 הפרויקטים האחרונים שלי, הלקוח שילם את המחיר שביקשתי בלי משא ומתן',
-  'אני יכול להגיד למישהו במשפט אחד מה אני עושה ולמי, והוא מבין מה הוא יקבל',
-  'יש לי לפחות 2-3 עבודות/תוצאות שאני יכול להציג כהוכחה שזה עובד',
-  'התמחור שלי לא משתנה דרמטית מלקוח ללקוח (אין "מחיר לפי הרגשה")',
+  'יש לי הצעה אחת מוגדרת (לא "כל עבודה לפי מה שהלקוח רוצה") שאני מציע ב-₪3,000+',
+  'בפרויקטים האחרונים שלי, הלקוחות שילמו את המחיר שביקשתי בלי משא ומתן ממשי',
+  'אני יכול להסביר במשפט אחד מה אני עושה ולמי — והצד השני מבין מה הוא יקבל',
+  'יש לי לפחות 2–3 עבודות גמורות שאני יכול להציג כהוכחה שהתהליך עובד',
+  'התמחור שלי יציב — הוא לא משתנה דרמטית מלקוח ללקוח לפי הרגשה',
 ];
 
 const LEADS_QUESTIONS = [
   'יש לי לפחות מקור אחד (לא המלצות בלבד) שמייצר פניות חדשות באופן קבוע',
-  'בחודש רגיל, יש לי לפחות 2-3 פניות מתאימות, בלי שאני "רודף" אחריהן',
-  'אני יודע מאיפה הלקוח האחרון שלי הגיע - ויש לי תהליך לחזור על זה',
-  'אם היום אין לי פרויקטים, אני לא בפאניקה - כי אני יודע שפניות יגיעו',
-  'יש לי רשימה/קהל (אינסטגרם, מייל, וואטסאפ) שאני יכול לפנות אליו כשצריך',
+  'בחודש רגיל יש לי לפחות 2–3 פניות מתאימות, בלי שאני "רודף" אחריהן',
+  'אני יודע בדיוק מאיפה הגיע הלקוח האחרון שלי — ויש לי תהליך לחזור על זה',
+  'אם היום אין לי פרויקטים פעילים, אני לא בפאניקה — כי אני יודע שפניות יגיעו',
+  'יש לי קהל (אינסטגרם, מייל, קבוצה) שאני יכול לפנות אליו כשצריך',
 ];
 
-const DELIVERY_QUESTION =
-  'יש לי תהליך מסירה שעובד גם בלי שאני מעורב באופן מלא בכל שלב (תבניות, צ׳קליסטים, איש צוות, אוטומציה)';
+const LEVERAGE_QUESTIONS = [
+  'חלק מהעבודה שלי לא עובר ישירות דרכי — יש תבניות, תהליכים, או אנשים שעוזרים',
+  'אם אני לוקח שבוע חופש, ההכנסה לא נעצרת לחלוטין',
+  'אני עובד על העסק (אסטרטגיה, מיתוג אישי, מוצרים) ולא רק בתוך העסק',
+];
 
 // ── Status order + colors (structural, not editable) ───────────
 const STATUS_ORDER = ['building', 'loaded', 'spinning', 'compounding'];
@@ -142,31 +145,41 @@ const DEFAULT_CONTENT = {
   },
 };
 
-function computeStatus(offerScore, leadsScore, delivery) {
+function computeStatus(offerScore, leadsScore, leverageScore) {
   if (offerScore < 3) return 'building';
   if (leadsScore < 3) return 'loaded';
-  if (!delivery) return 'spinning';
+  if (leverageScore < 2) return 'spinning';
   return 'compounding';
 }
 
-// ── Checkbox row (used inside the diagnosis modal) ─────────────
-function CheckRow({ checked, onToggle, children }) {
+// ── Answer row — 3-button selector ────────────────────────────
+function AnswerRow({ question, value, onChange }) {
+  const opts = [
+    { v: 1,   label: 'כן' },
+    { v: 0.5, label: 'לפעמים' },
+    { v: 0,   label: 'לא' },
+  ];
   return (
-    <button
-      onClick={onToggle}
-      className="w-full flex items-start gap-3 rounded-xl px-4 py-3 text-right transition hover:bg-white/[0.04]"
-      style={{ border: '1px solid rgba(255,255,255,0.07)', background: checked ? 'rgba(34,197,94,0.06)' : 'transparent' }}
-    >
-      <div
-        className="mt-0.5 h-5 w-5 flex-none rounded-md border-2 flex items-center justify-center transition"
-        style={{ borderColor: checked ? '#22c55e' : 'rgba(255,255,255,0.2)', background: checked ? '#22c55e' : 'transparent' }}
-      >
-        {checked && <CheckCircle2 size={13} color="#fff" />}
+    <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{question}</p>
+      <div className="flex gap-2">
+        {opts.map(opt => {
+          const active = value === opt.v;
+          const color = opt.v === 1 ? '#22c55e' : opt.v === 0.5 ? '#f59e0b' : '#ef4444';
+          return (
+            <button key={opt.v} onClick={() => onChange(opt.v)}
+              className="flex-1 rounded-lg py-2 text-sm font-semibold transition"
+              style={{
+                background: active ? color + '22' : 'rgba(255,255,255,0.05)',
+                border: `1px solid ${active ? color : 'rgba(255,255,255,0.1)'}`,
+                color: active ? color : 'rgba(255,255,255,0.5)',
+              }}>
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
-      <span className="text-sm leading-snug" style={{ color: checked ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.7)' }}>
-        {children}
-      </span>
-    </button>
+    </div>
   );
 }
 
@@ -306,81 +319,138 @@ function StageDetail({ stage, isCurrent }) {
   );
 }
 
-// ── Diagnosis modal (questionnaire) ─────────────────────────────
+// ── Diagnosis modal — multi-step flow ────────────────────────────
 function DiagnosisModal({ initial, onClose, onSave, saving }) {
-  const [offerChecks, setOfferChecks] = useState(initial.offerChecks);
-  const [leadsChecks, setLeadsChecks] = useState(initial.leadsChecks);
-  const [delivery, setDelivery] = useState(initial.delivery);
+  const [step, setStep] = useState('intro');
+  const [offerScores,    setOfferScores]    = useState(() => initial.offerChecks.map(v => typeof v === 'number' ? v : (v ? 1 : 0)));
+  const [leadsScores,    setLeadsScores]    = useState(() => initial.leadsChecks.map(v => typeof v === 'number' ? v : (v ? 1 : 0)));
+  const [leverageScores, setLeverageScores] = useState(() => (initial.leverageChecks || [0,0,0]).map(v => typeof v === 'number' ? v : (v ? 1 : 0)));
   const [error, setError] = useState('');
 
-  const offerScore = offerChecks.filter(Boolean).length;
-  const leadsScore = leadsChecks.filter(Boolean).length;
+  const offerScore    = offerScores.reduce((s, v) => s + (v ?? 0), 0);
+  const leadsScore    = leadsScores.reduce((s, v) => s + (v ?? 0), 0);
+  const leverageScore = leverageScores.reduce((s, v) => s + (v ?? 0), 0);
+  const showLeverage  = offerScore >= 3 && leadsScore >= 3;
 
   async function handleSave() {
     setError('');
-    const err = await onSave({ offerChecks, leadsChecks, delivery });
+    const err = await onSave({ offerChecks: offerScores, leadsChecks: leadsScores, leverageChecks: leverageScores });
     if (err) setError('שגיאה בשמירה: ' + err);
   }
 
+  function nextStep() {
+    if (step === 'offer') { setStep('leads'); return; }
+    if (step === 'leads') { showLeverage ? setStep('leverage') : handleSave(); return; }
+    if (step === 'leverage') { handleSave(); return; }
+  }
+
+  const stepTitles = { intro: 'אבחון עסקי', offer: 'חלק א׳ — יש לך הצעה שעובדת?', leads: 'חלק ב׳ — יש לך זרימת פניות?', leverage: 'חלק ג׳ — יש לך מינוף?' };
+  const stepProgress = { intro: 0, offer: 1, leads: 2, leverage: 3 };
+  const totalSteps = showLeverage ? 3 : 2;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
-      <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl p-5 sm:p-6"
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl"
         style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
 
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-bold text-white">אבחון העסק שלך</h3>
-          <button onClick={onClose} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }}>
-            <X size={18} />
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+          <h3 className="text-sm font-bold text-white">{stepTitles[step]}</h3>
+          <button onClick={onClose} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            <X size={16} />
           </button>
         </div>
 
-        <div className="space-y-5">
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold text-white">חלק א׳ - יש לי הצעה שמוכרת?</h4>
-              <span className="text-sm font-bold tabular-nums px-2.5 py-1 rounded-lg"
-                style={{ background: 'rgba(255,255,255,0.06)', color: offerScore >= 3 ? '#86efac' : '#fca5a5' }}>
-                {offerScore} / 5
-              </span>
-            </div>
-            <div className="space-y-2">
-              {OFFER_QUESTIONS.map((q, i) => (
-                <CheckRow key={i} checked={offerChecks[i]} onToggle={() => setOfferChecks(prev => prev.map((v, idx) => idx === i ? !v : v))}>{q}</CheckRow>
-              ))}
-            </div>
+        {/* Progress bar (shown for non-intro steps) */}
+        {step !== 'intro' && (
+          <div className="h-1 w-full" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-full transition-all" style={{ width: `${(stepProgress[step] / totalSteps) * 100}%`, background: '#F5C118' }} />
           </div>
+        )}
 
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold text-white">חלק ב׳ - יש לי זרימת פניות?</h4>
-              <span className="text-sm font-bold tabular-nums px-2.5 py-1 rounded-lg"
-                style={{ background: 'rgba(255,255,255,0.06)', color: leadsScore >= 3 ? '#86efac' : '#fca5a5' }}>
-                {leadsScore} / 5
-              </span>
-            </div>
-            <div className="space-y-2">
-              {LEADS_QUESTIONS.map((q, i) => (
-                <CheckRow key={i} checked={leadsChecks[i]} onToggle={() => setLeadsChecks(prev => prev.map((v, idx) => idx === i ? !v : v))}>{q}</CheckRow>
-              ))}
-            </div>
-          </div>
+        <div className="p-5 space-y-4">
 
-          {offerScore >= 3 && leadsScore >= 3 && (
-            <div>
-              <h4 className="text-sm font-bold text-white mb-3">שאלת בונוס - תהליך מסירה</h4>
-              <CheckRow checked={delivery} onToggle={() => setDelivery(d => !d)}>{DELIVERY_QUESTION}</CheckRow>
-            </div>
+          {/* Intro step */}
+          {step === 'intro' && (
+            <>
+              <p className="text-2xl font-bold text-white leading-snug">לפני שאתה עובד על משהו — תדע על מה לעבוד</p>
+              <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                רוב המעצבים עובדים על הבעיה הלא נכונה. רצים אחרי לידים כשהבעיה האמיתית היא שאין להם הצעה שמוכרת — או להיפך.
+                <br /><br />
+                האבחון הזה לוקח 3 דקות. בסוף תדע בדיוק איפה אתה עומד ומה הדבר האחד שכדאי לך לעשות עכשיו.
+              </p>
+              <button onClick={() => setStep('offer')}
+                className="btn-yellow w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90"
+                style={{ background: '#F5C118' }}>
+                בוא נתחיל
+              </button>
+            </>
           )}
 
-          {error && <p className="text-xs" style={{ color: '#fca5a5' }}>{error}</p>}
+          {/* Offer step */}
+          {step === 'offer' && (
+            <>
+              <p className="text-xs leading-relaxed px-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                הצעה שעובדת = הצעה מבוססת תוצאה שאתה יכול למכור שוב ושוב, במחיר מלא, בלי לבנות אותה מחדש לכל לקוח.
+              </p>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>5 שאלות</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: offerScore >= 3 ? '#22c55e' : '#f59e0b' }}>{offerScore} / 5</span>
+              </div>
+              {OFFER_QUESTIONS.map((q, i) => (
+                <AnswerRow key={i} question={q} value={offerScores[i]}
+                  onChange={v => setOfferScores(prev => prev.map((x, idx) => idx === i ? v : x))} />
+              ))}
+              <button onClick={nextStep}
+                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground">
+                המשך לחלק ב׳
+              </button>
+            </>
+          )}
 
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full rounded-lg py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-40 bg-accent text-accent-foreground"
-          >
-            {saving ? 'שומר...' : 'שמור ועדכן את הרמה שלי'}
-          </button>
+          {/* Leads step */}
+          {step === 'leads' && (
+            <>
+              <p className="text-xs leading-relaxed px-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                זרימת פניות = מקור אחד לפחות שמייצר פניות באופן עקבי — לא תלוי במזל, לא תלוי בהמלצה שתגיע.
+              </p>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>5 שאלות</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: leadsScore >= 3 ? '#22c55e' : '#f59e0b' }}>{leadsScore} / 5</span>
+              </div>
+              {LEADS_QUESTIONS.map((q, i) => (
+                <AnswerRow key={i} question={q} value={leadsScores[i]}
+                  onChange={v => setLeadsScores(prev => prev.map((x, idx) => idx === i ? v : x))} />
+              ))}
+              <button onClick={nextStep}
+                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground">
+                {showLeverage ? 'המשך לחלק ג׳' : 'סיים אבחון'}
+              </button>
+            </>
+          )}
+
+          {/* Leverage step */}
+          {step === 'leverage' && (
+            <>
+              <p className="text-xs leading-relaxed px-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                הכל עובד — עכשיו השאלה היא האם העסק תלוי רק בשעות שלך.
+              </p>
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>3 שאלות</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: leverageScore >= 2 ? '#22c55e' : '#f59e0b' }}>{leverageScore} / 3</span>
+              </div>
+              {LEVERAGE_QUESTIONS.map((q, i) => (
+                <AnswerRow key={i} question={q} value={leverageScores[i]}
+                  onChange={v => setLeverageScores(prev => prev.map((x, idx) => idx === i ? v : x))} />
+              ))}
+              {error && <p className="text-xs" style={{ color: '#fca5a5' }}>{error}</p>}
+              <button onClick={handleSave} disabled={saving}
+                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground disabled:opacity-40">
+                {saving ? 'שומר...' : 'סיים אבחון'}
+              </button>
+            </>
+          )}
+
         </div>
       </div>
     </div>
@@ -453,8 +523,8 @@ export default function Diagnosis() {
 
   const [content, setContent] = useState(DEFAULT_CONTENT);
   const [hasResult, setHasResult]   = useState(false);
-  const [offerChecks, setOfferChecks] = useState(Array(5).fill(false));
-  const [leadsChecks, setLeadsChecks] = useState(Array(5).fill(false));
+  const [offerChecks, setOfferChecks] = useState(Array(5).fill(0));
+  const [leadsChecks, setLeadsChecks] = useState(Array(5).fill(0));
   const [delivery, setDelivery]       = useState(false);
   const [updatedAt, setUpdatedAt]     = useState(null);
 
@@ -510,8 +580,8 @@ export default function Diagnosis() {
         .eq('user_id', userId)
         .maybeSingle();
       if (!error && data) {
-        setOfferChecks(data.offer_checks || Array(5).fill(false));
-        setLeadsChecks(data.leads_checks || Array(5).fill(false));
+        setOfferChecks(data.offer_checks || Array(5).fill(0));
+        setLeadsChecks(data.leads_checks || Array(5).fill(0));
         setDelivery(!!data.delivery_check);
         setUpdatedAt(data.updated_at || null);
         setHasResult(true);
@@ -523,22 +593,25 @@ export default function Diagnosis() {
     }
   }
 
-  const offerScore = offerChecks.filter(Boolean).length;
-  const leadsScore = leadsChecks.filter(Boolean).length;
-  const status = computeStatus(offerScore, leadsScore, delivery);
+  const offerScore = offerChecks.reduce((s, v) => s + (v ?? 0), 0);
+  const leadsScore = leadsChecks.reduce((s, v) => s + (v ?? 0), 0);
+  const status = computeStatus(offerScore, leadsScore, delivery ? 2 : 0);
 
-  async function saveResults({ offerChecks: oc, leadsChecks: lc, delivery: dl }) {
+  async function saveResults({ offerChecks: oc, leadsChecks: lc, leverageChecks: lv }) {
     if (!userId) return 'משתמש לא מחובר';
     setSaving(true);
     try {
-      const newStatus = computeStatus(oc.filter(Boolean).length, lc.filter(Boolean).length, dl);
+      const offerScore    = oc.reduce((s, v) => s + (v ?? 0), 0);
+      const leadsScore    = lc.reduce((s, v) => s + (v ?? 0), 0);
+      const leverageScore = (lv || []).reduce((s, v) => s + (v ?? 0), 0);
+      const newStatus = computeStatus(offerScore, leadsScore, leverageScore);
       const payload = {
         user_id: userId,
         offer_checks: oc,
         leads_checks: lc,
-        delivery_check: dl,
-        offer_score: oc.filter(Boolean).length,
-        leads_score: lc.filter(Boolean).length,
+        delivery_check: leverageScore >= 2,  // keep backward compat column
+        offer_score: offerScore,
+        leads_score: leadsScore,
         status: newStatus,
         updated_at: new Date().toISOString(),
       };
@@ -546,7 +619,7 @@ export default function Diagnosis() {
       if (error) throw error;
       setOfferChecks(oc);
       setLeadsChecks(lc);
-      setDelivery(dl);
+      setDelivery(leverageScore >= 2);
       setUpdatedAt(payload.updated_at);
       setHasResult(true);
       setSelectedStage(newStatus);
@@ -675,7 +748,7 @@ export default function Diagnosis() {
 
       {showModal && (
         <DiagnosisModal
-          initial={{ offerChecks, leadsChecks, delivery }}
+          initial={{ offerChecks, leadsChecks, leverageChecks: Array(3).fill(0) }}
           onClose={() => setShowModal(false)}
           onSave={saveResults}
           saving={saving}
