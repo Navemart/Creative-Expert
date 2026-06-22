@@ -422,9 +422,10 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
                 <AnswerRow key={i} question={q} value={leadsScores[i]}
                   onChange={v => setLeadsScores(prev => prev.map((x, idx) => idx === i ? v : x))} />
               ))}
-              <button onClick={nextStep}
-                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground">
-                {showLeverage ? 'המשך לחלק ג׳' : 'סיים אבחון'}
+              {error && <p className="text-xs" style={{ color: '#fca5a5' }}>{error}</p>}
+              <button onClick={nextStep} disabled={saving}
+                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground disabled:opacity-40">
+                {saving ? 'שומר...' : showLeverage ? 'המשך לחלק ג׳' : 'סיים אבחון'}
               </button>
             </>
           )}
