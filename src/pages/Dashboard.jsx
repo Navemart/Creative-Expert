@@ -1598,7 +1598,26 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── 4. שלבי הפלייוויל ── */}
+      {/* ── 4. כרטיסי נתונים ── */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[
+          { icon: <Banknote size={18} />, label: 'סך עסקאות חדשות', value: totalNewDeals !== null ? '₪' + totalNewDeals.toLocaleString('he-IL') : '—', suffix: '', color: '#F5C118' },
+          { icon: <Users size={18} />, label: 'לקוחות פעילים', value: activeClients !== null ? activeClients : '—', suffix: activeClients !== null ? 'לקוחות' : '', color: '#4fc38a' },
+          { icon: <Plus size={18} />, label: 'הצעות שהצעתי', value: proposalsCount !== null ? proposalsCount : '—', suffix: proposalsCount !== null ? 'הצעות' : '', color: '#06b6d4' },
+          { icon: <Image size={18} />, label: 'פוסטים שפרסמתי', value: postsCount !== null ? postsCount : '—', suffix: postsCount !== null ? 'פוסטים' : '', color: '#a855f7' },
+        ].map(({ icon, label, value, suffix, color }) => (
+          <div key={label} className="rounded-2xl p-3 sm:p-5 flex items-center gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex-none h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: color + '1a', color }}>{icon}</div>
+            <div className="min-w-0">
+              <div className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</div>
+              <div dir="ltr" className="text-xl lg:text-2xl font-bold text-white leading-none text-right">{value}</div>
+              {suffix && <div className="text-[11px] text-white/30 mt-0.5">{suffix}</div>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── 5. שלבי הפלייוויל ── */}
       {(() => {
         // Merge hardcoded defaults with dynamic content from diagnosis_content table
         const mergedStages = FLYWHEEL_STAGES.map(s => {
@@ -1712,25 +1731,6 @@ export default function Dashboard() {
           </div>
         );
       })()}
-
-      {/* ── 5. כרטיסי נתונים ── */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[
-          { icon: <Banknote size={18} />, label: 'סך עסקאות חדשות', value: totalNewDeals !== null ? '₪' + totalNewDeals.toLocaleString('he-IL') : '—', suffix: '', color: '#F5C118' },
-          { icon: <Users size={18} />, label: 'לקוחות פעילים', value: activeClients !== null ? activeClients : '—', suffix: activeClients !== null ? 'לקוחות' : '', color: '#4fc38a' },
-          { icon: <Plus size={18} />, label: 'הצעות שהצעתי', value: proposalsCount !== null ? proposalsCount : '—', suffix: proposalsCount !== null ? 'הצעות' : '', color: '#06b6d4' },
-          { icon: <Image size={18} />, label: 'פוסטים שפרסמתי', value: postsCount !== null ? postsCount : '—', suffix: postsCount !== null ? 'פוסטים' : '', color: '#a855f7' },
-        ].map(({ icon, label, value, suffix, color }) => (
-          <div key={label} className="rounded-2xl p-3 sm:p-5 flex items-center gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div className="flex-none h-10 w-10 rounded-xl flex items-center justify-center" style={{ background: color + '1a', color }}>{icon}</div>
-            <div className="min-w-0">
-              <div className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</div>
-              <div dir="ltr" className="text-xl lg:text-2xl font-bold text-white leading-none text-right">{value}</div>
-              {suffix && <div className="text-[11px] text-white/30 mt-0.5">{suffix}</div>}
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* ── 6. צ'קליסט יישום (ימין) | פגישות קרובות (שמאל) ── */}
       <div className="flex gap-5" style={{ alignItems: 'stretch' }}>
