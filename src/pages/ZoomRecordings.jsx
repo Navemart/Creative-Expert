@@ -513,7 +513,7 @@ export default function ZoomRecordings() {
     <div className="w-full space-y-5" dir="rtl">
 
       {/* ── Title ── */}
-      <h1 className="text-2xl sm:text-3xl font-bold text-white">קלטות ופגישות</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות ופגישות</h1>
 
       {/* ── 2 Upcoming featured cards ── */}
       <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
