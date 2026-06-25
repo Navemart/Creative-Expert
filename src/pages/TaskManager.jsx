@@ -204,7 +204,8 @@ export default function TaskManager() {
       actual_minutes: 0,
       created_at: new Date().toISOString(),
     };
-    const { data } = await supabase.from('tasks').insert(payload).select().single();
+    const { data, error } = await supabase.from('tasks').insert(payload).select().single();
+    if (error) { console.error('create task error:', error); alert('שגיאה: ' + error.message); return; }
     if (data) setTasks(prev => [data, ...prev]);
     setShowModal(false);
     setModalData({ title: '', category: 'עסק', priority: 'important', estimated_minutes: 30, due_date: '', notes: '' });
