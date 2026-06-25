@@ -351,71 +351,84 @@ export default function TaskManager() {
                 const overTime = (isActive || isPaused) && task.estimated_minutes && elapsed > task.estimated_minutes * 60;
                 const actual   = task.actual_minutes || 0;
 
+                const isCompact = heightPx < 60;
+
+                const actionBtns = isDone ? (
+                  <button onClick={e => { e.stopPropagation(); undoDone(task); }}
+                    style={{ background:'rgba(255,255,255,0.1)', border:'none', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'rgba(255,255,255,0.55)', fontSize:10, whiteSpace:'nowrap', flexShrink:0 }}>
+                    ↩ בטל
+                  </button>
+                ) : (
+                  <div style={{ display:'flex', gap:3, flexShrink:0 }}>
+                    <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
+                      style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:'none', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'inherit', fontSize:11 }}>
+                      {isActive ? '⏸' : '▶'}
+                    </button>
+                    {(isActive || isPaused) && (
+                      <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
+                        style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'rgba(252,165,165,0.7)', fontSize:11 }}>
+                        ↺
+                      </button>
+                    )}
+                    <button onClick={e => { e.stopPropagation(); markDone(task); }}
+                      style={{ background:'rgba(74,222,128,0.15)', border:'none', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'#4ade80', fontSize:11 }}>
+                      ✓
+                    </button>
+                  </div>
+                );
+
                 return (
                   <div
                     key={task.id}
                     draggable={!isDone}
-                    onDragStart={() => { onDragStart(task.id); }}
+                    onDragStart={() => onDragStart(task.id)}
                     onDragEnd={onDragEnd}
                     style={{
                       position:'absolute', top, left:52, right:8, height:heightPx,
-                      background: isDone ? 'rgba(255,255,255,0.04)' : `${p.color}18`,
-                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.08)' : p.color+'55'}`,
+                      background: isDone ? 'rgba(255,255,255,0.04)' : `${p.color}14`,
+                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.08)' : p.color+'44'}`,
                       borderRight: `3px solid ${p.color}`,
                       borderRadius:8, padding:'4px 8px', boxSizing:'border-box',
-                      display:'flex', flexDirection:'column', gap:2,
                       opacity: isDone ? 0.6 : 1,
                       cursor: isDone ? 'default' : 'grab',
                       overflow:'hidden', zIndex:1,
                       pointerEvents: isDragging && dragTaskId.current !== task.id ? 'none' : 'auto',
                     }}
                   >
-                    {/* Title row */}
-                    <div style={{ display:'flex', alignItems:'flex-start', gap:4, flex:1, minHeight:0 }}>
-                      <span style={{ fontSize:12, fontWeight:600, flex:1, lineHeight:1.3, textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.45)' : 'white', overflow:'hidden' }}>
-                        {task.title}
-                      </span>
-                    </div>
-
-                    {/* Time info */}
-                    <div style={{ display:'flex', alignItems:'center', gap:4, flexWrap:'wrap' }}>
-                      <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.35)' : p.color, fontWeight:600 }}>
-                        🎯 {fmtMin(mins)}
-                      </span>
-                      {(isActive || isPaused) && (
-                        <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:600 }}>
-                          ⏱ {formatElapsed(elapsed)}{overTime ? ' ⚠️' : ''}
+                    {isCompact ? (
+                      /* ── Compact: single row ── */
+                      <div style={{ display:'flex', alignItems:'center', gap:6, height:'100%' }}>
+                        {actionBtns}
+                        <span style={{ flex:1, fontSize:12, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.45)' : 'white' }}>
+                          {task.title}
                         </span>
-                      )}
-                      {isDone && actual > 0 && (
-                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>⏱ {fmtMin(actual)} בפועל</span>
-                      )}
-                    </div>
-
-                    {/* Action buttons */}
-                    {heightPx > 36 && (
-                      <div style={{ display:'flex', gap:4, flexShrink:0 }}>
-                        {isDone ? (
-                          <button onClick={e => { e.stopPropagation(); undoDone(task); }}
-                            style={{ background:'rgba(255,255,255,0.1)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'rgba(255,255,255,0.5)', fontSize:10 }}>
-                            ↩ בטל
-                          </button>
-                        ) : <>
-                          <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
-                            style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'inherit', fontSize:11 }}>
-                            {isActive ? '⏸' : '▶'}
-                          </button>
+                        <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.3)' : p.color, fontWeight:600, flexShrink:0 }}>
+                          {fmtMin(mins)}
+                        </span>
+                        {(isActive || isPaused) && (
+                          <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', flexShrink:0 }}>
+                            {formatElapsed(elapsed)}{overTime ? '⚠️' : ''}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      /* ── Full: multi-row ── */
+                      <div style={{ display:'flex', flexDirection:'column', gap:3, height:'100%' }}>
+                        <span style={{ fontSize:12, fontWeight:600, lineHeight:1.3, textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.45)' : 'white', overflow:'hidden' }}>
+                          {task.title}
+                        </span>
+                        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                          <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.3)' : p.color, fontWeight:600 }}>🎯 {fmtMin(mins)}</span>
                           {(isActive || isPaused) && (
-                            <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
-                              style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'rgba(252,165,165,0.7)', fontSize:11 }}>
-                              ↺
-                            </button>
+                            <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:600 }}>
+                              ⏱ {formatElapsed(elapsed)}{overTime ? ' ⚠️' : ''}
+                            </span>
                           )}
-                          <button onClick={e => { e.stopPropagation(); markDone(task); }}
-                            style={{ background:'rgba(74,222,128,0.15)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'#4ade80', fontSize:11 }}>
-                            ✓
-                          </button>
-                        </>}
+                          {isDone && actual > 0 && (
+                            <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>⏱ {fmtMin(actual)} בפועל</span>
+                          )}
+                        </div>
+                        <div style={{ marginTop:'auto' }}>{actionBtns}</div>
                       </div>
                     )}
                   </div>
