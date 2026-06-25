@@ -409,7 +409,7 @@ export default function TaskManager() {
                     onDragStart={() => onDragStart(task.id)}
                     onDragEnd={onDragEnd}
                     style={{
-                      position:'absolute', top, left:52, right:8, height:heightPx,
+                      position:'absolute', top, left:8, right:52, height:heightPx,
                       background: isDone ? 'rgba(255,255,255,0.03)' : `${p.color}12`,
                       border: `1px solid ${isDone ? 'rgba(255,255,255,0.07)' : p.color+'40'}`,
                       borderRight: `3px solid ${p.color}`,
