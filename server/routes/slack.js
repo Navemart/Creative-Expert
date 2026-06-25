@@ -94,7 +94,15 @@ router.post('/deals', async (req, res) => {
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ channel, text, unfurl_links: false }),
+      body: JSON.stringify({
+        channel,
+        text,
+        unfurl_links: false,
+        blocks: [
+          { type: 'section', text: { type: 'mrkdwn', text } },
+          { type: 'image', image_url: 'https://media2.giphy.com/media/JpG2A9P3dPHXaTYrwu/giphy.gif', alt_text: 'cha-ching!' },
+        ],
+      }),
     });
 
     const data = await response.json();
