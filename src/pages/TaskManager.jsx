@@ -4,32 +4,41 @@ import { supabase } from '../lib/supabase.js';
 import { useDialog } from '../components/Dialog.jsx';
 
 const PRIORITIES = {
-  urgent_important: { label: 'דחוף + חשוב',        color: '#ef4444', emoji: '🔴' },
-  important:        { label: 'חשוב, לא דחוף',       color: '#F5C118', emoji: '🟡' },
-  urgent:           { label: 'דחוף, לא חשוב',       color: '#3b82f6', emoji: '🔵' },
-  low:              { label: 'לא דחוף ולא חשוב',    color: 'rgba(255,255,255,0.4)', emoji: '⚪' },
+  urgent_important: { label: 'דחוף + חשוב',      color: '#ef4444', emoji: '🔴' },
+  important:        { label: 'חשוב, לא דחוף',     color: '#F5C118', emoji: '🟡' },
+  urgent:           { label: 'דחוף, לא חשוב',     color: '#3b82f6', emoji: '🔵' },
+  low:              { label: 'לא דחוף ולא חשוב',  color: 'rgba(255,255,255,0.4)', emoji: '⚪' },
 };
 
-const CATEGORIES    = ['עסק', 'שיווק', 'לקוחות'];
+const CATEGORIES     = ['עסק', 'שיווק', 'לקוחות'];
 const MINUTE_PRESETS = [25, 30, 45, 60, 90, 120];
-const EMPTY_MODAL   = { title: '', category: 'עסק', priority: 'important', estimated_minutes: 30, due_date: '', notes: '' };
+const EMPTY_MODAL    = { title:'', category:'עסק', priority:'important', estimated_minutes:30, due_date:'', notes:'' };
+const START_HOUR     = 5;
+const END_HOUR       = 23;
+const SLOT_HEIGHT    = 48; // px per 30-min slot
 
 function generateSlots() {
-  const slots = [];
-  for (let h = 5; h < 23; h++)
+  const s = [];
+  for (let h = START_HOUR; h < END_HOUR; h++)
     for (const m of [0, 30])
-      slots.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
-  return slots;
+      s.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);
+  return s;
 }
 const TIME_SLOTS = generateSlots();
 
+function slotIndex(slot) {
+  const [h, m] = slot.split(':').map(Number);
+  return (h - START_HOUR) * 2 + (m === 30 ? 1 : 0);
+}
+
 function toDateString(d) { return d.toISOString().split('T')[0]; }
 function formatHebrewDate(d) {
-  return d.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString('he-IL', { weekday:'long', day:'numeric', month:'long' });
 }
 function formatElapsed(s) {
   return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 }
+function fmtMin(m) { return m >= 60 ? `${Math.floor(m/60)}ש' ${m%60>0?m%60+"′":''}`.trim() : `${m}′`; }
 
 const labelStyle = { display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:500 };
 const inputStyle = {
@@ -42,34 +51,35 @@ const navBtnStyle = {
   borderRadius:6, width:28, height:28, cursor:'pointer', color:'inherit',
   fontSize:16, display:'flex', alignItems:'center', justifyContent:'center', padding:0,
 };
-function toggleBtnStyle(active) {
+function toggleBtnStyle(active, color) {
   return {
-    padding:'6px 14px', borderRadius:8, border:'1px solid rgba(255,255,255,0.15)',
-    background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
-    color:'inherit', cursor:'pointer', fontSize:13, fontWeight: active ? 600 : 400,
+    padding:'6px 14px', borderRadius:8, border:`1px solid ${color ? color+'55' : 'rgba(255,255,255,0.15)'}`,
+    background: active ? (color ? color+'22' : 'rgba(255,255,255,0.15)') : 'transparent',
+    color: active && color ? color : 'inherit',
+    cursor:'pointer', fontSize:13, fontWeight: active ? 600 : 400,
     display:'flex', alignItems:'center', gap:6,
   };
 }
 
 export default function TaskManager() {
-  const { user }  = useUser();
-  const userId    = user?.id;
+  const { user }    = useUser();
+  const userId      = user?.id;
   const { confirm } = useDialog();
 
   const [tasks,          setTasks]          = useState([]);
   const [selectedDate,   setSelectedDate]   = useState(new Date());
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [bankTab,        setBankTab]        = useState('bank'); // 'bank' | 'done'
+  const [bankTab,        setBankTab]        = useState('bank');
   const [showModal,      setShowModal]      = useState(false);
-  const [editingTask,    setEditingTask]     = useState(null); // task being edited
+  const [editingTask,    setEditingTask]     = useState(null);
   const [modalData,      setModalData]      = useState(EMPTY_MODAL);
   const [activeTimer,    setActiveTimer]    = useState(null);
-  const [elapsed,        setElapsed]        = useState(0);
+  const [taskElapsed,    setTaskElapsed]    = useState({}); // { [taskId]: seconds }
   const [dragOverSlot,   setDragOverSlot]   = useState(null);
-  const timerRef      = useRef(null);
-  const dragTaskId    = useRef(null);
-  const lastTimerTask = useRef(null);
+  const [isDragging,     setIsDragging]     = useState(false);
+  const timerRef   = useRef(null);
+  const dragTaskId = useRef(null);
 
   const todayStr    = toDateString(new Date());
   const selectedStr = toDateString(selectedDate);
@@ -77,12 +87,12 @@ export default function TaskManager() {
   useEffect(() => { if (userId) loadTasks(); }, [userId]);
 
   async function loadTasks() {
-    const { data } = await supabase.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending: false });
+    const { data } = await supabase.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending:false });
     if (data) { setTasks(data); runDailyReset(data); }
   }
 
   async function runDailyReset(data) {
-    const stale = data.filter(t => t.status === 'scheduled' && t.scheduled_date && t.scheduled_date < todayStr);
+    const stale = data.filter(t => t.status==='scheduled' && t.scheduled_date && t.scheduled_date < todayStr);
     if (!stale.length) return;
     await Promise.all(stale.map(t =>
       supabase.from('tasks').update({ status:'returned', returned_from:t.scheduled_date, scheduled_date:null, scheduled_slot:null }).eq('id', t.id)
@@ -93,31 +103,40 @@ export default function TaskManager() {
       : t));
   }
 
+  // Timer interval
   useEffect(() => {
-    if (activeTimer) { timerRef.current = setInterval(() => setElapsed(e => e+1), 1000); }
-    else             { clearInterval(timerRef.current); }
+    if (activeTimer) {
+      timerRef.current = setInterval(() => {
+        setTaskElapsed(prev => ({ ...prev, [activeTimer]: (prev[activeTimer] || 0) + 1 }));
+      }, 1000);
+    } else {
+      clearInterval(timerRef.current);
+    }
     return () => clearInterval(timerRef.current);
   }, [activeTimer]);
 
   function toggleTimer(taskId) {
     if (activeTimer === taskId) {
-      // pause — keep elapsed
-      setActiveTimer(null);
+      setActiveTimer(null); // pause, keep elapsed
     } else {
-      // start or resume
-      if (lastTimerTask.current !== taskId) setElapsed(0); // fresh task
-      lastTimerTask.current = taskId;
+      // if switching to different task, stop current but keep its elapsed
       setActiveTimer(taskId);
     }
   }
-  async function resetTimer() {
+
+  async function resetTimer(taskId) {
     const ok = await confirm('האם לאפס את הטיימר?', { title:'איפוס טיימר', confirmText:'אפס', danger:false });
-    if (ok) { setActiveTimer(null); setElapsed(0); lastTimerTask.current = null; }
+    if (ok) {
+      setActiveTimer(null);
+      setTaskElapsed(prev => ({ ...prev, [taskId]: 0 }));
+    }
   }
 
   async function markDone(task) {
-    const actual = Math.round((activeTimer === task.id ? elapsed : 0) / 60);
-    if (activeTimer === task.id) { clearInterval(timerRef.current); setActiveTimer(null); setElapsed(0); lastTimerTask.current = null; }
+    const elapsedSec = taskElapsed[task.id] || 0;
+    const actual     = Math.round(elapsedSec / 60);
+    if (activeTimer === task.id) setActiveTimer(null);
+    setTaskElapsed(prev => { const n = {...prev}; delete n[task.id]; return n; });
     const updates = { status:'done', actual_minutes:(task.actual_minutes||0)+actual, completed_at:new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
@@ -137,67 +156,42 @@ export default function TaskManager() {
   }
 
   async function deleteTask(taskId) {
-    const ok = await confirm({ title:'מחיקת משימה', message:'בטוח שרוצה למחוק את המשימה?', confirmLabel:'מחק', cancelLabel:'ביטול' });
+    const ok = await confirm('האם למחוק את המשימה?', { title:'מחיקת משימה', confirmText:'מחק', danger:true });
     if (!ok) return;
     await supabase.from('tasks').delete().eq('id', taskId);
     setTasks(prev => prev.filter(t => t.id !== taskId));
   }
 
-  function openCreate() {
-    setEditingTask(null);
-    setModalData(EMPTY_MODAL);
-    setShowModal(true);
-  }
-
+  function openCreate() { setEditingTask(null); setModalData(EMPTY_MODAL); setShowModal(true); }
   function openEdit(task) {
     setEditingTask(task);
-    setModalData({
-      title:             task.title,
-      category:          task.category,
-      priority:          task.priority,
-      estimated_minutes: task.estimated_minutes || 30,
-      due_date:          task.due_date || '',
-      notes:             task.notes || '',
-    });
+    setModalData({ title:task.title, category:task.category, priority:task.priority, estimated_minutes:task.estimated_minutes||30, due_date:task.due_date||'', notes:task.notes||'' });
     setShowModal(true);
   }
 
   async function saveModal() {
     if (!modalData.title.trim()) return;
     if (editingTask) {
-      const updates = {
-        title:             modalData.title.trim(),
-        category:          modalData.category,
-        priority:          modalData.priority,
-        estimated_minutes: modalData.estimated_minutes || null,
-        due_date:          modalData.due_date || null,
-        notes:             modalData.notes || null,
-      };
+      const updates = { title:modalData.title.trim(), category:modalData.category, priority:modalData.priority, estimated_minutes:modalData.estimated_minutes||null, due_date:modalData.due_date||null, notes:modalData.notes||null };
       const { error } = await supabase.from('tasks').update(updates).eq('id', editingTask.id);
-      if (error) { alert('שגיאה: ' + error.message); return; }
+      if (error) { alert('שגיאה: '+error.message); return; }
       setTasks(prev => prev.map(t => t.id===editingTask.id ? {...t,...updates} : t));
     } else {
-      const payload = {
-        user_id: userId, title: modalData.title.trim(), category: modalData.category,
-        priority: modalData.priority, estimated_minutes: modalData.estimated_minutes || null,
-        due_date: modalData.due_date || null, notes: modalData.notes || null,
-        status: 'bank', actual_minutes: 0, created_at: new Date().toISOString(),
-      };
+      const payload = { user_id:userId, title:modalData.title.trim(), category:modalData.category, priority:modalData.priority, estimated_minutes:modalData.estimated_minutes||null, due_date:modalData.due_date||null, notes:modalData.notes||null, status:'bank', actual_minutes:0, created_at:new Date().toISOString() };
       const { data, error } = await supabase.from('tasks').insert(payload).select().single();
-      if (error) { alert('שגיאה: ' + error.message); return; }
+      if (error) { alert('שגיאה: '+error.message); return; }
       if (data) setTasks(prev => [data, ...prev]);
     }
-    setShowModal(false);
-    setEditingTask(null);
-    setModalData(EMPTY_MODAL);
+    setShowModal(false); setEditingTask(null); setModalData(EMPTY_MODAL);
   }
 
-  function onDragStart(taskId) { dragTaskId.current = taskId; }
+  function onDragStart(taskId) { dragTaskId.current = taskId; setIsDragging(true); }
+  function onDragEnd() { setIsDragging(false); dragTaskId.current = null; setDragOverSlot(null); }
 
   async function dropOnSlot(slot) {
     const taskId = dragTaskId.current;
     if (!taskId) return;
-    dragTaskId.current = null;
+    dragTaskId.current = null; setIsDragging(false); setDragOverSlot(null);
     const updates = { scheduled_date:selectedStr, scheduled_slot:slot, status:'scheduled' };
     await supabase.from('tasks').update(updates).eq('id', taskId);
     setTasks(prev => prev.map(t => t.id===taskId ? {...t,...updates} : t));
@@ -206,7 +200,7 @@ export default function TaskManager() {
   async function dropOnBank() {
     const taskId = dragTaskId.current;
     if (!taskId) return;
-    dragTaskId.current = null;
+    dragTaskId.current = null; setIsDragging(false);
     const task = tasks.find(t => t.id===taskId);
     if (!task || task.status==='bank') return;
     const updates = { status:'bank', scheduled_date:null, scheduled_slot:null };
@@ -219,16 +213,14 @@ export default function TaskManager() {
     .filter(t => categoryFilter==='all' || t.category===categoryFilter)
     .filter(t => priorityFilter==='all' || t.priority===priorityFilter);
 
-  const doneBankTasks = tasks.filter(t => t.status==='done');
-
-  const calendarTasks = tasks.filter(t =>
-    t.scheduled_date===selectedStr && (t.status==='scheduled'||t.status==='done')
-  );
-  const doneToday    = calendarTasks.filter(t => t.status==='done');
-  const totalActual  = doneToday.reduce((s,t) => s+(t.actual_minutes||0), 0);
-  const totalPlanned = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
-
-  const showDragHint = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
+  const doneBankTasks  = tasks.filter(t => t.status==='done');
+  const calendarTasks  = tasks.filter(t => t.scheduled_date===selectedStr && (t.status==='scheduled'||t.status==='done'));
+  const doneToday      = calendarTasks.filter(t => t.status==='done');
+  const totalActual    = doneToday.reduce((s,t) => s+(t.actual_minutes||0), 0);
+  const totalPlanned   = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
+  const showDragHint   = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
+  const totalSlots     = (END_HOUR - START_HOUR) * 2;
+  const calendarHeight = totalSlots * SLOT_HEIGHT;
 
   function prevDay() { setSelectedDate(d => { const n=new Date(d); n.setDate(n.getDate()-1); return n; }); }
   function nextDay() { setSelectedDate(d => { const n=new Date(d); n.setDate(n.getDate()+1); return n; }); }
@@ -238,14 +230,12 @@ export default function TaskManager() {
       <div style={{ display:'flex', gap:16, flex:1, minHeight:0, padding:16 }}>
 
         {/* ── Bank panel ── */}
-        <div
-          style={{ width:'40%', display:'flex', flexDirection:'column', background:'rgb(var(--bg-surface))', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden' }}
-          onDragOver={e => e.preventDefault()}
-          onDrop={dropOnBank}
-        >
+        <div style={{ width:'38%', display:'flex', flexDirection:'column', background:'rgb(var(--bg-surface))', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden' }}
+          onDragOver={e => e.preventDefault()} onDrop={dropOnBank}>
+
           <div style={{ padding:'16px 16px 0' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-              <div style={{ display:'flex', gap:0 }}>
+              <div style={{ display:'flex', gap:2 }}>
                 {[['bank','בנק משימות'],['done','הושלמו']].map(([k,l]) => (
                   <button key={k} onClick={() => setBankTab(k)} style={{
                     padding:'6px 14px', borderRadius:8, border:'none', cursor:'pointer',
@@ -256,30 +246,23 @@ export default function TaskManager() {
                 ))}
               </div>
               {bankTab==='bank' && (
-                <button onClick={openCreate} className="btn-yellow" style={{
-                  background:'#F5C118', border:'none', borderRadius:8,
-                  padding:'6px 14px', fontWeight:600, cursor:'pointer', fontSize:13,
-                }}>+ משימה חדשה</button>
+                <button onClick={openCreate} className="btn-yellow" style={{ background:'#F5C118', border:'none', borderRadius:8, padding:'6px 14px', fontWeight:600, cursor:'pointer', fontSize:13 }}>+ משימה חדשה</button>
               )}
             </div>
 
             {bankTab==='bank' && <>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
                 {['all',...CATEGORIES].map(c => (
-                  <button key={c} onClick={() => setCategoryFilter(c)} style={{
-                    padding:'4px 10px', borderRadius:20, border:'1px solid rgba(255,255,255,0.15)',
-                    background: categoryFilter===c ? 'rgba(255,255,255,0.15)' : 'transparent',
-                    color:'inherit', cursor:'pointer', fontSize:12, fontWeight: categoryFilter===c ? 600 : 400,
-                  }}>{c==='all' ? 'הכל' : c}</button>
+                  <button key={c} onClick={() => setCategoryFilter(c)} style={{ padding:'4px 10px', borderRadius:20, border:'1px solid rgba(255,255,255,0.15)', background: categoryFilter===c ? 'rgba(255,255,255,0.15)' : 'transparent', color:'inherit', cursor:'pointer', fontSize:12, fontWeight: categoryFilter===c ? 600 : 400 }}>
+                    {c==='all' ? 'הכל' : c}
+                  </button>
                 ))}
               </div>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
                 {['all',...Object.keys(PRIORITIES)].map(p => (
-                  <button key={p} onClick={() => setPriorityFilter(p)} style={{
-                    padding:'4px 10px', borderRadius:20, border:'1px solid rgba(255,255,255,0.15)',
-                    background: priorityFilter===p ? 'rgba(255,255,255,0.15)' : 'transparent',
-                    color:'inherit', cursor:'pointer', fontSize:12, fontWeight: priorityFilter===p ? 600 : 400,
-                  }}>{p==='all' ? 'כל העדיפויות' : PRIORITIES[p].emoji}</button>
+                  <button key={p} onClick={() => setPriorityFilter(p)} style={{ padding:'4px 10px', borderRadius:20, border:'1px solid rgba(255,255,255,0.15)', background: priorityFilter===p ? 'rgba(255,255,255,0.15)' : 'transparent', color:'inherit', cursor:'pointer', fontSize:12, fontWeight: priorityFilter===p ? 600 : 400 }}>
+                    {p==='all' ? 'כל העדיפויות' : PRIORITIES[p].emoji}
+                  </button>
                 ))}
               </div>
             </>}
@@ -287,21 +270,17 @@ export default function TaskManager() {
 
           <div style={{ flex:1, overflowY:'auto', padding:'0 16px 16px' }}>
             {bankTab==='bank' && <>
-              {bankTasks.length===0 && (
-                <div style={{ textAlign:'center', color:'rgba(255,255,255,0.4)', marginTop:40, fontSize:14 }}>אין משימות בבנק</div>
-              )}
+              {bankTasks.length===0 && <div style={{ textAlign:'center', color:'rgba(255,255,255,0.4)', marginTop:40, fontSize:14 }}>אין משימות בבנק</div>}
               {bankTasks.map(task => (
                 <TaskCard key={task.id} task={task}
                   onDragStart={() => onDragStart(task.id)}
+                  onDragEnd={onDragEnd}
                   onEdit={() => openEdit(task)}
                   onDelete={() => deleteTask(task.id)} />
               ))}
             </>}
-
             {bankTab==='done' && <>
-              {doneBankTasks.length===0 && (
-                <div style={{ textAlign:'center', color:'rgba(255,255,255,0.4)', marginTop:40, fontSize:14 }}>אין משימות שהושלמו</div>
-              )}
+              {doneBankTasks.length===0 && <div style={{ textAlign:'center', color:'rgba(255,255,255,0.4)', marginTop:40, fontSize:14 }}>אין משימות שהושלמו</div>}
               {doneBankTasks.map(task => (
                 <DoneCard key={task.id} task={task} onRestore={() => restoreTask(task.id)} onDelete={() => deleteTask(task.id)} />
               ))}
@@ -310,268 +289,246 @@ export default function TaskManager() {
         </div>
 
         {/* ── Calendar panel ── */}
-        <div style={{ width:'60%', display:'flex', flexDirection:'column', background:'rgb(var(--bg-surface))', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden' }}>
-          <div style={{ padding:'16px 16px 0' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+        <div style={{ flex:1, display:'flex', flexDirection:'column', background:'rgb(var(--bg-surface))', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', overflow:'hidden' }}>
+          <div style={{ padding:'16px 16px 8px', flexShrink:0 }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                 <button onClick={prevDay} style={navBtnStyle}>›</button>
                 <span style={{ fontWeight:700, fontSize:15 }}>{formatHebrewDate(selectedDate)}</span>
                 <button onClick={nextDay} style={{ ...navBtnStyle, transform:'scaleX(-1)' }}>›</button>
               </div>
               {selectedStr!==todayStr && (
-                <button onClick={() => setSelectedDate(new Date())} style={{
-                  padding:'4px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.2)',
-                  background:'transparent', color:'inherit', cursor:'pointer', fontSize:12,
-                }}>היום</button>
+                <button onClick={() => setSelectedDate(new Date())} style={{ padding:'4px 12px', borderRadius:8, border:'1px solid rgba(255,255,255,0.2)', background:'transparent', color:'inherit', cursor:'pointer', fontSize:12 }}>היום</button>
               )}
             </div>
-
             {showDragHint && (
-              <div style={{
-                background:'rgba(245,193,24,0.08)', border:'1px solid rgba(245,193,24,0.25)',
-                borderRadius:10, padding:'8px 12px', marginBottom:10,
-                fontSize:13, color:'rgba(255,255,255,0.7)', display:'flex', alignItems:'center', gap:8,
-              }}>
-                <span>💡</span>
-                <span>גרור משימות מהבנק ישירות לשעה הרצויה ביומן</span>
+              <div style={{ background:'rgba(245,193,24,0.08)', border:'1px solid rgba(245,193,24,0.25)', borderRadius:10, padding:'8px 12px', marginTop:10, fontSize:13, color:'rgba(255,255,255,0.7)', display:'flex', alignItems:'center', gap:8 }}>
+                <span>💡</span><span>גרור משימות מהבנק ישירות לשעה הרצויה ביומן</span>
               </div>
             )}
           </div>
 
-          <div style={{ flex:1, overflowY:'auto', padding:'0 16px' }}>
-            {TIME_SLOTS.map(slot => {
-              const slotTasks = calendarTasks.filter(t => t.scheduled_slot===slot);
-              return (
+          {/* Calendar grid */}
+          <div style={{ flex:1, overflowY:'auto', position:'relative' }}>
+            <div style={{ position:'relative', height: calendarHeight }}>
+
+              {/* Time grid rows (drop zones) */}
+              {TIME_SLOTS.map((slot, idx) => (
                 <div key={slot}
                   style={{
-                    display:'flex', gap:8, minHeight:44,
-                    borderBottom:'1px solid rgba(255,255,255,0.05)',
-                    background: dragOverSlot===slot ? 'rgba(245,193,24,0.06)' : 'transparent',
+                    position:'absolute', top: idx * SLOT_HEIGHT, left:0, right:0, height: SLOT_HEIGHT,
+                    display:'flex', borderBottom:'1px solid rgba(255,255,255,0.05)',
+                    background: dragOverSlot===slot ? 'rgba(245,193,24,0.07)' : 'transparent',
                     transition:'background 0.1s',
                   }}
                   onDragOver={e => { e.preventDefault(); setDragOverSlot(slot); }}
                   onDragLeave={() => setDragOverSlot(null)}
-                  onDrop={() => { setDragOverSlot(null); dropOnSlot(slot); }}
+                  onDrop={() => dropOnSlot(slot)}
                 >
-                  <div style={{ width:42, flexShrink:0, fontSize:11, color:'rgba(255,255,255,0.35)', paddingTop:6, textAlign:'left' }}>
-                    {slot}
+                  <div style={{ width:44, flexShrink:0, fontSize:11, color: slot.endsWith(':00') ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)', paddingTop:4, paddingRight:8, textAlign:'right', userSelect:'none' }}>
+                    {slot.endsWith(':00') ? slot.replace(':00','') : '·'}
                   </div>
-                  <div style={{ flex:1, padding:'4px 0', display:'flex', flexDirection:'column', gap:4 }}>
-                    {slotTasks.map(task => (
-                      <CalendarTask key={task.id} task={task}
-                        activeTimer={activeTimer} elapsed={elapsed}
-                        onDragStart={() => onDragStart(task.id)}
-                        onTimer={() => toggleTimer(task.id)}
-                        onReset={resetTimer}
-                        onDone={() => markDone(task)}
-                        onUndoDone={() => undoDone(task)} />
-                    ))}
-                  </div>
+                  {dragOverSlot===slot && (
+                    <div style={{ flex:1, display:'flex', alignItems:'center', fontSize:11, color:'rgba(245,193,24,0.6)', paddingRight:8 }}>
+                      שחרר כאן ← {slot}
+                    </div>
+                  )}
                 </div>
-              );
-            })}
+              ))}
+
+              {/* Task overlays — absolutely positioned */}
+              {calendarTasks.map(task => {
+                if (!task.scheduled_slot) return null;
+                const idx      = slotIndex(task.scheduled_slot);
+                const mins     = task.estimated_minutes || 30;
+                const heightPx = Math.max(SLOT_HEIGHT - 4, Math.round((mins / 30) * SLOT_HEIGHT) - 4);
+                const top      = idx * SLOT_HEIGHT + 2;
+                const p        = PRIORITIES[task.priority];
+                const isDone   = task.status === 'done';
+                const elapsed  = taskElapsed[task.id] || 0;
+                const isActive = activeTimer === task.id;
+                const isPaused = elapsed > 0 && !isActive;
+                const overTime = (isActive || isPaused) && task.estimated_minutes && elapsed > task.estimated_minutes * 60;
+                const actual   = task.actual_minutes || 0;
+
+                return (
+                  <div
+                    key={task.id}
+                    draggable={!isDone}
+                    onDragStart={() => { onDragStart(task.id); }}
+                    onDragEnd={onDragEnd}
+                    style={{
+                      position:'absolute', top, left:52, right:8, height:heightPx,
+                      background: isDone ? 'rgba(255,255,255,0.04)' : `${p.color}18`,
+                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.08)' : p.color+'55'}`,
+                      borderRight: `3px solid ${p.color}`,
+                      borderRadius:8, padding:'4px 8px', boxSizing:'border-box',
+                      display:'flex', flexDirection:'column', gap:2,
+                      opacity: isDone ? 0.6 : 1,
+                      cursor: isDone ? 'default' : 'grab',
+                      overflow:'hidden', zIndex:1,
+                      pointerEvents: isDragging && dragTaskId.current !== task.id ? 'none' : 'auto',
+                    }}
+                  >
+                    {/* Title row */}
+                    <div style={{ display:'flex', alignItems:'flex-start', gap:4, flex:1, minHeight:0 }}>
+                      <span style={{ fontSize:12, fontWeight:600, flex:1, lineHeight:1.3, textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.45)' : 'white', overflow:'hidden' }}>
+                        {task.title}
+                      </span>
+                    </div>
+
+                    {/* Time info */}
+                    <div style={{ display:'flex', alignItems:'center', gap:4, flexWrap:'wrap' }}>
+                      <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.35)' : p.color, fontWeight:600 }}>
+                        🎯 {fmtMin(mins)}
+                      </span>
+                      {(isActive || isPaused) && (
+                        <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:600 }}>
+                          ⏱ {formatElapsed(elapsed)}{overTime ? ' ⚠️' : ''}
+                        </span>
+                      )}
+                      {isDone && actual > 0 && (
+                        <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>⏱ {fmtMin(actual)} בפועל</span>
+                      )}
+                    </div>
+
+                    {/* Action buttons */}
+                    {heightPx > 36 && (
+                      <div style={{ display:'flex', gap:4, flexShrink:0 }}>
+                        {isDone ? (
+                          <button onClick={e => { e.stopPropagation(); undoDone(task); }}
+                            style={{ background:'rgba(255,255,255,0.1)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'rgba(255,255,255,0.5)', fontSize:10 }}>
+                            ↩ בטל
+                          </button>
+                        ) : <>
+                          <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
+                            style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'inherit', fontSize:11 }}>
+                            {isActive ? '⏸' : '▶'}
+                          </button>
+                          {(isActive || isPaused) && (
+                            <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
+                              style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'rgba(252,165,165,0.7)', fontSize:11 }}>
+                              ↺
+                            </button>
+                          )}
+                          <button onClick={e => { e.stopPropagation(); markDone(task); }}
+                            style={{ background:'rgba(74,222,128,0.15)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'#4ade80', fontSize:11 }}>
+                            ✓
+                          </button>
+                        </>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', gap:20, fontSize:13, color:'rgba(255,255,255,0.6)' }}>
-            <span>✅ {doneToday.length} משימות הושלמו</span>
-            <span>⏱ {totalActual} דק' בוצעו בפועל</span>
-            <span>🎯 {totalPlanned} דק' מתוכנן</span>
+          {/* Summary bar */}
+          <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', gap:20, fontSize:13, color:'rgba(255,255,255,0.6)', flexShrink:0 }}>
+            <span>✅ {doneToday.length} הושלמו</span>
+            <span>⏱ {fmtMin(totalActual)} בפועל</span>
+            <span>🎯 {fmtMin(totalPlanned)} מתוכנן</span>
           </div>
         </div>
       </div>
 
       {showModal && (
-        <TaskModal
-          data={modalData}
-          isEdit={!!editingTask}
-          onChange={setModalData}
+        <TaskModal data={modalData} isEdit={!!editingTask} onChange={setModalData}
           onSave={saveModal}
-          onClose={() => { setShowModal(false); setEditingTask(null); setModalData(EMPTY_MODAL); }}
-        />
+          onClose={() => { setShowModal(false); setEditingTask(null); setModalData(EMPTY_MODAL); }} />
       )}
     </div>
   );
 }
 
-function TaskCard({ task, onDragStart, onEdit, onDelete }) {
-  const p = PRIORITIES[task.priority];
-  const isReturned = task.status==='returned';
+function TaskCard({ task, onDragStart, onDragEnd, onEdit, onDelete }) {
+  const p          = PRIORITIES[task.priority];
+  const isReturned = task.status === 'returned';
   const isPastDue  = task.due_date && task.due_date < toDateString(new Date());
 
   return (
-    <div draggable onDragStart={onDragStart} style={{
+    <div draggable onDragStart={onDragStart} onDragEnd={onDragEnd} style={{
       background:'rgb(var(--bg-elevated))', borderRadius:12, padding:'10px 12px', marginBottom:8,
-      border:'1px solid rgba(255,255,255,0.08)',
-      borderRight: isReturned ? '3px solid #f97316' : `3px solid ${p.color}`,
+      border:'1px solid rgba(255,255,255,0.08)', borderRight: isReturned ? '3px solid #f97316' : `3px solid ${p.color}`,
       cursor:'grab',
     }}>
-      <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
         <span style={{ fontSize:14 }}>{p.emoji}</span>
         <span style={{ fontWeight:600, fontSize:14, flex:1 }}>{task.title}</span>
-        {isReturned && (
-          <span style={{ fontSize:10, background:'rgba(249,115,22,0.2)', color:'#f97316', borderRadius:4, padding:'2px 6px', whiteSpace:'nowrap' }}>↩ לא הושלם</span>
-        )}
-        <button onClick={e => { e.stopPropagation(); onEdit(); }} title="ערוך" style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.4)', fontSize:13, padding:'2px 4px' }}>✏️</button>
-        <button onClick={e => { e.stopPropagation(); onDelete(); }} title="מחק" style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:13, padding:'2px 4px' }}>🗑</button>
+        {isReturned && <span style={{ fontSize:10, background:'rgba(249,115,22,0.2)', color:'#f97316', borderRadius:4, padding:'2px 6px', whiteSpace:'nowrap' }}>↩ לא הושלם</span>}
+        <button onClick={e => { e.stopPropagation(); onEdit(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.4)', fontSize:13, padding:'2px 4px' }}>✏️</button>
+        <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:13, padding:'2px 4px' }}>🗑</button>
       </div>
       <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
         <span style={{ fontSize:11, background:'rgba(255,255,255,0.1)', borderRadius:4, padding:'2px 6px' }}>{task.category}</span>
-        {task.due_date && (
-          <span style={{ fontSize:11, color: isPastDue ? '#ef4444' : 'rgba(255,255,255,0.5)' }}>{task.due_date}</span>
-        )}
-        {task.estimated_minutes && (
-          <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{task.estimated_minutes} דק'</span>
-        )}
+        {task.due_date && <span style={{ fontSize:11, color: isPastDue ? '#ef4444' : 'rgba(255,255,255,0.5)' }}>{task.due_date}</span>}
+        {task.estimated_minutes && <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)' }}>{fmtMin(task.estimated_minutes)}</span>}
       </div>
     </div>
   );
 }
 
 function DoneCard({ task, onRestore, onDelete }) {
-  const p = PRIORITIES[task.priority];
+  const p      = PRIORITIES[task.priority];
+  const actual = task.actual_minutes || 0;
   return (
-    <div style={{
-      background:'rgb(var(--bg-elevated))', borderRadius:12, padding:'10px 12px', marginBottom:8,
-      border:'1px solid rgba(255,255,255,0.06)', borderRight:`3px solid ${p.color}`, opacity:0.7,
-    }}>
-      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+    <div style={{ background:'rgb(var(--bg-elevated))', borderRadius:12, padding:'10px 12px', marginBottom:8, border:'1px solid rgba(255,255,255,0.06)', borderRight:`3px solid ${p.color}`, opacity:0.7 }}>
+      <div style={{ display:'flex', alignItems:'center', gap:6 }}>
         <span style={{ fontSize:14 }}>✅</span>
         <span style={{ fontWeight:500, fontSize:14, flex:1, textDecoration:'line-through', color:'rgba(255,255,255,0.5)' }}>{task.title}</span>
-        <button onClick={onRestore} title="החזר לבנק" style={{
-          background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.1)',
-          borderRadius:6, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:11,
-        }}>↩ החזר</button>
+        <button onClick={onRestore} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:11 }}>↩ החזר</button>
         <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:13, padding:'2px 4px' }}>🗑</button>
       </div>
-      {task.actual_minutes > 0 && (
-        <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:4, paddingRight:22 }}>
-          {task.actual_minutes} דק' בפועל
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CalendarTask({ task, activeTimer, elapsed, onDragStart, onTimer, onReset, onDone, onUndoDone }) {
-  const p        = PRIORITIES[task.priority];
-  const isDone   = task.status==='done';
-  const isActive = activeTimer===task.id;
-  const overTime = isActive && task.estimated_minutes && elapsed > task.estimated_minutes*60;
-
-  return (
-    <div draggable={!isDone} onDragStart={onDragStart} style={{
-      background:'rgb(var(--bg-elevated))', borderRadius:8, padding:'6px 10px',
-      border:'1px solid rgba(255,255,255,0.08)', borderRight:`3px solid ${p.color}`,
-      display:'flex', alignItems:'center', gap:6,
-      opacity: isDone ? 0.55 : 1, cursor: isDone ? 'default' : 'grab',
-    }}>
-      <span style={{
-        flex:1, fontSize:13, fontWeight:500,
-        textDecoration: isDone ? 'line-through' : 'none',
-        color: isDone ? 'rgba(255,255,255,0.5)' : 'inherit',
-      }}>
-        {task.title}
-        {task.estimated_minutes && (
-          <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)', marginRight:6 }}>{task.estimated_minutes} דק'</span>
-        )}
-      </span>
-
-      {isActive && (
-        <span style={{
-          fontSize:12, color: overTime ? '#ef4444' : '#4ade80',
-          fontVariantNumeric:'tabular-nums', minWidth:44, textAlign:'center',
-        }}>{formatElapsed(elapsed)}</span>
-      )}
-
-      {isDone ? (
-        <button onClick={onUndoDone} title="בטל סימון" style={{
-          background:'rgba(255,255,255,0.08)', border:'none', borderRadius:6,
-          padding:'3px 8px', cursor:'pointer', color:'rgba(255,255,255,0.5)', fontSize:12,
-        }}>↩ בטל</button>
-      ) : <>
-        <button onClick={onTimer} title={isActive ? 'השהה' : 'הפעל טיימר'} style={{
-          background: isActive ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.1)',
-          border:'none', borderRadius:6, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:13,
-        }}>{isActive ? '⏸' : '▶'}</button>
-
-        {isActive && (
-          <button onClick={onReset} title="אפס טיימר" style={{
-            background:'rgba(255,255,255,0.08)', border:'none', borderRadius:6,
-            padding:'3px 8px', cursor:'pointer', color:'rgba(252,165,165,0.7)', fontSize:13,
-          }}>↺</button>
-        )}
-
-        <button onClick={onDone} title="סמן כבוצע" style={{
-          background:'rgba(74,222,128,0.15)', border:'none', borderRadius:6,
-          padding:'3px 8px', cursor:'pointer', color:'#4ade80', fontSize:13,
-        }}>✓</button>
-      </>}
+      {actual > 0 && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:4, paddingRight:22 }}>⏱ {fmtMin(actual)} בפועל</div>}
     </div>
   );
 }
 
 function TaskModal({ data, isEdit, onChange, onSave, onClose }) {
   function set(key, val) { onChange(prev => ({ ...prev, [key]:val })); }
-
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-      <div dir="rtl" style={{
-        background:'rgb(var(--bg-surface))', borderRadius:16, padding:24,
-        width:480, maxHeight:'90vh', overflowY:'auto', border:'1px solid rgba(255,255,255,0.1)',
-      }}>
+      <div dir="rtl" style={{ background:'rgb(var(--bg-surface))', borderRadius:16, padding:24, width:480, maxHeight:'90vh', overflowY:'auto', border:'1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ display:'flex', justifyContent:'space-between', marginBottom:20 }}>
           <span style={{ fontWeight:700, fontSize:16 }}>{isEdit ? 'עריכת משימה' : 'משימה חדשה'}</span>
           <button onClick={onClose} style={{ background:'none', border:'none', color:'inherit', cursor:'pointer', fontSize:18 }}>×</button>
         </div>
 
         <label style={labelStyle}>כותרת</label>
-        <input autoFocus value={data.title} onChange={e => set('title', e.target.value)}
-          onKeyDown={e => e.key==='Enter' && onSave()}
-          placeholder="שם המשימה..." style={inputStyle} />
+        <input autoFocus value={data.title} onChange={e => set('title', e.target.value)} onKeyDown={e => e.key==='Enter' && onSave()} placeholder="שם המשימה..." style={inputStyle} />
 
         <label style={labelStyle}>קטגוריה</label>
         <div style={{ display:'flex', gap:8, marginBottom:16 }}>
-          {CATEGORIES.map(c => (
-            <button key={c} onClick={() => set('category', c)} style={toggleBtnStyle(data.category===c)}>{c}</button>
-          ))}
+          {CATEGORIES.map(c => <button key={c} onClick={() => set('category', c)} style={toggleBtnStyle(data.category===c)}>{c}</button>)}
         </div>
 
         <label style={labelStyle}>עדיפות</label>
         <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:16 }}>
           {Object.entries(PRIORITIES).map(([k, v]) => (
-            <button key={k} onClick={() => set('priority', k)} style={{
-              ...toggleBtnStyle(data.priority===k), borderRight:`3px solid ${v.color}`,
-              textAlign:'right', justifyContent:'flex-start',
-            }}>{v.emoji} {v.label}</button>
+            <button key={k} onClick={() => set('priority', k)} style={{ ...toggleBtnStyle(data.priority===k, v.color), borderRight:`3px solid ${v.color}`, textAlign:'right', justifyContent:'flex-start' }}>
+              {v.emoji} {v.label}
+            </button>
           ))}
         </div>
 
         <label style={labelStyle}>זמן משוער</label>
         <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:16, alignItems:'center' }}>
-          {MINUTE_PRESETS.map(m => (
-            <button key={m} onClick={() => set('estimated_minutes', m)} style={toggleBtnStyle(data.estimated_minutes===m)}>{m} דק'</button>
-          ))}
-          <input type="number" value={data.estimated_minutes}
-            onChange={e => set('estimated_minutes', Number(e.target.value))}
-            style={{ ...inputStyle, width:80, marginBottom:0 }} placeholder="דק'" />
+          {MINUTE_PRESETS.map(m => <button key={m} onClick={() => set('estimated_minutes', m)} style={toggleBtnStyle(data.estimated_minutes===m)}>{fmtMin(m)}</button>)}
+          <input type="number" value={data.estimated_minutes} onChange={e => set('estimated_minutes', Number(e.target.value))} style={{ ...inputStyle, width:80, marginBottom:0 }} placeholder="דק'" />
         </div>
 
         <label style={labelStyle}>תאריך יעד</label>
         <input type="date" value={data.due_date} onChange={e => set('due_date', e.target.value)} style={inputStyle} />
 
         <label style={labelStyle}>הערות</label>
-        <textarea value={data.notes} onChange={e => set('notes', e.target.value)}
-          rows={3} style={{ ...inputStyle, resize:'vertical' }} placeholder="הערות נוספות..." />
+        <textarea value={data.notes} onChange={e => set('notes', e.target.value)} rows={3} style={{ ...inputStyle, resize:'vertical' }} placeholder="הערות נוספות..." />
 
         <div style={{ display:'flex', gap:8, justifyContent:'flex-start', marginTop:4 }}>
-          <button onClick={onSave} className="btn-yellow" style={{
-            background:'#F5C118', border:'none', borderRadius:8,
-            padding:'8px 24px', fontWeight:700, cursor:'pointer',
-          }}>{isEdit ? 'עדכן' : 'שמור'}</button>
-          <button onClick={onClose} style={{
-            background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)',
-            borderRadius:8, padding:'8px 16px', color:'inherit', cursor:'pointer',
-          }}>ביטול</button>
+          <button onClick={onSave} className="btn-yellow" style={{ background:'#F5C118', border:'none', borderRadius:8, padding:'8px 24px', fontWeight:700, cursor:'pointer' }}>
+            {isEdit ? 'עדכן' : 'שמור'}
+          </button>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'8px 16px', color:'inherit', cursor:'pointer' }}>ביטול</button>
         </div>
       </div>
     </div>
