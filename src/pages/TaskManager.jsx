@@ -289,7 +289,7 @@ export default function TaskManager() {
                   onDrop={() => dropOnSlot(slot)}
                 >
                   <div style={{ width:44, flexShrink:0, fontSize:11, color: slot.endsWith(':00') ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)', paddingTop:4, paddingRight:8, textAlign:'right', userSelect:'none' }}>
-                    {slot.endsWith(':00') ? String(parseInt(slot)) : ''}
+                    {slot.endsWith(':00') ? `${parseInt(slot)}:00` : ''}
                   </div>
                   {dragOverSlot===slot && (
                     <div style={{ flex:1, display:'flex', alignItems:'center', fontSize:11, color:'rgba(245,193,24,0.6)', paddingRight:8 }}>
