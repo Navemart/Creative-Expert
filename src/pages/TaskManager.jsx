@@ -114,11 +114,17 @@ export default function TaskManager() {
     return () => clearInterval(timerRef.current);
   }, [activeTimer]);
 
-  function toggleTimer(taskId) {
+  async function toggleTimer(taskId) {
     if (activeTimer === taskId) {
-      setActiveTimer(null); // pause, keep elapsed
+      // pause — save elapsed to actual_minutes
+      setActiveTimer(null);
+      const elapsedSec = taskElapsed[taskId] || 0;
+      const mins = Math.round(elapsedSec / 60);
+      if (mins > 0) {
+        await supabase.from('tasks').update({ actual_minutes: mins }).eq('id', taskId);
+        setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: mins } : t));
+      }
     } else {
-      // if switching to different task, stop current but keep its elapsed
       setActiveTimer(taskId);
     }
   }
@@ -215,7 +221,11 @@ export default function TaskManager() {
   const doneBankTasks  = tasks.filter(t => t.status==='done');
   const calendarTasks  = tasks.filter(t => t.scheduled_date===selectedStr && (t.status==='scheduled'||t.status==='done'));
   const doneToday      = calendarTasks.filter(t => t.status==='done');
-  const totalActual    = doneToday.reduce((s,t) => s+(t.actual_minutes||0), 0);
+  const totalActual    = calendarTasks.reduce((s,t) => {
+    const saved   = t.actual_minutes || 0;
+    const running = Math.round((taskElapsed[t.id] || 0) / 60);
+    return s + Math.max(saved, running);
+  }, 0);
   const totalPlanned   = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
   const showDragHint   = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
   const totalSlots     = (END_HOUR - START_HOUR) * 2;
@@ -362,26 +372,26 @@ export default function TaskManager() {
                   </button>
                 );
 
-                // ── Timer side
+                // ── Timer side (far left in RTL)
                 const timerSide = (
-                  <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
                     {(isActive || isPaused) && (
                       <>
-                        <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:700, minWidth:36 }}>
-                          {formatElapsed(elapsed)}{overTime ? '⚠' : ''}
+                        <span style={{ fontSize:13, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:700, minWidth:44 }}>
+                          {formatElapsed(elapsed)}{overTime ? ' ⚠' : ''}
                         </span>
                         <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
-                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:12, padding:'1px 3px' }}>↺</button>
+                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:13, padding:'1px 4px' }}>↺</button>
                       </>
                     )}
-                    <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.55)', fontWeight:600, whiteSpace:'nowrap' }}>
-                      {fmtMin(mins)}
-                    </span>
                     {!isDone && (
                       <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
-                        style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.15)'}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', color:'inherit', fontSize:11, display:'flex', alignItems:'center', gap:3 }}>
+                        style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.15)'}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', color:'inherit', fontSize:13 }}>
                         {isActive ? '⏸' : '▶'}
                       </button>
+                    )}
+                    {isDone && actual > 0 && (
+                      <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', whiteSpace:'nowrap' }}>{fmtMin(actual)} בפועל</span>
                     )}
                   </div>
                 );
@@ -406,13 +416,14 @@ export default function TaskManager() {
                     }}
                   >
                     {checkbox}
-                    <span style={{
-                      flex:1, fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis',
-                      textDecoration: isDone ? 'line-through' : 'none',
-                      color: isDone ? 'rgba(255,255,255,0.4)' : 'white',
-                    }}>
-                      {task.title}
-                    </span>
+                    <div style={{ flex:1, display:'flex', alignItems:'center', gap:8, overflow:'hidden' }}>
+                      <span style={{ fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.4)' : 'white' }}>
+                        {task.title}
+                      </span>
+                      <span style={{ fontSize:13, fontWeight:600, color: isDone ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.5)', whiteSpace:'nowrap', flexShrink:0 }}>
+                        {fmtMin(mins)}
+                      </span>
+                    </div>
                     {timerSide}
                   </div>
                 );
@@ -482,7 +493,22 @@ function DoneCard({ task, onRestore, onDelete }) {
 }
 
 function TaskModal({ data, isEdit, onChange, onSave, onClose }) {
+  const [timeUnit, setTimeUnit] = useState('minutes');
+  const [timeValue, setTimeValue] = useState(data.estimated_minutes || 30);
+
   function set(key, val) { onChange(prev => ({ ...prev, [key]:val })); }
+
+  function handleTimeChange(val) {
+    setTimeValue(val);
+    const mins = timeUnit === 'hours' ? Math.round(val * 60) : Math.round(val);
+    set('estimated_minutes', mins || null);
+  }
+
+  function handleUnitSwitch(unit) {
+    setTimeUnit(unit);
+    const mins = unit === 'hours' ? Math.round(timeValue * 60) : Math.round(timeValue);
+    set('estimated_minutes', mins || null);
+  }
   return (
     <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
       <div dir="rtl" style={{ background:'rgb(var(--bg-surface))', borderRadius:16, padding:24, width:480, maxHeight:'90vh', overflowY:'auto', border:'1px solid rgba(255,255,255,0.1)' }}>
@@ -508,12 +534,21 @@ function TaskModal({ data, isEdit, onChange, onSave, onClose }) {
           ))}
         </div>
 
-        <label style={labelStyle}>כמה דקות תוקצב למשימה?</label>
+        <label style={labelStyle}>כמה זמן תוקצב למשימה?</label>
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-          <input type="number" min="1" value={data.estimated_minutes}
-            onChange={e => set('estimated_minutes', Number(e.target.value))}
-            style={{ ...inputStyle, width:100, marginBottom:0 }} placeholder="30" />
-          <span style={{ fontSize:13, color:'rgba(255,255,255,0.5)', whiteSpace:'nowrap' }}>דקות</span>
+          {/* Unit toggle */}
+          <div style={{ display:'flex', borderRadius:8, overflow:'hidden', border:'1px solid rgba(255,255,255,0.15)', flexShrink:0 }}>
+            {[['minutes','דקות'],['hours','שעות']].map(([u,l]) => (
+              <button key={u} onClick={() => handleUnitSwitch(u)} style={{
+                padding:'7px 14px', border:'none', cursor:'pointer', fontSize:13, fontWeight: timeUnit===u ? 700 : 400,
+                background: timeUnit===u ? 'rgba(255,255,255,0.15)' : 'transparent', color:'inherit',
+              }}>{l}</button>
+            ))}
+          </div>
+          <input type="number" min="0.5" step={timeUnit==='hours' ? 0.5 : 5} value={timeValue}
+            onChange={e => handleTimeChange(Number(e.target.value))}
+            style={{ ...inputStyle, width:90, marginBottom:0 }}
+            placeholder={timeUnit==='hours' ? '1.5' : '30'} />
         </div>
 
         <label style={labelStyle}>תאריך יעד</label>
