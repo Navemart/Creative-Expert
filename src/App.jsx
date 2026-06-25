@@ -18,6 +18,7 @@ import ContentLibrary from './pages/ContentLibrary.jsx';
 import Clients from './pages/Clients.jsx';
 import Transcriptions from './pages/Transcriptions.jsx';
 import ZoomRecordings from './pages/ZoomRecordings.jsx';
+import TaskManager from './pages/TaskManager.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="agents"          element={<Agents />} />
             <Route path="calculator"      element={<PricingCalculator />} />
             <Route path="transcriptions"  element={<Transcriptions />} />
+            <Route path="tasks"           element={<TaskManager />} />
             <Route path="members"         element={<Members />} />
             <Route path="members/:id"     element={<MemberDetail />} />
             <Route path="settings"        element={<Settings />} />

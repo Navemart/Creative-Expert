@@ -16,6 +16,7 @@ import {
   Library,
   Target,
   X,
+  ListTodo,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -36,6 +37,7 @@ const ENGINE_ITEMS = [
 ];
 
 const TOOLS_ITEMS = [
+  { to: '/tasks',           label: 'מארגן משימות',   icon: ListTodo },
   { to: '/agents',          label: 'AI ScaleKit',    icon: Bot },
   { to: '/calculator',      label: 'מחשבון תמחור',   icon: Calculator },
   { to: '/transcriptions',  label: 'תמלול',           icon: Mic2 },
