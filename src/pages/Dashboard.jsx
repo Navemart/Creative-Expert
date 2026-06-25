@@ -1144,7 +1144,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name:             user?.firstName || 'תלמיד',
+          name:             [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד',
           total_amount:     dealForm.total_amount,
           received_amount:  dealForm.received_amount,
           next_rank:        dealForm.next_rank,
@@ -1196,7 +1196,7 @@ export default function Dashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name:            user?.firstName || 'תלמיד',
+          name:            [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד',
           win_1:           winForm.win_1,
           win_2:           winForm.win_2,
           win_3:           winForm.win_3,
