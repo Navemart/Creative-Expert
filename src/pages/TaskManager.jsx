@@ -66,8 +66,10 @@ export default function TaskManager() {
   const [modalData,      setModalData]      = useState(EMPTY_MODAL);
   const [activeTimer,    setActiveTimer]    = useState(null);
   const [elapsed,        setElapsed]        = useState(0);
-  const timerRef  = useRef(null);
-  const dragTaskId = useRef(null);
+  const [dragOverSlot,   setDragOverSlot]   = useState(null);
+  const timerRef      = useRef(null);
+  const dragTaskId    = useRef(null);
+  const lastTimerTask = useRef(null);
 
   const todayStr    = toDateString(new Date());
   const selectedStr = toDateString(selectedDate);
@@ -97,29 +99,41 @@ export default function TaskManager() {
     return () => clearInterval(timerRef.current);
   }, [activeTimer]);
 
-  function startTimer(taskId) {
-    if (activeTimer === taskId) { setActiveTimer(null); }
-    else { setActiveTimer(taskId); setElapsed(0); }
+  function toggleTimer(taskId) {
+    if (activeTimer === taskId) {
+      // pause — keep elapsed
+      setActiveTimer(null);
+    } else {
+      // start or resume
+      if (lastTimerTask.current !== taskId) setElapsed(0); // fresh task
+      lastTimerTask.current = taskId;
+      setActiveTimer(taskId);
+    }
   }
-  function stopTimer() { setActiveTimer(null); }
   async function resetTimer() {
-    const ok = await confirm({ title:'איפוס טיימר', message:'בטוח שרוצה לאפס את הטיימר?', confirmLabel:'אפס', cancelLabel:'ביטול' });
-    if (ok) { setActiveTimer(null); setElapsed(0); }
+    const ok = await confirm('האם לאפס את הטיימר?', { title:'איפוס טיימר', confirmText:'אפס', danger:false });
+    if (ok) { setActiveTimer(null); setElapsed(0); lastTimerTask.current = null; }
   }
 
   async function markDone(task) {
-    const actual = Math.round(elapsed / 60);
-    clearInterval(timerRef.current);
-    setActiveTimer(null); setElapsed(0);
+    const actual = Math.round((activeTimer === task.id ? elapsed : 0) / 60);
+    if (activeTimer === task.id) { clearInterval(timerRef.current); setActiveTimer(null); setElapsed(0); lastTimerTask.current = null; }
     const updates = { status:'done', actual_minutes:(task.actual_minutes||0)+actual, completed_at:new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
   }
 
+  async function undoDone(task) {
+    const updates = { status:'scheduled', completed_at:null };
+    await supabase.from('tasks').update(updates).eq('id', task.id);
+    setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+  }
+
   async function restoreTask(taskId) {
-    const updates = { status:'bank', completed_at:null };
+    const updates = { status:'bank', completed_at:null, scheduled_date:null, scheduled_slot:null };
     await supabase.from('tasks').update(updates).eq('id', taskId);
     setTasks(prev => prev.map(t => t.id===taskId ? {...t,...updates} : t));
+    setBankTab('bank');
   }
 
   async function deleteTask(taskId) {
@@ -329,9 +343,15 @@ export default function TaskManager() {
               const slotTasks = calendarTasks.filter(t => t.scheduled_slot===slot);
               return (
                 <div key={slot}
-                  style={{ display:'flex', gap:8, minHeight:44, borderBottom:'1px solid rgba(255,255,255,0.05)' }}
-                  onDragOver={e => e.preventDefault()}
-                  onDrop={() => dropOnSlot(slot)}
+                  style={{
+                    display:'flex', gap:8, minHeight:44,
+                    borderBottom:'1px solid rgba(255,255,255,0.05)',
+                    background: dragOverSlot===slot ? 'rgba(245,193,24,0.06)' : 'transparent',
+                    transition:'background 0.1s',
+                  }}
+                  onDragOver={e => { e.preventDefault(); setDragOverSlot(slot); }}
+                  onDragLeave={() => setDragOverSlot(null)}
+                  onDrop={() => { setDragOverSlot(null); dropOnSlot(slot); }}
                 >
                   <div style={{ width:42, flexShrink:0, fontSize:11, color:'rgba(255,255,255,0.35)', paddingTop:6, textAlign:'left' }}>
                     {slot}
@@ -341,10 +361,10 @@ export default function TaskManager() {
                       <CalendarTask key={task.id} task={task}
                         activeTimer={activeTimer} elapsed={elapsed}
                         onDragStart={() => onDragStart(task.id)}
-                        onTimer={() => startTimer(task.id)}
-                        onStop={stopTimer}
+                        onTimer={() => toggleTimer(task.id)}
                         onReset={resetTimer}
-                        onDone={() => markDone(task)} />
+                        onDone={() => markDone(task)}
+                        onUndoDone={() => undoDone(task)} />
                     ))}
                   </div>
                 </div>
@@ -432,7 +452,7 @@ function DoneCard({ task, onRestore, onDelete }) {
   );
 }
 
-function CalendarTask({ task, activeTimer, elapsed, onDragStart, onTimer, onStop, onReset, onDone }) {
+function CalendarTask({ task, activeTimer, elapsed, onDragStart, onTimer, onReset, onDone, onUndoDone }) {
   const p        = PRIORITIES[task.priority];
   const isDone   = task.status==='done';
   const isActive = activeTimer===task.id;
@@ -443,7 +463,7 @@ function CalendarTask({ task, activeTimer, elapsed, onDragStart, onTimer, onStop
       background:'rgb(var(--bg-elevated))', borderRadius:8, padding:'6px 10px',
       border:'1px solid rgba(255,255,255,0.08)', borderRight:`3px solid ${p.color}`,
       display:'flex', alignItems:'center', gap:6,
-      opacity: isDone ? 0.5 : 1, cursor: isDone ? 'default' : 'grab',
+      opacity: isDone ? 0.55 : 1, cursor: isDone ? 'default' : 'grab',
     }}>
       <span style={{
         flex:1, fontSize:13, fontWeight:500,
@@ -463,22 +483,23 @@ function CalendarTask({ task, activeTimer, elapsed, onDragStart, onTimer, onStop
         }}>{formatElapsed(elapsed)}</span>
       )}
 
-      {!isDone && <>
+      {isDone ? (
+        <button onClick={onUndoDone} title="בטל סימון" style={{
+          background:'rgba(255,255,255,0.08)', border:'none', borderRadius:6,
+          padding:'3px 8px', cursor:'pointer', color:'rgba(255,255,255,0.5)', fontSize:12,
+        }}>↩ בטל</button>
+      ) : <>
         <button onClick={onTimer} title={isActive ? 'השהה' : 'הפעל טיימר'} style={{
-          background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)',
+          background: isActive ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.1)',
           border:'none', borderRadius:6, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:13,
         }}>{isActive ? '⏸' : '▶'}</button>
 
-        {isActive && <>
-          <button onClick={onStop} title="עצור" style={{
-            background:'rgba(255,255,255,0.08)', border:'none', borderRadius:6,
-            padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:13,
-          }}>■</button>
-          <button onClick={onReset} title="אפס" style={{
+        {isActive && (
+          <button onClick={onReset} title="אפס טיימר" style={{
             background:'rgba(255,255,255,0.08)', border:'none', borderRadius:6,
             padding:'3px 8px', cursor:'pointer', color:'rgba(252,165,165,0.7)', fontSize:13,
           }}>↺</button>
-        </>}
+        )}
 
         <button onClick={onDone} title="סמן כבוצע" style={{
           background:'rgba(74,222,128,0.15)', border:'none', borderRadius:6,
