@@ -637,7 +637,7 @@ function DealsTable({ students }) {
     { key: 'total_amount',    label: 'סכום עסקה',     align: 'left',  fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', color: '#F5C118' },
     { key: 'received_amount', label: 'התקבל',         align: 'left',  fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', color: '#4fc38a' },
     { key: 'description',     label: 'תיאור',         align: 'right', fmt: v => v || '—' },
-    { key: 'client_name',     label: 'לקוח',          align: 'right', fmt: v => v || '—' },
+    { key: 'next_rank',      label: 'דרגה',          align: 'right', fmt: v => v || '—' },
   ];
 
   function toggleSort(key) {
