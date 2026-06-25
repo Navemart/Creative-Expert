@@ -73,7 +73,43 @@ export default function TaskManager() {
   const [modalData,      setModalData]      = useState(EMPTY_MODAL);
   const [dragOverSlot, setDragOverSlot] = useState(null);
   const [isDragging,   setIsDragging]   = useState(false);
+  const [now,          setNow]          = useState(Date.now()); // ticks every second for display
   const dragTaskId = useRef(null);
+
+  // Single interval — updates 'now' for live elapsed display
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Compute live elapsed seconds for a task
+  function liveElapsed(task) {
+    const saved = (task.actual_minutes || 0) * 60;
+    if (!task.timer_started_at) return saved;
+    return saved + Math.floor((now - new Date(task.timer_started_at).getTime()) / 1000);
+  }
+
+  async function startTimer(task) {
+    const updates = { timer_started_at: new Date().toISOString() };
+    await supabase.from('tasks').update(updates).eq('id', task.id);
+    setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+  }
+
+  async function pauseTimer(task) {
+    const elapsed = liveElapsed(task);
+    const mins    = Math.round(elapsed / 60);
+    const updates = { timer_started_at: null, actual_minutes: mins };
+    await supabase.from('tasks').update(updates).eq('id', task.id);
+    setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+  }
+
+  async function resetTimer(task) {
+    const ok = await confirm('האם לאפס את הטיימר?', { title:'איפוס טיימר', confirmText:'אפס', danger:false });
+    if (!ok) return;
+    const updates = { timer_started_at: null, actual_minutes: 0 };
+    await supabase.from('tasks').update(updates).eq('id', task.id);
+    setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+  }
 
   const todayStr    = toDateString(new Date());
   const selectedStr = toDateString(selectedDate);
@@ -101,7 +137,9 @@ export default function TaskManager() {
   }
 
   async function markDone(task) {
-    const updates = { status:'done', completed_at: new Date().toISOString() };
+    const elapsed = liveElapsed(task);
+    const mins    = Math.round(elapsed / 60);
+    const updates = { status:'done', completed_at: new Date().toISOString(), timer_started_at: null, actual_minutes: mins };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
   }
@@ -181,6 +219,7 @@ export default function TaskManager() {
   const calendarTasks  = tasks.filter(t => t.scheduled_date===selectedStr && (t.status==='scheduled'||t.status==='done'));
   const doneToday    = calendarTasks.filter(t => t.status==='done');
   const totalPlanned = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
+  const totalActual  = calendarTasks.reduce((s,t) => s + Math.round(liveElapsed(t)/60), 0);
   const showDragHint   = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
   const totalSlots     = (END_HOUR - START_HOUR) * 2;
   const calendarHeight = totalSlots * SLOT_HEIGHT;
@@ -306,20 +345,18 @@ export default function TaskManager() {
                 const mins     = task.estimated_minutes || 30;
                 const heightPx = Math.max(SLOT_HEIGHT - 4, Math.round((mins / 30) * SLOT_HEIGHT) - 4);
                 const top      = idx * SLOT_HEIGHT + 2;
-                const p      = PRIORITIES[task.priority];
-                const isDone = task.status === 'done';
-
-                const checkbox = (
-                  <button onClick={e => { e.stopPropagation(); isDone ? undoDone(task) : markDone(task); }}
-                    style={{
-                      flexShrink:0, width:18, height:18, borderRadius:'50%',
-                      border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.35)'}`,
-                      background: isDone ? '#4ade80' : 'transparent', cursor:'pointer',
-                      display:'flex', alignItems:'center', justifyContent:'center', padding:0,
-                    }}>
-                    {isDone && <span style={{ fontSize:10, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
-                  </button>
-                );
+                const p        = PRIORITIES[task.priority];
+                const isDone   = task.status === 'done';
+                const isActive = !!task.timer_started_at;
+                const elapsed  = liveElapsed(task); // seconds
+                const elapsedMins = Math.floor(elapsed / 60);
+                const elapsedSecs = elapsed % 60;
+                const overTime = elapsed > 0 && task.estimated_minutes && elapsed > task.estimated_minutes * 60;
+                const elapsedStr = elapsed > 0
+                  ? (elapsed >= 3600
+                      ? `${Math.floor(elapsed/3600)}:${String(Math.floor((elapsed%3600)/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`
+                      : `${String(elapsedMins).padStart(2,'0')}:${String(elapsedSecs).padStart(2,'0')}`)
+                  : null;
 
                 return (
                   <div
@@ -329,24 +366,54 @@ export default function TaskManager() {
                     onDragEnd={onDragEnd}
                     style={{
                       position:'absolute', top, left:8, right:52, height:heightPx,
-                      background: isDone ? 'rgba(255,255,255,0.03)' : `${p.color}12`,
-                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.07)' : p.color+'40'}`,
+                      background: isDone ? 'rgba(255,255,255,0.03)' : isActive ? `${p.color}20` : `${p.color}12`,
+                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.07)' : isActive ? p.color+'80' : p.color+'40'}`,
                       borderRight: `3px solid ${p.color}`,
-                      borderRadius:8, padding:'6px 8px 6px 8px', boxSizing:'border-box',
-                      display:'flex', alignItems:'flex-start', gap:8,
+                      borderRadius:8, padding:'6px 8px', boxSizing:'border-box',
+                      display:'flex', alignItems:'flex-start', gap:6,
                       opacity: isDone ? 0.6 : 1,
                       cursor: isDone ? 'default' : 'grab',
                       overflow:'hidden', zIndex:1,
                       pointerEvents: isDragging && dragTaskId.current !== task.id ? 'none' : 'auto',
                     }}
                   >
-                    {checkbox}
+                    {/* Checkbox */}
+                    <button onClick={e => { e.stopPropagation(); isDone ? undoDone(task) : markDone(task); }}
+                      style={{
+                        flexShrink:0, width:18, height:18, borderRadius:'50%',
+                        border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.35)'}`,
+                        background: isDone ? '#4ade80' : 'transparent', cursor:'pointer',
+                        display:'flex', alignItems:'center', justifyContent:'center', padding:0,
+                      }}>
+                      {isDone && <span style={{ fontSize:10, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
+                    </button>
+
+                    {/* Title */}
                     <span style={{ flex:1, fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.4)' : 'white' }}>
                       {task.title}
                     </span>
-                    <span style={{ fontSize:13, fontWeight:600, color: isDone ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.5)', whiteSpace:'nowrap', flexShrink:0 }}>
-                      {fmtMin(mins)}
-                    </span>
+
+                    {/* Right side: elapsed / estimated + play button */}
+                    <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
+                      {elapsedStr && (
+                        <span style={{ fontSize:12, fontVariantNumeric:'tabular-nums', fontWeight:700, color: overTime ? '#ef4444' : isActive ? '#4ade80' : 'rgba(255,255,255,0.45)' }}>
+                          {elapsedStr}
+                        </span>
+                      )}
+                      {!elapsedStr && (
+                        <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>{fmtMin(mins)}</span>
+                      )}
+                      {elapsedStr && (
+                        <button onClick={e => { e.stopPropagation(); resetTimer(task); }}
+                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.5)', fontSize:12, padding:'0 2px', lineHeight:1 }}>↺</button>
+                      )}
+                      {!isDone && (
+                        <button onClick={e => { e.stopPropagation(); isActive ? pauseTimer(task) : startTimer(task); }}
+                          style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.2)'}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', color:'inherit', fontSize:12 }}>
+                          {isActive ? '⏸' : '▶'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -356,6 +423,7 @@ export default function TaskManager() {
           {/* Summary bar */}
           <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', gap:20, fontSize:13, color:'rgba(255,255,255,0.6)', flexShrink:0 }}>
             <span>✅ {doneToday.length} הושלמו</span>
+            {totalActual > 0 && <span>⏱ {fmtMin(totalActual)} בפועל</span>}
             <span>🎯 {fmtMin(totalPlanned)} מתוכנן</span>
           </div>
         </div>
