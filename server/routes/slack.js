@@ -73,34 +73,28 @@ router.post('/deals', async (req, res) => {
 
   if (!token) return res.status(500).json({ error: 'Slack לא מוגדר' });
 
-  const fields = [
-    `*שם*\n${name}`,
-    total_amount    ? `*סה"כ סכום העסקה*\n₪${Number(total_amount).toLocaleString()}` : null,
-    received_amount ? `*כסף שנכנס בפועל*\n₪${Number(received_amount).toLocaleString()}` : null,
-    next_rank       ? `*הדרגה הבאה*\n${RANK_META[next_rank]?.emoji ? RANK_META[next_rank].emoji + ' ' : ''}${next_rank} · ${RANK_META[next_rank]?.amount ?? ''}` : null,
-    notes           ? `*פרטים נוספים*\n${notes}` : null,
-    `*תאריך:*\n${date}`,
+  const rankMeta = RANK_META[next_rank] || {};
+  const rankLine = next_rank
+    ? `${rankMeta.emoji ? rankMeta.emoji + ' ' : ''}${next_rank}${rankMeta.amount ? ` / בחודש ${rankMeta.amount}` : ''}`
+    : null;
+
+  const lines = [
+    `🎉🏆 !!!אליפותתתתממממ`,
+    `\nהאגדה:  ${name}`,
+    `\n*סה"כ סכום העסקה כולל:*\n${total_amount ? `${Number(total_amount).toLocaleString()}₪` : '—'}`,
+    `*כסף שנכנס בפועל:*\n${received_amount ? `${Number(received_amount).toLocaleString()}₪` : '0₪'}`,
+    rankLine ? `*הדרגה הבאה שאני מגיע אליה:*\n${rankLine}` : null,
+    notes ? `*פרטים:*\n${notes}` : null,
+    date,
   ].filter(Boolean);
 
-  const lines = fields;
-
-  const text = lines.join('\n\n');
-
-  const blocks = [
-    {
-      type: 'section',
-      text: { type: 'mrkdwn', text },
-    },
-  ];
+  const text = lines.join('\n');
 
   try {
     const response = await fetch('https://slack.com/api/chat.postMessage', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ channel, blocks, text: `עסקה חדשה — ${name}` }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ channel, text, unfurl_links: false }),
     });
 
     const data = await response.json();
