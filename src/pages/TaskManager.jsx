@@ -74,16 +74,15 @@ export default function TaskManager() {
   const [editingTask,    setEditingTask]     = useState(null);
   const [modalData,      setModalData]      = useState(EMPTY_MODAL);
   const [activeTimer,   setActiveTimer]   = useState(null);
-  const [displaySecs,   setDisplaySecs]   = useState({}); // { [taskId]: seconds } for display
+  const [displaySecs,   setDisplaySecs]   = useState({}); // for display only
   const [dragOverSlot,  setDragOverSlot]  = useState(null);
   const [isDragging,    setIsDragging]    = useState(false);
-  const savedSecs  = useRef({});   // accumulated seconds before current session
+  const secsRef    = useRef({});   // source of truth — always current, never stale
   const timerRef   = useRef(null);
   const dragTaskId = useRef(null);
 
-  // Get current elapsed for any task
   function getElapsed(taskId) {
-    return displaySecs[taskId] ?? savedSecs.current[taskId] ?? 0;
+    return secsRef.current[taskId] || 0;
   }
 
   const todayStr    = toDateString(new Date());
@@ -96,11 +95,11 @@ export default function TaskManager() {
     if (data) {
       setTasks(data);
       runDailyReset(data);
-      // Seed savedSecs + displaySecs from DB so paused timers restore correctly
+      // Seed from DB so previous elapsed is restored on page load
       const preload = {};
       data.forEach(t => {
         if (t.actual_minutes > 0 && t.status !== 'done') {
-          savedSecs.current[t.id] = t.actual_minutes * 60;
+          secsRef.current[t.id] = t.actual_minutes * 60;
           preload[t.id] = t.actual_minutes * 60;
         }
       });
@@ -120,32 +119,31 @@ export default function TaskManager() {
       : t));
   }
 
-  // Timer — updates displaySecs every second for the active task
+  // Timer interval — writes to secsRef (no closure issue) + triggers display update
   useEffect(() => {
     clearInterval(timerRef.current);
     if (!activeTimer) return;
-    const base = savedSecs.current[activeTimer] || 0;
-    const startedAt = Date.now();
     timerRef.current = setInterval(() => {
-      const elapsed = base + Math.floor((Date.now() - startedAt) / 1000);
-      setDisplaySecs(prev => ({ ...prev, [activeTimer]: elapsed }));
+      secsRef.current[activeTimer] = (secsRef.current[activeTimer] || 0) + 1;
+      setDisplaySecs(prev => ({ ...prev, [activeTimer]: secsRef.current[activeTimer] }));
     }, 1000);
     return () => clearInterval(timerRef.current);
   }, [activeTimer]);
 
   async function toggleTimer(taskId) {
     if (activeTimer === taskId) {
-      // PAUSE — snapshot current display into savedSecs, stop interval
-      const elapsed = displaySecs[taskId] ?? savedSecs.current[taskId] ?? 0;
-      savedSecs.current[taskId] = elapsed;
-      setActiveTimer(null); // triggers useEffect to clear interval
-      const mins = Math.round(elapsed / 60);
+      // PAUSE — read from ref (always accurate), stop interval
+      clearInterval(timerRef.current);
+      setActiveTimer(null);
+      const secs = secsRef.current[taskId] || 0;
+      const mins = Math.round(secs / 60);
       if (mins > 0) {
         await supabase.from('tasks').update({ actual_minutes: mins }).eq('id', taskId);
         setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: mins } : t));
       }
+      // Keep secsRef + displaySecs so frozen time stays visible
     } else {
-      // PLAY/RESUME — useEffect will pick up savedSecs as base
+      // PLAY/RESUME — secsRef already has accumulated seconds, interval continues from there
       setActiveTimer(taskId);
     }
   }
@@ -153,8 +151,9 @@ export default function TaskManager() {
   async function resetTimer(taskId) {
     const ok = await confirm('האם לאפס את הטיימר?', { title:'איפוס טיימר', confirmText:'אפס', danger:false });
     if (ok) {
+      clearInterval(timerRef.current);
       setActiveTimer(null);
-      savedSecs.current[taskId] = 0;
+      secsRef.current[taskId] = 0;
       setDisplaySecs(prev => ({ ...prev, [taskId]: 0 }));
       await supabase.from('tasks').update({ actual_minutes: 0 }).eq('id', taskId);
       setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: 0 } : t));
@@ -162,10 +161,11 @@ export default function TaskManager() {
   }
 
   async function markDone(task) {
-    const elapsed = displaySecs[task.id] ?? savedSecs.current[task.id] ?? 0;
-    const mins    = Math.round(elapsed / 60);
+    clearInterval(timerRef.current);
     setActiveTimer(null);
-    savedSecs.current[task.id] = 0;
+    const secs = secsRef.current[task.id] || 0;
+    const mins = Math.round(secs / 60);
+    secsRef.current[task.id] = 0;
     setDisplaySecs(prev => { const n={...prev}; delete n[task.id]; return n; });
     const updates = { status:'done', actual_minutes: mins, completed_at: new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
@@ -177,7 +177,7 @@ export default function TaskManager() {
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
     if (task.actual_minutes > 0) {
-      savedSecs.current[task.id] = task.actual_minutes * 60;
+      secsRef.current[task.id] = task.actual_minutes * 60;
       setDisplaySecs(prev => ({ ...prev, [task.id]: task.actual_minutes * 60 }));
     }
   }
