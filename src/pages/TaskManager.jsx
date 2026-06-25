@@ -116,13 +116,16 @@ export default function TaskManager() {
 
   async function toggleTimer(taskId) {
     if (activeTimer === taskId) {
-      // pause — save elapsed to actual_minutes
+      // pause — save elapsed to actual_minutes and clear local elapsed
       setActiveTimer(null);
       const elapsedSec = taskElapsed[taskId] || 0;
       const mins = Math.round(elapsedSec / 60);
+      setTaskElapsed(prev => { const n={...prev}; delete n[taskId]; return n; });
       if (mins > 0) {
-        await supabase.from('tasks').update({ actual_minutes: mins }).eq('id', taskId);
-        setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: mins } : t));
+        const task = tasks.find(t => t.id === taskId);
+        const total = (task?.actual_minutes || 0) + mins;
+        await supabase.from('tasks').update({ actual_minutes: total }).eq('id', taskId);
+        setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: total } : t));
       }
     } else {
       setActiveTimer(taskId);
@@ -138,11 +141,14 @@ export default function TaskManager() {
   }
 
   async function markDone(task) {
-    const elapsedSec = taskElapsed[task.id] || 0;
-    const actual     = Math.round(elapsedSec / 60);
-    if (activeTimer === task.id) setActiveTimer(null);
+    // only count running elapsed — paused elapsed was already saved via toggleTimer
+    let additionalMins = 0;
+    if (activeTimer === task.id) {
+      additionalMins = Math.round((taskElapsed[task.id] || 0) / 60);
+      setActiveTimer(null);
+    }
     setTaskElapsed(prev => { const n = {...prev}; delete n[task.id]; return n; });
-    const updates = { status:'done', actual_minutes:(task.actual_minutes||0)+actual, completed_at:new Date().toISOString() };
+    const updates = { status:'done', actual_minutes:(task.actual_minutes||0)+additionalMins, completed_at:new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
   }
@@ -335,7 +341,7 @@ export default function TaskManager() {
                   onDrop={() => dropOnSlot(slot)}
                 >
                   <div style={{ width:44, flexShrink:0, fontSize:11, color: slot.endsWith(':00') ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.25)', paddingTop:4, paddingRight:8, textAlign:'right', userSelect:'none' }}>
-                    {slot.endsWith(':00') ? slot.replace(':00','') : '·'}
+                    {slot.endsWith(':00') ? String(parseInt(slot)) : ''}
                   </div>
                   {dragOverSlot===slot && (
                     <div style={{ flex:1, display:'flex', alignItems:'center', fontSize:11, color:'rgba(245,193,24,0.6)', paddingRight:8 }}>
@@ -536,7 +542,10 @@ function TaskModal({ data, isEdit, onChange, onSave, onClose }) {
 
         <label style={labelStyle}>כמה זמן תוקצב למשימה?</label>
         <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-          {/* Unit toggle */}
+          <input type="number" min="0.5" step={timeUnit==='hours' ? 0.5 : 5} value={timeValue}
+            onChange={e => handleTimeChange(Number(e.target.value))}
+            style={{ ...inputStyle, width:90, marginBottom:0 }}
+            placeholder={timeUnit==='hours' ? '1.5' : '30'} />
           <div style={{ display:'flex', borderRadius:8, overflow:'hidden', border:'1px solid rgba(255,255,255,0.15)', flexShrink:0 }}>
             {[['minutes','דקות'],['hours','שעות']].map(([u,l]) => (
               <button key={u} onClick={() => handleUnitSwitch(u)} style={{
@@ -545,17 +554,11 @@ function TaskModal({ data, isEdit, onChange, onSave, onClose }) {
               }}>{l}</button>
             ))}
           </div>
-          <input type="number" min="0.5" step={timeUnit==='hours' ? 0.5 : 5} value={timeValue}
-            onChange={e => handleTimeChange(Number(e.target.value))}
-            style={{ ...inputStyle, width:90, marginBottom:0 }}
-            placeholder={timeUnit==='hours' ? '1.5' : '30'} />
         </div>
 
         <label style={labelStyle}>תאריך יעד</label>
         <input type="date" value={data.due_date} onChange={e => set('due_date', e.target.value)} style={inputStyle} />
 
-        <label style={labelStyle}>הערות</label>
-        <textarea value={data.notes} onChange={e => set('notes', e.target.value)} rows={3} style={{ ...inputStyle, resize:'vertical' }} placeholder="הערות נוספות..." />
 
         <div style={{ display:'flex', gap:8, justifyContent:'flex-start', marginTop:4 }}>
           <button onClick={onSave} className="btn-yellow" style={{ background:'#F5C118', border:'none', borderRadius:8, padding:'8px 24px', fontWeight:700, cursor:'pointer' }}>
