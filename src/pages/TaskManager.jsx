@@ -34,9 +34,7 @@ function toDateString(d) { return d.toISOString().split('T')[0]; }
 function formatHebrewDate(d) {
   return d.toLocaleDateString('he-IL', { weekday:'long', day:'numeric', month:'long' });
 }
-function formatElapsed(s) {
-  return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
-}
+
 function fmtMin(m) { return m >= 60 ? `${Math.floor(m/60)}ש'${m%60>0?' '+m%60+' דק\'':''}` : `${m} דק'`; }
 
 const labelStyle = { display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:500 };
@@ -73,17 +71,9 @@ export default function TaskManager() {
   const [showModal,      setShowModal]      = useState(false);
   const [editingTask,    setEditingTask]     = useState(null);
   const [modalData,      setModalData]      = useState(EMPTY_MODAL);
-  const [activeTimer,   setActiveTimer]   = useState(null);
-  const [displaySecs,   setDisplaySecs]   = useState({}); // for display only
-  const [dragOverSlot,  setDragOverSlot]  = useState(null);
-  const [isDragging,    setIsDragging]    = useState(false);
-  const secsRef    = useRef({});   // source of truth — always current, never stale
-  const timerRef   = useRef(null);
+  const [dragOverSlot, setDragOverSlot] = useState(null);
+  const [isDragging,   setIsDragging]   = useState(false);
   const dragTaskId = useRef(null);
-
-  function getElapsed(taskId) {
-    return secsRef.current[taskId] || 0;
-  }
 
   const todayStr    = toDateString(new Date());
   const selectedStr = toDateString(selectedDate);
@@ -95,15 +85,6 @@ export default function TaskManager() {
     if (data) {
       setTasks(data);
       runDailyReset(data);
-      // Seed from DB so previous elapsed is restored on page load
-      const preload = {};
-      data.forEach(t => {
-        if (t.actual_minutes > 0 && t.status !== 'done') {
-          secsRef.current[t.id] = t.actual_minutes * 60;
-          preload[t.id] = t.actual_minutes * 60;
-        }
-      });
-      setDisplaySecs(preload);
     }
   }
 
@@ -119,55 +100,8 @@ export default function TaskManager() {
       : t));
   }
 
-  // Timer interval — writes to secsRef (no closure issue) + triggers display update
-  useEffect(() => {
-    clearInterval(timerRef.current);
-    if (!activeTimer) return;
-    timerRef.current = setInterval(() => {
-      secsRef.current[activeTimer] = (secsRef.current[activeTimer] || 0) + 1;
-      setDisplaySecs(prev => ({ ...prev, [activeTimer]: secsRef.current[activeTimer] }));
-    }, 1000);
-    return () => clearInterval(timerRef.current);
-  }, [activeTimer]);
-
-  async function toggleTimer(taskId) {
-    if (activeTimer === taskId) {
-      // PAUSE — read from ref (always accurate), stop interval
-      clearInterval(timerRef.current);
-      setActiveTimer(null);
-      const secs = secsRef.current[taskId] || 0;
-      const mins = Math.round(secs / 60);
-      if (mins > 0) {
-        await supabase.from('tasks').update({ actual_minutes: mins }).eq('id', taskId);
-        setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: mins } : t));
-      }
-      // Keep secsRef + displaySecs so frozen time stays visible
-    } else {
-      // PLAY/RESUME — secsRef already has accumulated seconds, interval continues from there
-      setActiveTimer(taskId);
-    }
-  }
-
-  async function resetTimer(taskId) {
-    const ok = await confirm('האם לאפס את הטיימר?', { title:'איפוס טיימר', confirmText:'אפס', danger:false });
-    if (ok) {
-      clearInterval(timerRef.current);
-      setActiveTimer(null);
-      secsRef.current[taskId] = 0;
-      setDisplaySecs(prev => ({ ...prev, [taskId]: 0 }));
-      await supabase.from('tasks').update({ actual_minutes: 0 }).eq('id', taskId);
-      setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: 0 } : t));
-    }
-  }
-
   async function markDone(task) {
-    clearInterval(timerRef.current);
-    setActiveTimer(null);
-    const secs = secsRef.current[task.id] || 0;
-    const mins = Math.round(secs / 60);
-    secsRef.current[task.id] = 0;
-    setDisplaySecs(prev => { const n={...prev}; delete n[task.id]; return n; });
-    const updates = { status:'done', actual_minutes: mins, completed_at: new Date().toISOString() };
+    const updates = { status:'done', completed_at: new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
   }
@@ -176,10 +110,6 @@ export default function TaskManager() {
     const updates = { status:'scheduled', completed_at:null };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
-    if (task.actual_minutes > 0) {
-      secsRef.current[task.id] = task.actual_minutes * 60;
-      setDisplaySecs(prev => ({ ...prev, [task.id]: task.actual_minutes * 60 }));
-    }
   }
 
   async function restoreTask(taskId) {
@@ -249,12 +179,8 @@ export default function TaskManager() {
 
   const doneBankTasks  = tasks.filter(t => t.status==='done');
   const calendarTasks  = tasks.filter(t => t.scheduled_date===selectedStr && (t.status==='scheduled'||t.status==='done'));
-  const doneToday      = calendarTasks.filter(t => t.status==='done');
-  const totalActual    = calendarTasks.reduce((s,t) => {
-    const e = getElapsed(t.id);
-    return s + (e > 0 ? Math.round(e / 60) : (t.actual_minutes || 0));
-  }, 0);
-  const totalPlanned   = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
+  const doneToday    = calendarTasks.filter(t => t.status==='done');
+  const totalPlanned = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
   const showDragHint   = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
   const totalSlots     = (END_HOUR - START_HOUR) * 2;
   const calendarHeight = totalSlots * SLOT_HEIGHT;
@@ -380,54 +306,19 @@ export default function TaskManager() {
                 const mins     = task.estimated_minutes || 30;
                 const heightPx = Math.max(SLOT_HEIGHT - 4, Math.round((mins / 30) * SLOT_HEIGHT) - 4);
                 const top      = idx * SLOT_HEIGHT + 2;
-                const p        = PRIORITIES[task.priority];
-                const isDone   = task.status === 'done';
-                const elapsed  = getElapsed(task.id);
-                const isActive = activeTimer === task.id;
-                const isPaused = elapsed > 0 && !isActive;
-                const overTime = elapsed > 0 && task.estimated_minutes && elapsed > task.estimated_minutes * 60;
-                const actual   = task.actual_minutes || 0;
+                const p      = PRIORITIES[task.priority];
+                const isDone = task.status === 'done';
 
-                // ── Checkbox
                 const checkbox = (
                   <button onClick={e => { e.stopPropagation(); isDone ? undoDone(task) : markDone(task); }}
                     style={{
-                      flexShrink:0, width:18, height:18, borderRadius:'50%', border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.35)'}`,
+                      flexShrink:0, width:18, height:18, borderRadius:'50%',
+                      border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.35)'}`,
                       background: isDone ? '#4ade80' : 'transparent', cursor:'pointer',
                       display:'flex', alignItems:'center', justifyContent:'center', padding:0,
                     }}>
                     {isDone && <span style={{ fontSize:10, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
                   </button>
-                );
-
-                // ── Timer side (far left in RTL)
-                const timerSide = (
-                  <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                    {isDone ? (
-                      // Done: show actual / estimated
-                      <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums' }}>
-                        {actual > 0 ? fmtMin(actual) : '—'} / {fmtMin(mins)}
-                      </span>
-                    ) : <>
-                      {/* Elapsed display — always visible when there's time */}
-                      {elapsed > 0 && (
-                        <span style={{ fontSize:13, fontVariantNumeric:'tabular-nums', fontWeight:700, minWidth:44,
-                          color: isActive ? (overTime ? '#ef4444' : '#4ade80') : 'rgba(255,255,255,0.5)' }}>
-                          {formatElapsed(elapsed)}{isActive && overTime ? ' ⚠' : ''}
-                        </span>
-                      )}
-                      {/* Reset — only when there's elapsed */}
-                      {elapsed > 0 && (
-                        <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
-                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.5)', fontSize:13, padding:'1px 4px' }}>↺</button>
-                      )}
-                      {/* Play/Pause */}
-                      <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
-                        style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.15)'}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', color:'inherit', fontSize:13 }}>
-                        {isActive ? '⏸' : '▶'}
-                      </button>
-                    </>}
-                  </div>
                 );
 
                 return (
@@ -450,15 +341,12 @@ export default function TaskManager() {
                     }}
                   >
                     {checkbox}
-                    <div style={{ flex:1, display:'flex', alignItems:'center', gap:8, overflow:'hidden' }}>
-                      <span style={{ fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.4)' : 'white' }}>
-                        {task.title}
-                      </span>
-                      <span style={{ fontSize:13, fontWeight:600, color: isDone ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.5)', whiteSpace:'nowrap', flexShrink:0 }}>
-                        {fmtMin(mins)}
-                      </span>
-                    </div>
-                    {timerSide}
+                    <span style={{ flex:1, fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.4)' : 'white' }}>
+                      {task.title}
+                    </span>
+                    <span style={{ fontSize:13, fontWeight:600, color: isDone ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.5)', whiteSpace:'nowrap', flexShrink:0 }}>
+                      {fmtMin(mins)}
+                    </span>
                   </div>
                 );
               })}
@@ -468,7 +356,6 @@ export default function TaskManager() {
           {/* Summary bar */}
           <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', gap:20, fontSize:13, color:'rgba(255,255,255,0.6)', flexShrink:0 }}>
             <span>✅ {doneToday.length} הושלמו</span>
-            <span>⏱ {fmtMin(totalActual)} בפועל</span>
             <span>🎯 {fmtMin(totalPlanned)} מתוכנן</span>
           </div>
         </div>
@@ -512,7 +399,6 @@ function TaskCard({ task, onDragStart, onDragEnd, onEdit, onDelete }) {
 
 function DoneCard({ task, onRestore, onDelete }) {
   const p      = PRIORITIES[task.priority];
-  const actual = task.actual_minutes || 0;
   return (
     <div style={{ background:'rgb(var(--bg-elevated))', borderRadius:12, padding:'10px 12px', marginBottom:8, border:'1px solid rgba(255,255,255,0.06)', borderRight:`3px solid ${p.color}`, opacity:0.7 }}>
       <div style={{ display:'flex', alignItems:'center', gap:6 }}>
@@ -521,7 +407,6 @@ function DoneCard({ task, onRestore, onDelete }) {
         <button onClick={onRestore} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:11 }}>↩ החזר</button>
         <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:13, padding:'2px 4px' }}>🗑</button>
       </div>
-      {actual > 0 && <div style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:4, paddingRight:22 }}>⏱ {fmtMin(actual)} בפועל</div>}
     </div>
   );
 }
