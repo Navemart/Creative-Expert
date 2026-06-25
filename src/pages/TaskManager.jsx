@@ -10,8 +10,7 @@ const PRIORITIES = {
   low:              { label: 'לא דחוף ולא חשוב',  color: 'rgba(255,255,255,0.4)', emoji: '⚪' },
 };
 
-const CATEGORIES     = ['עסק', 'שיווק', 'לקוחות'];
-const MINUTE_PRESETS = [25, 30, 45, 60, 90, 120];
+const CATEGORIES = ['עסק', 'שיווק', 'לקוחות'];
 const EMPTY_MODAL    = { title:'', category:'עסק', priority:'important', estimated_minutes:30, due_date:'', notes:'' };
 const START_HOUR     = 5;
 const END_HOUR       = 23;
@@ -38,7 +37,7 @@ function formatHebrewDate(d) {
 function formatElapsed(s) {
   return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 }
-function fmtMin(m) { return m >= 60 ? `${Math.floor(m/60)}ש' ${m%60>0?m%60+"′":''}`.trim() : `${m}′`; }
+function fmtMin(m) { return m >= 60 ? `${Math.floor(m/60)}ש'${m%60>0?' '+m%60+' דק\'':''}` : `${m} דק'`; }
 
 const labelStyle = { display:'block', fontSize:12, color:'rgba(255,255,255,0.5)', marginBottom:6, fontWeight:500 };
 const inputStyle = {
@@ -351,29 +350,39 @@ export default function TaskManager() {
                 const overTime = (isActive || isPaused) && task.estimated_minutes && elapsed > task.estimated_minutes * 60;
                 const actual   = task.actual_minutes || 0;
 
-                const isCompact = heightPx < 60;
-
-                const actionBtns = isDone ? (
-                  <button onClick={e => { e.stopPropagation(); undoDone(task); }}
-                    style={{ background:'rgba(255,255,255,0.1)', border:'none', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'rgba(255,255,255,0.55)', fontSize:10, whiteSpace:'nowrap', flexShrink:0 }}>
-                    ↩ בטל
+                // ── Checkbox
+                const checkbox = (
+                  <button onClick={e => { e.stopPropagation(); isDone ? undoDone(task) : markDone(task); }}
+                    style={{
+                      flexShrink:0, width:18, height:18, borderRadius:'50%', border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.35)'}`,
+                      background: isDone ? '#4ade80' : 'transparent', cursor:'pointer',
+                      display:'flex', alignItems:'center', justifyContent:'center', padding:0,
+                    }}>
+                    {isDone && <span style={{ fontSize:10, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
                   </button>
-                ) : (
-                  <div style={{ display:'flex', gap:3, flexShrink:0 }}>
-                    <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
-                      style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:'none', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'inherit', fontSize:11 }}>
-                      {isActive ? '⏸' : '▶'}
-                    </button>
+                );
+
+                // ── Timer side
+                const timerSide = (
+                  <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
                     {(isActive || isPaused) && (
-                      <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
-                        style={{ background:'rgba(255,255,255,0.08)', border:'none', borderRadius:5, padding:'2px 6px', cursor:'pointer', color:'rgba(252,165,165,0.7)', fontSize:11 }}>
-                        ↺
+                      <>
+                        <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:700, minWidth:36 }}>
+                          {formatElapsed(elapsed)}{overTime ? '⚠' : ''}
+                        </span>
+                        <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
+                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:12, padding:'1px 3px' }}>↺</button>
+                      </>
+                    )}
+                    <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.55)', fontWeight:600, whiteSpace:'nowrap' }}>
+                      {fmtMin(mins)}
+                    </span>
+                    {!isDone && (
+                      <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
+                        style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.15)'}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', color:'inherit', fontSize:11, display:'flex', alignItems:'center', gap:3 }}>
+                        {isActive ? '⏸' : '▶'}
                       </button>
                     )}
-                    <button onClick={e => { e.stopPropagation(); markDone(task); }}
-                      style={{ background:'rgba(74,222,128,0.15)', border:'none', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'#4ade80', fontSize:11 }}>
-                      ✓
-                    </button>
                   </div>
                 );
 
@@ -385,52 +394,26 @@ export default function TaskManager() {
                     onDragEnd={onDragEnd}
                     style={{
                       position:'absolute', top, left:52, right:8, height:heightPx,
-                      background: isDone ? 'rgba(255,255,255,0.04)' : `${p.color}14`,
-                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.08)' : p.color+'44'}`,
+                      background: isDone ? 'rgba(255,255,255,0.03)' : `${p.color}12`,
+                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.07)' : p.color+'40'}`,
                       borderRight: `3px solid ${p.color}`,
-                      borderRadius:8, padding:'4px 8px', boxSizing:'border-box',
+                      borderRadius:8, padding:'0 8px', boxSizing:'border-box',
+                      display:'flex', alignItems:'center', gap:8,
                       opacity: isDone ? 0.6 : 1,
                       cursor: isDone ? 'default' : 'grab',
                       overflow:'hidden', zIndex:1,
                       pointerEvents: isDragging && dragTaskId.current !== task.id ? 'none' : 'auto',
                     }}
                   >
-                    {isCompact ? (
-                      /* ── Compact: single row ── */
-                      <div style={{ display:'flex', alignItems:'center', gap:6, height:'100%' }}>
-                        {actionBtns}
-                        <span style={{ flex:1, fontSize:12, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.45)' : 'white' }}>
-                          {task.title}
-                        </span>
-                        <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.3)' : p.color, fontWeight:600, flexShrink:0 }}>
-                          {fmtMin(mins)}
-                        </span>
-                        {(isActive || isPaused) && (
-                          <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', flexShrink:0 }}>
-                            {formatElapsed(elapsed)}{overTime ? '⚠️' : ''}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      /* ── Full: multi-row ── */
-                      <div style={{ display:'flex', flexDirection:'column', gap:3, height:'100%' }}>
-                        <span style={{ fontSize:12, fontWeight:600, lineHeight:1.3, textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.45)' : 'white', overflow:'hidden' }}>
-                          {task.title}
-                        </span>
-                        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
-                          <span style={{ fontSize:10, color: isDone ? 'rgba(255,255,255,0.3)' : p.color, fontWeight:600 }}>🎯 {fmtMin(mins)}</span>
-                          {(isActive || isPaused) && (
-                            <span style={{ fontSize:10, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:600 }}>
-                              ⏱ {formatElapsed(elapsed)}{overTime ? ' ⚠️' : ''}
-                            </span>
-                          )}
-                          {isDone && actual > 0 && (
-                            <span style={{ fontSize:10, color:'rgba(255,255,255,0.4)' }}>⏱ {fmtMin(actual)} בפועל</span>
-                          )}
-                        </div>
-                        <div style={{ marginTop:'auto' }}>{actionBtns}</div>
-                      </div>
-                    )}
+                    {checkbox}
+                    <span style={{
+                      flex:1, fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis',
+                      textDecoration: isDone ? 'line-through' : 'none',
+                      color: isDone ? 'rgba(255,255,255,0.4)' : 'white',
+                    }}>
+                      {task.title}
+                    </span>
+                    {timerSide}
                   </div>
                 );
               })}
@@ -525,10 +508,12 @@ function TaskModal({ data, isEdit, onChange, onSave, onClose }) {
           ))}
         </div>
 
-        <label style={labelStyle}>זמן משוער</label>
-        <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:16, alignItems:'center' }}>
-          {MINUTE_PRESETS.map(m => <button key={m} onClick={() => set('estimated_minutes', m)} style={toggleBtnStyle(data.estimated_minutes===m)}>{fmtMin(m)}</button>)}
-          <input type="number" value={data.estimated_minutes} onChange={e => set('estimated_minutes', Number(e.target.value))} style={{ ...inputStyle, width:80, marginBottom:0 }} placeholder="דק'" />
+        <label style={labelStyle}>כמה דקות תוקצב למשימה?</label>
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+          <input type="number" min="1" value={data.estimated_minutes}
+            onChange={e => set('estimated_minutes', Number(e.target.value))}
+            style={{ ...inputStyle, width:100, marginBottom:0 }} placeholder="30" />
+          <span style={{ fontSize:13, color:'rgba(255,255,255,0.5)', whiteSpace:'nowrap' }}>דקות</span>
         </div>
 
         <label style={labelStyle}>תאריך יעד</label>
