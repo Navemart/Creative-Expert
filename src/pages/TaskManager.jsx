@@ -87,7 +87,18 @@ export default function TaskManager() {
 
   async function loadTasks() {
     const { data } = await supabase.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending:false });
-    if (data) { setTasks(data); runDailyReset(data); }
+    if (data) {
+      setTasks(data);
+      runDailyReset(data);
+      // Pre-populate taskElapsed from saved actual_minutes for non-done tasks
+      const preload = {};
+      data.forEach(t => {
+        if (t.actual_minutes > 0 && t.status !== 'done') {
+          preload[t.id] = t.actual_minutes * 60;
+        }
+      });
+      setTaskElapsed(preload);
+    }
   }
 
   async function runDailyReset(data) {
@@ -116,18 +127,17 @@ export default function TaskManager() {
 
   async function toggleTimer(taskId) {
     if (activeTimer === taskId) {
-      // pause — save elapsed to actual_minutes and clear local elapsed
+      // pause — keep taskElapsed intact so display stays, save to DB
       setActiveTimer(null);
-      const elapsedSec = taskElapsed[taskId] || 0;
-      const mins = Math.round(elapsedSec / 60);
-      setTaskElapsed(prev => { const n={...prev}; delete n[taskId]; return n; });
+      const secs = taskElapsed[taskId] || 0;
+      const mins = Math.round(secs / 60);
       if (mins > 0) {
-        const task = tasks.find(t => t.id === taskId);
-        const total = (task?.actual_minutes || 0) + mins;
-        await supabase.from('tasks').update({ actual_minutes: total }).eq('id', taskId);
-        setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: total } : t));
+        await supabase.from('tasks').update({ actual_minutes: mins }).eq('id', taskId);
+        setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: mins } : t));
       }
+      // DON'T clear taskElapsed — keep it so display shows frozen time and resume works
     } else {
+      // resume or start — taskElapsed already has accumulated seconds
       setActiveTimer(taskId);
     }
   }
@@ -137,18 +147,18 @@ export default function TaskManager() {
     if (ok) {
       setActiveTimer(null);
       setTaskElapsed(prev => ({ ...prev, [taskId]: 0 }));
+      await supabase.from('tasks').update({ actual_minutes: 0 }).eq('id', taskId);
+      setTasks(prev => prev.map(t => t.id===taskId ? { ...t, actual_minutes: 0 } : t));
     }
   }
 
   async function markDone(task) {
-    // only count running elapsed — paused elapsed was already saved via toggleTimer
-    let additionalMins = 0;
-    if (activeTimer === task.id) {
-      additionalMins = Math.round((taskElapsed[task.id] || 0) / 60);
-      setActiveTimer(null);
-    }
+    // use accumulated taskElapsed as source of truth
+    const secs = taskElapsed[task.id] ?? (task.actual_minutes || 0) * 60;
+    const mins = Math.round(secs / 60);
+    if (activeTimer === task.id) setActiveTimer(null);
     setTaskElapsed(prev => { const n = {...prev}; delete n[task.id]; return n; });
-    const updates = { status:'done', actual_minutes:(task.actual_minutes||0)+additionalMins, completed_at:new Date().toISOString() };
+    const updates = { status:'done', actual_minutes: mins, completed_at: new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
   }
@@ -157,6 +167,10 @@ export default function TaskManager() {
     const updates = { status:'scheduled', completed_at:null };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+    // Restore timer display from saved actual_minutes
+    if (task.actual_minutes > 0) {
+      setTaskElapsed(prev => ({ ...prev, [task.id]: task.actual_minutes * 60 }));
+    }
   }
 
   async function restoreTask(taskId) {
@@ -228,9 +242,9 @@ export default function TaskManager() {
   const calendarTasks  = tasks.filter(t => t.scheduled_date===selectedStr && (t.status==='scheduled'||t.status==='done'));
   const doneToday      = calendarTasks.filter(t => t.status==='done');
   const totalActual    = calendarTasks.reduce((s,t) => {
-    const saved   = t.actual_minutes || 0;
-    const running = Math.round((taskElapsed[t.id] || 0) / 60);
-    return s + Math.max(saved, running);
+    // Use taskElapsed if exists (most accurate), else fall back to DB value
+    if (taskElapsed[t.id] !== undefined) return s + Math.round(taskElapsed[t.id] / 60);
+    return s + (t.actual_minutes || 0);
   }, 0);
   const totalPlanned   = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
   const showDragHint   = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
@@ -381,24 +395,30 @@ export default function TaskManager() {
                 // ── Timer side (far left in RTL)
                 const timerSide = (
                   <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                    {(isActive || isPaused) && (
-                      <>
-                        <span style={{ fontSize:13, color: overTime ? '#ef4444' : '#4ade80', fontVariantNumeric:'tabular-nums', fontWeight:700, minWidth:44 }}>
-                          {formatElapsed(elapsed)}{overTime ? ' ⚠' : ''}
+                    {isDone ? (
+                      // Done: show actual / estimated
+                      <span style={{ fontSize:12, color:'rgba(255,255,255,0.5)', whiteSpace:'nowrap', fontVariantNumeric:'tabular-nums' }}>
+                        {actual > 0 ? fmtMin(actual) : '—'} / {fmtMin(mins)}
+                      </span>
+                    ) : <>
+                      {/* Elapsed display — always visible when there's time */}
+                      {elapsed > 0 && (
+                        <span style={{ fontSize:13, fontVariantNumeric:'tabular-nums', fontWeight:700, minWidth:44,
+                          color: isActive ? (overTime ? '#ef4444' : '#4ade80') : 'rgba(255,255,255,0.5)' }}>
+                          {formatElapsed(elapsed)}{isActive && overTime ? ' ⚠' : ''}
                         </span>
+                      )}
+                      {/* Reset — only when there's elapsed */}
+                      {elapsed > 0 && (
                         <button onClick={e => { e.stopPropagation(); resetTimer(task.id); }}
-                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:13, padding:'1px 4px' }}>↺</button>
-                      </>
-                    )}
-                    {!isDone && (
+                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.5)', fontSize:13, padding:'1px 4px' }}>↺</button>
+                      )}
+                      {/* Play/Pause */}
                       <button onClick={e => { e.stopPropagation(); toggleTimer(task.id); }}
                         style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.15)'}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', color:'inherit', fontSize:13 }}>
                         {isActive ? '⏸' : '▶'}
                       </button>
-                    )}
-                    {isDone && actual > 0 && (
-                      <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', whiteSpace:'nowrap' }}>{fmtMin(actual)} בפועל</span>
-                    )}
+                    </>}
                   </div>
                 );
 
