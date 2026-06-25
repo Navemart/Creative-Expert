@@ -14,7 +14,7 @@ const MINUTE_PRESETS = [25, 30, 45, 60, 90, 120];
 
 function generateSlots() {
   const slots = [];
-  for (let h = 7; h < 22; h++) {
+  for (let h = 5; h < 23; h++) {
     for (const m of [0, 30]) {
       slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
     }
