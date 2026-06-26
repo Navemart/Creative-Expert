@@ -413,7 +413,7 @@ export default function TaskManager() {
                             </button>
                           )}
                           <button onClick={e => { e.stopPropagation(); isActive ? pauseTimer(task) : startTimer(task); }}
-                            style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, borderRadius:5, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:13, lineHeight:1 }}>
+                            style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, borderRadius:5, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:8, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center' }}>
                             {isActive ? '⏸' : '▶'}
                           </button>
                         </div>
