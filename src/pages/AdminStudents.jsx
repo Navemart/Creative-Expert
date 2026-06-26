@@ -1082,6 +1082,7 @@ export default function AdminStudents() {
   const [filter,        setFilter]        = useState('all');
   const [openStudentId, setOpenStudentId] = useState(null);
   const [roadmap,       setRoadmap]       = useState({ phases: [], weeks: [], tasks: [] });
+  const [unpostedCount, setUnpostedCount] = useState({ wins: 0, deals: 0 });
   const location = useLocation();
   const view = location.pathname.includes('/monthly')   ? 'monthly'
              : location.pathname.includes('/wins')      ? 'wins'
@@ -1115,7 +1116,16 @@ export default function AdminStudents() {
     finally { setLoading(false); }
   }
 
-  useEffect(() => { fetchStudents(); }, []);
+  useEffect(() => { fetchStudents(); checkUnposted(); }, []);
+
+  async function checkUnposted() {
+    const since = new Date(Date.now() - 7 * 24 * 3600000).toISOString();
+    const [{ count: wCount }, { count: dCount }] = await Promise.all([
+      supabase.from('sunday_wins').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
+      supabase.from('deals').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
+    ]);
+    setUnpostedCount({ wins: wCount || 0, deals: dCount || 0 });
+  }
 
   // ── Realtime: רענון פאנל כשמגיע דיווח חדש ─────────────────
   useEffect(() => {
@@ -1220,6 +1230,19 @@ export default function AdminStudents() {
           </div>
         );
       })()}
+
+      {/* Slack unposted alert */}
+      {(unpostedCount.wins > 0 || unpostedCount.deals > 0) && (
+        <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.25)' }}>
+          <span style={{ color:'#fca5a5', fontSize:13, fontWeight:600 }}>
+            ⚠️ לא פורסם לסלאק:
+            {unpostedCount.wins > 0 && ` ${unpostedCount.wins} נצחונות`}
+            {unpostedCount.wins > 0 && unpostedCount.deals > 0 && ' ·'}
+            {unpostedCount.deals > 0 && ` ${unpostedCount.deals} עסקאות`}
+            {' — '}הCron יפרסם ב-09:00, או פרסם ידנית מהפאנל.
+          </span>
+        </div>
+      )}
 
       {/* Alert banners — students view only */}
       {view === 'students' && alertList.length > 0 && (

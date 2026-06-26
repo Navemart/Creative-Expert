@@ -100,3 +100,41 @@ cron.schedule('0 6 * * *', async () => {
   }
 });
 console.log('  ⏰  Instagram daily refresh scheduled (06:00)');
+
+// ── Slack retry — unposted wins & deals ───────────────────────
+// Every day at 09:00 — retry any wins/deals from last 48h not posted to Slack
+cron.schedule('0 9 * * *', async () => {
+  try {
+    const { createClient } = await import('@supabase/supabase-js');
+    const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+    const token   = process.env.SLACK_BOT_TOKEN;
+    const winsCh  = process.env.SLACK_WINS_CHANNEL;
+    const dealsCh = 'cha-ching';
+    if (!token) return;
+
+    const since = new Date(Date.now() - 48 * 3600000).toISOString();
+
+    // Retry unposted wins
+    const { data: wins } = await sb.from('sunday_wins').select('*').is('slack_posted_at', null).gte('created_at', since);
+    for (const w of wins || []) {
+      const lines = [`האגדה: ${w.user_name || 'תלמיד'}`, w.win_1, w.win_2, w.win_3, w.focus_next_week, w.blocker].filter(Boolean).join('\n\n');
+      const r = await fetch('https://slack.com/api/chat.postMessage', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({ channel: winsCh, text: lines }) });
+      const d = await r.json();
+      if (d.ok) await sb.from('sunday_wins').update({ slack_posted_at: new Date().toISOString() }).eq('id', w.id);
+    }
+    if (wins?.length) console.log(`[cron] Retried ${wins.length} unposted wins`);
+
+    // Retry unposted deals
+    const { data: deals } = await sb.from('deals').select('*').is('slack_posted_at', null).gte('created_at', since);
+    for (const d of deals || []) {
+      const text = `🎉🏆 !!!אליפותתתתממממ\nהאגדה: ${d.user_name || 'תלמיד'}\nסכום: ₪${Number(d.total_amount||0).toLocaleString()}\nדרגה: ${d.next_rank||''}`;
+      const r = await fetch('https://slack.com/api/chat.postMessage', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({ channel: dealsCh, text }) });
+      const rd = await r.json();
+      if (rd.ok) await sb.from('deals').update({ slack_posted_at: new Date().toISOString() }).eq('id', d.id);
+    }
+    if (deals?.length) console.log(`[cron] Retried ${deals.length} unposted deals`);
+  } catch (e) {
+    console.error('[cron] Slack retry error:', e.message);
+  }
+});
+console.log('  ⏰  Slack retry scheduled (09:00)');

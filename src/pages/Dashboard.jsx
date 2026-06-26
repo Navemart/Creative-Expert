@@ -1128,23 +1128,26 @@ export default function Dashboard() {
 
     const date = dealForm.deal_date || new Date().toISOString().slice(0, 10);
 
-    await supabase.from('deals').insert({
+    const dealName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
+
+    const { data: dealRow } = await supabase.from('deals').insert({
       user_id:          userId,
+      user_name:        dealName,
       amount:           parseFloat(dealForm.total_amount),
       total_amount:     parseFloat(dealForm.total_amount),
       received_amount:  parseFloat(dealForm.received_amount) || 0,
       next_rank:        dealForm.next_rank,
       notes:            dealForm.notes || null,
       created_at:       date + 'T12:00:00.000Z',
-    });
+    }).select('id').single();
 
     // שלח לסלאק
     try {
-      await fetch('/api/slack/deals', {
+      const slackRes = await fetch('/api/slack/deals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name:             [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד',
+          name:             dealName,
           total_amount:     dealForm.total_amount,
           received_amount:  dealForm.received_amount,
           next_rank:        dealForm.next_rank,
@@ -1152,6 +1155,10 @@ export default function Dashboard() {
           date,
         }),
       });
+      const slackData = await slackRes.json();
+      if (slackData.ok && dealRow?.id) {
+        await supabase.from('deals').update({ slack_posted_at: new Date().toISOString() }).eq('id', dealRow.id);
+      }
     } catch (e) {
       console.error('Slack deal error:', e);
     }
@@ -1177,9 +1184,12 @@ export default function Dashboard() {
     const submittedAt = new Date().toISOString(); // actual submit time — used for streak
     const weekDate    = winForm.week_date || new Date().toISOString().slice(0, 10);
 
+    const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
+
     // שמור ב-Supabase
-    await supabase.from('sunday_wins').insert({
+    const { data: winRow } = await supabase.from('sunday_wins').insert({
       user_id:         userId,
+      user_name:       fullName,
       wins:            winForm.win_1,
       win_1:           winForm.win_1,
       win_2:           winForm.win_2,
@@ -1188,15 +1198,15 @@ export default function Dashboard() {
       blocker:         winForm.blocker,
       week_date:       weekDate,
       submitted_at:    submittedAt,
-    });
+    }).select('id').single();
 
     // שלח לסלאק
     try {
-      await fetch('/api/slack/wins', {
+      const slackRes = await fetch('/api/slack/wins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name:            [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד',
+          name:            fullName,
           win_1:           winForm.win_1,
           win_2:           winForm.win_2,
           win_3:           winForm.win_3,
@@ -1205,8 +1215,12 @@ export default function Dashboard() {
           date:            weekDate,
         }),
       });
+      const slackData = await slackRes.json();
+      if (slackData.ok && winRow?.id) {
+        await supabase.from('sunday_wins').update({ slack_posted_at: new Date().toISOString() }).eq('id', winRow.id);
+      }
     } catch (e) {
-      console.error('Slack error:', e);
+      console.error('Slack wins error:', e);
     }
 
     setWinForm({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '', week_date: new Date().toISOString().slice(0,10), _datePicker: false });
