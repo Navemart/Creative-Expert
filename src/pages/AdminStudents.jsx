@@ -611,9 +611,10 @@ function WeeklyWinsTable({ students }) {
 
 // ── Deals Table ───────────────────────────────────────────────
 function DealsTable({ students }) {
-  const [search,  setSearch]  = useState('');
-  const [sortKey, setSortKey] = useState('created_at');
-  const [sortDir, setSortDir] = useState(-1);
+  const [search,      setSearch]      = useState('');
+  const [sortKey,     setSortKey]     = useState('created_at');
+  const [sortDir,     setSortDir]     = useState(-1);
+  const [expandedRow, setExpandedRow] = useState(null);
 
   const rows = useMemo(() => {
     const flat = students.flatMap(s =>
@@ -658,7 +659,64 @@ function DealsTable({ students }) {
           {' · '}התקבל: <span style={{ color: '#4fc38a', fontWeight: 700 }}>₪{totalReceived.toLocaleString('he-IL')}</span>
         </span>
       </div>
-      <AdminTable cols={COLS} rows={rows} rowKey={r => `${r.user_id}-${r.id || r.created_at}`} sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+      <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+        <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
+          <thead>
+            <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              {COLS.map(col => (
+                <th key={col.key} onClick={() => toggleSort(col.key)}
+                  className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
+                  style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                  {col.label}{sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0
+              ? <tr><td colSpan={COLS.length} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
+              : rows.map((r, i) => {
+                const rowId = `${r.user_id}-${r.id || r.created_at}`;
+                const isExpanded = expandedRow === rowId;
+                return (
+                  <tr key={rowId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
+                    className="hover:bg-white/[0.03] transition">
+                    {COLS.map(col => {
+                      const val = r[col.key];
+                      if (col.key === 'notes') {
+                        const text = val || '';
+                        const isLong = text.length > 60;
+                        return (
+                          <td key={col.key} className="px-3 py-2.5" style={{ textAlign: 'right', color: text ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.2)', fontSize: 13, maxWidth: 280 }}>
+                            {!text ? '—' : isLong ? (
+                              <span>
+                                {isExpanded ? text : `${text.slice(0, 60)}...`}
+                                {' '}
+                                <button onClick={() => setExpandedRow(isExpanded ? null : rowId)}
+                                  className="text-xs font-semibold hover:opacity-80 transition"
+                                  style={{ color: '#F5C118', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                  {isExpanded ? 'פחות' : 'עוד'}
+                                </button>
+                              </span>
+                            ) : text}
+                          </td>
+                        );
+                      }
+                      const display = col.fmt ? col.fmt(val) : (val ?? '—');
+                      return (
+                        <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
+                          style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: 13 }}>
+                          {display}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
