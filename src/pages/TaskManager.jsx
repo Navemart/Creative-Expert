@@ -421,7 +421,7 @@ export default function TaskManager() {
           {/* Summary bar */}
           <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', gap:20, fontSize:13, color:'rgba(255,255,255,0.6)', flexShrink:0 }}>
             <span>✅ {doneToday.length} הושלמו</span>
-            {totalActual > 0 && <span>⏱ {totalActual} דק' השקעתי היום</span>}
+            <span>⏱ {totalActual} דק' השקעתי היום</span>
             <span>🎯 {fmtMin(totalPlanned)} מתוכנן</span>
           </div>
         </div>
