@@ -11,6 +11,25 @@ const PRIORITIES = {
 };
 
 const CATEGORIES = ['עסק', 'שיווק', 'לקוחות'];
+
+const POMODORO_MODES = [
+  { id: '25-5',  focus: 25, brk: 5,  label: '25/5'  },
+  { id: '30-5',  focus: 30, brk: 5,  label: '30/5'  },
+  { id: '50-10', focus: 50, brk: 10, label: '50/10' },
+];
+
+function playBeep(freq = 700, duration = 0.6) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc  = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq; osc.type = 'sine';
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
 const EMPTY_MODAL    = { title:'', category:'עסק', priority:'important', estimated_minutes:30, due_date:'', notes:'' };
 const START_HOUR     = 5;
 const END_HOUR       = 23;
@@ -73,14 +92,49 @@ export default function TaskManager() {
   const [modalData,      setModalData]      = useState(EMPTY_MODAL);
   const [dragOverSlot, setDragOverSlot] = useState(null);
   const [isDragging,   setIsDragging]   = useState(false);
-  const [now,          setNow]          = useState(Date.now()); // ticks every second for display
+  const [now,          setNow]          = useState(Date.now());
+  const [pomMode,      setPomMode]      = useState(null);   // null | '25-5' | '30-5' | '50-10'
+  const [pomPhase,     setPomPhase]     = useState('focus'); // 'focus' | 'break'
+  const [pomStart,     setPomStart]     = useState(null);   // timestamp
+  const [pomAlert,     setPomAlert]     = useState(null);   // { msg, type }
   const dragTaskId = useRef(null);
 
-  // Single interval — updates 'now' for live elapsed display
+  // Single interval — updates 'now' every second
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
+
+  // Pomodoro phase check — fires when phase time expires
+  useEffect(() => {
+    if (!pomMode || !pomStart) return;
+    const mode = POMODORO_MODES.find(m => m.id === pomMode);
+    if (!mode) return;
+    const phaseMins = pomPhase === 'focus' ? mode.focus : mode.brk;
+    const elapsedMins = (now - pomStart) / 60000;
+    if (elapsedMins >= phaseMins) {
+      if (pomPhase === 'focus') {
+        playBeep(700, 0.8);
+        setTimeout(() => playBeep(900, 0.5), 500);
+        setPomAlert({ msg: `🍅 ${mode.focus} דק' הסתיימו! קח הפסקה של ${mode.brk} דק'`, type: 'break' });
+        setPomPhase('break');
+      } else {
+        playBeep(500, 0.5);
+        setTimeout(() => playBeep(700, 0.8), 400);
+        setPomAlert({ msg: `💪 ההפסקה הסתיימה! חזרה לעבודה`, type: 'focus' });
+        setPomPhase('focus');
+      }
+      setPomStart(Date.now());
+    }
+  }, [now]);
+
+  // Pomodoro computed values for display
+  const pomCurrent = pomMode ? POMODORO_MODES.find(m => m.id === pomMode) : null;
+  const pomElapsedSecs = pomStart ? Math.floor((now - pomStart) / 1000) : 0;
+  const pomTotalSecs   = pomCurrent ? (pomPhase === 'focus' ? pomCurrent.focus : pomCurrent.brk) * 60 : 0;
+  const pomRemaining   = Math.max(0, pomTotalSecs - pomElapsedSecs);
+  const pomPct         = pomTotalSecs > 0 ? Math.min(100, (pomElapsedSecs / pomTotalSecs) * 100) : 0;
+  const fmtPomTime     = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
   // actual_minutes stores SECONDS (not minutes) for timer precision
   function liveElapsed(task) {
@@ -90,13 +144,19 @@ export default function TaskManager() {
   }
 
   async function startTimer(task) {
-    // Pause any other running timer first
     const running = tasks.find(t => t.id !== task.id && t.timer_started_at);
     if (running) await pauseTimer(running);
 
     const updates = { timer_started_at: new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+
+    // Start pomodoro if mode selected and not already running
+    if (pomMode && !pomStart) {
+      setPomPhase('focus');
+      setPomStart(Date.now());
+      setPomAlert(null);
+    }
   }
 
   async function pauseTimer(task) {
@@ -244,6 +304,20 @@ export default function TaskManager() {
   function prevDay() { setSelectedDate(d => { const n=new Date(d); n.setDate(n.getDate()-1); return n; }); }
   function nextDay() { setSelectedDate(d => { const n=new Date(d); n.setDate(n.getDate()+1); return n; }); }
 
+  // ── Real-time recommendations ─────────────────────────────
+  const activeTasks = tasks.filter(t => t.status !== 'done');
+  const urgentImportantPct = activeTasks.length > 0
+    ? Math.round(activeTasks.filter(t => t.priority === 'urgent_important').length / activeTasks.length * 100)
+    : 0;
+  const hasGrowthTasks = activeTasks.some(t => t.priority === 'important');
+  const recommendations = [];
+  if (urgentImportantPct > 60)
+    recommendations.push({ icon:'⚠️', msg:`${urgentImportantPct}% מהמשימות שלך דחופות+חשובות — אתה במצב כיבוי שריפות. תתכנן מראש.`, color:'#fca5a5' });
+  if (!hasGrowthTasks && activeTasks.length > 2)
+    recommendations.push({ icon:'🌱', msg:'אין לך משימות בריבוע "חשוב לא דחוף" — זה אזור הצמיחה שלך.', color:'#86efac' });
+  if (avgOverrunPct !== null && Math.abs(avgOverrunPct) >= 10)
+    recommendations.push({ icon: avgOverrunPct > 0 ? '⏰' : '⚡', msg: avgOverrunPct > 0 ? `אתה חורג ב-${avgOverrunPct}% בממוצע — הוסף ${avgOverrunPct}% לכל הערכה הבאה` : `אתה מקדים ב-${Math.abs(avgOverrunPct)}% — תוריד מעט מהערכות שלך`, color: avgOverrunPct > 0 ? '#fbbf24' : '#4ade80' });
+
   return (
     <div dir="rtl" style={{ display:'flex', flexDirection:'column', height:'100%', minHeight:0 }}>
       <div style={{ display:'flex', gap:16, flex:1, minHeight:0, padding:16 }}>
@@ -323,6 +397,43 @@ export default function TaskManager() {
             {showDragHint && (
               <div style={{ background:'rgba(245,193,24,0.08)', border:'1px solid rgba(245,193,24,0.25)', borderRadius:10, padding:'8px 12px', marginTop:10, fontSize:13, color:'rgba(255,255,255,0.7)', display:'flex', alignItems:'center', gap:8 }}>
                 <span>💡</span><span>גרור משימות מהבנק ישירות לשעה הרצויה ביומן</span>
+              </div>
+            )}
+
+            {/* ── Pomodoro widget ── */}
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10, flexWrap:'wrap' }}>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>🍅 פומודורו:</span>
+              {[...POMODORO_MODES, { id: null, label: 'כבוי' }].map(m => (
+                <button key={m.id ?? 'off'} onClick={() => { setPomMode(m.id); setPomStart(null); setPomPhase('focus'); setPomAlert(null); }}
+                  style={{
+                    padding:'3px 10px', borderRadius:20, border:'1px solid rgba(255,255,255,0.15)',
+                    background: pomMode===m.id ? (m.id ? 'rgba(239,100,60,0.25)' : 'rgba(255,255,255,0.1)') : 'transparent',
+                    color: pomMode===m.id ? (m.id ? '#fb923c' : 'rgba(255,255,255,0.7)') : 'rgba(255,255,255,0.4)',
+                    cursor:'pointer', fontSize:11, fontWeight: pomMode===m.id ? 700 : 400,
+                  }}>{m.label}</button>
+              ))}
+              {pomMode && pomStart && (
+                <div style={{ display:'flex', alignItems:'center', gap:6, marginRight:'auto' }}>
+                  <span style={{ fontSize:11, color: pomPhase==='break' ? '#4ade80' : '#fb923c', fontWeight:600 }}>
+                    {pomPhase==='focus' ? 'פוקוס' : 'הפסקה'}
+                  </span>
+                  <span style={{ fontSize:13, fontVariantNumeric:'tabular-nums', fontWeight:800, color: pomPhase==='break' ? '#4ade80' : '#fb923c' }}>
+                    {fmtPomTime(pomRemaining)}
+                  </span>
+                  <div style={{ width:60, height:4, borderRadius:99, background:'rgba(255,255,255,0.08)' }}>
+                    <div style={{ height:'100%', borderRadius:99, width:`${pomPct}%`, background: pomPhase==='break' ? '#4ade80' : '#fb923c', transition:'width 1s linear' }} />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pomodoro alert */}
+            {pomAlert && (
+              <div style={{ marginTop:8, padding:'8px 12px', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'space-between',
+                background: pomAlert.type==='break' ? 'rgba(251,146,60,0.12)' : 'rgba(74,222,128,0.1)',
+                border: `1px solid ${pomAlert.type==='break' ? 'rgba(251,146,60,0.4)' : 'rgba(74,222,128,0.3)'}` }}>
+                <span style={{ fontSize:13, color: pomAlert.type==='break' ? '#fb923c' : '#4ade80', fontWeight:600 }}>{pomAlert.msg}</span>
+                <button onClick={() => setPomAlert(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.4)', fontSize:16, padding:'0 4px' }}>×</button>
               </div>
             )}
           </div>
@@ -450,26 +561,22 @@ export default function TaskManager() {
             </div>
           </div>
 
+          {/* Recommendations */}
+          {recommendations.length > 0 && (
+            <div style={{ padding:'8px 16px 0', flexShrink:0, display:'flex', flexDirection:'column', gap:4 }}>
+              {recommendations.map((r,i) => (
+                <div key={i} style={{ fontSize:12, color: r.color, display:'flex', alignItems:'center', gap:6, padding:'5px 10px', borderRadius:8, background:`${r.color}12`, border:`1px solid ${r.color}30` }}>
+                  <span>{r.icon}</span><span>{r.msg}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Summary bar */}
           <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', gap:16, fontSize:12, color:'rgba(255,255,255,0.5)', flexShrink:0, flexWrap:'wrap' }}>
             <span>✅ {doneToday.length} הושלמו</span>
             <span>⏱ <b style={{ color:'rgba(255,255,255,0.85)', fontSize:13 }}>{totalActual}</b> דק' היום</span>
             <span>🎯 {fmtMin(totalPlanned)} מתוכנן</span>
-            {avgOverrunPct !== null && (
-              <span style={{ marginRight:'auto', display:'flex', alignItems:'center', gap:5 }}>
-                <span style={{
-                  fontSize:11, fontWeight:700, borderRadius:6, padding:'2px 8px',
-                  background: Math.abs(avgOverrunPct) < 10 ? 'rgba(74,222,128,0.12)' : avgOverrunPct > 0 ? 'rgba(239,68,68,0.12)' : 'rgba(74,222,128,0.12)',
-                  color: Math.abs(avgOverrunPct) < 10 ? '#4ade80' : avgOverrunPct > 0 ? '#fca5a5' : '#4ade80',
-                }}>
-                  {Math.abs(avgOverrunPct) < 10
-                    ? '🎯 הערכות מדויקות'
-                    : avgOverrunPct > 0
-                      ? `⚠️ חורג ב-${avgOverrunPct}% בממוצע — הוסף ${avgOverrunPct}% לכל הערכה`
-                      : `✨ מקדים ב-${Math.abs(avgOverrunPct)}% — אפשר להוריד מהערכות`}
-                </span>
-              </span>
-            )}
           </div>
         </div>
       </div>
