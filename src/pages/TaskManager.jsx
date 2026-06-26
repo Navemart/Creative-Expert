@@ -408,8 +408,8 @@ export default function TaskManager() {
                         <div style={{ display:'flex', gap:3, flexShrink:0 }}>
                           {elapsed > 0 && (
                             <button onClick={e => { e.stopPropagation(); resetTimer(task); }}
-                              style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:6, padding:'6px 14px', cursor:'pointer', color:'rgba(255,255,255,0.7)', fontSize:18, lineHeight:1 }}>
-                              ■
+                              style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:5, padding:'3px 8px', cursor:'pointer', color:'rgba(255,255,255,0.7)', fontSize:13, lineHeight:1, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                              <span style={{ display:'block', width:7, height:7, background:'rgba(255,255,255,0.65)', borderRadius:1 }} />
                             </button>
                           )}
                           <button onClick={e => { e.stopPropagation(); isActive ? pauseTimer(task) : startTimer(task); }}
