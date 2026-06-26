@@ -1202,7 +1202,7 @@ export default function Dashboard() {
           win_3:           winForm.win_3,
           focus_next_week: winForm.focus_next_week,
           blocker:         winForm.blocker,
-          date,
+          date:            weekDate,
         }),
       });
     } catch (e) {
