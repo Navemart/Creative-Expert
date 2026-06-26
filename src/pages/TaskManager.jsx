@@ -422,7 +422,9 @@ export default function TaskManager() {
                         <div style={{ display:'flex', alignItems:'center', gap:4 }}>
                           {elapsed > 0 && (
                             <button onClick={e => { e.stopPropagation(); resetTimer(task); }}
-                              style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.4)', fontSize:11, padding:0, lineHeight:1 }}>↺</button>
+                              style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:5, cursor:'pointer', color:'rgba(255,255,255,0.45)', fontSize:10, fontWeight:600, padding:'1px 6px', lineHeight:'16px' }}>
+                              איפוס
+                            </button>
                           )}
                           {overTime && (
                             <button onClick={e => { e.stopPropagation(); addTime(task, 15); }}
