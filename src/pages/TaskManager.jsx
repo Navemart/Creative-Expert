@@ -82,9 +82,9 @@ export default function TaskManager() {
     return () => clearInterval(id);
   }, []);
 
-  // Compute live elapsed seconds for a task
+  // actual_minutes stores SECONDS (not minutes) for timer precision
   function liveElapsed(task) {
-    const saved = (task.actual_minutes || 0) * 60;
+    const saved = task.actual_minutes || 0; // already in seconds
     if (!task.timer_started_at) return saved;
     return saved + Math.floor((now - new Date(task.timer_started_at).getTime()) / 1000);
   }
@@ -96,9 +96,8 @@ export default function TaskManager() {
   }
 
   async function pauseTimer(task) {
-    const elapsed = liveElapsed(task);
-    const mins    = Math.round(elapsed / 60);
-    const updates = { timer_started_at: null, actual_minutes: mins };
+    const elapsed = liveElapsed(task); // seconds
+    const updates = { timer_started_at: null, actual_minutes: Math.floor(elapsed) };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
   }
@@ -137,9 +136,8 @@ export default function TaskManager() {
   }
 
   async function markDone(task) {
-    const elapsed = liveElapsed(task);
-    const mins    = Math.round(elapsed / 60);
-    const updates = { status:'done', completed_at: new Date().toISOString(), timer_started_at: null, actual_minutes: mins };
+    const elapsed = liveElapsed(task); // seconds
+    const updates = { status:'done', completed_at: new Date().toISOString(), timer_started_at: null, actual_minutes: Math.floor(elapsed) };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
   }
@@ -219,7 +217,7 @@ export default function TaskManager() {
   const calendarTasks  = tasks.filter(t => t.scheduled_date===selectedStr && (t.status==='scheduled'||t.status==='done'));
   const doneToday    = calendarTasks.filter(t => t.status==='done');
   const totalPlanned = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
-  const totalActual  = calendarTasks.reduce((s,t) => s + Math.round(liveElapsed(t)/60), 0);
+  const totalActual  = Math.round(calendarTasks.reduce((s,t) => s + liveElapsed(t), 0) / 60);
   const showDragHint   = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
   const totalSlots     = (END_HOUR - START_HOUR) * 2;
   const calendarHeight = totalSlots * SLOT_HEIGHT;
