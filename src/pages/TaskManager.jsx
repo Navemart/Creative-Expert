@@ -408,12 +408,12 @@ export default function TaskManager() {
                         <div style={{ display:'flex', gap:3, flexShrink:0 }}>
                           {elapsed > 0 && (
                             <button onClick={e => { e.stopPropagation(); resetTimer(task); }}
-                              style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:5, padding:'1px 7px', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:11 }}>
+                              style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:5, padding:'3px 8px', cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:13, lineHeight:1 }}>
                               ■
                             </button>
                           )}
                           <button onClick={e => { e.stopPropagation(); isActive ? pauseTimer(task) : startTimer(task); }}
-                            style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, borderRadius:5, padding:'1px 7px', cursor:'pointer', color:'inherit', fontSize:11 }}>
+                            style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, borderRadius:5, padding:'3px 8px', cursor:'pointer', color:'inherit', fontSize:13, lineHeight:1 }}>
                             {isActive ? '⏸' : '▶'}
                           </button>
                         </div>
