@@ -90,6 +90,10 @@ export default function TaskManager() {
   }
 
   async function startTimer(task) {
+    // Pause any other running timer first
+    const running = tasks.find(t => t.id !== task.id && t.timer_started_at);
+    if (running) await pauseTimer(running);
+
     const updates = { timer_started_at: new Date().toISOString() };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
