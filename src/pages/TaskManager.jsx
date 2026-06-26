@@ -93,11 +93,13 @@ export default function TaskManager() {
   const [dragOverSlot, setDragOverSlot] = useState(null);
   const [isDragging,   setIsDragging]   = useState(false);
   const [now,          setNow]          = useState(Date.now());
-  const [pomMode,      setPomMode]      = useState(null);   // null | '25-5' | '30-5' | '50-10'
-  const [pomPhase,     setPomPhase]     = useState('focus'); // 'focus' | 'break'
-  const [pomStart,     setPomStart]     = useState(null);   // timestamp
-  const [pomAlert,     setPomAlert]     = useState(null);   // { msg, type }
-  const dragTaskId = useRef(null);
+  const [pomMode,      setPomMode]      = useState(null);
+  const [pomPhase,     setPomPhase]     = useState('focus');
+  const [pomStart,     setPomStart]     = useState(null);   // timestamp when current phase started (adjusted for pauses)
+  const [pomPaused,    setPomPaused]    = useState(false);  // is pomodoro paused?
+  const [pomAlert,     setPomAlert]     = useState(null);
+  const dragTaskId    = useRef(null);
+  const pomSavedSecs  = useRef(0); // elapsed seconds at time of pause
 
   // Single interval — updates 'now' every second
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function TaskManager() {
 
   // Pomodoro phase check — fires when phase time expires
   useEffect(() => {
-    if (!pomMode || !pomStart) return;
+    if (!pomMode || !pomStart || pomPaused) return;
     const mode = POMODORO_MODES.find(m => m.id === pomMode);
     if (!mode) return;
     const phaseMins = pomPhase === 'focus' ? mode.focus : mode.brk;
@@ -130,7 +132,7 @@ export default function TaskManager() {
 
   // Pomodoro computed values for display
   const pomCurrent = pomMode ? POMODORO_MODES.find(m => m.id === pomMode) : null;
-  const pomElapsedSecs = pomStart ? Math.floor((now - pomStart) / 1000) : 0;
+  const pomElapsedSecs = pomPaused ? pomSavedSecs.current : (pomStart ? Math.floor((now - pomStart) / 1000) : 0);
   const pomTotalSecs   = pomCurrent ? (pomPhase === 'focus' ? pomCurrent.focus : pomCurrent.brk) * 60 : 0;
   const pomRemaining   = Math.max(0, pomTotalSecs - pomElapsedSecs);
   const pomPct         = pomTotalSecs > 0 ? Math.min(100, (pomElapsedSecs / pomTotalSecs) * 100) : 0;
@@ -151,19 +153,31 @@ export default function TaskManager() {
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
 
-    // Start pomodoro if mode selected and not already running
-    if (pomMode && !pomStart) {
-      setPomPhase('focus');
-      setPomStart(Date.now());
-      setPomAlert(null);
+    // Resume or start pomodoro
+    if (pomMode) {
+      if (pomPaused) {
+        // Resume from saved position
+        setPomStart(Date.now() - pomSavedSecs.current * 1000);
+        setPomPaused(false);
+      } else if (!pomStart) {
+        setPomPhase('focus');
+        setPomStart(Date.now());
+        pomSavedSecs.current = 0;
+        setPomAlert(null);
+      }
     }
   }
 
   async function pauseTimer(task) {
-    const elapsed = liveElapsed(task); // seconds
+    const elapsed = liveElapsed(task);
     const updates = { timer_started_at: null, actual_minutes: Math.floor(elapsed) };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+    // Pause pomodoro
+    if (pomMode && pomStart && !pomPaused) {
+      pomSavedSecs.current = Math.floor((Date.now() - pomStart) / 1000);
+      setPomPaused(true);
+    }
   }
 
   async function resetTimer(task) {
