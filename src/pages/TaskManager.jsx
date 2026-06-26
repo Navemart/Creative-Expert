@@ -218,6 +218,21 @@ export default function TaskManager() {
   const doneToday    = calendarTasks.filter(t => t.status==='done');
   const totalPlanned = calendarTasks.reduce((s,t) => s+(t.estimated_minutes||0), 0);
   const totalActual  = Math.round(calendarTasks.reduce((s,t) => s + liveElapsed(t), 0) / 60);
+
+  // Accuracy score from all done tasks with both actual and estimated
+  const scoredTasks = tasks.filter(t => t.status==='done' && t.estimated_minutes > 0 && t.actual_minutes > 0);
+  const avgOverrunPct = scoredTasks.length > 0
+    ? Math.round(scoredTasks.reduce((s,t) => {
+        const estSecs = t.estimated_minutes * 60;
+        return s + ((t.actual_minutes - estSecs) / estSecs * 100);
+      }, 0) / scoredTasks.length)
+    : null;
+
+  async function addTime(task, mins) {
+    const newEst = (task.estimated_minutes || 0) + mins;
+    await supabase.from('tasks').update({ estimated_minutes: newEst }).eq('id', task.id);
+    setTasks(prev => prev.map(t => t.id===task.id ? {...t, estimated_minutes: newEst} : t));
+  }
   const showDragHint   = bankTasks.length > 0 && calendarTasks.length === 0 && selectedStr === todayStr;
   const totalSlots     = (END_HOUR - START_HOUR) * 2;
   const calendarHeight = totalSlots * SLOT_HEIGHT;
@@ -343,18 +358,19 @@ export default function TaskManager() {
                 const mins     = task.estimated_minutes || 30;
                 const heightPx = Math.max(SLOT_HEIGHT - 4, Math.round((mins / 30) * SLOT_HEIGHT) - 4);
                 const top      = idx * SLOT_HEIGHT + 2;
-                const p        = PRIORITIES[task.priority];
-                const isDone   = task.status === 'done';
-                const isActive = !!task.timer_started_at;
-                const elapsed  = liveElapsed(task); // seconds
-                const elapsedMins = Math.floor(elapsed / 60);
-                const elapsedSecs = elapsed % 60;
-                const overTime = elapsed > 0 && task.estimated_minutes && elapsed > task.estimated_minutes * 60;
-                const elapsedStr = elapsed > 0
-                  ? (elapsed >= 3600
-                      ? `${Math.floor(elapsed/3600)}:${String(Math.floor((elapsed%3600)/60)).padStart(2,'0')}:${String(elapsed%60).padStart(2,'0')}`
-                      : `${String(elapsedMins).padStart(2,'0')}:${String(elapsedSecs).padStart(2,'0')}`)
-                  : null;
+                const p          = PRIORITIES[task.priority];
+                const isDone     = task.status === 'done';
+                const isActive   = !!task.timer_started_at;
+                const elapsed    = liveElapsed(task); // seconds
+                const estSecs    = (task.estimated_minutes || 0) * 60;
+                const pct        = estSecs > 0 ? Math.min((elapsed / estSecs) * 100, 100) : 0;
+                const overTime   = estSecs > 0 && elapsed > estSecs;
+                const nearTime   = !overTime && estSecs > 0 && elapsed >= estSecs * 0.8;
+                const barColor   = overTime ? '#ef4444' : nearTime ? '#f59e0b' : isActive ? '#4ade80' : p.color;
+                const fmtElapsed = (s) => s >= 3600
+                  ? `${Math.floor(s/3600)}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`
+                  : `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+                const blockHeight = Math.max(62, heightPx);
 
                 return (
                   <div
@@ -363,53 +379,61 @@ export default function TaskManager() {
                     onDragStart={() => onDragStart(task.id)}
                     onDragEnd={onDragEnd}
                     style={{
-                      position:'absolute', top, left:8, right:52, height:heightPx,
-                      background: isDone ? 'rgba(255,255,255,0.03)' : isActive ? `${p.color}20` : `${p.color}12`,
-                      border: `1px solid ${isDone ? 'rgba(255,255,255,0.07)' : isActive ? p.color+'80' : p.color+'40'}`,
-                      borderRight: `3px solid ${p.color}`,
-                      borderRadius:8, padding:'6px 8px', boxSizing:'border-box',
-                      display:'flex', alignItems:'flex-start', gap:6,
-                      opacity: isDone ? 0.6 : 1,
+                      position:'absolute', top, left:8, right:52, height:blockHeight,
+                      background: overTime ? 'rgba(239,68,68,0.08)' : isDone ? 'rgba(255,255,255,0.03)' : `${p.color}10`,
+                      border: `1px solid ${overTime ? 'rgba(239,68,68,0.5)' : isDone ? 'rgba(255,255,255,0.07)' : p.color+'40'}`,
+                      borderRight: `3px solid ${overTime ? '#ef4444' : p.color}`,
+                      borderRadius:8, padding:'6px 8px 4px', boxSizing:'border-box',
+                      display:'flex', flexDirection:'column', gap:4,
+                      opacity: isDone ? 0.65 : 1,
                       cursor: isDone ? 'default' : 'grab',
                       overflow:'hidden', zIndex:1,
                       pointerEvents: isDragging && dragTaskId.current !== task.id ? 'none' : 'auto',
                     }}
                   >
-                    {/* Checkbox */}
-                    <button onClick={e => { e.stopPropagation(); isDone ? undoDone(task) : markDone(task); }}
-                      style={{
-                        flexShrink:0, width:18, height:18, borderRadius:'50%',
-                        border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.35)'}`,
-                        background: isDone ? '#4ade80' : 'transparent', cursor:'pointer',
-                        display:'flex', alignItems:'center', justifyContent:'center', padding:0,
-                      }}>
-                      {isDone && <span style={{ fontSize:10, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
-                    </button>
-
-                    {/* Title */}
-                    <span style={{ flex:1, fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.4)' : 'white' }}>
-                      {task.title}
-                    </span>
-
-                    {/* Right side: elapsed / estimated + play button */}
-                    <div style={{ display:'flex', alignItems:'center', gap:5, flexShrink:0 }}>
-                      {elapsedStr && (
-                        <span style={{ fontSize:12, fontVariantNumeric:'tabular-nums', fontWeight:700, color: overTime ? '#ef4444' : isActive ? '#4ade80' : 'rgba(255,255,255,0.45)' }}>
-                          {elapsedStr}
-                        </span>
-                      )}
-                      {!elapsedStr && (
-                        <span style={{ fontSize:12, color:'rgba(255,255,255,0.4)', fontWeight:600 }}>{fmtMin(mins)}</span>
-                      )}
-                      {elapsedStr && (
-                        <button onClick={e => { e.stopPropagation(); resetTimer(task); }}
-                          style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.5)', fontSize:12, padding:'0 2px', lineHeight:1 }}>↺</button>
-                      )}
+                    {/* Row 1: checkbox + title + play */}
+                    <div style={{ display:'flex', alignItems:'center', gap:6, minWidth:0 }}>
+                      <button onClick={e => { e.stopPropagation(); isDone ? undoDone(task) : markDone(task); }}
+                        style={{ flexShrink:0, width:16, height:16, borderRadius:'50%', border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.35)'}`, background: isDone ? '#4ade80' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
+                        {isDone && <span style={{ fontSize:9, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
+                      </button>
+                      <span style={{ flex:1, fontSize:12, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.4)' : 'white' }}>
+                        {task.title}
+                      </span>
                       {!isDone && (
                         <button onClick={e => { e.stopPropagation(); isActive ? pauseTimer(task) : startTimer(task); }}
-                          style={{ background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.12)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.2)'}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', color:'inherit', fontSize:12 }}>
+                          style={{ flexShrink:0, background: isActive ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.1)', border:`1px solid ${isActive ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, borderRadius:5, padding:'1px 7px', cursor:'pointer', color:'inherit', fontSize:11 }}>
                           {isActive ? '⏸' : '▶'}
                         </button>
+                      )}
+                    </div>
+
+                    {/* Row 2: progress bar + time display */}
+                    <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+                      {/* Time numbers */}
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                        <span style={{ fontSize:13, fontWeight:800, fontVariantNumeric:'tabular-nums', color: overTime ? '#ef4444' : elapsed > 0 ? barColor : 'rgba(255,255,255,0.3)', letterSpacing:'-0.5px' }}>
+                          {elapsed > 0 ? fmtElapsed(elapsed) : '00:00'}
+                        </span>
+                        <div style={{ display:'flex', alignItems:'center', gap:4 }}>
+                          {elapsed > 0 && (
+                            <button onClick={e => { e.stopPropagation(); resetTimer(task); }}
+                              style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.4)', fontSize:11, padding:0, lineHeight:1 }}>↺</button>
+                          )}
+                          {overTime && (
+                            <button onClick={e => { e.stopPropagation(); addTime(task, 15); }}
+                              style={{ background:'rgba(239,68,68,0.15)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:4, padding:'1px 5px', cursor:'pointer', color:'#fca5a5', fontSize:10, fontWeight:600 }}>+15 דק'</button>
+                          )}
+                          <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', fontWeight:500 }}>
+                            {task.estimated_minutes ? `/ ${fmtMin(task.estimated_minutes)}` : '—'}
+                          </span>
+                        </div>
+                      </div>
+                      {/* Progress bar */}
+                      {estSecs > 0 && (
+                        <div style={{ height:3, borderRadius:99, background:'rgba(255,255,255,0.08)', overflow:'hidden' }}>
+                          <div style={{ height:'100%', borderRadius:99, width:`${pct}%`, background: barColor, transition:'width 1s linear', boxShadow: isActive ? `0 0 6px ${barColor}88` : 'none' }} />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -419,10 +443,25 @@ export default function TaskManager() {
           </div>
 
           {/* Summary bar */}
-          <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', gap:20, fontSize:13, color:'rgba(255,255,255,0.6)', flexShrink:0 }}>
+          <div style={{ padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', gap:16, fontSize:12, color:'rgba(255,255,255,0.5)', flexShrink:0, flexWrap:'wrap' }}>
             <span>✅ {doneToday.length} הושלמו</span>
-            <span>⏱ {totalActual} דק' השקעתי היום</span>
+            <span>⏱ <b style={{ color:'rgba(255,255,255,0.85)', fontSize:13 }}>{totalActual}</b> דק' היום</span>
             <span>🎯 {fmtMin(totalPlanned)} מתוכנן</span>
+            {avgOverrunPct !== null && (
+              <span style={{ marginRight:'auto', display:'flex', alignItems:'center', gap:5 }}>
+                <span style={{
+                  fontSize:11, fontWeight:700, borderRadius:6, padding:'2px 8px',
+                  background: Math.abs(avgOverrunPct) < 10 ? 'rgba(74,222,128,0.12)' : avgOverrunPct > 0 ? 'rgba(239,68,68,0.12)' : 'rgba(74,222,128,0.12)',
+                  color: Math.abs(avgOverrunPct) < 10 ? '#4ade80' : avgOverrunPct > 0 ? '#fca5a5' : '#4ade80',
+                }}>
+                  {Math.abs(avgOverrunPct) < 10
+                    ? '🎯 הערכות מדויקות'
+                    : avgOverrunPct > 0
+                      ? `⚠️ חורג ב-${avgOverrunPct}% בממוצע — הוסף ${avgOverrunPct}% לכל הערכה`
+                      : `✨ מקדים ב-${Math.abs(avgOverrunPct)}% — אפשר להוריד מהערכות`}
+                </span>
+              </span>
+            )}
           </div>
         </div>
       </div>
