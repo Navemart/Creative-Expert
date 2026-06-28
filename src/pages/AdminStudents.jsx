@@ -570,7 +570,9 @@ function WeeklyWinsTable({ students }) {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
             className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
         </div>
-        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{rows.length} ניצחונות</span>
+        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          {rows.length} ניצחונות · {students.length} תלמידים · {students.filter(s=>s.wins?.length>0).length} עם נצחונות
+        </span>
       </div>
 
       <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
