@@ -129,8 +129,17 @@ cron.schedule('0 9 * * *', async () => {
     const { data: wins } = await sb.from('sunday_wins').select('*').is('slack_posted_at', null).gte('created_at', since);
     for (const w of wins || []) {
       const name  = w.user_name || await getClerkName(w.user_id) || 'תלמיד';
-      const lines = [`האגדה: ${name}`, w.win_1, w.win_2, w.win_3, w.focus_next_week, w.blocker].filter(Boolean).join('\n\n');
-      const r = await fetch('https://slack.com/api/chat.postMessage', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({ channel: winsCh, text: lines }) });
+      const lines = [
+        `*שם*\n${name}`,
+        w.win_1           ? `*הנצחון הכי משמעותי מהשבוע שעבר*\n${w.win_1}` : null,
+        w.win_2           ? `*הנצחון ה-2 הכי משמעותי*\n${w.win_2}` : null,
+        w.win_3           ? `*הנצחון ה-3 הכי משמעותי*\n${w.win_3}` : null,
+        w.focus_next_week ? `*מה הדבר האחד הבא שאני הולך להתמקד בו בשבוע הקרוב*\n${w.focus_next_week}` : null,
+        w.blocker         ? `*מה הדבר האחד שחוסם אותך כרגע*\n${w.blocker}` : null,
+        `*תאריך:*\n${w.week_date || ''}`,
+      ].filter(Boolean).join('\n\n');
+      const blocks = [{ type:'section', text:{ type:'mrkdwn', text: lines } }];
+      const r = await fetch('https://slack.com/api/chat.postMessage', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({ channel: winsCh, blocks, text: `נצחונות שבועיים — ${name}` }) });
       const d = await r.json();
       if (d.ok) await sb.from('sunday_wins').update({ slack_posted_at: new Date().toISOString(), user_name: name }).eq('id', w.id);
     }
