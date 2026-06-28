@@ -1036,11 +1036,11 @@ export default function Dashboard() {
 
     // Weekly history grid — last NUM_WEEKS weeks (on-time wins only)
     const today = new Date();
+    const fmtLocal = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const history = Array.from({ length: NUM_WEEKS }, (_, i) => {
       const sunday = new Date(today);
       sunday.setDate(today.getDate() - today.getDay() - i * 7); // go back i sundays
-      sunday.setHours(0,0,0,0);
-      const key = sunday.toISOString().slice(0, 10);
+      const key = fmtLocal(sunday); // use LOCAL date to match isoWeekKey
       return !!weekMap[key]?._onTime;
     }).reverse();
 
