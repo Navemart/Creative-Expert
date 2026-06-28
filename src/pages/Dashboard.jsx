@@ -1406,12 +1406,22 @@ export default function Dashboard() {
     };
 
     if (editingSubmission) {
-      // Editing existing record (opened via "עריכת נתונים")
-      await supabase.from('monthly_submissions').update(payload).eq('id', editingSubmission.id);
+      const { error } = await supabase.from('monthly_submissions').update(payload).eq('id', editingSubmission.id);
+      if (error) { alert('שגיאה בשמירה: ' + error.message); return; }
       setEditingSubmission(null);
     } else {
-      // New submission (opened via "נתונים חודשיים") — always insert
-      await supabase.from('monthly_submissions').insert(payload);
+      // Check for duplicate month
+      const exists = monthlyData.some(m => m.month?.slice(0, 7) === fullDate.slice(0, 7));
+      if (exists) {
+        const ok = window.confirm(`כבר קיים דיווח לחודש ${monthlyForm.report_month}. האם לעדכן אותו?`);
+        if (!ok) return;
+        const existing = monthlyData.find(m => m.month?.slice(0, 7) === fullDate.slice(0, 7));
+        const { error } = await supabase.from('monthly_submissions').update(payload).eq('id', existing.id);
+        if (error) { alert('שגיאה בעדכון: ' + error.message); return; }
+      } else {
+        const { error } = await supabase.from('monthly_submissions').insert(payload);
+        if (error) { alert('שגיאה בשמירה: ' + error.message); return; }
+      }
     }
 
     // Save pending request for admin to see (Slack sent only when admin approves)
