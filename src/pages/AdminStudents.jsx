@@ -1119,12 +1119,16 @@ export default function AdminStudents() {
   useEffect(() => { fetchStudents(); checkUnposted(); }, []);
 
   async function checkUnposted() {
-    const since = new Date(Date.now() - 7 * 24 * 3600000).toISOString();
-    const [{ count: wCount }, { count: dCount }] = await Promise.all([
-      supabase.from('sunday_wins').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
-      supabase.from('deals').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
-    ]);
-    setUnpostedCount({ wins: wCount || 0, deals: dCount || 0 });
+    try {
+      const since = new Date(Date.now() - 7 * 24 * 3600000).toISOString();
+      const [wRes, dRes] = await Promise.all([
+        supabase.from('sunday_wins').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
+        supabase.from('deals').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
+      ]);
+      setUnpostedCount({ wins: wRes.count || 0, deals: dRes.count || 0 });
+    } catch (e) {
+      console.error('checkUnposted error:', e);
+    }
   }
 
   // ── Realtime: רענון פאנל כשמגיע דיווח חדש ─────────────────
