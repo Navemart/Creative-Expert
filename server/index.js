@@ -112,25 +112,38 @@ cron.schedule('0 9 * * *', async () => {
     const dealsCh = 'cha-ching';
     if (!token) return;
 
-    const since = new Date(Date.now() - 48 * 3600000).toISOString();
+    const since = new Date(Date.now() - 72 * 3600000).toISOString();
+    const clerkKey = process.env.CLERK_SECRET_KEY;
+
+    // Helper: get full name from Clerk
+    async function getClerkName(userId) {
+      if (!clerkKey) return null;
+      try {
+        const r = await fetch(`https://api.clerk.com/v1/users/${userId}`, { headers: { Authorization: `Bearer ${clerkKey}` } });
+        const u = await r.json();
+        return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || null;
+      } catch { return null; }
+    }
 
     // Retry unposted wins
     const { data: wins } = await sb.from('sunday_wins').select('*').is('slack_posted_at', null).gte('created_at', since);
     for (const w of wins || []) {
-      const lines = [`האגדה: ${w.user_name || 'תלמיד'}`, w.win_1, w.win_2, w.win_3, w.focus_next_week, w.blocker].filter(Boolean).join('\n\n');
+      const name  = w.user_name || await getClerkName(w.user_id) || 'תלמיד';
+      const lines = [`האגדה: ${name}`, w.win_1, w.win_2, w.win_3, w.focus_next_week, w.blocker].filter(Boolean).join('\n\n');
       const r = await fetch('https://slack.com/api/chat.postMessage', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({ channel: winsCh, text: lines }) });
       const d = await r.json();
-      if (d.ok) await sb.from('sunday_wins').update({ slack_posted_at: new Date().toISOString() }).eq('id', w.id);
+      if (d.ok) await sb.from('sunday_wins').update({ slack_posted_at: new Date().toISOString(), user_name: name }).eq('id', w.id);
     }
     if (wins?.length) console.log(`[cron] Retried ${wins.length} unposted wins`);
 
     // Retry unposted deals
     const { data: deals } = await sb.from('deals').select('*').is('slack_posted_at', null).gte('created_at', since);
-    for (const d of deals || []) {
-      const text = `🎉🏆 !!!אליפותתתתממממ\nהאגדה: ${d.user_name || 'תלמיד'}\nסכום: ₪${Number(d.total_amount||0).toLocaleString()}\nדרגה: ${d.next_rank||''}`;
+    for (const deal of deals || []) {
+      const name = deal.user_name || await getClerkName(deal.user_id) || 'תלמיד';
+      const text = `🎉🏆 !!!אליפותתתתממממ\nהאגדה: ${name}\nסכום: ₪${Number(deal.total_amount||0).toLocaleString()}\nדרגה: ${deal.next_rank||''}`;
       const r = await fetch('https://slack.com/api/chat.postMessage', { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({ channel: dealsCh, text }) });
       const rd = await r.json();
-      if (rd.ok) await sb.from('deals').update({ slack_posted_at: new Date().toISOString() }).eq('id', d.id);
+      if (rd.ok) await sb.from('deals').update({ slack_posted_at: new Date().toISOString(), user_name: name }).eq('id', deal.id);
     }
     if (deals?.length) console.log(`[cron] Retried ${deals.length} unposted deals`);
   } catch (e) {
