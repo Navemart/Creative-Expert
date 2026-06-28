@@ -2035,9 +2035,11 @@ export default function Dashboard() {
                     style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: dealForm.next_rank ? 'white' : 'rgba(255,255,255,0.25)' }}
                   >
                     <option value="">בחר דרגה...</option>
-                    {SEGMENTS.map(s => (
-                      <option key={s.label} value={s.label}>{s.label} — ₪{s.min === 0 ? '0' : `${s.min/1000}K`}+</option>
-                    ))}
+                    <option value="CREW">₪5K בחודש / Crew ⚪</option>
+                    <option value="SECOND OFFICER">₪10K בחודש / Second-Officer 🟡</option>
+                    <option value="CO-PILOT">₪15K בחודש / Co-Pilot 🔵</option>
+                    <option value="CAPTAIN">₪20K בחודש / Captain 🟢</option>
+                    <option value="EXPERT">₪30K בחודש / Expert 🟣</option>
                   </select>
                 </div>
 
