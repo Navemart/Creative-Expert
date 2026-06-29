@@ -98,6 +98,12 @@ export default function TaskManager() {
   const [pomStart,     setPomStart]     = useState(null);   // timestamp when current phase started (adjusted for pauses)
   const [pomPaused,    setPomPaused]    = useState(false);  // is pomodoro paused?
   const [pomAlert,     setPomAlert]     = useState(null);
+  const [routineTasks,       setRoutineTasks]       = useState([]);
+  const [routineCompletions, setRoutineCompletions] = useState(new Set());
+  const [routineExpanded,    setRoutineExpanded]    = useState(true);
+  const [routineEditMode,    setRoutineEditMode]    = useState(false);
+  const [routineNewTitle,    setRoutineNewTitle]    = useState('');
+  const [routineAdding,      setRoutineAdding]      = useState(false);
   const dragTaskId    = useRef(null);
   const pomSavedSecs  = useRef(0); // elapsed seconds at time of pause
 
@@ -191,7 +197,43 @@ export default function TaskManager() {
   const todayStr    = toDateString(new Date());
   const selectedStr = toDateString(selectedDate);
 
-  useEffect(() => { if (userId) loadTasks(); }, [userId]);
+  useEffect(() => { if (userId) { loadTasks(); loadRoutine(); } }, [userId]);
+
+  async function loadRoutine() {
+    const today = new Date().toISOString().split('T')[0];
+    const [{ data: tasks }, { data: completions }] = await Promise.all([
+      supabase.from('routine_tasks').select('*').eq('user_id', userId).order('sort_order'),
+      supabase.from('routine_completions').select('task_id').eq('user_id', userId).eq('completed_date', today),
+    ]);
+    setRoutineTasks(tasks || []);
+    setRoutineCompletions(new Set((completions || []).map(c => c.task_id)));
+  }
+
+  async function toggleRoutine(taskId) {
+    const today = new Date().toISOString().split('T')[0];
+    if (routineCompletions.has(taskId)) {
+      await supabase.from('routine_completions').delete().eq('task_id', taskId).eq('completed_date', today).eq('user_id', userId);
+      setRoutineCompletions(prev => { const s = new Set(prev); s.delete(taskId); return s; });
+    } else {
+      await supabase.from('routine_completions').insert({ user_id: userId, task_id: taskId, completed_date: today });
+      setRoutineCompletions(prev => new Set([...prev, taskId]));
+    }
+  }
+
+  async function addRoutineTask() {
+    if (!routineNewTitle.trim()) return;
+    const { data } = await supabase.from('routine_tasks').insert({ user_id: userId, title: routineNewTitle.trim(), sort_order: routineTasks.length }).select().single();
+    if (data) setRoutineTasks(prev => [...prev, data]);
+    setRoutineNewTitle('');
+    setRoutineAdding(false);
+  }
+
+  async function deleteRoutineTask(taskId) {
+    const ok = await confirm('למחוק משימה קבועה זו?', { title: 'מחיקה', confirmText: 'מחק', danger: true });
+    if (!ok) return;
+    await supabase.from('routine_tasks').delete().eq('id', taskId);
+    setRoutineTasks(prev => prev.filter(t => t.id !== taskId));
+  }
 
   async function loadTasks() {
     const { data } = await supabase.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending:false });
@@ -332,8 +374,85 @@ export default function TaskManager() {
   if (avgOverrunPct !== null && Math.abs(avgOverrunPct) >= 10)
     recommendations.push({ icon: avgOverrunPct > 0 ? '⏰' : '⚡', msg: avgOverrunPct > 0 ? `אתה חורג ב-${avgOverrunPct}% בממוצע — הוסף ${avgOverrunPct}% לכל הערכה הבאה` : `אתה מקדים ב-${Math.abs(avgOverrunPct)}% — תוריד מעט מהערכות שלך`, color: avgOverrunPct > 0 ? '#fbbf24' : '#4ade80' });
 
+  const routineDoneCount = routineCompletions.size;
+  const routineTotalCount = routineTasks.length;
+  const routineAllDone = routineTotalCount > 0 && routineDoneCount === routineTotalCount;
+  const routineHour = new Date().getHours();
+  const routineNoneDone = routineDoneCount === 0 && routineHour >= 18;
+
   return (
     <div dir="rtl" style={{ display:'flex', flexDirection:'column', height:'100%', minHeight:0 }}>
+
+      {/* ── Daily Routine panel ── */}
+      <div style={{ margin:'16px 16px 0', background:'rgb(var(--bg-surface))', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }}>
+        {/* Header row */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 16px', cursor:'pointer' }}
+          onClick={() => setRoutineExpanded(e => !e)}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ fontWeight:700, fontSize:15 }}>שגרה יומית</span>
+            {routineAllDone ? (
+              <span style={{ fontSize:12, background:'rgba(74,222,128,0.15)', color:'#4ade80', borderRadius:20, padding:'2px 10px', fontWeight:600 }}>✅ הושלם!</span>
+            ) : routineNoneDone ? (
+              <span style={{ fontSize:12, background:'rgba(251,146,60,0.15)', color:'#fb923c', borderRadius:20, padding:'2px 10px', fontWeight:600 }}>⚠️ לא בוצע היום</span>
+            ) : (
+              <span style={{ fontSize:12, background:'rgba(255,255,255,0.08)', color:'rgba(255,255,255,0.6)', borderRadius:20, padding:'2px 10px', fontWeight:600 }}>{routineDoneCount}/{routineTotalCount}</span>
+            )}
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setRoutineEditMode(m => !m)} style={{ background: routineEditMode ? 'rgba(245,193,24,0.15)' : 'rgba(255,255,255,0.08)', border:`1px solid ${routineEditMode ? 'rgba(245,193,24,0.4)' : 'rgba(255,255,255,0.12)'}`, borderRadius:8, padding:'4px 12px', color: routineEditMode ? '#F5C118' : 'inherit', cursor:'pointer', fontSize:12, fontWeight: routineEditMode ? 700 : 400 }}>ערוך</button>
+            <button onClick={() => setRoutineExpanded(e => !e)} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, width:28, height:28, cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:13, display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
+              {routineExpanded ? '▲' : '▼'}
+            </button>
+          </div>
+        </div>
+
+        {/* Body */}
+        {routineExpanded && (
+          <div style={{ padding:'0 16px 14px' }}>
+            {routineTasks.length === 0 && !routineAdding && (
+              <div style={{ textAlign:'center', color:'rgba(255,255,255,0.35)', fontSize:13, padding:'8px 0' }}>אין משימות קבועות עדיין</div>
+            )}
+            {routineTasks.map(task => {
+              const checked = routineCompletions.has(task.id);
+              return (
+                <div key={task.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 4px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
+                  {routineEditMode && (
+                    <span style={{ color:'rgba(255,255,255,0.3)', fontSize:14, cursor:'grab', userSelect:'none' }}>☰</span>
+                  )}
+                  <button
+                    onClick={() => toggleRoutine(task.id)}
+                    style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', border:`1.5px solid ${checked ? '#4ade80' : 'rgba(255,255,255,0.3)'}`, background: checked ? '#4ade80' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0, transition:'all 0.15s' }}>
+                    {checked && <span style={{ fontSize:10, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
+                  </button>
+                  <span style={{ flex:1, fontSize:14, color: checked ? 'rgba(255,255,255,0.4)' : 'white', textDecoration: checked ? 'line-through' : 'none' }}>{task.title}</span>
+                  {routineEditMode && (
+                    <button onClick={() => deleteRoutineTask(task.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:14, padding:'2px 4px' }}>🗑</button>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Add new task inline */}
+            {routineAdding ? (
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10 }}>
+                <input
+                  autoFocus
+                  value={routineNewTitle}
+                  onChange={e => setRoutineNewTitle(e.target.value)}
+                  onKeyDown={e => { if (e.key==='Enter') addRoutineTask(); if (e.key==='Escape') { setRoutineAdding(false); setRoutineNewTitle(''); } }}
+                  placeholder="שם המשימה הקבועה..."
+                  style={{ flex:1, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, padding:'7px 12px', color:'inherit', fontSize:13, outline:'none', fontFamily:'inherit' }}
+                />
+                <button onClick={addRoutineTask} className="btn-yellow" style={{ background:'#F5C118', border:'none', borderRadius:8, padding:'7px 14px', fontWeight:700, cursor:'pointer', fontSize:13 }}>שמור</button>
+                <button onClick={() => { setRoutineAdding(false); setRoutineNewTitle(''); }} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 12px', color:'inherit', cursor:'pointer', fontSize:13 }}>ביטול</button>
+              </div>
+            ) : (
+              <button onClick={() => setRoutineAdding(true)} style={{ marginTop:10, background:'none', border:'1px dashed rgba(255,255,255,0.2)', borderRadius:8, padding:'6px 14px', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:13, width:'100%', textAlign:'center' }}>➕ הוסף משימה קבועה</button>
+            )}
+          </div>
+        )}
+      </div>
+
       <div style={{ display:'flex', gap:16, flex:1, minHeight:0, padding:16 }}>
 
         {/* ── Bank panel ── */}
