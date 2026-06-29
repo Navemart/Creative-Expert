@@ -261,16 +261,32 @@ export default function TaskManager() {
   }
 
   async function markDone(task) {
-    const elapsed = liveElapsed(task); // seconds
+    const elapsed = liveElapsed(task);
     const updates = { status:'done', completed_at: new Date().toISOString(), timer_started_at: null, actual_minutes: Math.floor(elapsed) };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+
+    // If routine task — also mark it in the daily routine panel
+    if (task.priority === 'routine') {
+      const matching = routineTasks.find(rt => rt.title === task.title);
+      if (matching && !routineCompletions.has(matching.id)) {
+        await toggleRoutine(matching.id);
+      }
+    }
   }
 
   async function undoDone(task) {
     const updates = { status:'scheduled', completed_at:null };
     await supabase.from('tasks').update(updates).eq('id', task.id);
     setTasks(prev => prev.map(t => t.id===task.id ? {...t,...updates} : t));
+
+    // If routine task — also uncheck in daily routine panel
+    if (task.priority === 'routine') {
+      const matching = routineTasks.find(rt => rt.title === task.title);
+      if (matching && routineCompletions.has(matching.id)) {
+        await toggleRoutine(matching.id);
+      }
+    }
   }
 
   async function restoreTask(taskId) {
