@@ -8,6 +8,7 @@ const PRIORITIES = {
   important:        { label: 'חשוב, לא דחוף',     color: '#F5C118', emoji: '🟡' },
   urgent:           { label: 'דחוף, לא חשוב',     color: '#3b82f6', emoji: '🔵' },
   low:              { label: 'לא דחוף ולא חשוב',  color: 'rgba(255,255,255,0.4)', emoji: '⚪' },
+  routine:          { label: 'שגרה יומית',         color: '#34d399', emoji: '🔁' },
 };
 
 const CATEGORIES = ['עסק', 'שיווק', 'לקוחות'];
@@ -104,8 +105,10 @@ export default function TaskManager() {
   const [routineEditMode,    setRoutineEditMode]    = useState(false);
   const [routineNewTitle,    setRoutineNewTitle]    = useState('');
   const [routineAdding,      setRoutineAdding]      = useState(false);
+  const [pendingRoutineDrop, setPendingRoutineDrop] = useState(null); // { task, slot } awaiting time input
+  const [routineDropMins,    setRoutineDropMins]    = useState(30);
   const dragTaskId      = useRef(null);
-  const dragRoutineTask = useRef(null); // routine task being dragged to calendar
+  const dragRoutineTask = useRef(null);
   const pomSavedSecs  = useRef(0); // elapsed seconds at time of pause
 
   // Single interval — updates 'now' every second
@@ -313,18 +316,12 @@ export default function TaskManager() {
   async function dropOnSlot(slot) {
     setDragOverSlot(null); setIsDragging(false);
 
-    // Routine task → create new task in calendar
+    // Routine task → open time modal before creating
     if (dragRoutineTask.current) {
       const rt = dragRoutineTask.current;
       dragRoutineTask.current = null;
-      const payload = {
-        user_id: userId, title: rt.title, category: 'עסק',
-        priority: 'important', status: 'scheduled',
-        scheduled_date: selectedStr, scheduled_slot: slot,
-        actual_minutes: 0, created_at: new Date().toISOString(),
-      };
-      const { data } = await supabase.from('tasks').insert(payload).select().single();
-      if (data) setTasks(prev => [data, ...prev]);
+      setRoutineDropMins(30);
+      setPendingRoutineDrop({ task: rt, slot });
       return;
     }
 
@@ -747,6 +744,40 @@ export default function TaskManager() {
           </div>
         </div>
       </div>
+
+      {/* Routine drop time modal */}
+      {pendingRoutineDrop && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
+          <div dir="rtl" style={{ background:'rgb(var(--bg-surface))', borderRadius:16, padding:24, width:320, border:'1px solid rgba(255,255,255,0.1)' }}>
+            <p style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>🔁 {pendingRoutineDrop.task.title}</p>
+            <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:16 }}>כמה דקות להקצות למשימה זו?</p>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
+              {[15,25,30,45,60].map(m => (
+                <button key={m} onClick={() => setRoutineDropMins(m)}
+                  style={{ padding:'6px 10px', borderRadius:8, border:`1px solid ${routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.15)'}`, background: routineDropMins===m ? 'rgba(52,211,153,0.15)' : 'transparent', color: routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.6)', cursor:'pointer', fontSize:12, fontWeight: routineDropMins===m ? 700 : 400 }}>
+                  {m}′
+                </button>
+              ))}
+              <input type="number" value={routineDropMins} onChange={e => setRoutineDropMins(Number(e.target.value))}
+                style={{ width:60, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, padding:'6px 8px', color:'inherit', fontSize:12, outline:'none', textAlign:'center' }} />
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <button className="btn-yellow" onClick={async () => {
+                const { task, slot } = pendingRoutineDrop;
+                const payload = { user_id: userId, title: task.title, category: 'עסק', priority: 'routine', status: 'scheduled', scheduled_date: selectedStr, scheduled_slot: slot, estimated_minutes: routineDropMins || null, actual_minutes: 0, created_at: new Date().toISOString() };
+                const { data } = await supabase.from('tasks').insert(payload).select().single();
+                if (data) setTasks(prev => [data, ...prev]);
+                setPendingRoutineDrop(null);
+              }} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:13 }}>
+                הוסף ללוח
+              </button>
+              <button onClick={() => setPendingRoutineDrop(null)} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:13 }}>
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <TaskModal data={modalData} isEdit={!!editingTask} onChange={setModalData}
