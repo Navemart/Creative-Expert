@@ -382,7 +382,7 @@ export default function TaskManager() {
   const routineNoneDone = routineDoneCount === 0 && routineHour >= 18;
 
   return (
-    <div dir="rtl" style={{ display:'flex', flexDirection:'column', height:'100%', minHeight:0 }}>
+    <div dir="rtl" style={{ display:'flex', flexDirection:'column', height:'100%', minHeight:0, overflowY:'auto' }}>
 
       {/* ── Daily Routine panel ── */}
       <div style={{ margin:'16px 16px 0', background:'rgb(var(--bg-surface))', borderRadius:16, border:'1px solid rgba(255,255,255,0.08)', flexShrink:0 }}>
