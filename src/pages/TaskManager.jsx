@@ -107,7 +107,8 @@ export default function TaskManager() {
   const [routineAdding,      setRoutineAdding]      = useState(false);
   const [pendingRoutineDrop, setPendingRoutineDrop] = useState(null); // { task, slot } awaiting time input
   const [routineDropMins,    setRoutineDropMins]    = useState(30);
-  const dragTaskId      = useRef(null);
+  const calendarScrollRef = useRef(null);
+  const dragTaskId        = useRef(null);
   const dragRoutineTask = useRef(null);
   const pomSavedSecs  = useRef(0); // elapsed seconds at time of pause
 
@@ -202,6 +203,17 @@ export default function TaskManager() {
   const selectedStr = toDateString(selectedDate);
 
   useEffect(() => { if (userId) { loadTasks(); loadRoutine(); } }, [userId]);
+
+  // Scroll calendar to current time on load and when switching to today
+  useEffect(() => {
+    if (!calendarScrollRef.current) return;
+    const now = new Date();
+    const hour = now.getHours();
+    const min  = now.getMinutes();
+    const slotIdx = (hour - START_HOUR) * 2 + (min >= 30 ? 1 : 0);
+    const scrollTo = Math.max(0, (slotIdx - 2) * SLOT_HEIGHT); // show 1 hour before current
+    calendarScrollRef.current.scrollTop = scrollTo;
+  }, [selectedDate]);
 
   async function loadRoutine() {
     const today = new Date().toISOString().split('T')[0];
@@ -624,7 +636,7 @@ export default function TaskManager() {
           </div>
 
           {/* Calendar grid */}
-          <div style={{ flex:1, overflowY:'auto', position:'relative' }}>
+          <div ref={calendarScrollRef} style={{ flex:1, overflowY:'auto', position:'relative' }}>
             <div style={{ position:'relative', height: calendarHeight }}>
 
               {/* Time grid rows (drop zones) */}
