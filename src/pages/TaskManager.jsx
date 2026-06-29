@@ -104,7 +104,8 @@ export default function TaskManager() {
   const [routineEditMode,    setRoutineEditMode]    = useState(false);
   const [routineNewTitle,    setRoutineNewTitle]    = useState('');
   const [routineAdding,      setRoutineAdding]      = useState(false);
-  const dragTaskId    = useRef(null);
+  const dragTaskId      = useRef(null);
+  const dragRoutineTask = useRef(null); // routine task being dragged to calendar
   const pomSavedSecs  = useRef(0); // elapsed seconds at time of pause
 
   // Single interval — updates 'now' every second
@@ -310,9 +311,26 @@ export default function TaskManager() {
   function onDragEnd() { setIsDragging(false); dragTaskId.current = null; setDragOverSlot(null); }
 
   async function dropOnSlot(slot) {
+    setDragOverSlot(null); setIsDragging(false);
+
+    // Routine task → create new task in calendar
+    if (dragRoutineTask.current) {
+      const rt = dragRoutineTask.current;
+      dragRoutineTask.current = null;
+      const payload = {
+        user_id: userId, title: rt.title, category: 'עסק',
+        priority: 'important', status: 'scheduled',
+        scheduled_date: selectedStr, scheduled_slot: slot,
+        actual_minutes: 0, created_at: new Date().toISOString(),
+      };
+      const { data } = await supabase.from('tasks').insert(payload).select().single();
+      if (data) setTasks(prev => [data, ...prev]);
+      return;
+    }
+
     const taskId = dragTaskId.current;
     if (!taskId) return;
-    dragTaskId.current = null; setIsDragging(false); setDragOverSlot(null);
+    dragTaskId.current = null;
     const updates = { scheduled_date:selectedStr, scheduled_slot:slot, status:'scheduled' };
     await supabase.from('tasks').update(updates).eq('id', taskId);
     setTasks(prev => prev.map(t => t.id===taskId ? {...t,...updates} : t));
@@ -419,13 +437,17 @@ export default function TaskManager() {
               {routineTasks.map(task => {
                 const checked = routineCompletions.has(task.id);
                 return (
-                  <div key={task.id} style={{
-                    display:'flex', alignItems:'center', gap:6,
-                    padding:'5px 10px 5px 8px', borderRadius:99,
-                    background: checked ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.07)',
-                    border: `1px solid ${checked ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.12)'}`,
-                    transition:'all 0.15s',
-                  }}>
+                  <div key={task.id}
+                    draggable
+                    onDragStart={() => { dragRoutineTask.current = task; setIsDragging(true); }}
+                    onDragEnd={() => { dragRoutineTask.current = null; setIsDragging(false); }}
+                    style={{
+                      display:'flex', alignItems:'center', gap:6,
+                      padding:'5px 10px 5px 8px', borderRadius:99,
+                      background: checked ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.07)',
+                      border: `1px solid ${checked ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.12)'}`,
+                      transition:'all 0.15s', cursor:'grab',
+                    }}>
                     <button onClick={() => toggleRoutine(task.id)}
                       style={{ flexShrink:0, width:16, height:16, borderRadius:'50%', border:`1.5px solid ${checked ? '#4ade80' : 'rgba(255,255,255,0.3)'}`, background: checked ? '#4ade80' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
                       {checked && <span style={{ fontSize:9, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
