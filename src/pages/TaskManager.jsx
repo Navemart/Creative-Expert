@@ -222,7 +222,8 @@ export default function TaskManager() {
 
   async function addRoutineTask() {
     if (!routineNewTitle.trim()) return;
-    const { data } = await supabase.from('routine_tasks').insert({ user_id: userId, title: routineNewTitle.trim(), sort_order: routineTasks.length }).select().single();
+    const { data, error } = await supabase.from('routine_tasks').insert({ user_id: userId, title: routineNewTitle.trim(), sort_order: routineTasks.length }).select().single();
+    if (error) { alert('שגיאה: ' + error.message); return; }
     if (data) setRoutineTasks(prev => [...prev, data]);
     setRoutineNewTitle('');
     setRoutineAdding(false);
