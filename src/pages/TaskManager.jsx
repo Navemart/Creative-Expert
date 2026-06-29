@@ -452,6 +452,11 @@ export default function TaskManager() {
                     <span style={{ fontSize:13, color: checked ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.85)', textDecoration: checked ? 'line-through' : 'none', whiteSpace:'nowrap' }}>
                       {task.title}
                     </span>
+                    {!routineEditMode && (
+                      <button onClick={e => { e.stopPropagation(); setRoutineDropMins(30); setPendingRoutineDrop({ task, slot: null }); }}
+                        title="הוסף ללוח"
+                        style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.35)', fontSize:12, padding:0, lineHeight:1, marginRight:1 }}>📅</button>
+                    )}
                     {routineEditMode && (
                       <button onClick={() => deleteRoutineTask(task.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.5)', fontSize:12, padding:0, lineHeight:1 }}>✕</button>
                     )}
@@ -746,38 +751,59 @@ export default function TaskManager() {
       </div>
 
       {/* Routine drop time modal */}
-      {pendingRoutineDrop && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
-          <div dir="rtl" style={{ background:'rgb(var(--bg-surface))', borderRadius:16, padding:24, width:320, border:'1px solid rgba(255,255,255,0.1)' }}>
-            <p style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>🔁 {pendingRoutineDrop.task.title}</p>
-            <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:16 }}>כמה דקות להקצות למשימה זו?</p>
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:20 }}>
-              {[15,25,30,45,60].map(m => (
-                <button key={m} onClick={() => setRoutineDropMins(m)}
-                  style={{ padding:'6px 10px', borderRadius:8, border:`1px solid ${routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.15)'}`, background: routineDropMins===m ? 'rgba(52,211,153,0.15)' : 'transparent', color: routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.6)', cursor:'pointer', fontSize:12, fontWeight: routineDropMins===m ? 700 : 400 }}>
-                  {m}′
+      {pendingRoutineDrop && (() => {
+        const [selSlot, setSelSlot] = [pendingRoutineDrop.slot, (s) => setPendingRoutineDrop(p => ({...p, slot: s}))];
+        return (
+          <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:1000 }}>
+            <div dir="rtl" style={{ background:'rgb(var(--bg-surface))', borderRadius:16, padding:24, width:340, border:'1px solid rgba(255,255,255,0.1)', maxHeight:'80vh', overflowY:'auto' }}>
+              <p style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>🔁 {pendingRoutineDrop.task.title}</p>
+
+              {/* Slot picker — shown when opened via button */}
+              {!pendingRoutineDrop.slot && (
+                <>
+                  <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:8 }}>בחר שעה ביומן:</p>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginBottom:16, maxHeight:160, overflowY:'auto' }}>
+                    {TIME_SLOTS.filter(s => s.endsWith(':00') || s.endsWith(':30')).map(s => (
+                      <button key={s} onClick={() => setPendingRoutineDrop(p => ({...p, slot: s}))}
+                        style={{ padding:'4px 10px', borderRadius:8, border:`1px solid ${pendingRoutineDrop.slot===s ? '#34d399' : 'rgba(255,255,255,0.15)'}`, background: pendingRoutineDrop.slot===s ? 'rgba(52,211,153,0.15)' : 'transparent', color: pendingRoutineDrop.slot===s ? '#34d399' : 'rgba(255,255,255,0.55)', cursor:'pointer', fontSize:12 }}>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+              {pendingRoutineDrop.slot && <p style={{ fontSize:12, color:'rgba(52,211,153,0.8)', marginBottom:12 }}>⏰ {pendingRoutineDrop.slot} · <button onClick={() => setPendingRoutineDrop(p=>({...p,slot:null}))} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.4)',fontSize:11}}>שנה</button></p>}
+
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.45)', marginBottom:8 }}>כמה דקות להקצות?</p>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:20, flexWrap:'wrap' }}>
+                {[15,25,30,45,60].map(m => (
+                  <button key={m} onClick={() => setRoutineDropMins(m)}
+                    style={{ padding:'6px 10px', borderRadius:8, border:`1px solid ${routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.15)'}`, background: routineDropMins===m ? 'rgba(52,211,153,0.15)' : 'transparent', color: routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.6)', cursor:'pointer', fontSize:12, fontWeight: routineDropMins===m ? 700 : 400 }}>
+                    {m}′
+                  </button>
+                ))}
+                <input type="number" value={routineDropMins} onChange={e => setRoutineDropMins(Number(e.target.value))}
+                  style={{ width:56, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, padding:'6px 8px', color:'inherit', fontSize:12, outline:'none', textAlign:'center' }} />
+              </div>
+              <div style={{ display:'flex', gap:8 }}>
+                <button className="btn-yellow" disabled={!pendingRoutineDrop.slot} onClick={async () => {
+                  const { task, slot } = pendingRoutineDrop;
+                  if (!slot) return;
+                  const payload = { user_id: userId, title: task.title, category: 'עסק', priority: 'routine', status: 'scheduled', scheduled_date: selectedStr, scheduled_slot: slot, estimated_minutes: routineDropMins || null, actual_minutes: 0, created_at: new Date().toISOString() };
+                  const { data } = await supabase.from('tasks').insert(payload).select().single();
+                  if (data) setTasks(prev => [data, ...prev]);
+                  setPendingRoutineDrop(null);
+                }} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:13, opacity: pendingRoutineDrop.slot ? 1 : 0.4 }}>
+                  הוסף ללוח
                 </button>
-              ))}
-              <input type="number" value={routineDropMins} onChange={e => setRoutineDropMins(Number(e.target.value))}
-                style={{ width:60, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, padding:'6px 8px', color:'inherit', fontSize:12, outline:'none', textAlign:'center' }} />
-            </div>
-            <div style={{ display:'flex', gap:8 }}>
-              <button className="btn-yellow" onClick={async () => {
-                const { task, slot } = pendingRoutineDrop;
-                const payload = { user_id: userId, title: task.title, category: 'עסק', priority: 'routine', status: 'scheduled', scheduled_date: selectedStr, scheduled_slot: slot, estimated_minutes: routineDropMins || null, actual_minutes: 0, created_at: new Date().toISOString() };
-                const { data } = await supabase.from('tasks').insert(payload).select().single();
-                if (data) setTasks(prev => [data, ...prev]);
-                setPendingRoutineDrop(null);
-              }} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:13 }}>
-                הוסף ללוח
-              </button>
-              <button onClick={() => setPendingRoutineDrop(null)} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:13 }}>
-                ביטול
-              </button>
+                <button onClick={() => setPendingRoutineDrop(null)} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:13 }}>
+                  ביטול
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {showModal && (
         <TaskModal data={modalData} isEdit={!!editingTask} onChange={setModalData}
