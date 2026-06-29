@@ -700,6 +700,14 @@ export default function TaskManager() {
                       <span style={{ flex:1, fontSize:12, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.4)' : 'white' }}>
                         {task.title}
                       </span>
+                      {/* Remove from calendar — routine tasks only */}
+                      {task.priority === 'routine' && !isDone && (
+                        <button onClick={async e => {
+                          e.stopPropagation();
+                          await supabase.from('tasks').delete().eq('id', task.id);
+                          setTasks(prev => prev.filter(t => t.id !== task.id));
+                        }} title="הסר מהלוח" style={{ flexShrink:0, background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.3)', fontSize:13, padding:'0 2px', lineHeight:1 }}>✕</button>
+                      )}
                       {!isDone && (
                         <div style={{ display:'flex', gap:3, flexShrink:0 }}>
                           {elapsed > 0 && (
