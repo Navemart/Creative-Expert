@@ -409,46 +409,57 @@ export default function TaskManager() {
 
         {/* Body */}
         {routineExpanded && (
-          <div style={{ padding:'0 16px 14px' }}>
+          <div style={{ padding:'0 16px 12px' }}>
             {routineTasks.length === 0 && !routineAdding && (
-              <div style={{ textAlign:'center', color:'rgba(255,255,255,0.35)', fontSize:13, padding:'8px 0' }}>אין משימות קבועות עדיין</div>
+              <p style={{ color:'rgba(255,255,255,0.35)', fontSize:13, padding:'4px 0' }}>אין משימות קבועות עדיין</p>
             )}
-            {routineTasks.map(task => {
-              const checked = routineCompletions.has(task.id);
-              return (
-                <div key={task.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 4px', borderBottom:'1px solid rgba(255,255,255,0.05)' }}>
-                  {routineEditMode && (
-                    <span style={{ color:'rgba(255,255,255,0.3)', fontSize:14, cursor:'grab', userSelect:'none' }}>☰</span>
-                  )}
-                  <button
-                    onClick={() => toggleRoutine(task.id)}
-                    style={{ flexShrink:0, width:20, height:20, borderRadius:'50%', border:`1.5px solid ${checked ? '#4ade80' : 'rgba(255,255,255,0.3)'}`, background: checked ? '#4ade80' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0, transition:'all 0.15s' }}>
-                    {checked && <span style={{ fontSize:10, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
-                  </button>
-                  <span style={{ flex:1, fontSize:14, color: checked ? 'rgba(255,255,255,0.4)' : 'white', textDecoration: checked ? 'line-through' : 'none' }}>{task.title}</span>
-                  {routineEditMode && (
-                    <button onClick={() => deleteRoutineTask(task.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.6)', fontSize:14, padding:'2px 4px' }}>🗑</button>
-                  )}
-                </div>
-              );
-            })}
 
-            {/* Add new task inline */}
-            {routineAdding ? (
-              <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:10 }}>
-                <input
-                  autoFocus
-                  value={routineNewTitle}
+            {/* Chips row */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom: routineAdding ? 10 : 0 }}>
+              {routineTasks.map(task => {
+                const checked = routineCompletions.has(task.id);
+                return (
+                  <div key={task.id} style={{
+                    display:'flex', alignItems:'center', gap:6,
+                    padding:'5px 10px 5px 8px', borderRadius:99,
+                    background: checked ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.07)',
+                    border: `1px solid ${checked ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.12)'}`,
+                    transition:'all 0.15s',
+                  }}>
+                    <button onClick={() => toggleRoutine(task.id)}
+                      style={{ flexShrink:0, width:16, height:16, borderRadius:'50%', border:`1.5px solid ${checked ? '#4ade80' : 'rgba(255,255,255,0.3)'}`, background: checked ? '#4ade80' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
+                      {checked && <span style={{ fontSize:9, color:'#13152A', fontWeight:900, lineHeight:1 }}>✓</span>}
+                    </button>
+                    <span style={{ fontSize:13, color: checked ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.85)', textDecoration: checked ? 'line-through' : 'none', whiteSpace:'nowrap' }}>
+                      {task.title}
+                    </span>
+                    {routineEditMode && (
+                      <button onClick={() => deleteRoutineTask(task.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.5)', fontSize:12, padding:0, lineHeight:1 }}>✕</button>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Add chip */}
+              {!routineAdding && (
+                <button onClick={() => setRoutineAdding(true)} style={{ padding:'5px 10px', borderRadius:99, background:'none', border:'1px dashed rgba(255,255,255,0.2)', color:'rgba(255,255,255,0.4)', cursor:'pointer', fontSize:13 }}>
+                  ＋ הוסף
+                </button>
+              )}
+            </div>
+
+            {/* Inline add input */}
+            {routineAdding && (
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                <input autoFocus value={routineNewTitle}
                   onChange={e => setRoutineNewTitle(e.target.value)}
                   onKeyDown={e => { if (e.key==='Enter') addRoutineTask(); if (e.key==='Escape') { setRoutineAdding(false); setRoutineNewTitle(''); } }}
                   placeholder="שם המשימה הקבועה..."
-                  style={{ flex:1, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, padding:'7px 12px', color:'inherit', fontSize:13, outline:'none', fontFamily:'inherit' }}
+                  style={{ flex:1, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, padding:'6px 12px', color:'inherit', fontSize:13, outline:'none', fontFamily:'inherit' }}
                 />
-                <button onClick={addRoutineTask} className="btn-yellow" style={{ background:'#F5C118', border:'none', borderRadius:8, padding:'7px 14px', fontWeight:700, cursor:'pointer', fontSize:13 }}>שמור</button>
-                <button onClick={() => { setRoutineAdding(false); setRoutineNewTitle(''); }} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 12px', color:'inherit', cursor:'pointer', fontSize:13 }}>ביטול</button>
+                <button onClick={addRoutineTask} className="btn-yellow" style={{ background:'#F5C118', border:'none', borderRadius:8, padding:'6px 14px', fontWeight:700, cursor:'pointer', fontSize:13 }}>שמור</button>
+                <button onClick={() => { setRoutineAdding(false); setRoutineNewTitle(''); }} style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'6px 12px', color:'inherit', cursor:'pointer', fontSize:13 }}>ביטול</button>
               </div>
-            ) : (
-              <button onClick={() => setRoutineAdding(true)} style={{ marginTop:10, background:'none', border:'1px dashed rgba(255,255,255,0.2)', borderRadius:8, padding:'6px 14px', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:13, width:'100%', textAlign:'center' }}>➕ הוסף משימה קבועה</button>
             )}
           </div>
         )}
