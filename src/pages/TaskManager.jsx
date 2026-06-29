@@ -471,7 +471,7 @@ export default function TaskManager() {
                     {!routineEditMode && (
                       <button onClick={e => { e.stopPropagation(); setRoutineDropMins(30); setPendingRoutineDrop({ task, slot: null }); }}
                         title="הוסף ללוח"
-                        style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.35)', fontSize:14, padding:0, lineHeight:1, marginRight:1, fontWeight:300 }}>+</button>
+                        style={{ background:'rgba(255,255,255,0.08)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:5, cursor:'pointer', color:'rgba(255,255,255,0.6)', fontSize:12, padding:'1px 6px', lineHeight:'16px', fontWeight:600 }}>+</button>
                     )}
                     {routineEditMode && (
                       <button onClick={() => deleteRoutineTask(task.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.5)', fontSize:12, padding:0, lineHeight:1 }}>✕</button>
