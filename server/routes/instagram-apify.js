@@ -30,7 +30,7 @@ async function scrapeInstagramProfile(username) {
 
 async function scrapeInstagramPosts(username) {
   try {
-    const items = await runActor(POST_ACTOR_ID, { username: [username], resultsLimit: 500 }, 300);
+    const items = await runActor(POST_ACTOR_ID, { username: [username], resultsLimit: 500 }, 240);
     console.log(`[post-scraper] got ${items?.length ?? 0} posts for ${username}`);
     return Array.isArray(items) ? items : [];
   } catch(e) {
@@ -228,6 +228,43 @@ router.delete('/disconnect', async (req, res) => {
 export default router;
 
 // ── Daily auto-refresh — called by cron in server/index.js ────
+// Runs all profiles IN PARALLEL (not sequentially) so the total wall time
+// stays under Vercel's function timeout regardless of how many students
+// are connected — a sequential loop would multiply each profile's scrape
+// time and blow past the limit once there are more than 1-2 profiles.
+async function refreshOneProfile(user_id, username) {
+  const [raw, rawPosts] = await Promise.all([
+    scrapeInstagramProfile(username),
+    scrapeInstagramPosts(username),
+  ]);
+  const now = new Date().toISOString();
+  const postSource = rawPosts?.length ? rawPosts : (raw.latestPosts || []);
+  const posts = normalizePosts(postSource);
+  const { avgViews, avgEng } = computePostStats(posts);
+
+  const row = {
+    user_id,
+    username:    raw.username    || username,
+    full_name:   raw.fullName    || null,
+    bio:         raw.biography   || null,
+    followers:   raw.followersCount || 0,
+    following:   raw.followsCount   || 0,
+    posts_count: raw.postsCount     || 0,
+    profile_pic: raw.profilePicUrl  || null,
+    is_verified: raw.verified       || false,
+    is_business: raw.isBusinessAccount || false,
+    posts,
+    scraped_at: now,
+  };
+
+  await supabase.from('instagram_profiles').upsert(row, { onConflict: 'user_id' });
+  await supabase.from('instagram_history').insert({
+    user_id, followers: row.followers, following: row.following,
+    posts_count: row.posts_count, avg_views: avgViews,
+    avg_engagement: avgEng, recorded_at: now,
+  });
+}
+
 export async function dailyRefreshAll() {
   const { data: profiles } = await supabase
     .from('instagram_profiles')
@@ -235,43 +272,14 @@ export async function dailyRefreshAll() {
 
   if (!profiles?.length) return 0;
 
+  const results = await Promise.allSettled(
+    profiles.map(({ user_id, username }) => refreshOneProfile(user_id, username))
+  );
+
   let count = 0;
-  for (const { user_id, username } of profiles) {
-    try {
-      const [raw, rawPosts] = await Promise.all([
-        scrapeInstagramProfile(username),
-        scrapeInstagramPosts(username),
-      ]);
-      const now = new Date().toISOString();
-      const postSource = rawPosts?.length ? rawPosts : (raw.latestPosts || []);
-      const posts = normalizePosts(postSource);
-      const { avgViews, avgEng } = computePostStats(posts);
-
-      const row = {
-        user_id,
-        username:    raw.username    || username,
-        full_name:   raw.fullName    || null,
-        bio:         raw.biography   || null,
-        followers:   raw.followersCount || 0,
-        following:   raw.followsCount   || 0,
-        posts_count: raw.postsCount     || 0,
-        profile_pic: raw.profilePicUrl  || null,
-        is_verified: raw.verified       || false,
-        is_business: raw.isBusinessAccount || false,
-        posts,
-        scraped_at: now,
-      };
-
-      await supabase.from('instagram_profiles').upsert(row, { onConflict: 'user_id' });
-      await supabase.from('instagram_history').insert({
-        user_id, followers: row.followers, following: row.following,
-        posts_count: row.posts_count, avg_views: avgViews,
-        avg_engagement: avgEng, recorded_at: now,
-      });
-      count++;
-    } catch (e) {
-      console.error(`[dailyRefresh] failed for ${username}:`, e.message);
-    }
-  }
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') count++;
+    else console.error(`[dailyRefresh] failed for ${profiles[i].username}:`, r.reason?.message);
+  });
   return count;
 }
