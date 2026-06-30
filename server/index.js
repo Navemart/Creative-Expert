@@ -160,3 +160,27 @@ cron.schedule('0 9 * * *', async () => {
   }
 });
 console.log('  ⏰  Slack retry scheduled (09:00)');
+
+// ── Daily data backup — snapshot critical tables ──────────────
+// Every day at 04:00 — copy key tables into db_backups, keep last 30 days
+const BACKUP_TABLES = ['zoom_meta', 'monthly_submissions', 'deals', 'sunday_wins', 'routine_tasks'];
+cron.schedule('0 4 * * *', async () => {
+  try {
+    const { createClient } = await import('@supabase/supabase-js');
+    const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY);
+
+    for (const table of BACKUP_TABLES) {
+      const { data, error } = await sb.from(table).select('*');
+      if (error) { console.error(`[cron] backup read error (${table}):`, error.message); continue; }
+      await sb.from('db_backups').insert({ table_name: table, snapshot: data || [] });
+    }
+    console.log(`[cron] Backed up ${BACKUP_TABLES.length} tables`);
+
+    // Cleanup — keep last 30 days only
+    const cutoff = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
+    await sb.from('db_backups').delete().lt('created_at', cutoff);
+  } catch (e) {
+    console.error('[cron] Backup error:', e.message);
+  }
+});
+console.log('  ⏰  Daily DB backup scheduled (04:00)');
