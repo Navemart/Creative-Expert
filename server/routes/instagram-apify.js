@@ -14,12 +14,19 @@ const POST_ACTOR_ID      = 'apify~instagram-post-scraper';
 const APIFY_BASE         = 'https://api.apify.com/v2';
 
 async function runActor(actorId, input, timeout = 120) {
-  const res = await fetch(
-    `${APIFY_BASE}/acts/${actorId}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=${timeout}`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) },
-  );
-  if (!res.ok) throw new Error(`Apify ${actorId} error: ${res.status} ${await res.text()}`);
-  return res.json();
+  const controller = new AbortController();
+  // Kill the fetch if Apify doesn't respond within timeout + 15s grace
+  const timer = setTimeout(() => controller.abort(), (timeout + 15) * 1000);
+  try {
+    const res = await fetch(
+      `${APIFY_BASE}/acts/${actorId}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=${timeout}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input), signal: controller.signal },
+    );
+    if (!res.ok) throw new Error(`Apify ${actorId} error: ${res.status} ${await res.text()}`);
+    return res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function scrapeInstagramProfile(username) {
@@ -30,7 +37,7 @@ async function scrapeInstagramProfile(username) {
 
 async function scrapeInstagramPosts(username) {
   try {
-    const items = await runActor(POST_ACTOR_ID, { username: [username], resultsLimit: 500 }, 240);
+    const items = await runActor(POST_ACTOR_ID, { username: [username], resultsLimit: 100 }, 120);
     console.log(`[post-scraper] got ${items?.length ?? 0} posts for ${username}`);
     return Array.isArray(items) ? items : [];
   } catch(e) {
