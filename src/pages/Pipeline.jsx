@@ -112,12 +112,12 @@ function LinkCell({ value, onSave }) {
 
   if (value) {
     return (
-      <div className="flex items-center gap-1 group/link">
+      <div className="flex items-center gap-1 group/link" style={{ minWidth: 0 }}>
         <a href={value.startsWith('http') ? value : `https://instagram.com/${value.replace('@','')}`}
           target="_blank" rel="noopener noreferrer"
-          className="text-sm truncate hover:underline"
-          style={{ color: '#60a5fa' }}>
-          {value}
+          className="text-sm truncate hover:underline flex-1"
+          style={{ color: '#60a5fa', minWidth: 0 }}>
+          {value.replace(/^https?:\/\/(www\.)?instagram\.com\//, '@').replace(/\/$/, '')}
         </a>
         <ExternalLink size={10} className="flex-none opacity-50 group-hover/link:opacity-100 transition"
           style={{ color: '#60a5fa' }} />
@@ -286,7 +286,7 @@ function StarsCell({ value, onSave }) {
 const COLS = [
   { label: 'שם הליד',              w: 140 },
   { label: 'תאריך\nהתקשרות',      w: 105, sortKey: 'contact_date' },
-  { label: 'אינסטגרם',             w: 140 },
+  { label: 'אינסטגרם',             w: 100 },
   { label: 'סוג ליד',              w: 148 },
   { label: 'דירוג',                w: 108, sortKey: 'rating' },
   { label: 'תחום / סוג עסק',      w: 130 },
