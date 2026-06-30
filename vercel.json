@@ -12,5 +12,11 @@
       "maxDuration": 300,
       "includeFiles": "bin/**"
     }
-  }
+  },
+  "crons": [
+    { "path": "/api/cron/notion-sync",        "schedule": "0 3 * * *" },
+    { "path": "/api/cron/db-backup",          "schedule": "0 4 * * *" },
+    { "path": "/api/cron/instagram-refresh",  "schedule": "0 6 * * *" },
+    { "path": "/api/cron/slack-retry",        "schedule": "0 9 * * *" }
+  ]
 }
