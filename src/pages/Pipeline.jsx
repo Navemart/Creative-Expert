@@ -1005,8 +1005,8 @@ export default function Pipeline() {
       <div ref={tableRef} className="rounded-xl overflow-hidden"
         style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgb(var(--bg-surface))' }}>
         <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <table className="w-full"
-            style={{ borderCollapse: 'collapse', minWidth: COLS.reduce((s, c) => s + c.w, 0) }}>
+          <table
+            style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: 36 + COLS.reduce((s, c) => s + c.w, 0) }}>
 
             {/* Header */}
             <thead>
