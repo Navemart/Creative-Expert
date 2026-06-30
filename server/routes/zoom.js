@@ -519,7 +519,9 @@ router.get('/upcoming', async (req, res) => {
       if (m.type === 3) return true; // recurring/no fixed time — handle separately
       if (!m.start_time) return false;
       const start = new Date(m.start_time);
-      return start >= now && start <= lookAhead;
+      const end   = new Date(start.getTime() + (m.duration || 0) * 60000);
+      // Keep the meeting visible until it actually ends, not just until start time passes
+      return end >= now && start <= lookAhead;
     });
 
     // Enrich recurring meetings with estimated next occurrence from recordings
