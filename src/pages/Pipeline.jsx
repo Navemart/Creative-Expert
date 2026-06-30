@@ -176,7 +176,14 @@ function SelectCell({ value, options, onSave, placeholder = '— בחר —' }) 
   function handleOpen() {
     if (triggerRef.current) {
       const r = triggerRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
+      const itemCount   = options.length + (value ? 1 : 0); // + "נקה בחירה" row
+      const estHeight   = itemCount * 32 + 8; // ~32px per row + padding
+      const spaceBelow  = window.innerHeight - r.bottom;
+      const openUpward  = spaceBelow < estHeight + 12;
+      setPos({
+        top:   openUpward ? r.top - estHeight - 4 : r.bottom + 4,
+        right: window.innerWidth - r.right,
+      });
     }
     setOpen(o => !o);
   }
