@@ -1129,7 +1129,7 @@ export default function Pipeline() {
 
       {/* Table */}
       <div ref={tableRef} className="rounded-xl overflow-hidden" style={{ flex: 1, minWidth: 0, border: '1px solid rgba(255,255,255,0.08)', background: 'rgb(var(--bg-surface))' }}>
-        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="overflow-x-auto" dir="ltr" style={{ WebkitOverflowScrolling: 'touch' }}>
           <table
             style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: 36 + COLS.reduce((s, c) => s + c.w, 0) }}>
 
