@@ -914,12 +914,13 @@ const MT_COLS = [
   { key: 'nps',                 label: 'NPS',             fmt: v => v ?? '—', align: 'center' },
 ];
 
-function MonthlyTable({ students }) {
-  const [search,   setSearch]   = useState('');
-  const [period,   setPeriod]   = useState('all');
-  const [sortKey,  setSortKey]  = useState('month');
-  const [sortDir,  setSortDir]  = useState(-1); // -1 = desc
-  const [handled,  setHandled]  = useState(new Set()); // IDs שטופלו מקומית
+function MonthlyTable({ students, onUpdateProfile }) {
+  const [search,          setSearch]          = useState('');
+  const [period,          setPeriod]          = useState('all');
+  const [sortKey,         setSortKey]         = useState('month');
+  const [sortDir,         setSortDir]         = useState(-1); // -1 = desc
+  const [handled,         setHandled]         = useState(new Set()); // IDs שטופלו מקומית
+  const [selectedStudent, setSelectedStudent] = useState(null);
 
   async function markHandled(rowId) {
     setHandled(prev => new Set([...prev, rowId]));
@@ -1006,6 +1007,31 @@ function MonthlyTable({ students }) {
         </div>
       </div>
 
+      {/* Modal — full MonthlyPanel for selected student */}
+      {selectedStudent && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.72)', zIndex:1000, display:'flex', alignItems:'flex-start', justifyContent:'center', padding:'40px 16px', overflowY:'auto' }}
+          onClick={() => setSelectedStudent(null)}>
+          <div style={{ background:'rgb(var(--bg-surface))', borderRadius:20, width:'100%', maxWidth:860, border:'1px solid rgba(255,255,255,0.1)', boxShadow:'0 24px 80px rgba(0,0,0,0.7)', marginBottom:40 }}
+            dir="rtl" onClick={e => e.stopPropagation()}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 20px', borderBottom:'1px solid rgba(255,255,255,0.07)', position:'sticky', top:0, background:'rgb(var(--bg-surface))', borderRadius:'20px 20px 0 0', zIndex:1 }}>
+              <div>
+                <p style={{ fontWeight:800, fontSize:17, color:'white' }}>{selectedStudent.name}</p>
+                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>דיווח חודשי מלא</p>
+              </div>
+              <button onClick={() => setSelectedStudent(null)}
+                style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, width:32, height:32, cursor:'pointer', color:'rgba(255,255,255,0.5)', fontSize:18, display:'flex', alignItems:'center', justifyContent:'center' }}>×</button>
+            </div>
+            <MonthlyPanel
+              monthly={selectedStudent.monthly || []}
+              studentId={selectedStudent.id}
+              enrolled_at={selectedStudent.enrolled_at}
+              total_paid={selectedStudent.total_paid}
+              onUpdateProfile={onUpdateProfile || (() => {})}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
         <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 900 }}>
@@ -1031,6 +1057,20 @@ function MonthlyTable({ students }) {
                 {MT_COLS.map(col => {
                   const val = r[col.key];
                   const display = col.fmt(val);
+                  if (col.key === 'name') {
+                    const student = students.find(s => s.id === r.user_id);
+                    return (
+                      <td key="name" className="px-3 py-2.5 whitespace-nowrap">
+                        <button
+                          onClick={() => student && setSelectedStudent(student)}
+                          style={{ background:'none', border:'none', padding:0, cursor: student ? 'pointer' : 'default', color:'white', fontWeight:500, fontSize:13, textDecoration: student ? 'underline' : 'none', textDecorationColor:'rgba(245,193,24,0.5)', textUnderlineOffset:3 }}
+                          title={student ? 'לחץ לצפייה בדיווח המלא' : ''}
+                        >
+                          {display}
+                        </button>
+                      </td>
+                    );
+                  }
                   return (
                     <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
                       style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' || val === '—' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: 13 }}>
@@ -1297,7 +1337,7 @@ export default function AdminStudents() {
       )}
 
       {/* Sub-page views */}
-      {view === 'monthly'   && !loading && <MonthlyTable   students={students.filter(s => s.is_active !== false)} />}
+      {view === 'monthly'   && !loading && <MonthlyTable   students={students.filter(s => s.is_active !== false)} onUpdateProfile={updateProfile} />}
       {view === 'wins'      && !loading && <WeeklyWinsTable students={students.filter(s => s.is_active !== false)} />}
       {view === 'deals'     && !loading && <DealsTable      students={students.filter(s => s.is_active !== false)} />}
       {view === 'checklist' && !loading && <ChecklistView   students={students.filter(s => s.is_active !== false)} roadmap={roadmap} />}
