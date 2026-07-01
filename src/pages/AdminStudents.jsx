@@ -209,7 +209,8 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
             {sorted.map((m, i) => {
               const isActive = i === idx;
               return (
-                <button key={m.month} onClick={() => setIdx(i)}
+                <button key={m.id ?? m.month} onClick={() => setIdx(i)}
+                  title={`id: ${m.id} | month: ${m.month}`}
                   className="rounded-lg px-3 py-1.5 transition-all whitespace-nowrap"
                   style={{ background: isActive ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isActive ? 'rgba(245,193,24,0.45)' : 'rgba(255,255,255,0.07)'}` }}>
                   <span className="text-[11px] font-semibold" style={{ color: isActive ? '#F5C118' : 'rgba(255,255,255,0.45)' }}>
