@@ -282,6 +282,120 @@ function StarsCell({ value, onSave }) {
   );
 }
 
+// ── Lead Detail Panel (desktop split-view) ───────────────────
+function LeadDetailPanel({ lead, onUpdate, onClose, onDelete }) {
+  const u = (f, v) => onUpdate(lead.id, f, v);
+  const src = SOURCE_OPTIONS.find(o => o.value === lead.lead_source);
+  const stat = CALL_STATUS_OPTIONS.find(o => o.value === lead.call_status);
+
+  return (
+    <div style={{
+      width: 360, flexShrink: 0,
+      background: 'rgb(var(--bg-surface))',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 16, display: 'flex', flexDirection: 'column',
+      maxHeight: 'calc(100vh - 180px)', overflow: 'hidden',
+      position: 'sticky', top: 16,
+    }}>
+      {/* Panel header */}
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TextCell value={lead.name} onSave={v => u('name', v)} placeholder="שם ליד..." />
+          {src && (
+            <span style={{ display: 'inline-block', marginTop: 4, fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 6, background: src.bg, border: `1px solid ${src.border}`, color: src.color }}>
+              {src.value}
+            </span>
+          )}
+        </div>
+        <button onClick={onClose} style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', padding: 4, borderRadius: 6, lineHeight: 1, fontSize: 18 }}>×</button>
+      </div>
+
+      {/* Panel body — scrollable */}
+      <div style={{ overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+        {/* Stars */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>דירוג</div>
+          <StarsCell value={lead.rating || 0} onSave={v => u('rating', v)} />
+        </div>
+
+        {/* Status */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>מצב שיחה</div>
+          <SelectCell value={lead.call_status} options={CALL_STATUS_OPTIONS} onSave={v => u('call_status', v)} placeholder="— מצב —" />
+        </div>
+
+        {/* Lead source */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>סוג ליד</div>
+          <SelectCell value={lead.lead_source} options={SOURCE_OPTIONS} onSave={v => u('lead_source', v)} placeholder="— סוג ליד —" />
+        </div>
+
+        {/* Business type */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>תחום / סוג עסק</div>
+          <TextCell value={lead.business_type} onSave={v => u('business_type', v)} placeholder="תחום..." />
+        </div>
+
+        {/* Instagram */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>אינסטגרם</div>
+          <LinkCell value={lead.instagram_link} onSave={v => u('instagram_link', v)} />
+        </div>
+
+        {/* Notes */}
+        <div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>הערות</div>
+          <TextCell value={lead.notes} onSave={v => u('notes', v)} placeholder="הערות על הליד..." multiline />
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+        {/* Dates */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>תאריך התקשרות</div>
+            <DateCell value={lead.contact_date} onSave={v => u('contact_date', v)} />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>תאריך שיחה</div>
+            <DateCell value={lead.call_date} onSave={v => u('call_date', v)} />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: 6, letterSpacing: '0.05em' }}>תאריך פולואפ</div>
+            <DateCell value={lead.followup_date} onSave={v => u('followup_date', v)} highlight={lead.call_status === 'פולואפ'} />
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+
+        {/* Checkboxes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { label: 'הוזמן לשיחת התאמה', field: 'matching_booked', val: lead.matching_booked },
+            { label: 'הוזמן לשיחת מכירה', field: 'sales_booked', val: lead.sales_booked },
+            { label: 'הופיע לשיחה', field: 'sales_scheduled', val: lead.sales_scheduled },
+          ].map(({ label, field, val }) => (
+            <label key={field} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+              <input type="checkbox" checked={!!val} onChange={() => u(field, !val)}
+                style={{ width: 15, height: 15, cursor: 'pointer', accentColor: '#22c55e' }} />
+              <span style={{ fontSize: 13, color: val ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)' }}>{label}</span>
+            </label>
+          ))}
+        </div>
+
+        {/* Delete */}
+        <button onClick={onDelete}
+          style={{ marginTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%', padding: '8px', borderRadius: 10, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: '#fca5a5', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+          <Trash2 size={13} /> מחק ליד
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Column definitions ────────────────────────────────────────
 const COLS = [
   { label: 'שם הליד',              w: 140 },
@@ -321,8 +435,10 @@ export default function Pipeline() {
     source:    'all',   // 'all' | lead_source value
     sort:      'newest', // 'newest' | 'oldest' | 'rating_high' | 'rating_low'
   });
-  const [showFilters, setShowFilters] = useState(false);
-  const [showLegend,  setShowLegend]  = useState(false);
+  const [showFilters,    setShowFilters]    = useState(false);
+  const [showLegend,     setShowLegend]     = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState(null);
+  const selectedLead = leads.find(l => l.id === selectedLeadId) ?? null;
 
   function setFilter(key, val) {
     setFilters(prev => ({ ...prev, [key]: val }));
@@ -375,6 +491,13 @@ export default function Pipeline() {
     }
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
+  // Close panel on Escape
+  useEffect(() => {
+    const h = e => { if (e.key === 'Escape') setSelectedLeadId(null); };
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
   }, []);
 
   // ── Follow-up notifications ───────────────────────────────────
@@ -1001,9 +1124,11 @@ export default function Pipeline() {
         </div>
       )}
 
+      {/* Table + optional detail panel */}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+
       {/* Table */}
-      <div ref={tableRef} className="rounded-xl overflow-hidden"
-        style={{ border: '1px solid rgba(255,255,255,0.08)', background: 'rgb(var(--bg-surface))' }}>
+      <div ref={tableRef} className="rounded-xl overflow-hidden" style={{ flex: 1, minWidth: 0, border: '1px solid rgba(255,255,255,0.08)', background: 'rgb(var(--bg-surface))' }}>
         <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <table
             style={{ borderCollapse: 'collapse', tableLayout: 'fixed', width: 36 + COLS.reduce((s, c) => s + c.w, 0) }}>
@@ -1079,18 +1204,17 @@ export default function Pipeline() {
 
               {filtered.map((lead, ri) => {
                 const u = (f, v) => updateLead(lead.id, f, v);
+                const isRowActive = selected.has(lead.id) || editingLeadId === lead.id || selectedLeadId === lead.id;
                 return (
                   <tr key={lead.id} className="group"
-                    onClick={() => setEditingLeadId(lead.id)}
+                    onClick={() => { setEditingLeadId(lead.id); setSelectedLeadId(lead.id); }}
                     style={{ cursor: 'default',
                       borderBottom: '1px solid rgba(255,255,255,0.05)',
-                      background: (selected.has(lead.id) || editingLeadId === lead.id)
-                        ? 'rgba(245,193,24,0.07)'
-                        : ri % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent',
+                      background: isRowActive ? 'rgba(245,193,24,0.07)' : ri % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent',
                       transition: 'background 0.15s',
                     }}
-                    onMouseEnter={e => { if (!selected.has(lead.id) && editingLeadId !== lead.id) e.currentTarget.style.background = 'rgba(255,255,255,0.035)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = (selected.has(lead.id) || editingLeadId === lead.id) ? 'rgba(245,193,24,0.07)' : ri % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent'; }}>
+                    onMouseEnter={e => { if (!isRowActive) e.currentTarget.style.background = 'rgba(255,255,255,0.035)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = isRowActive ? 'rgba(245,193,24,0.07)' : ri % 2 === 1 ? 'rgba(255,255,255,0.012)' : 'transparent'; }}>
 
                     {/* Checkbox */}
                     <td style={{ ...td(), textAlign:'center', width:36, minWidth:36 }} onClick={e => e.stopPropagation()}>
@@ -1198,6 +1322,20 @@ export default function Pipeline() {
           <Plus size={13} /> הוסף ליד
         </button>
       </div>
+
+      {/* Detail panel — desktop only */}
+      {selectedLead && (
+        <div className="hidden lg:block">
+          <LeadDetailPanel
+            lead={selectedLead}
+            onUpdate={updateLead}
+            onClose={() => setSelectedLeadId(null)}
+            onDelete={() => { deleteLead(selectedLead.id); setSelectedLeadId(null); }}
+          />
+        </div>
+      )}
+
+      </div>{/* end split-view flex */}
 
       {/* ── Floating action bar ── */}
       {selected.size > 0 && (
