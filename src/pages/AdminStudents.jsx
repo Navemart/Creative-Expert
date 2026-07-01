@@ -222,6 +222,11 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
           </div>
         </div>
 
+        {/* DEBUG — remove after diagnosis */}
+        <p style={{ fontSize:10, color:'rgba(255,100,100,0.7)', marginBottom:4 }}>
+          [debug] idx={idx} | cur.month={cur?.month} | total={sorted.length}
+        </p>
+
         {/* ══ HERO ROW — הנתונים הכי חשובים ══ */}
         <div className="grid grid-cols-4 gap-3">
           {/* הכנסה — הגדול */}
