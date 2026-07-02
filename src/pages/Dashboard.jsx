@@ -1495,7 +1495,9 @@ export default function Dashboard() {
           <button onClick={() => { setWinStep(1); setModal('win'); }} className={btnClass} style={btnStyle}><Trophy size={15} /> נצחונות שבועיים</button>
           <button
             onClick={() => {
-              setMonthlyForm({ report_month: currentMonth, total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '', new_clients: '', client_satisfaction: '', on_time_delivery: '', biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '', nps: '', program_feedback: '' });
+              const _prev = new Date(); _prev.setDate(1); _prev.setMonth(_prev.getMonth() - 1);
+              const _prevStr = `${_prev.getFullYear()}-${String(_prev.getMonth()+1).padStart(2,'0')}`;
+              setMonthlyForm({ report_month: _prevStr, total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '', new_clients: '', client_satisfaction: '', on_time_delivery: '', biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '', nps: '', program_feedback: '' });
               setEditingSubmission(null); setModal('monthly');
             }}
             className={btnClass} style={btnStyle}
