@@ -140,7 +140,7 @@ function PostCard({ post }) {
       )}
       {/* video badge */}
       {post.media_type === 'VIDEO' && (
-        <div className="absolute top-1.5 right-1.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white"
+        <div className="absolute top-1.5 right-1.5 rounded-md px-1.5 py-0.5 text-[11px] font-bold text-white"
           style={{ background: 'rgba(0,0,0,0.55)' }}>
           ▶
         </div>
@@ -773,7 +773,7 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
               <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.28)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: 10 }} axisLine={false} tickLine={false}
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false}
                 tickFormatter={metric.fmt} width={48} domain={['auto', 'auto']} />
               <Tooltip
                 contentStyle={{ background: 'rgba(8,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 12 }}
@@ -900,14 +900,14 @@ function ApifyDashboard({ profile, history, onDisconnect }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-base font-bold text-white">@{profile.username}</span>
-            {profile.is_verified && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa' }}>✓ מאומת</span>}
+            {profile.is_verified && <span className="text-[11px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(59,130,246,0.2)', color: '#60a5fa' }}>✓ מאומת</span>}
             <a href={`https://instagram.com/${profile.username}`} target="_blank" rel="noopener noreferrer"
               className="p-1 rounded hover:bg-white/10 transition" style={{ color: 'rgba(255,255,255,0.35)' }}>
               <ExternalLink size={12} />
             </a>
           </div>
           {profile.bio && <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{profile.bio}</p>}
-          {scrapedAt && <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>עודכן {scrapedAt}</p>}
+          {scrapedAt && <p className="text-[11px] mt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>עודכן {scrapedAt}</p>}
         </div>
 
         <div className="flex gap-6 flex-none text-center px-2">
@@ -1000,7 +1000,7 @@ function ApifyDashboard({ profile, history, onDisconnect }) {
             { k: null,         l: ''        },
           ].map(({ k, l }) => (
             <button key={l + (k||'')} onClick={() => k && toggleSort(k)} disabled={!k}
-              className="text-[10px] font-semibold tracking-wider select-none transition-colors text-right"
+              className="text-[11px] font-semibold tracking-wider select-none transition-colors text-right"
               style={{
                 color:  sortCol === k ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.22)',
                 cursor: k ? 'pointer' : 'default',
@@ -1054,7 +1054,7 @@ function ApifyDashboard({ profile, history, onDisconnect }) {
 
                 {/* סוג */}
                 <div className="flex justify-end">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
                     style={{ background: (TYPE_COLOR[post.type] || '#fff') + '18', color: TYPE_COLOR[post.type] || 'white' }}>
                     <TypeIcon type={post.type} size={9} />
                     {TYPE_LABEL[post.type] || post.type || '—'}

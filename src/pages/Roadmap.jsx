@@ -523,7 +523,7 @@ export default function Roadmap() {
 
             {/* Left: numbers */}
             <div>
-              <div className="text-[10px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              <div className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
                 התקדמות כוללת
               </div>
               <div className="flex items-baseline gap-3">
@@ -542,7 +542,7 @@ export default function Roadmap() {
             {/* Right: current milestone */}
             {currentMilestone && (
               <div className="sm:max-w-xs w-full">
-                <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <div className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
                   אבן דרך נוכחית
                 </div>
                 <div
@@ -614,7 +614,7 @@ export default function Roadmap() {
                 {/* Left: MONTH label + big number + title + progress text */}
                 <div className="flex items-center gap-5 flex-1 min-w-0">
                   <div className="flex-none" onClick={e => editMode && e.stopPropagation()}>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>MONTH</div>
+                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>MONTH</div>
                     <InlineEdit
                       value={String(phase.month_number)}
                       onSave={v => updatePhaseMonth(phase.id, v)}
@@ -719,13 +719,13 @@ export default function Roadmap() {
                               style={{ color: 'rgba(255,255,255,0.35)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
                           )}
                           <div className="flex items-center gap-2 flex-none" onClick={e => editMode && e.stopPropagation()}>
-                            <span className="text-[10px] font-bold uppercase tracking-[0.15em]"
+                            <span className="text-[11px] font-bold uppercase tracking-[0.15em]"
                               style={{ color: 'rgba(255,255,255,0.28)' }}>WEEK</span>
                             <InlineEdit
                               value={String(week.week_number)}
                               onSave={v => updateWeekNumber(week.id, v)}
                               active={editMode}
-                              className="text-[10px] font-bold"
+                              className="text-[11px] font-bold"
                               style={{ color: 'rgba(255,255,255,0.45)' }}
                             />
                           </div>

@@ -305,7 +305,7 @@ function InstallmentBuilder({ plan, dealAmount, onChange }) {
           </div>
           <input type="date" value={inst.date || ''} onChange={e => onChange(plan.map(i => i.id === inst.id ? { ...i, date: e.target.value } : i))}
             className="flex-none w-14 rounded-lg py-1.5 text-xs outline-none"
-            style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: inst.date ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)', paddingLeft: 2, paddingRight: 2, fontSize: 10 }} />
+            style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: inst.date ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)', paddingLeft: 2, paddingRight: 2, fontSize: 11 }} />
           <button type="button" onClick={() => remove(inst.id)} className="rounded-md p-1 hover:bg-red-500/20 transition flex-none" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <X size={13} />
           </button>
@@ -386,7 +386,7 @@ function StepListInput({ steps, onChange }) {
     <div>
       {steps.map((s, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
+          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
           <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{s}</span>
           <button type="button" onClick={() => onChange(steps.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(252,165,165,0.5)', padding: 2, display: 'flex' }}><X size={12} /></button>
         </div>
@@ -499,7 +499,7 @@ function WfPanel({ userId, onApplyTemplate }) {
               <div style={{ borderTop: '1px solid rgba(245,193,24,0.15)', padding: '10px 14px 12px' }}>
                 {lines.map((s, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
                     <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)' }}>{s}</span>
                   </div>
                 ))}
@@ -620,7 +620,7 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
                 </span>
               )}
               {isInactive && (
-                <span className="flex-none flex items-center gap-1 text-[10px] font-semibold rounded-md px-1.5 py-0.5"
+                <span className="flex-none flex items-center gap-1 text-[11px] font-semibold rounded-md px-1.5 py-0.5"
                   style={{ background: 'rgba(100,116,139,0.15)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.2)' }}>
                   <Archive size={9} />לא פעיל
                 </span>
@@ -827,12 +827,12 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
                         style={{ color: 'rgba(255,255,255,0.85)' }}>
                         {proj.name}
                       </span>
-                      <span className="flex-none text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                      <span className="flex-none text-[11px] font-semibold px-1.5 py-0.5 rounded"
                         style={{ color: pst.color, background: pst.bg, border: `1px solid ${pst.border}` }}>
                         {pst.label}
                       </span>
                       {proj.total_amount > 0 && (
-                        <span className="flex-none text-[10px] tabular-nums font-semibold"
+                        <span className="flex-none text-[11px] tabular-nums font-semibold"
                           style={{ color: allPaid ? '#86efac' : '#fcd34d' }}>
                           {fmt(paidAmt)}<span style={{ color: 'rgba(255,255,255,0.25)', fontWeight: 400 }}> / {fmt(proj.total_amount)}</span>
                         </span>
@@ -906,7 +906,7 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
                                 {inst.label || `תשלום ${idx + 1}`}
                               </span>
                               {inst.date && !isPaid && (
-                                <span className="flex-none text-[10px]" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                                <span className="flex-none text-[11px]" style={{ color: 'rgba(255,255,255,0.28)' }}>
                                   {fmtDate(inst.date)}
                                 </span>
                               )}
@@ -1748,7 +1748,7 @@ export default function Clients() {
                     <s.icon size={16} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-xs mb-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</div>
+                    <div className="text-[11px] sm:text-xs mb-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</div>
                     <div className="text-base sm:text-xl lg:text-2xl font-bold text-white leading-none truncate">{s.value}</div>
                   </div>
                 </div>
@@ -1867,7 +1867,7 @@ export default function Clients() {
                     <s.icon size={16} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[10px] sm:text-xs mb-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</div>
+                    <div className="text-[11px] sm:text-xs mb-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{s.label}</div>
                     <div className="text-base sm:text-xl lg:text-2xl font-bold text-white leading-none truncate">{s.value}</div>
                   </div>
                 </div>
@@ -2223,7 +2223,7 @@ export default function Clients() {
                       שלבי הפרויקט · {(projectForm.stages || []).filter(s=>s.done).length}/{(projectForm.stages || []).length}
                     </span>
                     <button onClick={() => setProjectForm(f => ({ ...f, stages: [] }))}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>
                       נקה
                     </button>
                   </div>

@@ -161,18 +161,18 @@ function ClientRow({ client, projects, onEditClient, onDeleteClient, onAddProjec
         <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{clientProjects.length}</div>
-            <div style={{ fontSize: 10, color: C.muted }}>פרויקטים</div>
+            <div style={{ fontSize: 11, color: C.muted }}>פרויקטים</div>
           </div>
           {totalValue > 0 && (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: C.accent }}>{fmt(totalValue)}</div>
-              <div style={{ fontSize: 10, color: C.muted }}>סה"כ ערך</div>
+              <div style={{ fontSize: 11, color: C.muted }}>סה"כ ערך</div>
             </div>
           )}
           {outstanding > 0 && (
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: C.red }}>{fmt(outstanding)}</div>
-              <div style={{ fontSize: 10, color: C.muted }}>חוב פתוח</div>
+              <div style={{ fontSize: 11, color: C.muted }}>חוב פתוח</div>
             </div>
           )}
         </div>
@@ -368,7 +368,7 @@ function WfPanel({ userId }) {
                   <div style={{ borderTop: `1px solid ${C.border}`, padding: '10px 14px 12px' }}>
                     {stepLines.map((step, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', border: `1.5px solid rgba(245,193,24,0.4)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: C.accent, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', border: `1.5px solid rgba(245,193,24,0.4)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: C.accent, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
                         <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', lineHeight: 1.5 }}>{step}</span>
                       </div>
                     ))}

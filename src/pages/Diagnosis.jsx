@@ -216,13 +216,13 @@ function StageCard({ stage, isCurrent, isSelected, hasResult, onClick }) {
         ))}
       </div>
 
-      <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-semibold uppercase tracking-widest"
+      <div className="flex items-center gap-1.5 mb-1.5 text-[11px] font-semibold uppercase tracking-widest"
         style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.3)' }}>
         ההתמקדות
       </div>
       <div className="flex flex-wrap gap-1">
         {stage.tags.map(tag => (
-          <span key={tag} className="text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+          <span key={tag} className="text-[11px] font-medium px-1.5 py-0.5 rounded-md"
             style={{
               background: isCurrent ? `${hex}25` : 'rgba(255,255,255,0.05)',
               color: isCurrent ? hex : 'rgba(255,255,255,0.4)',
@@ -268,7 +268,7 @@ function StageDetail({ stage, isCurrent }) {
         <span className="text-sm font-bold" style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.85)' }}>{stage.title}</span>
         <span className="text-xs hidden sm:inline" style={{ color: 'rgba(255,255,255,0.35)' }}>{stage.subtitle}</span>
         {isCurrent && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${hex}25`, color: hex }}>
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${hex}25`, color: hex }}>
             השלב שלך
           </span>
         )}
@@ -676,7 +676,7 @@ export default function Diagnosis() {
       <div className="rounded-2xl px-5 py-5 flex items-center justify-between gap-4 flex-wrap"
         style={{ background: 'rgb(var(--bg-elevated))', border: `1px solid ${hasResult ? currentHex + '33' : 'rgba(255,255,255,0.07)'}` }}>
         <div className="min-w-0">
-          <div className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <div className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
             התקדמות עסקית
           </div>
 

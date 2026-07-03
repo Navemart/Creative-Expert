@@ -86,7 +86,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
           {/* NPS נמוך */}
           {npsAlerts.length > 0 && (
             <>
-              <div className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
                 style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
                 <AlertCircle size={11} /> NPS נמוך — {npsAlerts.length}
               </div>
@@ -96,7 +96,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
           {/* תשלומים באיחור */}
           {overdue.length > 0 && (
             <>
-              <div className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
                 style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
                 <AlertCircle size={11} /> תשלומים באיחור — {overdue.length}
               </div>
@@ -106,7 +106,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
           {/* קרוב לפירעון */}
           {upcoming.length > 0 && (
             <>
-              <div className="flex items-center gap-1.5 px-4 py-2 text-[10px] font-bold uppercase tracking-widest"
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
                 style={{ background: 'rgba(249,115,22,0.07)', color: '#f97316' }}>
                 <Clock size={11} /> קרוב לפירעון — {upcoming.length}
               </div>
@@ -116,7 +116,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
         </div>
       )}
       {total > 0 && (
-        <div className="px-4 py-2.5 text-center text-[10px]"
+        <div className="px-4 py-2.5 text-center text-[11px]"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.2)' }}>
           ✕ לחיצה על X מסמנת כטופל
         </div>
@@ -207,7 +207,7 @@ function DailyPanel({ onClose }) {
       {/* Legend */}
       <div className="flex items-center gap-3 px-4 pt-2.5 pb-1">
         {LEVELS.map(l => (
-          <span key={l.v} className="flex items-center gap-1 text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <span key={l.v} className="flex items-center gap-1 text-[11px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <span className="h-2 w-2 rounded-full flex-none" style={{ background: l.dot }} />
             {l.label}
           </span>
@@ -460,7 +460,7 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
           style={{ color: total > 0 ? badgeColor : 'rgba(255,255,255,0.75)' }}>
           <Bell size={18} className={total > 0 ? 'bell-ring' : ''} />
           {total > 0 && (
-            <span className={`absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none${hasOverdue ? ' badge-pulse' : ''}`}
+            <span className={`absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-bold leading-none${hasOverdue ? ' badge-pulse' : ''}`}
               style={{ background: badgeColor, color: 'white' }}>
               {total}
             </span>

@@ -140,7 +140,7 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
         <div>
           {sectionLabel ?? <span className="text-sm font-semibold text-white/70">ההתקדמות שלך</span>}
           {monthsCount >= 2 && (
-            <div className="text-[10px] text-white/30 mt-0.5">
+            <div className="text-[11px] text-white/30 mt-0.5">
               דרגה לפי ממוצע 2 חודשים אחרונים · ₪{Math.round(rankAmount).toLocaleString()}
             </div>
           )}
@@ -152,7 +152,7 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
           >
             {rank.label} · {rank.min === 0 ? '₪0' : `₪${rank.min / 1000}K`}
           </span>
-          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
             הדרגה הנוכחית שלך
           </span>
         </div>
@@ -166,7 +166,7 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
             style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}
           >
             <span className="text-xs font-bold text-white leading-none">₪{(current / 1000).toFixed(1)}K</span>
-            <span className="text-[10px] text-white/45 leading-none mt-0.5">{currentLabel}</span>
+            <span className="text-[11px] text-white/45 leading-none mt-0.5">{currentLabel}</span>
             <div className="mt-1 h-3 w-px bg-white/50" />
           </div>
         )}
@@ -178,7 +178,7 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
             <span className="text-xs font-bold leading-none" style={{ color: '#F5C118' }}>
               ₪{(best / 1000).toFixed(1)}K
             </span>
-            <span className="text-[10px] leading-none mt-0.5" style={{ color: '#F5C118', opacity: 0.7 }}>{bestLabel}</span>
+            <span className="text-[11px] leading-none mt-0.5" style={{ color: '#F5C118', opacity: 0.7 }}>{bestLabel}</span>
             <div className="mt-1 h-3 w-px" style={{ background: '#F5C118', opacity: 0.7 }} />
           </div>
         )}
@@ -221,7 +221,7 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
       </div>
 
       {/* Bottom labels */}
-      <div className="mt-2 flex justify-between text-[10px] text-white/30">
+      <div className="mt-2 flex justify-between text-[11px] text-white/30">
         {SEGMENTS.map(s => (
           <span key={s.label}>{s.min === 0 ? '₪0' : `₪${s.min / 1000}K`}</span>
         ))}
@@ -291,7 +291,7 @@ function MField({ label, hint, required, children, full }) {
       <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.82)' }}>
         {label}{required && <span style={{ color: '#f87171', marginRight: 3 }}>*</span>}
       </label>
-      {hint && <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: -2 }}>{hint}</p>}
+      {hint && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: -2 }}>{hint}</p>}
       {children}
     </div>
   );
@@ -1663,7 +1663,7 @@ export default function Dashboard() {
 
             {/* Header — outside the cards */}
             <div>
-              <p className="text-[10px] uppercase tracking-widest font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              <p className="text-[11px] uppercase tracking-widest font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
                 סטטוס הפלייוויל שלך
               </p>
               <div className="flex items-center gap-2.5 flex-wrap">
@@ -1734,10 +1734,10 @@ export default function Dashboard() {
 
                     {/* Focus section */}
                     <div className="mt-auto pt-1">
-                      <p className="text-[9px] uppercase tracking-widest font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.22)' }}>פוקוס</p>
+                      <p className="text-[11px] uppercase tracking-widest font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.22)' }}>פוקוס</p>
                       <div className="flex flex-wrap gap-1">
                         {stage.tags.map(tag => (
-                          <span key={tag} className="text-[10px] font-medium" style={{
+                          <span key={tag} className="text-[11px] font-medium" style={{
                             ...(isCurrent
                               ? { background: stage.color + '28', color: stage.color, padding: '2px 8px', borderRadius: 4 }
                               : { color: 'rgba(255,255,255,0.55)', padding: '2px 8px', borderRadius: 4, border: '1px solid rgba(255,255,255,0.15)' }
@@ -1807,7 +1807,7 @@ export default function Dashboard() {
               <div className="flex flex-col gap-0.5 flex-1">
                 {!roadmapAllData && <p className="text-xs text-center py-4" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
                 {from > 0 && (
-                  <p className="text-[10px] px-2 pb-1" style={{ color: 'rgba(255,255,255,0.18)' }}>· · · {from} משימות קודמות</p>
+                  <p className="text-[11px] px-2 pb-1" style={{ color: 'rgba(255,255,255,0.18)' }}>· · · {from} משימות קודמות</p>
                 )}
                 {visible.map((task) => {
                   const done    = rdDone.has(task.id);
@@ -1823,7 +1823,7 @@ export default function Dashboard() {
                         background: done ? '#F5C118' : isCur ? 'rgba(245,193,24,0.15)' : 'transparent',
                         border: done ? 'none' : isCur ? '1.5px solid rgba(245,193,24,0.6)' : '1.5px solid rgba(255,255,255,0.18)',
                       }}>
-                        {done && <span className="text-[9px] font-bold" style={{ color: '#13152A' }}>✓</span>}
+                        {done && <span className="text-[11px] font-bold" style={{ color: '#13152A' }}>✓</span>}
                         {isCur && !done && <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#F5C118', display:'block' }} />}
                       </div>
                       <span className="flex-1 text-sm leading-snug" style={{
@@ -1836,7 +1836,7 @@ export default function Dashboard() {
                   );
                 })}
                 {to < allOrderedTasks.length && (
-                  <p className="text-[10px] px-2 pt-1" style={{ color: 'rgba(255,255,255,0.18)' }}>· · · {allOrderedTasks.length - to} משימות קדימה</p>
+                  <p className="text-[11px] px-2 pt-1" style={{ color: 'rgba(255,255,255,0.18)' }}>· · · {allOrderedTasks.length - to} משימות קדימה</p>
                 )}
               </div>
             </div>

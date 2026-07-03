@@ -141,7 +141,7 @@ function GPTCard({ tool, editMode, onEdit, onDelete }) {
           style={{ background: 'rgba(245,193,24,0.12)' }}>⚙️</div>
         <h3 className="text-sm font-semibold text-white leading-snug mt-0.5">
           {tool.name}
-          {tool.tm && <sup className="ml-0.5 text-[9px] text-white/35 font-normal">TM</sup>}
+          {tool.tm && <sup className="ml-0.5 text-[11px] text-white/35 font-normal">TM</sup>}
         </h3>
       </div>
 

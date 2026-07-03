@@ -202,7 +202,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
               {collapsed ? (
                 <div className="h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
               ) : (
-                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
                   המנוע
                 </span>
               )}
@@ -220,7 +220,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
               {collapsed ? (
                 <div className="h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
               ) : (
-                <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
                   כלים
                 </span>
               )}
@@ -239,7 +239,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
                 {collapsed ? (
                   <div className="h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
                 ) : (
-                  <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
                     ניהול
                   </span>
                 )}

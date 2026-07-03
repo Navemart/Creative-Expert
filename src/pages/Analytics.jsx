@@ -91,7 +91,7 @@ function KpiCard({ label, value, sub, color='#F5C118', trend, icon: Icon }) {
               : trend < 0
               ? <ArrowDownRight size={12} style={{ color:'#fca5a5' }} />
               : <Minus size={12} style={{ color:'rgba(255,255,255,0.25)' }} />}
-            <span className="text-[10px] font-bold" style={{ color: trend>0?'#86efac':trend<0?'#fca5a5':'rgba(255,255,255,0.25)' }}>
+            <span className="text-[11px] font-bold" style={{ color: trend>0?'#86efac':trend<0?'#fca5a5':'rgba(255,255,255,0.25)' }}>
               {trend>0?'+':''}{trend}%
             </span>
           </div>
@@ -124,8 +124,8 @@ const TIP = {
 };
 const GRID = <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />;
 const XAXIS = <XAxis dataKey="month" tick={{ fill:'rgba(255,255,255,0.28)', fontSize:11 }} axisLine={false} tickLine={false} />;
-const YILS  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize:10 }} axisLine={false} tickLine={false} tickFormatter={v=>v===0?'₪0':`₪${Math.round(v/1000)}K`} width={44} />;
-const YCNT  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize:10 }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />;
+const YILS  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v=>v===0?'₪0':`₪${Math.round(v/1000)}K`} width={44} />;
+const YCNT  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />;
 
 // ── Funnel bar ──────────────────────────────────────────────────
 function FunnelRow({ label, value, total, color, sub }) {
@@ -703,7 +703,7 @@ export default function Analytics() {
                 <>
                   <div className="grid px-5 pb-2" style={{ gridTemplateColumns:'1fr 80px 88px' }}>
                     {['לקוח','סכום','תאריך'].map(h => (
-                      <span key={h} className="text-[10px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.18)' }}>{h}</span>
+                      <span key={h} className="text-[11px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.18)' }}>{h}</span>
                     ))}
                   </div>
                   {outstandingItems.map((item, i) => {
@@ -712,7 +712,7 @@ export default function Analytics() {
                       <div key={i} className="grid px-5 py-2.5 items-center" style={{ gridTemplateColumns:'1fr 80px 88px', borderTop:'1px solid rgba(255,255,255,0.04)', background: overdue ? 'rgba(239,68,68,0.05)' : 'transparent' }}>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-white truncate">{item.clientName}</p>
-                          <p className="text-[10px]" style={{ color:'rgba(255,255,255,0.28)' }}>{item.label}</p>
+                          <p className="text-[11px]" style={{ color:'rgba(255,255,255,0.28)' }}>{item.label}</p>
                         </div>
                         <p className="text-sm font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
                         <div className="flex items-center gap-1">
@@ -761,7 +761,7 @@ export default function Analytics() {
                       { l:'רווח נטו',v:fmtFull(curNet),    c: curNet>=0?'#4fc38a':'#ff5a72' },
                     ].map(({ l, v, c }) => (
                       <div key={l} className="rounded-xl px-3 py-2.5 text-center" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)' }}>
-                        <p className="text-[10px] mb-1" style={{ color:'rgba(255,255,255,0.3)' }}>{l}</p>
+                        <p className="text-[11px] mb-1" style={{ color:'rgba(255,255,255,0.3)' }}>{l}</p>
                         <p className="text-sm font-black leading-none" style={{ color:c }}>{v}</p>
                       </div>
                     ))}
@@ -781,7 +781,7 @@ export default function Analytics() {
                     <div className="flex items-center gap-2 flex-none">
                       <span className="text-xs" style={{ color:'rgba(255,255,255,0.38)' }}>משכורת חודשית לבית</span>
                       <div className="relative group">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold cursor-help"
+                        <span className="flex items-center justify-center w-4 h-4 rounded-full text-[11px] font-bold cursor-help"
                           style={{ background:'rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.4)' }}>?</span>
                         <div className="absolute bottom-full right-0 mb-2 w-56 rounded-xl px-3 py-2.5 text-[11px] leading-relaxed z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
                           style={{ background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.7)' }} dir="rtl">
@@ -922,7 +922,7 @@ export default function Analytics() {
                 { l:'אחוז סגירה', v:convQuoteToClose!=null ? `${convQuoteToClose}%` : '—', c:'#f472b6' },
               ].map(({l,v,c}) => (
                 <div key={l} className="rounded-xl p-4 text-center" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
-                  <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
+                  <p className="text-[11px] uppercase tracking-wider mb-2" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
                   <p className="text-2xl font-black" style={{ color:c }}>{v}</p>
                 </div>
               ))}
@@ -976,9 +976,9 @@ export default function Analytics() {
                 { l:'הכי רווחי', v: topClient ? fmtILS(topClient.paid) : '—', c:'#38bdf8', sub: topClient?.name ?? '' },
               ].map(({ l, v, c, sub }) => (
                 <div key={l} className="rounded-2xl p-4" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.07)' }}>
-                  <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
+                  <p className="text-[11px] uppercase tracking-wider mb-1.5" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
                   <p className="text-xl font-black leading-none" style={{ color:c }}>{v}</p>
-                  {sub && <p className="text-[10px] mt-1" style={{ color:'rgba(255,255,255,0.28)' }}>{sub}</p>}
+                  {sub && <p className="text-[11px] mt-1" style={{ color:'rgba(255,255,255,0.28)' }}>{sub}</p>}
                 </div>
               ))}
             </div>
@@ -1022,7 +1022,7 @@ export default function Analytics() {
               <Section title="לקוחות לפי רווחיות" sub="לפי סכום ששולם בפועל" noPad>
                 <div className="grid px-5 pb-2 mt-4" style={{ gridTemplateColumns:'1fr 90px 90px' }}>
                   {['לקוח','שולם','שווי עסקה'].map(h=>(
-                    <span key={h} className="text-[10px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.2)' }}>{h}</span>
+                    <span key={h} className="text-[11px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.2)' }}>{h}</span>
                   ))}
                 </div>
                 {clientsRanked.slice(0, 5).map((c, i) => (
@@ -1056,7 +1056,7 @@ export default function Analytics() {
                 <div>
                   <div className="grid gap-3 px-5 pb-2 mt-4" style={{ gridTemplateColumns:'1fr 80px 90px' }}>
                     {['לקוח / תיאור','סכום','תאריך'].map(h=>(
-                      <span key={h} className="text-[10px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.2)' }}>{h}</span>
+                      <span key={h} className="text-[11px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.2)' }}>{h}</span>
                     ))}
                   </div>
                   {outstandingItems.map((item, i) => {
@@ -1105,9 +1105,9 @@ export default function Analytics() {
                     </linearGradient>
                   </defs>
                   {GRID}{XAXIS}
-                  <YAxis yAxisId="left" tick={{ fill:'rgba(255,255,255,0.22)', fontSize:10 }} axisLine={false} tickLine={false}
+                  <YAxis yAxisId="left" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false}
                     tickFormatter={v=>v>=1000?`${Math.round(v/1000)}K`:v} width={40} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fill:'rgba(255,255,255,0.22)', fontSize:10 }}
+                  <YAxis yAxisId="right" orientation="right" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }}
                     axisLine={false} tickLine={false} allowDecimals={false} width={24} />
                   <Tooltip {...TIP} formatter={(v,n)=>[n==='עוקבים'?v.toLocaleString('he-IL'):v, n]} />
                   <Area yAxisId="left" type="monotone" dataKey="עוקבים"
@@ -1121,7 +1121,7 @@ export default function Analytics() {
               {[{c:'#e1306c',l:'עוקבים',line:true},{c:'rgba(245,193,24,0.7)',l:'פוסטים',line:false}].map(x=>(
                 <div key={x.l} className="flex items-center gap-1.5">
                   <div className={x.line?'h-0.5 w-4 rounded':'h-2.5 w-2.5 rounded-sm'} style={{ background:x.c }} />
-                  <span className="text-[10px]" style={{ color:'rgba(255,255,255,0.32)' }}>{x.l}</span>
+                  <span className="text-[11px]" style={{ color:'rgba(255,255,255,0.32)' }}>{x.l}</span>
                 </div>
               ))}
             </div>
@@ -1135,7 +1135,7 @@ export default function Analytics() {
               { l:'עוקבים נוכחיים', v: latest?.followers ? num(latest.followers).toLocaleString('he-IL') : '—', c:'#e1306c', sub:fmtMonth(latest?.month) },
             ].map(({l,v,c,sub})=>(
               <div key={l} className="rounded-xl p-4" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.07)' }}>
-                <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
+                <p className="text-[11px] uppercase tracking-wider mb-2" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
                 <p className="text-2xl font-black" style={{ color:c }}>{v}</p>
                 <p className="text-[11px] mt-1" style={{ color:'rgba(255,255,255,0.28)' }}>{sub}</p>
               </div>

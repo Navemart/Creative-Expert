@@ -172,7 +172,7 @@ function AnalysisModal({ row, onClose }) {
         {/* Footer */}
         <div className="px-5 py-3 flex items-center justify-between"
           style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
+          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>
             מופעל על ידי GPT-4o mini
           </span>
           <button onClick={onClose}
@@ -382,7 +382,7 @@ export default function Transcriptions() {
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   {['פלטפורמה', 'תאריך', 'קישור', 'סטטוס', 'תמלול', 'ניתוח', ''].map(h => (
                     <th key={h}
-                      className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                      className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-widest whitespace-nowrap"
                       style={{ color: 'rgba(255,255,255,0.22)' }}>
                       {h}
                     </th>

@@ -164,7 +164,7 @@ function TipBox({ type }) {
         type="button"
         onMouseEnter={()=>setShow(true)}
         onMouseLeave={()=>setShow(false)}
-        style={{ width:18, height:18, borderRadius:'50%', background:C.accent, color:'#000', fontSize:10, fontWeight:700, border:'none', cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginRight:6, lineHeight:1 }}
+        style={{ width:18, height:18, borderRadius:'50%', background:C.accent, color:'#000', fontSize: 11, fontWeight:700, border:'none', cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginRight:6, lineHeight:1 }}
       >?</button>
       {show && (
         <div style={{ position:'absolute', right:0, top:26, width:280, background:C.surface, border:`1px solid rgba(245,197,24,0.3)`, borderRadius:12, padding:'14px 16px', zIndex:100, boxShadow:'0 8px 24px rgba(0,0,0,0.4)' }}>

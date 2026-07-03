@@ -205,7 +205,7 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin,
       <div className="flex-1 min-w-0">
         <div className="mb-1">
           <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
+            className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
             style={{ background: ts.badgeBg, color: ts.color, border: `1px solid ${ts.badgeBorder}` }}
           >
             {badge}
@@ -579,7 +579,7 @@ export default function ZoomRecordings() {
                 {t.icon && <Star size={12} fill={active ? '#F5C118' : 'none'} style={{ color: active ? '#F5C118' : 'rgba(255,255,255,0.35)' }} />}
                 {t.l}
                 {t.count !== null && t.count > 0 && (
-                  <span className="rounded-full px-1.5 py-0.5 text-[10px] font-bold leading-none"
+                  <span className="rounded-full px-1.5 py-0.5 text-[11px] font-bold leading-none"
                     style={{ background: active ? '#F5C118' : 'rgba(255,255,255,0.1)', color: active ? '#13152A' : 'rgba(255,255,255,0.5)' }}>
                     {t.count}
                   </span>
@@ -641,7 +641,7 @@ export default function ZoomRecordings() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="h-2 w-2 rounded-full flex-none" style={{ background: ts.rowBorder }} />
-                              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: ts.color }}>{getBadge(m.topic || '')}</span>
+                              <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: ts.color }}>{getBadge(m.topic || '')}</span>
                             </div>
                             <p className="text-sm font-semibold text-white leading-snug">{title}</p>
                             {timeStr && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>

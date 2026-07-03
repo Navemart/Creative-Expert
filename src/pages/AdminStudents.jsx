@@ -119,7 +119,7 @@ function Delta({ value, prev }) {
   const color = d > 0 ? '#86efac' : d < 0 ? '#fca5a5' : 'rgba(255,255,255,0.3)';
   const Icon  = d > 0 ? ArrowUpRight : d < 0 ? ArrowDownRight : Minus;
   return (
-    <span className="flex items-center gap-0.5 text-[10px] font-bold mt-1" style={{ color }}>
+    <span className="flex items-center gap-0.5 text-[11px] font-bold mt-1" style={{ color }}>
       <Icon size={10} />{d > 0 ? '+' : ''}{d}%
     </span>
   );
@@ -130,7 +130,7 @@ function Chip({ label, value, prev, color = 'rgba(255,255,255,0.85)', fmt = v =>
   const display = value == null || value === '' ? '—' : fmt(value);
   return (
     <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <p className="text-[10px] mb-1 leading-tight" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
+      <p className="text-[11px] mb-1 leading-tight" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
       <p className="text-sm font-black leading-none" style={{ color }}>{display}</p>
       {prev != null && prev !== '' && value != null && <Delta value={num(value)} prev={num(prev)} />}
     </div>
@@ -154,7 +154,7 @@ function SliderDisplay({ value, color = '#F5C118' }) {
 // ── Section header ────────────────────────────────────────────
 function SectionHeader({ label }) {
   return (
-    <p className="text-[10px] font-bold uppercase tracking-widest mb-2 mt-1" style={{ color: 'rgba(255,255,255,0.28)' }}>
+    <p className="text-[11px] font-bold uppercase tracking-widest mb-2 mt-1" style={{ color: 'rgba(255,255,255,0.28)' }}>
       {label}
     </p>
   );
@@ -184,14 +184,14 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
       {/* ── Profile meta ── */}
       <div className="flex flex-wrap items-center gap-3 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>הצטרף</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>הצטרף</span>
           <input key={`enroll-${studentId}-${enrolled_at}`} type="date" defaultValue={enrolled_at || ''}
             onBlur={e => onUpdateProfile(studentId, { enrolled_at: e.target.value || null })}
             className="rounded-lg px-2 py-1 text-xs outline-none"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', colorScheme: 'dark' }} />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>שילם ₪</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.3)' }}>שילם ₪</span>
           <input key={`paid-${studentId}-${total_paid}`} type="number" defaultValue={total_paid ?? ''} placeholder="0"
             onBlur={e => onUpdateProfile(studentId, { total_paid: e.target.value ? parseInt(e.target.value, 10) : null })}
             className="w-24 rounded-lg px-2 py-1 text-xs outline-none text-white"
@@ -227,7 +227,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
           {/* הכנסה — הגדול */}
           <div className="col-span-1 rounded-2xl p-5 flex flex-col justify-between"
             style={{ background: 'rgba(245,193,24,0.08)', border: '1px solid rgba(245,193,24,0.25)' }}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה חודשית</p>
+            <p className="text-[11px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(245,193,24,0.6)' }}>הכנסה חודשית</p>
             <p className="text-4xl font-black leading-none" style={{ color: '#F5C118' }}>{fmtFull(curIncome)}</p>
             {incomeD != null && (
               <span className="mt-2 self-start text-xs font-bold rounded-lg px-2 py-1"
@@ -239,20 +239,20 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
           {/* רווח נטו */}
           <div className="rounded-2xl p-5 flex flex-col justify-between"
             style={{ background: curNet >= 0 ? 'rgba(79,195,138,0.07)' : 'rgba(255,90,114,0.07)', border: `1px solid ${curNet >= 0 ? 'rgba(79,195,138,0.25)' : 'rgba(255,90,114,0.25)'}` }}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>רווח נטו</p>
+            <p className="text-[11px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>רווח נטו</p>
             <p className="text-3xl font-black leading-none" style={{ color: curNet >= 0 ? '#4fc38a' : '#ff5a72' }}>{fmtFull(curNet)}</p>
-            <p className="text-[10px] mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>הוצ׳ {fmtFull(curExp)}</p>
+            <p className="text-[11px] mt-2" style={{ color: 'rgba(255,255,255,0.3)' }}>הוצ׳ {fmtFull(curExp)}</p>
           </div>
           {/* דרגה */}
           <div className="rounded-2xl p-5 flex flex-col justify-between"
             style={{ background: getRankColor(cur.current_rank) + '12', border: `1px solid ${getRankColor(cur.current_rank)}40` }}>
-            <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>דרגה נוכחית</p>
+            <p className="text-[11px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.35)' }}>דרגה נוכחית</p>
             <p className="text-2xl font-black leading-none" style={{ color: getRankColor(cur.current_rank) }}>{cur.current_rank || '—'}</p>
           </div>
           {/* ספארקליין */}
           {sparkData.length > 1 && (
             <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <p className="text-[10px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.28)' }}>היסטוריה</p>
+              <p className="text-[11px] uppercase tracking-widest font-bold mb-3" style={{ color: 'rgba(255,255,255,0.28)' }}>היסטוריה</p>
               <div className="flex items-end gap-1.5 h-12">
                 {sparkData.map((m, i) => {
                   const barH = Math.max(6, Math.round(num(m.total_income || m.amount) / maxIncome * 48));
@@ -280,14 +280,14 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
               { label: 'ממומן',   value: cur.paid_ads,     prev: prev?.paid_ads,    color: '#f97316', fmt: fmtFull },
             ].map(({ label, value, prev: p, color, fmt }) => (
               <div key={label}>
-                <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                <p className="text-[11px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
                 <p className="text-2xl font-black" style={{ color }}>{value != null && value !== '' ? fmt(value) : '—'}</p>
                 {p != null && p !== '' && value != null && <Delta value={num(value)} prev={num(p)} />}
               </div>
             ))}
           </div>
           <div>
-            <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתוכן</p>
+            <p className="text-[11px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתוכן</p>
             <SliderDisplay value={cur.content_confidence} color="#f97316" />
           </div>
         </div>
@@ -307,14 +307,14 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
               { label: 'שיחות אסטרטגיה',value: cur.strategy_calls,       prev: prev?.strategy_calls,       color: '#818cf8' },
             ].map(({ label, value, prev: p, color }) => (
               <div key={label}>
-                <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                <p className="text-[11px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
                 <p className="text-2xl font-black" style={{ color }}>{value != null && value !== '' ? value : '—'}</p>
                 {p != null && p !== '' && value != null && <Delta value={num(value)} prev={num(p)} />}
               </div>
             ))}
           </div>
           <div>
-            <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתהליך המכירה</p>
+            <p className="text-[11px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בתהליך המכירה</p>
             <SliderDisplay value={cur.sales_confidence} color="#8b5cf6" />
           </div>
         </div>
@@ -331,7 +331,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
                 { label: 'ריטיינרים (מס׳)', value: cur.retainers_count, prev: prev?.retainers_count, color: '#2dd4bf' },
               ].map(({ label, value, prev: p, color }) => (
                 <div key={label}>
-                  <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                  <p className="text-[11px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
                   <p className="text-2xl font-black" style={{ color }}>{value != null && value !== '' ? value : '—'}</p>
                   {p != null && p !== '' && value != null && <Delta value={num(value)} prev={num(p)} />}
                 </div>
@@ -339,12 +339,12 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
             </div>
             {cur.main_project && (
               <div className="rounded-xl px-3 py-2 mb-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                <p className="text-[10px] mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>פרויקט מרכזי</p>
+                <p className="text-[11px] mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>פרויקט מרכזי</p>
                 <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{cur.main_project}</p>
               </div>
             )}
             <div>
-              <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>שביעות רצון לקוחות</p>
+              <p className="text-[11px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>שביעות רצון לקוחות</p>
               <SliderDisplay value={cur.client_satisfaction} color="#22c55e" />
             </div>
           </div>
@@ -360,14 +360,14 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
                 { label: 'הוצ׳ משתנות',  value: cur.variable_expenses,prev: null,                  color: '#fca5a5',                fmt: fmtFull },
               ].map(({ label, value, prev: p, color, fmt }) => (
                 <div key={label}>
-                  <p className="text-[10px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
+                  <p className="text-[11px] mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{label}</p>
                   <p className="text-lg font-black leading-tight" style={{ color }}>{value != null && value !== '' ? fmt(value) : '—'}</p>
                   {p != null && value != null && <Delta value={num(value)} prev={num(p)} />}
                 </div>
               ))}
             </div>
             <div>
-              <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בביצועים העסקיים</p>
+              <p className="text-[11px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>ביטחון בביצועים העסקיים</p>
               <SliderDisplay value={cur.business_confidence} color="#3b82f6" />
             </div>
           </div>
@@ -378,7 +378,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
           <div className="flex items-start justify-between gap-6 mb-4">
             <p className="text-xs font-bold" style={{ color: '#ec4899' }}>🔮 רפלקשן</p>
             <div className="flex items-center gap-3">
-              <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.35)' }}>NPS</p>
+              <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>NPS</p>
               <div className="flex items-center gap-2" style={{ minWidth: 180 }}>
                 <SliderDisplay value={cur.nps} color="#ec4899" />
               </div>
@@ -394,7 +394,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
             ].filter(f => f.value).map(({ label, value, color }) => (
               <div key={label} className="rounded-xl px-3 py-3"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <p className="text-[10px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
+                <p className="text-[11px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
                 <p className="text-sm leading-relaxed font-medium" style={{ color }}>{value}</p>
               </div>
             ))}
@@ -451,12 +451,12 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
 
           {/* דרגה */}
           {latest_rank ? (
-            <span className="text-[10px] rounded px-2 py-0.5 font-bold whitespace-nowrap"
+            <span className="text-[11px] rounded px-2 py-0.5 font-bold whitespace-nowrap"
               style={{ background: rankColor + '22', color: rankColor }}>
               {latest_rank}
             </span>
           ) : (
-            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
+            <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.2)' }}>—</span>
           )}
 
           {/* תאריך הצטרפות */}
@@ -474,7 +474,7 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {rank_request && (
             <button onClick={handleApprove} disabled={approving}
-              className="rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition hover:opacity-80"
+              className="rounded-lg px-2.5 py-1.5 text-[11px] font-bold transition hover:opacity-80"
               style={{ background: '#F5C118', color: '#13152A' }}>
               {approving ? '...' : '✓ אשר דרגה'}
             </button>
@@ -491,7 +491,7 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
       {/* Mobile: show fields below */}
       <div className="sm:hidden flex flex-wrap gap-3 px-4 pb-3" onClick={e => e.stopPropagation()}>
         <HealthPicker current={health_status} onChange={v => onHealthChange(student.id, v)} />
-        {latest_rank && <span className="text-[10px] rounded px-2 py-0.5 font-bold" style={{ background: rankColor + '22', color: rankColor }}>{latest_rank}</span>}
+        {latest_rank && <span className="text-[11px] rounded px-2 py-0.5 font-bold" style={{ background: rankColor + '22', color: rankColor }}>{latest_rank}</span>}
         {enrolled_at && <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{fmtDate(enrolled_at)}</span>}
         {total_paid && <span className="text-sm font-bold" style={{ color: '#4fc38a' }}>{fmtFull(total_paid)}</span>}
       </div>
@@ -1076,7 +1076,7 @@ function MonthlyTable({ students, onUpdateProfile }) {
                     <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
                       style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' || val === '—' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: 13 }}>
                       {col.key === 'current_rank' && val ? (
-                        <span className="rounded-md px-2 py-0.5 text-[10px] font-bold"
+                        <span className="rounded-md px-2 py-0.5 text-[11px] font-bold"
                           style={{ background: getRankColor(val) + '20', color: getRankColor(val), border: `1px solid ${getRankColor(val)}40` }}>
                           {val}
                         </span>
@@ -1269,9 +1269,9 @@ export default function AdminStudents() {
             ].map(({ l, v, c, sub }) => (
               <div key={l} className="rounded-2xl p-4"
                 style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <p className="text-[10px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(255,255,255,0.28)' }}>{l}</p>
+                <p className="text-[11px] uppercase tracking-wider mb-1.5" style={{ color: 'rgba(255,255,255,0.28)' }}>{l}</p>
                 <p className="text-xl font-black leading-none" style={{ color: c }}>{v}</p>
-                {sub && <p className="text-[10px] mt-1 truncate" style={{ color: 'rgba(255,255,255,0.28)' }}>{sub}</p>}
+                {sub && <p className="text-[11px] mt-1 truncate" style={{ color: 'rgba(255,255,255,0.28)' }}>{sub}</p>}
               </div>
             ))}
           </div>

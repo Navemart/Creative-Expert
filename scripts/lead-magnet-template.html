@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<!-- ============================================================
+  🎯 מגנט לידים — תבנית מוכנה לעריכה
+  ============================================================
+  מה לשנות? חפש את הסימן ✏️ — שם יש משהו שצריך להתאים אישית.
+  שאר הקוד — אל תיגע בו, הוא עושה את העיצוב והלוגיקה.
+  ============================================================ -->
+
+<!-- ✏️ שנה את כותרת הטאב בדפדפן -->
+<title>גלה כמה האתר שלך באמת ממיר — WebPro Studio</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    /* ============================================================
+       ✏️ צבעים — שנה רק את הערכים האלה
+       ============================================================ */
+    --accent: #7c6af7;          /* ✏️ הצבע הראשי (כפתורים, בחירות, ניקוד) — הכנס קוד HEX */
+    --accent-light: #a89af9;    /* ✏️ גרסה בהירה של הצבע הראשי (טקסט, תגיות) */
+    --accent-glow: rgba(124,106,247,0.25); /* ✏️ אפקט זוהר — שנה ל-rgba של הצבע הראשי */
+
+    /* שאר הצבעים — לא לשנות */
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #18181f;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.18);
+    --text: #f0eff8;
+    --text-muted: #8b8a9e;
+    --text-faint: #4a4960;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Heebo', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 10%, rgba(124,106,247,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(80,50,180,0.08) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03) inset,
+      0 40px 80px rgba(0,0,0,0.5),
+      0 0 60px rgba(124,106,247,0.06);
+  }
+
+  .card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+  }
+
+  .logo-mark {
+    width: 34px;
+    height: 34px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    box-shadow: 0 0 16px var(--accent-glow);
+    overflow: hidden;
+  }
+
+  .logo-mark img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+
+  .brand-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+  }
+
+  .progress-wrap {
+    margin-right: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .progress-track {
+    width: 100px;
+    height: 3px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  .progress-label {
+    font-size: 12px;
+    color: var(--text-faint);
+    min-width: 30px;
+    text-align: left;
+  }
+
+  .card-body {
+    padding: 2rem 1.75rem;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .screen { display: none; flex-direction: column; flex: 1; animation: slideUp 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .screen.active { display: flex; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .intro { align-items: flex-start; justify-content: center; flex: 1; }
+
+  .intro-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent-light);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .intro h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 5vw, 34px);
+    line-height: 1.25;
+    color: var(--text);
+    margin-bottom: 1rem;
+    font-style: italic;
+  }
+
+  .intro h1 span { color: var(--accent-light); font-style: normal; }
+
+  .intro p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.75;
+    margin-bottom: 2rem;
+    max-width: 400px;
+  }
+
+  .pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 2rem; }
+
+  .pill {
+    background: rgba(124,106,247,0.1);
+    border: 1px solid rgba(124,106,247,0.2);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: var(--accent-light);
+  }
+
+  .btn-start {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 28px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 24px var(--accent-glow);
+    align-self: flex-start;
+  }
+
+  .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
+  .btn-start:active { transform: scale(0.97); }
+
+  .q-step {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.875rem;
+  }
+
+  .q-text {
+    font-size: 19px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 1.75rem;
+    font-family: 'DM Serif Display', serif;
+    font-style: italic;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: auto; }
+
+  .option {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 14px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1.55;
+    text-align: right;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .option::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(124,106,247,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .option:hover { border-color: var(--border-hover); color: var(--text); transform: translateX(-2px); }
+  .option:hover::before { opacity: 1; }
+
+  .option.selected {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(124,106,247,0.08);
+    box-shadow: 0 0 0 1px var(--accent) inset, 0 0 20px rgba(124,106,247,0.1);
+  }
+
+  .option.selected::before { opacity: 1; }
+
+  .q-footer { display: flex; justify-content: flex-start; margin-top: 1.75rem; }
+
+  .btn-next {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0.35;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-next.on { opacity: 1; pointer-events: auto; box-shadow: 0 4px 20px var(--accent-glow); }
+  .btn-next.on:hover { transform: translateY(-1px); }
+  .btn-next.on:active { transform: scale(0.97); }
+
+  .email-screen { align-items: center; justify-content: center; flex: 1; text-align: center; }
+
+  .email-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(124,106,247,0.12);
+    border: 1px solid rgba(124,106,247,0.2);
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 28px;
+  }
+
+  .email-screen h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    font-style: italic;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .email-screen p { font-size: 13px; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.65; }
+
+  .email-input-wrap { width: 100%; max-width: 340px; margin: 0 auto 12px; }
+
+  .email-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .email-input::placeholder { color: var(--text-faint); }
+  .email-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,106,247,0.1); }
+
+  .btn-reveal {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .btn-reveal:hover { transform: translateY(-1px); box-shadow: 0 8px 28px var(--accent-glow); }
+
+  .privacy-note { font-size: 11px; color: var(--text-faint); margin-top: 8px; }
+
+  .result-screen { align-items: center; text-align: center; flex: 1; justify-content: flex-start; }
+
+  .score-wrap { position: relative; width: 120px; height: 120px; margin: 0 auto 1.25rem; }
+
+  .score-svg { transform: rotate(-90deg); }
+  .score-track { fill: none; stroke: rgba(255,255,255,0.06); stroke-width: 8; }
+  .score-fill { fill: none; stroke: url(#scoreGrad); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1); }
+
+  .score-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-num { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+  .score-sub { font-size: 10px; color: var(--text-faint); }
+
+  .profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(124,106,247,0.12);
+    border: 1px solid rgba(124,106,247,0.25);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: var(--accent-light);
+    margin-bottom: 10px;
+  }
+
+  .profile-name { font-family: 'DM Serif Display', serif; font-size: 22px; font-style: italic; color: var(--text); margin-bottom: 8px; }
+  .profile-desc { font-size: 13px; color: var(--text-muted); line-height: 1.7; max-width: 380px; margin-bottom: 1.25rem; }
+
+  .recs-box { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 14px; padding: 1.125rem 1.25rem; text-align: right; margin-bottom: 1.25rem; }
+  .recs-label { font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+  .rec-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 8px; }
+  .rec-item:last-child { margin-bottom: 0; }
+  .rec-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); margin-top: 7px; flex-shrink: 0; }
+
+  .btn-cta {
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 15px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 24px var(--accent-glow);
+  }
+
+  .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 36px var(--accent-glow); }
+  .btn-cta:active { transform: scale(0.98); }
+
+  .restart-link { font-size: 12px; color: var(--text-faint); cursor: pointer; margin-top: 12px; text-decoration: underline; text-underline-offset: 3px; }
+  .restart-link:hover { color: var(--text-muted); }
+
+  @media (max-width: 480px) {
+    body { padding: 1rem; align-items: flex-start; padding-top: 2rem; }
+    .card-body { padding: 1.5rem 1.25rem; }
+    .intro h1 { font-size: 24px; }
+    .progress-track { width: 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="card-header">
+    <div class="logo-mark" id="logo-container">
+      <!--
+        ✏️ לוגו — שתי אפשרויות:
+        אפשרות א׳ — אות/טקסט: השאר כך ורק שנה את האות
+        אפשרות ב׳ — תמונה: הוסף תג img עם הURL של הלוגו שלך
+        לדוגמה: <img src="https://yourdomain.com/logo.png" alt="לוגו" />
+      -->
+      W
+    </div>
+    <!-- ✏️ שם העסק בראש השאלון -->
+    <span class="brand-name">WebPro Studio</span>
+    <div class="progress-wrap">
+      <div class="progress-track">
+        <div class="progress-fill" id="pbar"></div>
+      </div>
+      <span class="progress-label" id="plabel">0/7</span>
+    </div>
+  </div>
+
+  <div class="card-body" dir="rtl">
+
+    <!-- ============================================================
+         מסך פתיחה
+         ============================================================ -->
+    <div class="screen intro active" id="s-intro">
+      <!-- ✏️ תווית קטנה מעל הכותרת -->
+      <div class="intro-eyebrow">אבחון חינמי · 2 דקות</div>
+
+      <!-- ✏️ כותרת ראשית — החלק ב-<span> יוצג בצבע הראשי -->
+      <h1>גלה כמה האתר שלך <span>באמת ממיר</span></h1>
+
+      <!-- ✏️ תיאור קצר מתחת לכותרת -->
+      <p>7 שאלות שיאבחנו בדיוק איפה האתר שלך מפסיד לקוחות — ומה אפשר לעשות עם זה עוד היום.</p>
+
+      <!-- ✏️ שלוש "הבטחות" קצרות — שנה לפי התחום שלך -->
+      <div class="pills">
+        <span class="pill">✓ ללא כרטיס אשראי</span>
+        <span class="pill">✓ תוצאות מיידיות</span>
+        <span class="pill">✓ 65% מהמשתמשים מופתעים</span>
+      </div>
+
+      <!-- ✏️ טקסט כפתור ההתחלה -->
+      <button class="btn-start" onclick="go('s-q1')">
+        התחל את הבדיקה
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+
+    <!-- ============================================================
+         שאלות — העתק את הבלוק הזה לכל שאלה נוספת
+         ============================================================
+         שים לב לשמות: s-q1, s-q2... next-q1, next-q2...
+         וב-advance: שנה את המספרים בהתאם לסדר
+         ============================================================ -->
+
+    <!-- שאלה 1 -->
+    <div class="screen" id="s-q1">
+      <div class="q-step">שאלה 1 מתוך 7</div>
+      <!-- ✏️ טקסט השאלה -->
+      <div class="q-text">כשמישהו נכנס לאתר שלך בפעם הראשונה — עד כמה ברור לו מה אתה מציע?</div>
+      <div class="options">
+        <!-- ✏️ 3 תשובות: הראשונה = חזקה (3 נק'), השנייה = בינונית (2), השלישית = חלשה (1) -->
+        <div class="option" onclick="pick(this,3,'q1')">מאוד ברור — יש כותרת חדה ומשפט ערך שמדבר ישר ללקוח</div>
+        <div class="option" onclick="pick(this,2,'q1')">בערך ברור — צריך לגלול קצת כדי להבין</div>
+        <div class="option" onclick="pick(this,1,'q1')">לא בטוח — גם אני לפעמים מסביר בעל-פה מה אני עושה</div>
+      </div>
+      <div class="q-footer">
+        <!-- advance('מסך נוכחי', 'מסך הבא', מספר שאלה) -->
+        <button class="btn-next" id="next-q1" onclick="advance('s-q1','s-q2',1)">
+          הבא <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- שאלה 2 -->
+    <div class="screen" id="s-q2">
+      <div class="q-step">שאלה 2 מתוך 7</div>
+      <div class="q-text">כמה קל ליצור איתך קשר מהאתר?</div>
+      <div class="options">
+        <div class="option" onclick="pick(this,3,'q2')">יש כפתור CTA בולט בכל דף — קל מאוד</div>
+        <div class="option" onclick="pick(this,2,'q2')">יש עמוד "צור קשר" אבל צריך לחפש אותו</div>
+        <div class="option" onclick="pick(this,1,'q2')">בעיקר דרך האינסטגרם — האתר לא מוביל לשם</div>
+      </div>
+      <div class="q-footer">
+        <button class="btn-next" id="next-q2" onclick="advance('s-q2','s-q3',2)">
+          הבא <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- שאלה 3 -->
+    <div class="screen" id="s-q3">
+      <div class="q-step">שאלה 3 מתוך 7</div>
+      <div class="q-text">מתי בדקת לאחרונה את מהירות טעינת האתר?</div>
+      <div class="options">
+        <div class="option" onclick="pick(this,3,'q3')">בחודש האחרון — יש לי מעקב שוטף</div>
+        <div class="option" onclick="pick(this,2,'q3')">לפני כמה חודשים, פעם אחת</div>
+        <div class="option" onclick="pick(this,1,'q3')">מעולם לא בדקתי</div>
+      </div>
+      <div class="q-footer">
+        <button class="btn-next" id="next-q3" onclick="advance('s-q3','s-q4',3)">
+          הבא <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- שאלה 4 -->
+    <div class="screen" id="s-q4">
+      <div class="q-step">שאלה 4 מתוך 7</div>
+      <div class="q-text">כמה עדויות לקוחות יש באתר שלך?</div>
+      <div class="options">
+        <div class="option" onclick="pick(this,3,'q4')">5 ומעלה — עם שם, תמונה ותוצאה קונקרטית</div>
+        <div class="option" onclick="pick(this,2,'q4')">1–4, או בלי שם מלא / תמונה</div>
+        <div class="option" onclick="pick(this,1,'q4')">אין בכלל</div>
+      </div>
+      <div class="q-footer">
+        <button class="btn-next" id="next-q4" onclick="advance('s-q4','s-q5',4)">
+          הבא <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- שאלה 5 -->
+    <div class="screen" id="s-q5">
+      <div class="q-step">שאלה 5 מתוך 7</div>
+      <div class="q-text">האתר שלך נראה טוב במובייל?</div>
+      <div class="options">
+        <div class="option" onclick="pick(this,3,'q5')">כן, בניתי אותו mobile-first וזה נראה מצוין</div>
+        <div class="option" onclick="pick(this,2,'q5')">בערך — רוב הדברים עובדים אבל יש כמה בעיות</div>
+        <div class="option" onclick="pick(this,1,'q5')">לא ממש בדקתי</div>
+      </div>
+      <div class="q-footer">
+        <button class="btn-next" id="next-q5" onclick="advance('s-q5','s-q6',5)">
+          הבא <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- שאלה 6 -->
+    <div class="screen" id="s-q6">
+      <div class="q-step">שאלה 6 מתוך 7</div>
+      <div class="q-text">מה האתר עושה כדי לתפוס לידים שעדיין לא מוכנים לקנות?</div>
+      <div class="options">
+        <div class="option" onclick="pick(this,3,'q6')">יש מגנט לידים — מדריך, שאלון, ניוזלטר</div>
+        <div class="option" onclick="pick(this,2,'q6')">יש טופס יצירת קשר כללי</div>
+        <div class="option" onclick="pick(this,1,'q6')">כלום — מי שלא קונה עכשיו, פשוט עוזב</div>
+      </div>
+      <div class="q-footer">
+        <button class="btn-next" id="next-q6" onclick="advance('s-q6','s-q7',6)">
+          הבא <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- שאלה 7 — האחרונה: advance מוביל ל-s-email -->
+    <div class="screen" id="s-q7">
+      <div class="q-step">שאלה 7 מתוך 7</div>
+      <div class="q-text">בהשוואה לאתרים של מתחרים בתחומך — האתר שלך:</div>
+      <div class="options">
+        <div class="option" onclick="pick(this,3,'q7')">בולט ומקצועי יותר — אני גאה להפנות אליו</div>
+        <div class="option" onclick="pick(this,2,'q7')">דומה לרוב — לא בולט לטוב או לרע</div>
+        <div class="option" onclick="pick(this,1,'q7')">נראה פחות טוב — אני יודע שצריך שדרוג</div>
+      </div>
+      <div class="q-footer">
+        <!-- ✏️ טקסט הכפתור של השאלה האחרונה -->
+        <button class="btn-next" id="next-q7" onclick="advance('s-q7','s-email',7)">
+          לתוצאה <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- ============================================================
+         שלב לפני תוצאה — לכידת אימייל
+         ============================================================ -->
+    <div class="screen email-screen" id="s-email">
+      <div class="email-icon">📬</div>
+      <!-- ✏️ כותרת ותיאור מסך האימייל -->
+      <h2>התוצאות מוכנות</h2>
+      <p>לאן לשלוח את האבחון המלא שלך?<br/>נשלח רק את הניתוח — בלי ספאם.</p>
+      <div class="email-input-wrap">
+        <input class="email-input" type="email" placeholder="האימייל שלך" id="email-in" />
+        <!-- ✏️ טקסט כפתור חשיפת התוצאה -->
+        <button class="btn-reveal" onclick="showResult()">חשוף את התוצאה שלי ←</button>
+      </div>
+      <div class="privacy-note">🔒 הפרטים שמורים. ביטול בכל עת.</div>
+    </div>
+
+
+    <!-- ============================================================
+         מסך תוצאות
+         ============================================================ -->
+    <div class="screen result-screen" id="s-result">
+      <div class="score-wrap">
+        <svg class="score-svg" width="120" height="120" viewBox="0 0 120 120">
+          <defs>
+            <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#7c6af7"/>
+              <stop offset="100%" stop-color="#a89af9"/>
+            </linearGradient>
+          </defs>
+          <circle class="score-track" cx="60" cy="60" r="50"/>
+          <circle class="score-fill" id="score-circle" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="314"/>
+        </svg>
+        <div class="score-center">
+          <div class="score-num" id="score-num">0%</div>
+          <div class="score-sub">ניקוד</div>
+        </div>
+      </div>
+
+      <div class="profile-badge">
+        <span id="profile-icon">●</span>
+        <span id="profile-badge-text">אבחון</span>
+      </div>
+      <div class="profile-name" id="profile-name">—</div>
+      <div class="profile-desc" id="profile-desc">—</div>
+
+      <div class="recs-box">
+        <!-- ✏️ כותרת תיבת ההמלצות -->
+        <div class="recs-label">3 דברים לעשות עכשיו</div>
+        <div id="recs-list"></div>
+      </div>
+
+      <!-- ✏️ טקסט כפתור ה-CTA -->
+      <button class="btn-cta" onclick="openCTA()">קבע שיחת אבחון חינמית ←</button>
+      <div class="restart-link" onclick="restart()">עשה את האבחון שוב</div>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+/* ============================================================
+   הגדרות — ✏️ שנה רק כאן
+   ============================================================ */
+
+// ✏️ מספר השאלות הכולל
+const TOTAL_QUESTIONS = 7;
+
+// ✏️ ניקוד מקסימלי (מספר שאלות × 3)
+const MAX_SCORE = 21;
+
+// ✏️ פרופילי תוצאה — שלושה רמות לפי ניקוד
+// score_max = ניקוד עד כמה זה הפרופיל הזה
+const PROFILES = [
+  {
+    score_max: 11,  // ✏️ ניקוד 7–11
+    icon: '⚠',
+    badge: 'זקוק לשיפור',          // ✏️ תווית קצרה
+    name: 'האתר לא עובד בשבילך',   // ✏️ שם הפרופיל
+    desc: 'האתר שלך קיים, אבל הוא לא ממיר. הוא לא מסביר ברור מה אתה מציע, לא תופס לידים ולא בונה אמון. הבשורה הטובה: יש הרבה מה לשפר, ולכל שיפור יש השפעה ישירה על הכנסות.', // ✏️ תיאור
+    recs: [  // ✏️ 3 המלצות
+      'הגדר כותרת ומשפט ערך חד שמסביר מה אתה עושה ולמי — בשורה הראשונה',
+      'הוסף לפחות 3 עדויות לקוחות עם שם מלא ותוצאה קונקרטית',
+      'שים כפתור CTA בולט בכל עמוד — לא רק בעמוד "צור קשר"'
+    ]
+  },
+  {
+    score_max: 17,  // ✏️ ניקוד 12–17
+    icon: '↗',
+    badge: 'פוטנציאל לצמיחה',
+    name: 'בדרך הנכונה',
+    desc: 'האתר שלך עובד — אבל הוא מפסיד חלק מהלקוחות בדרך. עם כמה שינויים ממוקדים תוכל להכפיל את כמות הפניות בלי לשנות את התקציב השיווקי.',
+    recs: [
+      'הוסף מגנט לידים — מדריך, שאלון, או צ\'קליסט — לתפוס מי שעדיין לא מוכן',
+      'בדוק מהירות טעינה ב-PageSpeed Insights ותקן — כל שניה עולה 7% המרות',
+      'שפר את חוויית המובייל — 70%+ מהגולשים מגיעים מטלפון'
+    ]
+  },
+  {
+    score_max: 21,  // ✏️ ניקוד 18–21
+    icon: '✦',
+    badge: 'מוכן לצמיחה',
+    name: 'האתר שלך ממיר',
+    desc: 'האתר שלך עובד כמו שצריך — ברור, מהיר ובונה אמון. אתה בקבוצה הקטנה שיש לה אתר שעובד עבורה. עכשיו זה הזמן לאופטימיזציה מתקדמת.',
+    recs: [
+      'הוסף A/B testing לכותרות הראשיות — שינוי קטן יכול להגדיל המרות ב-20–40%',
+      'בנה עמוד תיק עבודות עם case studies מפורטים עם נתונים ותוצאות',
+      'הוסף שאלון אבחון כמגנט לידים — בדיוק כמו זה שמילאת עכשיו'
+    ]
+  }
+];
+
+// ✏️ קישור ה-CTA — שנה לקישור Calendly / WhatsApp / טופס שלך
+const CTA_URL = 'https://wa.me/972500000000';
+
+/* ============================================================
+   לוגיקה — אל תשנה
+   ============================================================ */
+const scores = {};
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  updateProgress(0);
+}
+
+function pick(el, pts, qid) {
+  el.closest('.options').querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  scores[qid] = pts;
+  const btn = document.getElementById('next-' + qid);
+  if (btn) btn.classList.add('on');
+}
+
+function advance(from, to, step) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(to).classList.add('active');
+  updateProgress(step);
+}
+
+function updateProgress(step) {
+  const pct = Math.round((step / TOTAL_QUESTIONS) * 100);
+  document.getElementById('pbar').style.width = pct + '%';
+  document.getElementById('plabel').textContent = step + '/' + TOTAL_QUESTIONS;
+}
+
+function showResult() {
+  const total = Object.values(scores).reduce((a,b) => a+b, 0);
+  const pct = Math.round((total / MAX_SCORE) * 100);
+  const profile = PROFILES.find(p => total <= p.score_max) || PROFILES[PROFILES.length - 1];
+
+  document.getElementById('profile-name').textContent = profile.name;
+  document.getElementById('profile-badge-text').textContent = profile.badge;
+  document.getElementById('profile-icon').textContent = profile.icon;
+  document.getElementById('profile-desc').textContent = profile.desc;
+  document.getElementById('score-num').textContent = pct + '%';
+
+  document.getElementById('recs-list').innerHTML = profile.recs.map(r =>
+    `<div class="rec-item"><div class="rec-dot"></div><span>${r}</span></div>`
+  ).join('');
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('s-result').classList.add('active');
+  updateProgress(TOTAL_QUESTIONS);
+
+  setTimeout(() => {
+    const offset = 314 - (pct / 100) * 314;
+    document.getElementById('score-circle').style.strokeDashoffset = offset;
+  }, 100);
+}
+
+function openCTA() {
+  window.open(CTA_URL, '_blank');
+}
+
+function restart() {
+  Object.keys(scores).forEach(k => delete scores[k]);
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.btn-next').forEach(b => b.classList.remove('on'));
+  document.getElementById('score-circle').style.strokeDashoffset = '314';
+  go('s-intro');
+}
+</script>
+</body>
+</html>
