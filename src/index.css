@@ -57,6 +57,7 @@ body, h3, h4, h5, h6, p, span, button, input, textarea, a, li {
   --bg-chrome:   19  21  40;   /* #131528 — sidebar & header  */
 }
 
+html { font-size: 15px; }
 html, body, #root { height: 100%; }
 
 html { font-size: 18px; }
