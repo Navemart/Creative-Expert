@@ -62,7 +62,7 @@ function extractYoutubeId(url) {
 // ── YouTube: transcribe via Apify pintostudio/youtube-transcript-scraper ──
 const APIFY_TOKEN = process.env.APIFY_TOKEN;
 const APIFY_BASE  = 'https://api.apify.com/v2';
-const YT_ACTOR_ID = 'pintostudio/youtube-transcript-scraper';
+const YT_ACTOR_ID = 'pintostudio~youtube-transcript-scraper';
 
 async function transcribeYoutube(url) {
   if (!extractYoutubeId(url)) throw new Error('קישור YouTube לא תקין');
