@@ -59,52 +59,54 @@ function extractYoutubeId(url) {
   return m ? m[1] : null;
 }
 
-// ── YouTube: download audio + Whisper ────────────────────────
+// ── YouTube: transcribe via Apify pintostudio/youtube-transcript-scraper ──
+const APIFY_TOKEN = process.env.APIFY_TOKEN;
+const APIFY_BASE  = 'https://api.apify.com/v2';
+const YT_ACTOR_ID = 'pintostudio/youtube-transcript-scraper';
+
 async function transcribeYoutube(url) {
   if (!extractYoutubeId(url)) throw new Error('קישור YouTube לא תקין');
-  if (!openai) throw new Error('OPENAI_API_KEY חסר ב-.env');
+  if (!APIFY_TOKEN) throw new Error('APIFY_TOKEN חסר ב-.env');
 
-  const tmpBase = path.join(os.tmpdir(), `yt-${Date.now()}`);
-
-  try {
-    // 1. Write cookies to temp file if provided as env var (base64-encoded Netscape cookies.txt)
-    let cookiesArg = '';
-    const cookiesEnv = process.env.YT_COOKIES_B64 || process.env.YT_COOKIES_FILE;
-    let cookiesTmp = null;
-    if (process.env.YT_COOKIES_B64) {
-      cookiesTmp = path.join(os.tmpdir(), `yt-cookies-${Date.now()}.txt`);
-      const { writeFile } = await import('fs/promises');
-      await writeFile(cookiesTmp, Buffer.from(process.env.YT_COOKIES_B64, 'base64').toString('utf8'));
-      cookiesArg = `--cookies "${cookiesTmp}"`;
-    } else if (process.env.YT_COOKIES_FILE) {
-      cookiesArg = `--cookies "${process.env.YT_COOKIES_FILE}"`;
+  const res = await fetch(
+    `${APIFY_BASE}/acts/${encodeURIComponent(YT_ACTOR_ID)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ videoUrl: url }),
     }
+  );
 
-    // 2. Download best audio
-    await execAsync(
-      `"${YT_DLP}" -x --extractor-args "youtube:player_client=ios,web" ${cookiesArg} -o "${tmpBase}.%(ext)s" "${url}"`,
-      { timeout: 300_000 }
-    );
-    if (cookiesTmp) unlink(cookiesTmp).catch(() => {});
-
-    // 2. Find the downloaded file
-    let audioPath = null;
-    for (const ext of AUDIO_EXTS) {
-      try { await access(`${tmpBase}.${ext}`); audioPath = `${tmpBase}.${ext}`; break; }
-      catch {}
-    }
-    if (!audioPath) throw new Error('הסרטון לא הורד — ייתכן שהוא פרטי או חסום');
-
-    // 3. Transcribe with Whisper
-    const response = await openai.audio.transcriptions.create({
-      file:  createReadStream(audioPath),
-      model: 'whisper-1',
-    });
-
-    return response.text;
-  } finally {
-    AUDIO_EXTS.forEach(ext => unlink(`${tmpBase}.${ext}`).catch(() => {}));
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`Apify שגיאה ${res.status}: ${txt.slice(0, 200)}`);
   }
+
+  const items = await res.json();
+  if (!Array.isArray(items) || items.length === 0)
+    throw new Error('לא נמצאו כתוביות לסרטון הזה — ייתכן שהן מושבתות');
+
+  // Flatten transcript segments into a single string
+  const first = items[0];
+  // Actor may return { transcript: [...] } or { captions: [...] } or a flat array of segment objects
+  const segments =
+    first.transcript   ??
+    first.captions     ??
+    first.subtitles    ??
+    (Array.isArray(items[0]?.text) ? items.map(i => i.text) : null) ??
+    items;
+
+  if (Array.isArray(segments) && segments.length > 0 && typeof segments[0] === 'object') {
+    return segments.map(s => s.text ?? s.content ?? '').join(' ').trim();
+  }
+  if (typeof first === 'object' && typeof first.text === 'string') {
+    return items.map(i => i.text).join(' ').trim();
+  }
+  if (typeof first === 'string') {
+    return items.join(' ').trim();
+  }
+
+  throw new Error('פורמט תגובה לא צפוי מ-Apify — אנא בדוק את ה-actor');
 }
 
 // ── Instagram: download audio + Whisper ──────────────────────
