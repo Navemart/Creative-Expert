@@ -67,12 +67,25 @@ async function transcribeYoutube(url) {
   const tmpBase = path.join(os.tmpdir(), `yt-${Date.now()}`);
 
   try {
-    // 1. Download best audio — use iOS client to bypass bot detection & JS runtime requirement
-    const cookiesArg = process.env.YT_COOKIES_FILE ? `--cookies "${process.env.YT_COOKIES_FILE}"` : '';
+    // 1. Write cookies to temp file if provided as env var (base64-encoded Netscape cookies.txt)
+    let cookiesArg = '';
+    const cookiesEnv = process.env.YT_COOKIES_B64 || process.env.YT_COOKIES_FILE;
+    let cookiesTmp = null;
+    if (process.env.YT_COOKIES_B64) {
+      cookiesTmp = path.join(os.tmpdir(), `yt-cookies-${Date.now()}.txt`);
+      const { writeFile } = await import('fs/promises');
+      await writeFile(cookiesTmp, Buffer.from(process.env.YT_COOKIES_B64, 'base64').toString('utf8'));
+      cookiesArg = `--cookies "${cookiesTmp}"`;
+    } else if (process.env.YT_COOKIES_FILE) {
+      cookiesArg = `--cookies "${process.env.YT_COOKIES_FILE}"`;
+    }
+
+    // 2. Download best audio
     await execAsync(
       `"${YT_DLP}" -x --extractor-args "youtube:player_client=ios,web" ${cookiesArg} -o "${tmpBase}.%(ext)s" "${url}"`,
       { timeout: 300_000 }
     );
+    if (cookiesTmp) unlink(cookiesTmp).catch(() => {});
 
     // 2. Find the downloaded file
     let audioPath = null;
