@@ -1643,8 +1643,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ── 5. שלבי הפלייוויל ── */}
-      {(() => {
+      {/* ── 5. שלבי הפלייוויל — מוסתר בינתיים (בנייה) ── */}
+      {false && (() => {
         // Merge hardcoded defaults with dynamic content from diagnosis_content table
         const mergedStages = FLYWHEEL_STAGES.map(s => {
           const db = diagnosisContent?.[s.key] || {};

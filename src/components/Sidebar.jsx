@@ -208,9 +208,30 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
               )}
             </div>
             <ul className="space-y-1">
-              {ENGINE_ITEMS.map((item) => (
-                <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
-              ))}
+              {ENGINE_ITEMS.map((item) => {
+                if (item.to === '/diagnosis' && !isAdmin) {
+                  return (
+                    <li key={item.to}>
+                      <div
+                        className={['flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium cursor-not-allowed select-none', collapsed ? 'md:justify-center md:px-2' : ''].join(' ')}
+                        style={{ color: 'rgba(255,255,255,0.3)' }}
+                        title="בנייה — בקרוב"
+                      >
+                        <item.icon size={18} className="flex-none" />
+                        {!collapsed && (
+                          <span className="flex items-center gap-2">
+                            {item.label}
+                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,193,24,0.15)', color: 'rgba(245,193,24,0.6)', border: '1px solid rgba(245,193,24,0.2)' }}>
+                              בנייה
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                }
+                return <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />;
+              })}
             </ul>
           </div>
 
