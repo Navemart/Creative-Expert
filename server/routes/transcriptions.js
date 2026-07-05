@@ -83,30 +83,32 @@ async function transcribeYoutube(url) {
   }
 
   const items = await res.json();
+  console.log('[YT-Apify] raw response (first item):', JSON.stringify(items?.[0]).slice(0, 500));
+
   if (!Array.isArray(items) || items.length === 0)
     throw new Error('לא נמצאו כתוביות לסרטון הזה — ייתכן שהן מושבתות');
 
-  // Flatten transcript segments into a single string
   const first = items[0];
-  // Actor may return { transcript: [...] } or { captions: [...] } or a flat array of segment objects
-  const segments =
-    first.transcript   ??
-    first.captions     ??
-    first.subtitles    ??
-    (Array.isArray(items[0]?.text) ? items.map(i => i.text) : null) ??
-    items;
 
-  if (Array.isArray(segments) && segments.length > 0 && typeof segments[0] === 'object') {
-    return segments.map(s => s.text ?? s.content ?? '').join(' ').trim();
+  // pintostudio actor returns { transcript: "full text" } (string) or { transcript: [...segments] }
+  if (typeof first?.transcript === 'string' && first.transcript.trim()) {
+    return first.transcript.trim();
   }
-  if (typeof first === 'object' && typeof first.text === 'string') {
-    return items.map(i => i.text).join(' ').trim();
+  if (Array.isArray(first?.transcript) && first.transcript.length > 0) {
+    return first.transcript.map(s => s.text ?? s.content ?? '').join(' ').trim();
   }
+
+  // Flat array of segment objects: [{ text, start, dur }, ...]
+  if (typeof first?.text === 'string') {
+    return items.map(i => i.text ?? '').join(' ').trim();
+  }
+
+  // String array
   if (typeof first === 'string') {
     return items.join(' ').trim();
   }
 
-  throw new Error('פורמט תגובה לא צפוי מ-Apify — אנא בדוק את ה-actor');
+  throw new Error(`פורמט לא צפוי מ-Apify: ${JSON.stringify(first).slice(0, 200)}`);
 }
 
 // ── Instagram: download audio + Whisper ──────────────────────
