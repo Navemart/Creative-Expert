@@ -29,13 +29,6 @@ import os               from 'os';
 import path             from 'path';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI           from 'openai';
-import {
-  YoutubeTranscript,
-  YoutubeTranscriptDisabledError,
-  YoutubeTranscriptNotAvailableError,
-  YoutubeTranscriptVideoUnavailableError,
-  YoutubeTranscriptTooManyRequestError,
-} from 'youtube-transcript';
 
 const router    = Router();
 const execAsync = promisify(exec);
@@ -66,22 +59,37 @@ function extractYoutubeId(url) {
   return m ? m[1] : null;
 }
 
-// ── YouTube: fetch captions ───────────────────────────────────
+// ── YouTube: download audio + Whisper ────────────────────────
 async function transcribeYoutube(url) {
-  const videoId = extractYoutubeId(url);
-  if (!videoId) throw new Error('קישור YouTube לא תקין');
+  if (!extractYoutubeId(url)) throw new Error('קישור YouTube לא תקין');
+  if (!openai) throw new Error('OPENAI_API_KEY חסר ב-.env');
+
+  const tmpBase = path.join(os.tmpdir(), `yt-${Date.now()}`);
 
   try {
-    const segments = await YoutubeTranscript.fetchTranscript(videoId);
-    return segments.map(s => s.text.replace(/\n/g, ' ')).join(' ').replace(/\s+/g, ' ').trim();
-  } catch (err) {
-    if (err instanceof YoutubeTranscriptDisabledError || err instanceof YoutubeTranscriptNotAvailableError)
-      throw new Error('לסרטון זה אין כתוביות זמינות — נסה סרטון אחר');
-    if (err instanceof YoutubeTranscriptVideoUnavailableError)
-      throw new Error('הסרטון לא זמין (פרטי או נמחק)');
-    if (err instanceof YoutubeTranscriptTooManyRequestError)
-      throw new Error('יותר מדי בקשות ל-YouTube — נסה שוב עוד כמה דקות');
-    throw err;
+    // 1. Download best audio — no ffmpeg needed
+    await execAsync(
+      `"${YT_DLP}" -x -o "${tmpBase}.%(ext)s" "${url}"`,
+      { timeout: 300_000 } // 5 min for long videos
+    );
+
+    // 2. Find the downloaded file
+    let audioPath = null;
+    for (const ext of AUDIO_EXTS) {
+      try { await access(`${tmpBase}.${ext}`); audioPath = `${tmpBase}.${ext}`; break; }
+      catch {}
+    }
+    if (!audioPath) throw new Error('הסרטון לא הורד — ייתכן שהוא פרטי או חסום');
+
+    // 3. Transcribe with Whisper
+    const response = await openai.audio.transcriptions.create({
+      file:  createReadStream(audioPath),
+      model: 'whisper-1',
+    });
+
+    return response.text;
+  } finally {
+    AUDIO_EXTS.forEach(ext => unlink(`${tmpBase}.${ext}`).catch(() => {}));
   }
 }
 
