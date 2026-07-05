@@ -82,30 +82,27 @@ async function transcribeYoutube(url) {
     throw new Error(`Apify שגיאה ${res.status}: ${txt.slice(0, 200)}`);
   }
 
-  const items = await res.json();
+  const raw = await res.json();
+  console.log('[YT-Apify] type:', typeof raw, 'isArray:', Array.isArray(raw), 'keys:', JSON.stringify(Object.keys(raw || {})).slice(0, 100));
+  console.log('[YT-Apify] first item:', JSON.stringify(Array.isArray(raw) ? raw[0] : raw).slice(0, 300));
 
-  if (!Array.isArray(items) || items.length === 0)
-    throw new Error('לא נמצאו כתוביות לסרטון הזה — ייתכן שהן מושבתות');
+  // Recursively collect all string values of any "text" / "content" field
+  function collectText(node) {
+    if (!node) return [];
+    if (typeof node === 'string') return node ? [node] : [];
+    if (Array.isArray(node)) return node.flatMap(collectText);
+    if (typeof node === 'object') {
+      if (typeof node.text === 'string' && node.text.trim()) return [node.text.trim()];
+      if (typeof node.content === 'string' && node.content.trim()) return [node.content.trim()];
+      return Object.values(node).flatMap(collectText);
+    }
+    return [];
+  }
 
-  const first = items[0];
+  const texts = collectText(raw);
+  if (texts.length > 0) return texts.join(' ');
 
-  // { transcript: "full text" }
-  if (typeof first?.transcript === 'string' && first.transcript.trim())
-    return first.transcript.trim();
-
-  // { transcript: [{text, start, dur}, ...] }
-  if (Array.isArray(first?.transcript))
-    return first.transcript.map(s => s.text ?? '').filter(Boolean).join(' ');
-
-  // flat array [{text?, start, dur}, ...] — pintostudio format
-  if (Array.isArray(items) && items.some(i => i.text))
-    return items.map(i => i.text ?? '').filter(Boolean).join(' ');
-
-  // string array
-  if (typeof first === 'string')
-    return items.join(' ');
-
-  throw new Error(`פורמט לא צפוי מ-Apify: ${JSON.stringify(first).slice(0, 200)}`);
+  throw new Error('לא נמצא טקסט בתגובה מ-Apify — ייתכן שלסרטון אין כתוביות');
 }
 
 // ── Instagram: download audio + Whisper ──────────────────────
