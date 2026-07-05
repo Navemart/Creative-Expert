@@ -67,10 +67,11 @@ async function transcribeYoutube(url) {
   const tmpBase = path.join(os.tmpdir(), `yt-${Date.now()}`);
 
   try {
-    // 1. Download best audio — no ffmpeg needed
+    // 1. Download best audio — use iOS client to bypass bot detection & JS runtime requirement
+    const cookiesArg = process.env.YT_COOKIES_FILE ? `--cookies "${process.env.YT_COOKIES_FILE}"` : '';
     await execAsync(
-      `"${YT_DLP}" -x -o "${tmpBase}.%(ext)s" "${url}"`,
-      { timeout: 300_000 } // 5 min for long videos
+      `"${YT_DLP}" -x --extractor-args "youtube:player_client=ios,web" ${cookiesArg} -o "${tmpBase}.%(ext)s" "${url}"`,
+      { timeout: 300_000 }
     );
 
     // 2. Find the downloaded file
