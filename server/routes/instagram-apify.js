@@ -35,10 +35,12 @@ async function scrapeInstagramProfile(username) {
   return items[0];
 }
 
-async function scrapeInstagramPosts(username) {
+async function scrapeInstagramPosts(username, limit = 30) {
   try {
-    const items = await runActor(POST_ACTOR_ID, { username: [username], resultsLimit: 100 }, 120);
-    console.log(`[post-scraper] got ${items?.length ?? 0} posts for ${username}`);
+    const input = { username: [username] };
+    if (limit) input.resultsLimit = limit;
+    const items = await runActor(POST_ACTOR_ID, input, limit > 100 ? 300 : 120);
+    console.log(`[post-scraper] got ${items?.length ?? 0} posts for ${username} (limit=${limit ?? 'all'})`);
     return Array.isArray(items) ? items : [];
   } catch(e) {
     console.warn('[instagram-post-scraper] fallback to profile posts:', e.message);
@@ -119,11 +121,15 @@ router.post('/connect', async (req, res) => {
 
   try {
     const cleanUsername = username.replace('@', '');
-    // connect: only profile scraper (fast ~10s). User hits refresh for full post history.
-    const raw = await scrapeInstagramProfile(cleanUsername);
+    // connect: full scrape — profile + all posts (no limit)
+    const [raw, rawPosts] = await Promise.all([
+      scrapeInstagramProfile(cleanUsername),
+      scrapeInstagramPosts(cleanUsername, null),
+    ]);
     const now = new Date().toISOString();
 
-    const posts = normalizePosts(raw.latestPosts || []);
+    const postSource = rawPosts?.length ? rawPosts : (raw.latestPosts || []);
+    const posts = normalizePosts(postSource);
     const { avgViews, avgEng } = computePostStats(posts);
 
     const row = {
@@ -176,7 +182,7 @@ router.post('/refresh', async (req, res) => {
   try {
     const [raw, rawPostsFromScraper] = await Promise.all([
       scrapeInstagramProfile(existing.username),
-      scrapeInstagramPosts(existing.username),
+      scrapeInstagramPosts(existing.username, 30),
     ]);
     const now = new Date().toISOString();
 
