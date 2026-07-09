@@ -260,12 +260,12 @@ function WizardModal({ onClose, onSaved, userId, existingQuarters = [] }) {
       <div className="mb-5">
         <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: STEP_COLORS[1] }}>02 / 06</p>
         <h2 className="text-2xl font-bold text-white">נצחונות</h2>
-        <p className="text-base mt-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>לך חיובי קודם — תסתכל אחורה לפני שמסתכלים קדימה.</p>
+        <p className="text-base mt-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>תתחילו קודם בחיובי — אנחנו מסתכלים אחורה, לפני שאנחנו מסתכלים קדימה.</p>
       </div>
       <div className="space-y-5">
         <div>
           <label className="block text-base font-semibold mb-2 text-white">כיף + חופש</label>
-          <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>אילו זכרות מגניבות יצרת בשלושת החודשים האחרונים?</p>
+          <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>אילו זכרונות מגניבים יצרתם בשלושת החודשים האחרונים?</p>
           <textarea rows={3} value={form.fun_freedom} onChange={e => set('fun_freedom', e.target.value)}
             className="w-full rounded-xl px-4 py-3 text-base resize-none" placeholder="שתף..." />
         </div>
@@ -280,7 +280,7 @@ function WizardModal({ onClose, onSaved, userId, existingQuarters = [] }) {
         </div>
         <div>
           <label className="block text-base font-semibold mb-2 text-white">החזון שלך</label>
-          <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>מה אתה מתרגש לקראתו בשלושת החודשים הבאים?</p>
+          <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.4)' }}>מה הדבר שאתם מתרגשים לקראתו בשלושת החודשים הבאים?</p>
           <textarea rows={3} value={form.vision_next} onChange={e => set('vision_next', e.target.value)}
             className="w-full rounded-xl px-4 py-3 text-base resize-none" placeholder="החזון שלי..." />
         </div>
@@ -293,12 +293,12 @@ function WizardModal({ onClose, onSaved, userId, existingQuarters = [] }) {
       <div className="mb-5">
         <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: STEP_COLORS[2] }}>03 / 06</p>
         <h2 className="text-2xl font-bold text-white">כסף</h2>
-        <p className="text-base mt-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>איפה אתה בדרך, ומהו הציון הבא?</p>
+        <p className="text-base mt-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>איפה אתם עכשיו ומהו ציון הדרך הבא שלכם?</p>
       </div>
       <div className="space-y-5">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>החודש הגבוה ביותר ברבעון האחרון</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>החודש עם ההכנסה הגבוהה ביותר ברבעון האחרון</label>
             <div className="flex items-center gap-1 rounded-xl px-3 py-2.5" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
               <span className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>₪</span>
               <input type="number" value={form.highest_cash_month} onChange={e => set('highest_cash_month', e.target.value)}
@@ -306,7 +306,7 @@ function WizardModal({ onClose, onSaved, userId, existingQuarters = [] }) {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>יעד חודש כסף לרבעון הזה</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>היעד להכנסה בחודש אחד ברבעון הקרוב</label>
             <div className="flex items-center gap-1 rounded-xl px-3 py-2.5" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
               <span className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>₪</span>
               <input type="number" value={form.goal_cash_month} onChange={e => set('goal_cash_month', e.target.value)}
@@ -315,7 +315,7 @@ function WizardModal({ onClose, onSaved, userId, existingQuarters = [] }) {
           </div>
         </div>
         <div>
-          <label className="block text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>איזו דרגה יש לך כרגע?</label>
+          <label className="block text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>מהי הדרגה הנוכחית שלך / הדרגה שבה זכית לאחרונה?</label>
           <div className="flex gap-2 flex-wrap">
             {LEVEL_OPTIONS.map(l => (
               <button
@@ -336,14 +336,14 @@ function WizardModal({ onClose, onSaved, userId, existingQuarters = [] }) {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>לקוחות חדשים לסגירה</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>כמה לקוחות חדשים תצטרך כדי להגיע ליעד שהגדרת?</label>
             <input type="number" value={form.clients_to_sign} onChange={e => set('clients_to_sign', e.target.value)}
               className="w-full rounded-xl px-3 py-2.5 text-sm"
               style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.92)' }}
               placeholder="6" />
           </div>
           <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>פרס כשמגיעים ליעד</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'rgba(255,255,255,0.6)' }}>מהו הפרס שתתן לעצמך כשתגיע ליעד?</label>
             <input type="text" value={form.reward} onChange={e => set('reward', e.target.value)}
               className="w-full rounded-xl px-3 py-2.5 text-sm"
               style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.92)' }}
@@ -359,8 +359,8 @@ function WizardModal({ onClose, onSaved, userId, existingQuarters = [] }) {
       <div className="mb-4">
         <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: STEP_COLORS[3] }}>04 / 06</p>
         <h2 className="text-2xl font-bold text-white">מאמץ</h2>
-        <p className="text-base mt-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>כמה קשה אתה משחק את המשחק עכשיו?</p>
-        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>1 = מפיל את הכדור · 10 = לא יכול להתאמץ יותר</p>
+        <p className="text-base mt-1.5" style={{ color: 'rgba(255,255,255,0.45)' }}>כמה רציני אתם ״משחקים את המשחק״ כרגע?</p>
+        <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>1 — לא בכיוון בכלל · 10 — אין טוב יותר מזה</p>
       </div>
       <div className="space-y-5">
         {EFFORT_METRICS.map(m => (
