@@ -148,6 +148,19 @@ router.patch('/students/:userId/profile', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── DELETE /api/admin/deals/:id ──────────────────────────────
+router.delete('/deals/:id', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const { id } = req.params;
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { error } = await supabase.from('deals').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 // keep old route for backward compat
 router.patch('/students/:userId/health', async (req, res) => {
   req.url = req.url.replace('/health', '/profile');

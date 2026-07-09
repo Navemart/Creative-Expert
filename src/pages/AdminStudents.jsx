@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase.js';
 import {
   TrendingDown, Calendar, ArrowUp, Users, RefreshCw,
   Circle, ArrowUpRight, ArrowDownRight, Minus,
-  Archive, RotateCcw, ChevronDown,
+  Archive, RotateCcw, ChevronDown, Trash2,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -612,28 +612,132 @@ function WeeklyWinsTable({ students }) {
   );
 }
 
+// ── Deals KPI cards ───────────────────────────────────────────
+function DealsKPIs({ students }) {
+  const allDeals = students.flatMap(s => s.deals || []);
+
+  const totalEver = allDeals.reduce((s, d) => s + num(d.total_amount), 0);
+
+  // Best month by total_amount grouped by YYYY-MM of created_at
+  const byMonth = {};
+  allDeals.forEach(d => {
+    if (!d.created_at) return;
+    const month = d.created_at.slice(0, 7);
+    byMonth[month] = (byMonth[month] || 0) + num(d.total_amount);
+  });
+  const bestMonth = Object.entries(byMonth).sort((a, b) => b[1] - a[1])[0] || null;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* כרטיסייה 1 — סה"כ כל הזמנים */}
+      <div className="rounded-2xl p-5 flex items-center gap-4"
+        style={{ background: 'rgba(245,193,24,0.07)', border: '1px solid rgba(245,193,24,0.2)' }}>
+        <div className="flex-none h-12 w-12 rounded-xl flex items-center justify-center text-2xl"
+          style={{ background: 'rgba(245,193,24,0.12)' }}>
+          💰
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(245,193,24,0.6)' }}>
+            סה״כ עסקאות — כל הזמנים
+          </p>
+          <p className="text-3xl font-black leading-none" style={{ color: '#F5C118' }}>
+            ₪{totalEver.toLocaleString('he-IL')}
+          </p>
+          <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            {allDeals.length} עסקאות · {students.length} תלמידים
+          </p>
+        </div>
+      </div>
+
+      {/* כרטיסייה 2 — החודש הכי טוב */}
+      <div className="rounded-2xl p-5 flex items-center gap-4"
+        style={{ background: 'rgba(79,195,138,0.07)', border: '1px solid rgba(79,195,138,0.2)' }}>
+        <div className="flex-none h-12 w-12 rounded-xl flex items-center justify-center text-2xl"
+          style={{ background: 'rgba(79,195,138,0.12)' }}>
+          🏆
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'rgba(79,195,138,0.7)' }}>
+            החודש הכי טוב
+          </p>
+          {bestMonth ? (
+            <>
+              <p className="text-3xl font-black leading-none" style={{ color: '#4fc38a' }}>
+                ₪{bestMonth[1].toLocaleString('he-IL')}
+              </p>
+              <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                {fmtMonth(bestMonth[0] + '-01')}
+              </p>
+            </>
+          ) : (
+            <p className="text-2xl font-black" style={{ color: 'rgba(255,255,255,0.2)' }}>—</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Deals Table ───────────────────────────────────────────────
-function DealsTable({ students }) {
+function DealsTable({ students, onRefresh }) {
   const [search,      setSearch]      = useState('');
   const [sortKey,     setSortKey]     = useState('created_at');
   const [sortDir,     setSortDir]     = useState(-1);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [deletingId,  setDeletingId]  = useState(null); // id ממתין לאישור
+  const [deleting,    setDeleting]    = useState(false);
 
-  const rows = useMemo(() => {
+  async function confirmDelete(id) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/deals/${id}`, {
+        method: 'DELETE',
+        headers: { 'x-admin-id': import.meta.env.VITE_ADMIN_USER_ID || '' },
+      });
+      if (!res.ok) { const d = await res.json(); console.error('delete deal error:', d.error); }
+      else if (onRefresh) onRefresh();
+    } finally {
+      setDeleting(false);
+      setDeletingId(null);
+    }
+  }
+
+  const allRows = useMemo(() => {
     const flat = students.flatMap(s =>
       (s.deals || []).map(d => ({ ...d, name: s.name }))
     );
-    return flat
-      .filter(r => !search || r.name?.toLowerCase().includes(search.toLowerCase()))
-      .sort((a, b) => {
+    return flat.filter(r => !search || r.name?.toLowerCase().includes(search.toLowerCase()));
+  }, [students, search]);
+
+  // Group by month (YYYY-MM), months sorted newest-first
+  // Within each month apply the selected sort
+  const grouped = useMemo(() => {
+    const byMonth = {};
+    allRows.forEach(r => {
+      let month = 'unknown';
+      if (r.created_at) {
+        const d = new Date(r.created_at);
+        d.setMonth(d.getMonth() - 1); // דיווח תמיד על החודש הקודם
+        month = d.toISOString().slice(0, 7);
+      }
+      if (!byMonth[month]) byMonth[month] = [];
+      byMonth[month].push(r);
+    });
+    const monthsSorted = Object.keys(byMonth).sort((a, b) => b.localeCompare(a));
+    return monthsSorted.map(month => {
+      const rows = [...byMonth[month]].sort((a, b) => {
         const av = a[sortKey] ?? ''; const bv = b[sortKey] ?? '';
         if (!isNaN(Number(av)) && !isNaN(Number(bv))) return (Number(av) - Number(bv)) * sortDir;
         return String(av).localeCompare(String(bv), 'he') * sortDir;
       });
-  }, [students, search, sortKey, sortDir]);
+      const monthTotal    = rows.reduce((s, r) => s + num(r.total_amount), 0);
+      const monthReceived = rows.reduce((s, r) => s + num(r.received_amount), 0);
+      return { month, rows, monthTotal, monthReceived };
+    });
+  }, [allRows, sortKey, sortDir]);
 
-  const totalAmount   = rows.reduce((s, r) => s + num(r.total_amount), 0);
-  const totalReceived = rows.reduce((s, r) => s + num(r.received_amount), 0);
+  const totalAmount   = allRows.reduce((s, r) => s + num(r.total_amount), 0);
+  const totalReceived = allRows.reduce((s, r) => s + num(r.received_amount), 0);
 
   const COLS = [
     { key: 'name',            label: 'שם',            align: 'right' },
@@ -641,7 +745,8 @@ function DealsTable({ students }) {
     { key: 'total_amount',    label: 'סכום עסקה',     align: 'left',  fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', color: '#F5C118' },
     { key: 'received_amount', label: 'נכנס בפועל',    align: 'left',  fmt: v => v != null ? `₪${num(v).toLocaleString('he-IL')}` : '—', color: '#4fc38a' },
     { key: 'notes',           label: 'תיאור',         align: 'right', fmt: v => v || '—' },
-    { key: 'next_rank',      label: 'הדרגה הבאה',   align: 'right', fmt: v => v || '—' },
+    { key: 'next_rank',       label: 'הדרגה הבאה',   align: 'right', fmt: v => v || '—' },
+    { key: '_delete',         label: '',              align: 'center' },
   ];
 
   function toggleSort(key) {
@@ -658,67 +763,119 @@ function DealsTable({ students }) {
             className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
         </div>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-          {rows.length} עסקאות · סה״כ: <span style={{ color: '#F5C118', fontWeight: 700 }}>₪{totalAmount.toLocaleString('he-IL')}</span>
+          {allRows.length} עסקאות · סה״כ: <span style={{ color: '#F5C118', fontWeight: 700 }}>₪{totalAmount.toLocaleString('he-IL')}</span>
           {' · '}התקבל: <span style={{ color: '#4fc38a', fontWeight: 700 }}>₪{totalReceived.toLocaleString('he-IL')}</span>
         </span>
       </div>
+
       <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-        <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
-          <thead>
-            <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              {COLS.map(col => (
-                <th key={col.key} onClick={() => toggleSort(col.key)}
-                  className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
-                  style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
-                  {col.label}{sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0
-              ? <tr><td colSpan={COLS.length} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
-              : rows.map((r, i) => {
-                const rowId = `${r.user_id}-${r.id || r.created_at}`;
-                const isExpanded = expandedRow === rowId;
-                return (
-                  <tr key={rowId} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
-                    className="hover:bg-white/[0.03] transition">
-                    {COLS.map(col => {
-                      const val = r[col.key];
-                      if (col.key === 'notes') {
-                        const text = val || '';
-                        const isLong = text.length > 60;
-                        return (
-                          <td key={col.key} className="px-3 py-2.5" style={{ textAlign: 'right', color: text ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.2)', fontSize: 13, maxWidth: 280 }}>
-                            {!text ? '—' : isLong ? (
-                              <span>
-                                {isExpanded ? text : `${text.slice(0, 60)}...`}
-                                {' '}
-                                <button onClick={() => setExpandedRow(isExpanded ? null : rowId)}
-                                  className="text-xs font-semibold hover:opacity-80 transition"
-                                  style={{ color: '#F5C118', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                                  {isExpanded ? 'פחות' : 'עוד'}
-                                </button>
-                              </span>
-                            ) : text}
-                          </td>
-                        );
-                      }
-                      const display = col.fmt ? col.fmt(val) : (val ?? '—');
-                      return (
-                        <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
-                          style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: 13 }}>
-                          {display}
-                        </td>
-                      );
-                    })}
+        {grouped.length === 0 ? (
+          <div className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</div>
+        ) : (
+          <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
+            <thead>
+              <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                {COLS.map(col => (
+                  <th key={col.key} onClick={() => toggleSort(col.key)}
+                    className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
+                    style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: 11, fontWeight: 700, letterSpacing: '0.05em' }}>
+                    {col.label}{sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {grouped.map(({ month, rows, monthTotal, monthReceived }) => (
+                <>
+                  {/* Month separator row */}
+                  <tr key={`sep-${month}`} style={{ background: 'rgba(255,255,255,0.03)', borderTop: '2px solid rgba(255,255,255,0.08)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <td colSpan={COLS.length} className="px-4 py-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                          {fmtMonth(month + '-01')}
+                        </span>
+                        <div className="flex items-center gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                          <span>{rows.length} עסקאות</span>
+                          <span style={{ color: '#F5C118', fontWeight: 700 }}>₪{monthTotal.toLocaleString('he-IL')}</span>
+                          {monthReceived > 0 && <span style={{ color: '#4fc38a', fontWeight: 700 }}>נכנס ₪{monthReceived.toLocaleString('he-IL')}</span>}
+                        </div>
+                      </div>
+                    </td>
                   </tr>
-                );
-              })
-            }
-          </tbody>
-        </table>
+                  {rows.map((r, i) => {
+                    const rowId = `${r.user_id}-${r.id || r.created_at}`;
+                    const isExpanded = expandedRow === rowId;
+                    return (
+                      <tr key={rowId}
+                        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
+                        className="hover:bg-white/[0.03] transition group">
+                        {COLS.map(col => {
+                          const val = r[col.key];
+
+                          if (col.key === '_delete') {
+                            const isPending = deletingId === r.id;
+                            return (
+                              <td key="_delete" className="px-3 py-2.5 whitespace-nowrap" style={{ textAlign: 'center' }}>
+                                {isPending ? (
+                                  <div className="flex items-center gap-1.5 justify-center">
+                                    <button onClick={() => confirmDelete(r.id)} disabled={deleting}
+                                      className="rounded-lg px-2 py-1 text-xs font-bold transition hover:opacity-80"
+                                      style={{ background: 'rgba(239,68,68,0.2)', color: '#f87171', border: '1px solid rgba(239,68,68,0.4)' }}>
+                                      {deleting ? '...' : 'אשר'}
+                                    </button>
+                                    <button onClick={() => setDeletingId(null)}
+                                      className="rounded-lg px-2 py-1 text-xs font-medium transition hover:bg-white/10"
+                                      style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                      ביטול
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => setDeletingId(r.id)}
+                                    className="p-1.5 rounded-lg transition hover:bg-red-500/10 opacity-0 group-hover:opacity-100"
+                                    style={{ color: 'rgba(255,255,255,0.2)' }}
+                                    title="בטל עסקה">
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </td>
+                            );
+                          }
+
+                          if (col.key === 'notes') {
+                            const text = val || '';
+                            const isLong = text.length > 60;
+                            return (
+                              <td key={col.key} className="px-3 py-2.5" style={{ textAlign: 'right', color: text ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.2)', fontSize: 13, maxWidth: 280 }}>
+                                {!text ? '—' : isLong ? (
+                                  <span>
+                                    {isExpanded ? text : `${text.slice(0, 60)}...`}
+                                    {' '}
+                                    <button onClick={() => setExpandedRow(isExpanded ? null : rowId)}
+                                      className="text-xs font-semibold hover:opacity-80 transition"
+                                      style={{ color: '#F5C118', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                                      {isExpanded ? 'פחות' : 'עוד'}
+                                    </button>
+                                  </span>
+                                ) : text}
+                              </td>
+                            );
+                          }
+                          const display = col.fmt ? col.fmt(val) : (val ?? '—');
+                          return (
+                            <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
+                              style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: 13 }}>
+                              {display}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
@@ -1340,7 +1497,10 @@ export default function AdminStudents() {
       {/* Sub-page views */}
       {view === 'monthly'   && !loading && <MonthlyTable   students={students.filter(s => s.is_active !== false)} onUpdateProfile={updateProfile} />}
       {view === 'wins'      && !loading && <WeeklyWinsTable students={students.filter(s => s.is_active !== false)} />}
-      {view === 'deals'     && !loading && <DealsTable      students={students.filter(s => s.is_active !== false)} />}
+      {view === 'deals'     && !loading && <>
+        <DealsKPIs   students={students.filter(s => s.is_active !== false)} />
+        <DealsTable  students={students.filter(s => s.is_active !== false)} onRefresh={fetchStudents} />
+      </>}
       {view === 'checklist' && !loading && <ChecklistView   students={students.filter(s => s.is_active !== false)} roadmap={roadmap} />}
 
       {/* Student list view */}

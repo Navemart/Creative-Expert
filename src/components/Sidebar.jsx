@@ -17,6 +17,8 @@ import {
   Target,
   X,
   ListTodo,
+  ScanSearch,
+  ClipboardList,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -35,6 +37,15 @@ const ENGINE_ITEMS = [
   { to: '/diagnosis',       label: 'אבחון עסקי',   icon: Target },
   { to: '/content-library', label: 'ספריית תכנים', icon: Library },
 ];
+
+const SELF_AUDIT_ITEMS = {
+  to:       '/self-audit',
+  label:    'כלי אבחון עצמי',
+  icon:     ScanSearch,
+  children: [
+    { to: '/self-audit/quarterly', label: 'כרטיסיית אבחון רבעוני', icon: ClipboardList },
+  ],
+};
 
 const TOOLS_ITEMS = [
   { to: '/tasks',           label: 'מארגן משימות',   icon: ListTodo },
@@ -208,6 +219,7 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
               )}
             </div>
             <ul className="space-y-1">
+              <NavItemExpandable item={SELF_AUDIT_ITEMS} collapsed={collapsed} onCloseMobile={onCloseMobile} />
               {ENGINE_ITEMS.map((item) => {
                 if (item.to === '/diagnosis' && !isAdmin) {
                   return (
