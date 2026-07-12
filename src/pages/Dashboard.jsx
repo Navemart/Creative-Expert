@@ -1179,7 +1179,7 @@ export default function Dashboard() {
   }
 
   async function submitWin() {
-    if (!winForm.win_1.trim()) return;
+    if (!winForm.win_1.trim() || !winForm.win_2.trim() || !winForm.win_3.trim()) return;
 
     const submittedAt = new Date().toISOString(); // actual submit time — used for streak
     const weekDate    = winForm.week_date || new Date().toISOString().slice(0, 10);
