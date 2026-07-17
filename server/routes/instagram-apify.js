@@ -64,6 +64,24 @@ function normalizePosts(rawPosts = []) {
   }));
 }
 
+// ── Merge fresh posts into existing history ───────────────────────
+// Keeps all historical posts; adds new ones and refreshes stats on existing.
+function mergePosts(existingPosts = [], freshPosts = []) {
+  const map = new Map();
+  existingPosts.forEach(p => map.set(p.id || p.shortCode, p));
+  freshPosts.forEach(p => {
+    const key = p.id || p.shortCode;
+    if (!key) return;
+    if (map.has(key)) {
+      // update mutable stats only
+      map.set(key, { ...map.get(key), likes: p.likes, comments: p.comments, views: p.views });
+    } else {
+      map.set(key, p);
+    }
+  });
+  return [...map.values()].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
+
 // ── Helper: compute stats from normalized posts ──────────────────
 function computePostStats(posts) {
   const videoPosts = posts.filter(p => p.views != null && p.views > 0);
@@ -186,8 +204,14 @@ router.post('/refresh', async (req, res) => {
     ]);
     const now = new Date().toISOString();
 
-    const postSource = rawPostsFromScraper?.length ? rawPostsFromScraper : (raw.latestPosts || []);
-    const posts = normalizePosts(postSource);
+    const freshSource = rawPostsFromScraper?.length ? rawPostsFromScraper : (raw.latestPosts || []);
+    const freshPosts  = normalizePosts(freshSource);
+
+    // Load existing posts and merge — never lose historical data
+    const { data: current } = await supabase
+      .from('instagram_profiles').select('posts').eq('user_id', userId).maybeSingle();
+    const posts = mergePosts(current?.posts || [], freshPosts);
+
     const { avgViews, avgEng } = computePostStats(posts);
 
     const row = {
@@ -240,19 +264,20 @@ router.delete('/disconnect', async (req, res) => {
 
 export default router;
 
-// ── Daily auto-refresh — called by cron in server/index.js ────
-// Runs all profiles IN PARALLEL (not sequentially) so the total wall time
-// stays under Vercel's function timeout regardless of how many students
-// are connected — a sequential loop would multiply each profile's scrape
-// time and blow past the limit once there are more than 1-2 profiles.
+// ── Daily auto-refresh — called by cron ──────────────────────────
+// Profile-only (1 actor run per student). Uses latestPosts (~12 posts)
+// from the profile scraper to detect new posts and merge into history.
 async function refreshOneProfile(user_id, username) {
-  const [raw, rawPosts] = await Promise.all([
-    scrapeInstagramProfile(username),
-    scrapeInstagramPosts(username),
-  ]);
+  const raw = await scrapeInstagramProfile(username);
   const now = new Date().toISOString();
-  const postSource = rawPosts?.length ? rawPosts : (raw.latestPosts || []);
-  const posts = normalizePosts(postSource);
+
+  const freshPosts = normalizePosts(raw.latestPosts || []);
+
+  // Merge with existing — keeps full post history, only adds new entries
+  const { data: current } = await supabase
+    .from('instagram_profiles').select('posts').eq('user_id', user_id).maybeSingle();
+  const posts = mergePosts(current?.posts || [], freshPosts);
+
   const { avgViews, avgEng } = computePostStats(posts);
 
   const row = {

@@ -22,6 +22,7 @@ const SOURCE_OPTIONS = [
 const CALL_STATUS_OPTIONS = [
   { value: 'פולואפ',     color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.3)'  },
   { value: 'נסגר',       color: '#22c55e', bg: 'rgba(34,197,94,0.15)',   border: 'rgba(34,197,94,0.3)'   },
+  { value: 'לא נסגר',    color: '#f97316', bg: 'rgba(249,115,22,0.15)',  border: 'rgba(249,115,22,0.3)'  },
   { value: 'אין התאמה',  color: '#94a3b8', bg: 'rgba(148,163,184,0.12)', border: 'rgba(148,163,184,0.25)' },
   { value: 'לא הגיע',    color: '#ef4444', bg: 'rgba(239,68,68,0.15)',   border: 'rgba(239,68,68,0.3)'   },
 ];
@@ -590,9 +591,13 @@ export default function Pipeline() {
   const noFitCount    = leads.filter(l => l.call_status === 'אין התאמה').length;
   const total         = leads.length;
 
-  // Only leads that had any call (matching or sales) count toward close rate
-  const leadsWithCall    = leads.filter(l => l.matching_booked || l.sales_booked);
-  const closePct         = leadsWithCall.length > 0 ? Math.round(closedCount / leadsWithCall.length * 100) : 0;
+  // Close rate denominator: only leads that actually reached a sales call.
+  // Booking a call isn't enough — they need to have shown up (sales_scheduled)
+  // or been explicitly marked as no-show / closed / follow-up.
+  // "אין התאמה" = successful filter, not a failed close — excluded.
+  const CALL_HAPPENED = ['לא הגיע', 'נסגר', 'לא נסגר', 'פולואפ'];
+  const leadsWithCall  = leads.filter(l => l.sales_scheduled || CALL_HAPPENED.includes(l.call_status));
+  const closePct       = leadsWithCall.length > 0 ? Math.round(closedCount / leadsWithCall.length * 100) : 0;
 
   // Show-up rate: showed up / any lead with any call booked (matching OR sales)
   const leadsWithSales   = leadsWithCall; // same denominator — any call booked
@@ -922,9 +927,10 @@ export default function Pipeline() {
             <div className="flex gap-1.5 flex-wrap">
               {[
                 { v: 'all',       l: 'הכל',          color: 'rgba(255,255,255,0.6)' },
-                { v: 'נסגר',      l: '✅ נסגר',       color: '#22c55e' },
-                { v: 'פולואפ',    l: '🔄 פולואפ',     color: '#f59e0b' },
-                { v: 'לא הגיע',   l: '❌ לא הגיע',    color: '#ef4444' },
+                { v: 'נסגר',      l: '✅ נסגר',        color: '#22c55e' },
+                { v: 'לא נסגר',   l: '🚷 לא נסגר',    color: '#f97316' },
+                { v: 'פולואפ',    l: '🔄 פולואפ',      color: '#f59e0b' },
+                { v: 'לא הגיע',   l: '❌ לא הגיע',     color: '#ef4444' },
                 { v: 'אין התאמה', l: '🚫 אין התאמה',  color: '#94a3b8' },
               ].map(f => {
                 const active = filters.status === f.v;
