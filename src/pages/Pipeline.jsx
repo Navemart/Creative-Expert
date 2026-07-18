@@ -595,8 +595,9 @@ export default function Pipeline() {
   // Booking a call isn't enough — they need to have shown up (sales_scheduled)
   // or been explicitly marked as no-show / closed / follow-up.
   // "אין התאמה" = successful filter, not a failed close — excluded.
-  const CALL_HAPPENED = ['לא הגיע', 'נסגר', 'לא נסגר', 'פולואפ'];
-  const leadsWithCall  = leads.filter(l => l.sales_scheduled || CALL_HAPPENED.includes(l.call_status));
+  // Only leads who actually showed up (sales_scheduled=true) count toward close rate.
+  // "לא הגיע" = no-show, excluded. "אין התאמה" = filtered out, excluded.
+  const leadsWithCall  = leads.filter(l => l.sales_scheduled);
   const closePct       = leadsWithCall.length > 0 ? Math.round(closedCount / leadsWithCall.length * 100) : 0;
 
   // Show-up rate: showed up / any lead with any call booked (matching OR sales)
