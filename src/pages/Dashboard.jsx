@@ -1225,6 +1225,7 @@ export default function Dashboard() {
 
     setWinForm({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '', week_date: new Date().toISOString().slice(0,10), _datePicker: false });
     setModal(null);
+    setWinStep(1);
     fetchAll();
   }
 
@@ -2265,7 +2266,7 @@ export default function Dashboard() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => { submitWin(); setWinStep(1); }}
+                    onClick={() => { submitWin(); }}
                     disabled={!winForm.focus_next_week.trim()}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
                     style={{ background: accent, color: '#1e3a8a' }}
