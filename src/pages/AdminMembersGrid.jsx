@@ -461,22 +461,21 @@ export default function AdminMembersGrid() {
 
         {/* ── KPI tiles ───────────────────────────────────── */}
         {students.length > 0 && (() => {
-          const active       = students.filter(s => (s.member_status || 'active') === 'active');
-          const withPaid     = students.filter(s => s.total_paid != null);
-          const totalRevenue = withPaid.reduce((s, x) => s + num(x.total_paid || 0), 0);
-          const avgLTV       = withPaid.length ? Math.round(totalRevenue / withPaid.length) : null;
-          const allDeals     = students.flatMap(s => {
-            const d30 = new Date(); d30.setMonth(d30.getMonth() - 1);
-            return (s.deals || []).filter(d => d.created_at && new Date(d.created_at) >= d30);
-          });
-          const newDealsTotal = allDeals.reduce((s, d) => s + num(d.total_amount), 0);
-          const topStudent   = withPaid.length ? [...withPaid].sort((a, b) => (b.total_paid||0) - (a.total_paid||0))[0] : null;
+          const allDealsEver = students.flatMap(s => s.deals || []);
+          const totalRevenue = allDealsEver.reduce((s, d) => s + num(d.total_amount), 0);
+          const studentsWithDeals = students.filter(s => (s.deals || []).length > 0);
+          const avgLTV       = studentsWithDeals.length ? Math.round(totalRevenue / studentsWithDeals.length) : null;
+          const d30          = new Date(); d30.setMonth(d30.getMonth() - 1);
+          const recentDeals  = allDealsEver.filter(d => d.created_at && new Date(d.created_at) >= d30);
+          const newDealsTotal = recentDeals.reduce((s, d) => s + num(d.total_amount), 0);
+          const perStudent   = students.map(s => ({ name: s.name, total: (s.deals||[]).reduce((a,d) => a + num(d.total_amount), 0) }));
+          const topStudent   = perStudent.length ? perStudent.sort((a,b) => b.total - a.total)[0] : null;
 
           const KPIS = [
-            { label: 'הכנסות מהתוכנית', value: totalRevenue > 0 ? `₪${totalRevenue.toLocaleString('he-IL')}` : '—', color: '#F5C118', sub: `${withPaid.length} תלמידים` },
-            { label: 'ממוצע LTV',        value: avgLTV ? `₪${avgLTV.toLocaleString('he-IL')}` : '—',               color: '#4fc38a', sub: 'שווי לקוח ממוצע' },
-            { label: 'עסקאות חדשות — 30י׳', value: newDealsTotal > 0 ? `₪${newDealsTotal.toLocaleString('he-IL')}` : '—', color: '#a78bfa', sub: `${allDeals.length} עסקאות` },
-            { label: 'הכי רווחי',         value: topStudent ? `₪${(topStudent.total_paid||0).toLocaleString('he-IL')}` : '—', color: '#38bdf8', sub: topStudent?.name || '' },
+            { label: 'סה״כ עסקאות — כל הזמנים', value: totalRevenue > 0 ? `₪${totalRevenue.toLocaleString('he-IL')}` : '—', color: '#F5C118', sub: `${allDealsEver.length} עסקאות` },
+            { label: 'ממוצע LTV',                 value: avgLTV ? `₪${avgLTV.toLocaleString('he-IL')}` : '—',               color: '#4fc38a', sub: 'שווי לקוח ממוצע' },
+            { label: 'עסקאות חדשות — 30י׳',       value: newDealsTotal > 0 ? `₪${newDealsTotal.toLocaleString('he-IL')}` : '—', color: '#a78bfa', sub: `${recentDeals.length} עסקאות` },
+            { label: 'הכי רווחי',                  value: topStudent?.total > 0 ? `₪${topStudent.total.toLocaleString('he-IL')}` : '—', color: '#38bdf8', sub: topStudent?.name || '' },
           ];
           return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
