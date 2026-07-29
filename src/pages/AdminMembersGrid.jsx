@@ -459,6 +459,38 @@ export default function AdminMembersGrid() {
     <div dir="rtl" style={{  padding: '28px 24px' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
 
+        {/* ── KPI tiles ───────────────────────────────────── */}
+        {students.length > 0 && (() => {
+          const active       = students.filter(s => (s.member_status || 'active') === 'active');
+          const withPaid     = students.filter(s => s.total_paid != null);
+          const totalRevenue = withPaid.reduce((s, x) => s + num(x.total_paid || 0), 0);
+          const avgLTV       = withPaid.length ? Math.round(totalRevenue / withPaid.length) : null;
+          const allDeals     = students.flatMap(s => {
+            const d30 = new Date(); d30.setMonth(d30.getMonth() - 1);
+            return (s.deals || []).filter(d => d.created_at && new Date(d.created_at) >= d30);
+          });
+          const newDealsTotal = allDeals.reduce((s, d) => s + num(d.total_amount), 0);
+          const topStudent   = withPaid.length ? [...withPaid].sort((a, b) => (b.total_paid||0) - (a.total_paid||0))[0] : null;
+
+          const KPIS = [
+            { label: 'הכנסות מהתוכנית', value: totalRevenue > 0 ? `₪${totalRevenue.toLocaleString('he-IL')}` : '—', color: '#F5C118', sub: `${withPaid.length} תלמידים` },
+            { label: 'ממוצע LTV',        value: avgLTV ? `₪${avgLTV.toLocaleString('he-IL')}` : '—',               color: '#4fc38a', sub: 'שווי לקוח ממוצע' },
+            { label: 'עסקאות חדשות — 30י׳', value: newDealsTotal > 0 ? `₪${newDealsTotal.toLocaleString('he-IL')}` : '—', color: '#a78bfa', sub: `${allDeals.length} עסקאות` },
+            { label: 'הכי רווחי',         value: topStudent ? `₪${(topStudent.total_paid||0).toLocaleString('he-IL')}` : '—', color: '#38bdf8', sub: topStudent?.name || '' },
+          ];
+          return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+              {KPIS.map(({ label, value, color, sub }) => (
+                <div key={label} style={{ borderRadius: 14, padding: '16px 18px', background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
+                  <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.28)', margin: '0 0 8px' }}>{label}</p>
+                  <p style={{ fontSize: 22, fontWeight: 900, color, margin: 0, lineHeight: 1 }}>{value}</p>
+                  {sub && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', margin: '6px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</p>}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
         {/* ── Slack unposted alert ────────────────────────── */}
         {(unposted.wins > 0 || unposted.deals > 0) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 10, marginBottom: 16, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
