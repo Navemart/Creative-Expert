@@ -132,54 +132,27 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
 
   return (
     <div
-      className="rounded-2xl p-6"
+      className="rounded-2xl px-6 py-4"
       style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
     >
       {/* Header */}
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          {sectionLabel ?? <span className="text-sm font-semibold text-white/70">ההתקדמות שלך</span>}
-          {monthsCount >= 2 && (
-            <div className="text-[11px] text-white/30 mt-0.5">
-              דרגה לפי ממוצע 2 חודשים אחרונים · ₪{Math.round(rankAmount).toLocaleString()}
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col items-center gap-1 flex-none">
-          <span
-            className="rounded-md px-3 py-1 text-xs whitespace-nowrap"
-            style={{ border: `1.5px solid ${rank.color}`, color: rank.color, fontWeight: 700 }}
-          >
-            {rank.label} · {rank.min === 0 ? '₪0' : `₪${rank.min / 1000}K`}
-          </span>
-          <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            הדרגה הנוכחית שלך
-          </span>
-        </div>
+      <div className="flex items-center gap-2 mb-1.5">
+        <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>ההתקדמות שלך בדרגות</p>
+        <RankInfoButton />
       </div>
 
-      {/* Pin labels */}
-      <div className="relative h-12 mb-1">
+      {/* Pin labels — amount only, month in tooltip on dot hover */}
+      <div className="relative h-5 mb-1">
         {current > 0 && (
-          <div
-            className="absolute bottom-0 flex flex-col items-center"
-            style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}
-          >
+          <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}>
             <span className="text-xs font-bold text-white leading-none">₪{(current / 1000).toFixed(1)}K</span>
-            <span className="text-[11px] text-white/45 leading-none mt-0.5">{currentLabel}</span>
-            <div className="mt-1 h-3 w-px bg-white/50" />
+            <div className="h-2 w-px bg-white/50 mt-0.5" />
           </div>
         )}
         {best > 0 && best !== current && (
-          <div
-            className="absolute bottom-0 flex flex-col items-center"
-            style={{ left: `${bestPct}%`, transform: 'translateX(-50%)' }}
-          >
-            <span className="text-xs font-bold leading-none" style={{ color: '#F5C118' }}>
-              ₪{(best / 1000).toFixed(1)}K
-            </span>
-            <span className="text-[11px] leading-none mt-0.5" style={{ color: '#F5C118', opacity: 0.7 }}>{bestLabel}</span>
-            <div className="mt-1 h-3 w-px" style={{ background: '#F5C118', opacity: 0.7 }} />
+          <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${bestPct}%`, transform: 'translateX(-50%)' }}>
+            <span className="text-xs font-bold leading-none" style={{ color: '#F5C118' }}>₪{(best / 1000).toFixed(1)}K</span>
+            <div className="h-2 w-px mt-0.5" style={{ background: '#F5C118', opacity: 0.7 }} />
           </div>
         )}
       </div>
@@ -194,29 +167,24 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
 
         {/* Best dot — מאחורה */}
         {best > 0 && best !== current && (
-          <div
-            className="absolute top-1/2 h-5 w-5 rounded-full border-2 shadow-lg"
-            style={{
-              left: `${bestPct}%`,
-              transform: 'translate(-50%, -50%)',
-              background: '#F5C118',
-              borderColor: '#F5C118',
-              zIndex: 1,
-            }}
-          />
+          <div className="absolute top-1/2 group" style={{ left: `${bestPct}%`, transform: 'translate(-50%, -50%)', zIndex: 1 }}>
+            <div className="h-5 w-5 rounded-full border-2 shadow-lg cursor-default" style={{ background: '#F5C118', borderColor: '#F5C118' }} />
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+              style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }}>
+              {bestLabel}
+            </div>
+          </div>
         )}
 
         {/* Now dot — מעל */}
         {current > 0 && (
-          <div
-            className="absolute top-1/2 h-6 w-6 rounded-full border-2 border-white shadow-lg"
-            style={{
-              left: `${currentPct}%`,
-              transform: 'translate(-50%, -50%)',
-              background: currentRankDisplay.color,
-              zIndex: 2,
-            }}
-          />
+          <div className="absolute top-1/2 group" style={{ left: `${currentPct}%`, transform: 'translate(-50%, -50%)', zIndex: 2 }}>
+            <div className="h-6 w-6 rounded-full border-2 border-white shadow-lg cursor-default" style={{ background: currentRankDisplay.color }} />
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity"
+              style={{ background: '#1c1c2e', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }}>
+              {currentLabel}
+            </div>
+          </div>
         )}
       </div>
 
@@ -532,6 +500,66 @@ function useCloseOnOutsideClick() {
     return () => document.removeEventListener('mousedown', handle);
   }, [open]);
   return [open, setOpen, ref];
+}
+
+function RankInfoButton() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        title="לחץ למידע על הדרגות"
+        className="group"
+        style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid #F5C118', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
+        onMouseEnter={e => { e.currentTarget.style.background = '#F5C118'; e.currentTarget.querySelector('span').style.color = '#13152A'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.querySelector('span').style.color = '#F5C118'; }}
+      >
+        <span style={{ fontSize: 9, fontWeight: 800, color: '#F5C118', lineHeight: 1 }}>?</span>
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }} onClick={() => setOpen(false)}>
+          <div dir="rtl" className="rounded-2xl p-6 w-full max-w-md" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }} onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: 'white', margin: 0 }}>איך עובדות הדרגות?</h3>
+              <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
+            </div>
+
+            {/* הסבר */}
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, marginBottom: 20 }}>
+              <p style={{ marginBottom: 10 }}>
+                הדרגה שלך נקבעת לפי <strong style={{ color: 'rgba(255,255,255,0.85)' }}>ממוצע ההכנסה החודשית שלך בשני החודשים האחרונים</strong>. זה אומר שדרגה אחת חודש טוב לא מספיקה — צריך עקביות.
+              </p>
+              <p style={{ marginBottom: 10 }}>
+                ברגע שהממוצע שלך חוצה סף דרגה — הדרגה עולה אוטומטית. הדרגה <strong style={{ color: 'rgba(255,255,255,0.85)' }}>לא יורדת</strong> — היא נשמרת על השיא ההיסטורי שלך.
+              </p>
+              <p>
+                כדי לדווח על הכנסה ולעלות בדרגות — מלא את <strong style={{ color: 'rgba(255,255,255,0.85)' }}>הדיווח החודשי</strong> בתחילת כל חודש.
+              </p>
+            </div>
+
+            {/* טבלת דרגות */}
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>טבלת הדרגות</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {[
+                { label: 'TRAINEE',        range: '₪0 – ₪5K',    color: '#ef4444' },
+                { label: 'CREW',           range: '₪5K – ₪10K',  color: '#f97316' },
+                { label: 'SECOND OFFICER', range: '₪10K – ₪15K', color: '#eab308' },
+                { label: 'CO-PILOT',       range: '₪15K – ₪20K', color: '#22c55e' },
+                { label: 'CAPTAIN',        range: '₪20K – ₪30K', color: '#06b6d4' },
+                { label: 'EXPERT',         range: '₪30K+',        color: '#a855f7' },
+              ].map(({ label, range, color }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px solid ${color}35` }}>
+                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{range}</span>
+                  <span style={{ fontSize: 12, fontWeight: 800, color, letterSpacing: '0.04em' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 function SubmitBtn({ onClick, children }) {
@@ -859,7 +887,7 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData]   = useState([]);
   const [wins, setWins]                 = useState([]);
   const [deals, setDeals]               = useState([]);
-  const [chartRange, setChartRange]     = useState('6M');
+  const [chartRange, setChartRange]     = useState('all');
   const [editingSubmission, setEditingSubmission] = useState(null);
   const [editSelectedId,    setEditSelectedId]    = useState('');
 
@@ -1113,7 +1141,7 @@ export default function Dashboard() {
   const storedRankLabel = currentSubmission?.current_rank || SEGMENTS[0].label;
   const storedRank = SEGMENTS.find(s => s.label === storedRankLabel) || SEGMENTS[0];
 
-  const rangeMonths = { '3M': 3, '6M': 6, '1Y': 12 };
+  const rangeMonths = { '1M': 1, '3M': 3, '6M': 6 };
 
   const allChartData = [...monthlyData]
     .sort((a, b) => new Date(a.month) - new Date(b.month))
@@ -1126,7 +1154,7 @@ export default function Dashboard() {
     });
 
   // RTL: newest month on the left → reverse so recharts index-0 = newest (leftmost)
-  const chartData = allChartData.slice(-rangeMonths[chartRange]).reverse();
+  const chartData = (chartRange === 'all' ? allChartData : allChartData.slice(-rangeMonths[chartRange])).reverse();
 
   // ── Stat cards ───────────────────────────────────────────────
   const activeClients     = currentSubmission?.active_clients ?? null;
@@ -1545,7 +1573,15 @@ export default function Dashboard() {
 
       {/* ── 1. Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-2xl sm:text-4xl font-bold text-white">{getGreeting()}, {firstName}.</h1>
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-2xl sm:text-4xl font-bold text-white">{getGreeting()}, {firstName}.</h1>
+          {storedRank && (
+            <span className="rounded-md px-2.5 py-1 text-xs font-bold whitespace-nowrap"
+              style={{ border: `1.5px solid ${storedRank.color}`, color: storedRank.color, background: storedRank.color + '18' }}>
+              {storedRank.label}
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2">
           <SubmitDropdown
             onDeal={() => setModal('deal')}
@@ -1640,21 +1676,26 @@ export default function Dashboard() {
 
         {/* שמאל: גרף הכנסות */}
         <div className="flex-1 rounded-2xl p-6" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-start justify-between mb-5">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>הכנסה · {latestMonthLabel}</div>
-              <div className="mt-1 flex items-baseline gap-3 flex-wrap">
-                <span className="text-2xl sm:text-4xl font-bold text-white">₪{latestAmount.toLocaleString()}</span>
-                {prevMonthLabel && <span className="text-xs text-white/35">לעומת {prevMonthLabel} · ₪{prevAmount.toLocaleString()}</span>}
+          {(() => {
+            const rangeTotal = chartData.reduce((s, d) => s + (d.revenue || 0), 0);
+            const rangeLabel = chartRange === 'all' ? 'כל הזמן' : chartRange === '1M' ? 'חודש אחרון' : chartRange === '3M' ? '3 חודשים' : '6 חודשים';
+            return (
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>סה״כ הכנסות · {rangeLabel}</div>
+                  <div className="mt-1 flex items-baseline gap-3 flex-wrap">
+                    <span className="text-2xl sm:text-4xl font-bold text-white">₪{rangeTotal.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="flex gap-1 rounded-lg p-1 flex-none" style={{ background: 'rgb(var(--bg-elevated))' }}>
+                  {[{ key: 'all', label: 'הכל' }, { key: '1M', label: 'חודש' }, { key: '3M', label: '3M' }, { key: '6M', label: '6M' }].map(({ key, label }) => (
+                    <button key={key} type="button" onClick={() => setChartRange(key)} className="rounded-md px-3 py-1 text-xs font-semibold transition"
+                      style={{ background: chartRange === key ? 'rgba(255,255,255,0.15)' : 'transparent', color: chartRange === key ? 'white' : 'rgba(255,255,255,0.35)' }}>{label}</button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="flex gap-1 rounded-lg p-1 flex-none" style={{ background: 'rgb(var(--bg-elevated))' }}>
-              {[{ key: '3M', label: '3M' }, { key: '6M', label: '6M' }, { key: '1Y', label: 'שנה' }].map(({ key, label }) => (
-                <button key={key} type="button" onClick={() => setChartRange(key)} className="rounded-md px-3 py-1 text-xs font-semibold transition"
-                  style={{ background: chartRange === key ? 'rgba(255,255,255,0.15)' : 'transparent', color: chartRange === key ? 'white' : 'rgba(255,255,255,0.35)' }}>{label}</button>
-              ))}
-            </div>
-          </div>
+            );
+          })()}
           {chartData.length > 0 ? (
             <div dir="ltr">
               <ResponsiveContainer width="100%" height={200}>
@@ -1795,10 +1836,47 @@ export default function Dashboard() {
         );
       })()}
 
-      {/* ── 6. צ'קליסט יישום (ימין) | פגישות קרובות (שמאל) ── */}
+      {/* ── 6. פגישות קרובות (ימין) | מפת דרכים (שמאל) ── */}
       <div className="flex gap-5" style={{ alignItems: 'stretch' }}>
 
-        {/* ימין: מפת דרכים מינימלית */}
+        {/* ימין: פגישות קרובות */}
+        <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
+            <button onClick={() => navigate('/zoom')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              כל הפגישות <ChevronLeft size={13} />
+            </button>
+          </div>
+          <div className="flex flex-col gap-2 flex-1">
+            {upcomingMeetings === null && <div className="flex-1 flex items-center justify-center"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
+            {upcomingMeetings?.length === 0 && <div className="flex-1 flex items-center justify-center"><p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p></div>}
+            {upcomingMeetings?.map(m => {
+              const dotColor = m.topic?.includes('מעבדת') ? '#67e8f9' : '#F5C118';
+              let dateLine = '', timeLine = '';
+              if (m.start_time) {
+                const start = new Date(m.start_time);
+                dateLine = start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' });
+                timeLine = start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) + (m.duration ? ` · ${m.duration} דק׳` : '');
+              } else { timeLine = m.duration ? `${m.duration} דק׳` : ''; }
+              return (
+                <div key={m.id} className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}><Video size={15} style={{ color: 'rgba(255,255,255,0.4)' }} /></div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: dotColor }} />
+                      <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{m.topic}</p>
+                    </div>
+                    {dateLine && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)', paddingRight: '14px' }}>{dateLine}</p>}
+                    {timeLine && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)', paddingRight: '14px' }}>{timeLine}</p>}
+                  </div>
+                  {m.join_url && <a href={m.join_url} target="_blank" rel="noopener noreferrer" className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.1)' }}>הצטרף</a>}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* שמאל: מפת דרכים מינימלית */}
         {(() => {
           // בנה רשימה שטוחה מסודרת של כל המשימות
           const allOrderedTasks = rdPhases.flatMap(phase =>
@@ -1880,42 +1958,6 @@ export default function Dashboard() {
           );
         })()}
 
-        {/* שמאל: פגישות קרובות */}
-        <div className="flex-1 rounded-2xl p-5 flex flex-col gap-4" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
-            <button onClick={() => navigate('/zoom')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              כל הפגישות <ChevronLeft size={13} />
-            </button>
-          </div>
-          <div className="flex flex-col gap-2 flex-1">
-            {upcomingMeetings === null && <div className="flex-1 flex items-center justify-center"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
-            {upcomingMeetings?.length === 0 && <div className="flex-1 flex items-center justify-center"><p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p></div>}
-            {upcomingMeetings?.map(m => {
-              const dotColor = m.topic?.includes('מעבדת') ? '#67e8f9' : '#F5C118';
-              let dateLine = '', timeLine = '';
-              if (m.start_time) {
-                const start = new Date(m.start_time);
-                dateLine = start.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Asia/Jerusalem' });
-                timeLine = start.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' }) + (m.duration ? ` · ${m.duration} דק׳` : '');
-              } else { timeLine = m.duration ? `${m.duration} דק׳` : ''; }
-              return (
-                <div key={m.id} className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.05)' }}><Video size={15} style={{ color: 'rgba(255,255,255,0.4)' }} /></div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: dotColor }} />
-                      <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{m.topic}</p>
-                    </div>
-                    {dateLine && <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)', paddingRight: '14px' }}>{dateLine}</p>}
-                    {timeLine && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.28)', paddingRight: '14px' }}>{timeLine}</p>}
-                  </div>
-                  {m.join_url && <a href={m.join_url} target="_blank" rel="noopener noreferrer" className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.1)' }}>הצטרף</a>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
 
       </div>
 
