@@ -259,7 +259,7 @@ router.get('/checkins', async (req, res) => {
 
   // Determine current phase label
   function phaseLabel(enrolledAt) {
-    if (!enrolledAt) return null;
+    if (!enrolledAt) return 'שוטף';
     const days = (nowMs - new Date(enrolledAt).getTime()) / DAY;
     if (days <= 7)  return 'שבוע 1';
     if (days <= 14) return 'שבוע 2';
