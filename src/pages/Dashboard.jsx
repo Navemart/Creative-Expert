@@ -959,75 +959,77 @@ export default function Dashboard() {
   }, [userId]);
 
   async function fetchAll() {
-    const [
-      { data: md },
-      { data: wd },
-      { data: dd },
-      { data: pData },
-      { data: wkData },
-      { data: tData },
-      { data: cData },
-    ] = await Promise.all([
-      supabase.from('monthly_submissions').select('*').eq('user_id', userId).order('month'),
-      supabase.from('sunday_wins').select('*').eq('user_id', userId).order('week_date', { ascending: false }),
-      supabase.from('deals').select('total_amount, received_amount, created_at').eq('user_id', userId),
-      supabase.from('roadmap_phases').select('id, title, sort_order').order('sort_order'),
-      supabase.from('roadmap_weeks').select('id, phase_id, title, sort_order').order('sort_order'),
-      supabase.from('roadmap_tasks').select('id, week_id, title, link, sort_order').order('sort_order'),
-      supabase.from('roadmap_completions').select('task_id').eq('user_id', userId),
-    ]);
-    const submissions = md || [];
-    setMonthlyData(submissions);
-    setWins(wd || []);
-    setDeals(dd || []);
+    // ── User data ─────────────────────────────────────────────────
+    try {
+      const [
+        { data: md },
+        { data: wd },
+        { data: dd },
+      ] = await Promise.all([
+        supabase.from('monthly_submissions').select('*').eq('user_id', userId).order('month'),
+        supabase.from('sunday_wins').select('*').eq('user_id', userId).order('week_date', { ascending: false }),
+        supabase.from('deals').select('total_amount, received_amount, created_at').eq('user_id', userId),
+      ]);
+      const submissions = md || [];
+      setMonthlyData(submissions);
+      setWins(wd || []);
+      setDeals(dd || []);
 
-    // Fetch admin rank override separately so it can't affect roadmap loading
-    supabase.from('student_profiles').select('admin_rank').eq('user_id', userId).maybeSingle()
-      .then(({ data }) => { if (data?.admin_rank) setAdminRankOverride(data.admin_rank); })
-      .catch(() => {});
+      // Fetch admin rank override
+      supabase.from('student_profiles').select('admin_rank').eq('user_id', userId).maybeSingle()
+        .then(({ data }) => { if (data?.admin_rank) setAdminRankOverride(data.admin_rank); })
+        .catch(() => {});
 
-    // ── Retroactive rank fix for imported users ──────────────────
-    // If the best historical rank is higher than what's stored, fix it silently.
-    if (submissions.length >= 2) {
-      const bestRank   = calcBestHistoricalRank(submissions);
-      const sortedSubs = [...submissions].sort((a, b) => new Date(a.month) - new Date(b.month));
-      const latestSub  = sortedSubs[sortedSubs.length - 1];
-      const storedRankObj = SEGMENTS.find(s => s.label === latestSub.current_rank);
-      if (bestRank && (!storedRankObj || bestRank.min > (storedRankObj?.min ?? 0))) {
-        // Update the most recent submission's rank in the DB
-        supabase
-          .from('monthly_submissions')
-          .update({ current_rank: bestRank.label })
-          .eq('id', latestSub.id)
-          .then(() => {
-            setMonthlyData(prev =>
-              prev.map(m => m.id === latestSub.id ? { ...m, current_rank: bestRank.label } : m)
-            );
-          });
+      // Retroactive rank fix
+      if (submissions.length >= 2) {
+        const bestRank   = calcBestHistoricalRank(submissions);
+        const sortedSubs = [...submissions].sort((a, b) => new Date(a.month) - new Date(b.month));
+        const latestSub  = sortedSubs[sortedSubs.length - 1];
+        const storedRankObj = SEGMENTS.find(s => s.label === latestSub.current_rank);
+        if (bestRank && (!storedRankObj || bestRank.min > (storedRankObj?.min ?? 0))) {
+          supabase.from('monthly_submissions').update({ current_rank: bestRank.label }).eq('id', latestSub.id)
+            .then(() => { setMonthlyData(prev => prev.map(m => m.id === latestSub.id ? { ...m, current_rank: bestRank.label } : m)); });
+        }
       }
-    }
+    } catch (e) { console.error('[fetchAll/user]', e); }
 
-    // Compute next uncompleted roadmap task (phase → week → task order)
-    const completedIds = new Set((cData || []).map(c => c.task_id));
-    const phases = (pData  || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-    const weeks  = (wkData || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-    const tasks  = (tData  || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    // ── Roadmap (separate so user-data errors can't block it) ────
+    try {
+      const [
+        { data: pData },
+        { data: wkData },
+        { data: tData },
+        { data: cData },
+      ] = await Promise.all([
+        supabase.from('roadmap_phases').select('id, title, sort_order').order('sort_order'),
+        supabase.from('roadmap_weeks').select('id, phase_id, title, sort_order').order('sort_order'),
+        supabase.from('roadmap_tasks').select('id, week_id, title, link, sort_order').order('sort_order'),
+        supabase.from('roadmap_completions').select('task_id').eq('user_id', userId),
+      ]);
+      const completedIds = new Set((cData || []).map(c => c.task_id));
+      const phases = (pData  || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      const weeks  = (wkData || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+      const tasks  = (tData  || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 
-    let found = null;
-    outer: for (const phase of phases) {
-      const phaseWeeks = weeks.filter(w => w.phase_id === phase.id);
-      for (const week of phaseWeeks) {
-        const weekTasks = tasks.filter(t => t.week_id === week.id);
-        for (const task of weekTasks) {
-          if (!completedIds.has(task.id)) {
-            found = { ...task, weekTitle: week.title, phaseTitle: phase.title };
-            break outer;
+      let found = null;
+      outer: for (const phase of phases) {
+        const phaseWeeks = weeks.filter(w => w.phase_id === phase.id);
+        for (const week of phaseWeeks) {
+          const weekTasks = tasks.filter(t => t.week_id === week.id);
+          for (const task of weekTasks) {
+            if (!completedIds.has(task.id)) {
+              found = { ...task, weekTitle: week.title, phaseTitle: phase.title };
+              break outer;
+            }
           }
         }
       }
+      setNextTask(found);
+      setRoadmapAllData({ phases, weeks, tasks, completedIds });
+    } catch (e) {
+      console.error('[fetchAll/roadmap]', e);
+      setRoadmapAllData({ phases: [], weeks: [], tasks: [], completedIds: new Set() });
     }
-    setNextTask(found);
-    setRoadmapAllData({ phases, weeks, tasks, completedIds });
 
     // Fetch diagnosis status
     const { data: dxData } = await supabase
