@@ -437,8 +437,10 @@ export default function AdminMemberDetail() {
   const slackPhotos = state?.slackPhotos || {};
   const [tab, setTab]           = useState('overview');
   const [memberStatus, setMemberStatus] = useState(student?.member_status || 'active');
-  const [cadence, setCadence]   = useState(student?.checkin_cadence_days ?? 14);
-  const [savingCadence, setSavingCadence] = useState(false);
+  const [cadence, setCadence]         = useState(student?.checkin_cadence_days ?? 14);
+  const [enrolledAt, setEnrolledAt]   = useState(student?.enrolled_at ? student.enrolled_at.slice(0, 10) : '');
+  const [savingCadence, setSavingCadence]     = useState(false);
+  const [savingEnrolled, setSavingEnrolled]   = useState(false);
   const [saving, setSaving]     = useState(false);
 
   if (!student) {
@@ -454,6 +456,20 @@ export default function AdminMemberDetail() {
   const photoSrc  = student.email ? (slackPhotos[student.email.toLowerCase()] || student.image_url) : student.image_url;
   const sm        = STATUS_META[memberStatus] || STATUS_META.active;
   const rankColor = RANK_COLORS[student.latest_rank] || '#9ca3af';
+
+  async function saveEnrolledAt(date) {
+    setSavingEnrolled(true);
+    try {
+      await fetch(`/api/admin/students/${student.id}/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': ADMIN_ID || '' },
+        body: JSON.stringify({ enrolled_at: date }),
+      });
+      setEnrolledAt(date);
+    } finally {
+      setSavingEnrolled(false);
+    }
+  }
 
   async function saveCadence(days) {
     setSavingCadence(true);
@@ -519,8 +535,19 @@ export default function AdminMemberDetail() {
             )}
           </div>
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-            {student.email      && <span style={{ fontSize: 12, color: muted }}>{student.email}</span>}
-            {student.enrolled_at && <span style={{ fontSize: 12, color: muted }}>הצטרף {fmtDate(student.enrolled_at)}</span>}
+            {student.email && <span style={{ fontSize: 12, color: muted }}>{student.email}</span>}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: muted }}>
+              הצטרף
+              <input
+                type="date"
+                value={enrolledAt}
+                onChange={e => setEnrolledAt(e.target.value)}
+                onBlur={e => { if (e.target.value) saveEnrolledAt(e.target.value); }}
+                disabled={savingEnrolled}
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'white', fontSize: 12, padding: '2px 6px', cursor: 'pointer', colorScheme: 'dark' }}
+              />
+              {savingEnrolled && <span style={{ fontSize: 10, color: muted }}>שומר...</span>}
+            </span>
             {student.total_paid  && <span style={{ fontSize: 12, color: '#4fc38a', fontWeight: 700 }}>שילם {fmt(student.total_paid)}</span>}
             <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: muted }}>
               צ׳קאין כל
