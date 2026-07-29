@@ -178,6 +178,54 @@ router.delete('/deals/:id', async (req, res) => {
   res.json({ ok: true });
 });
 
+// Phase-based schedule:
+// Days  0-7  → 3 check-ins (every ~2.3 days)
+// Days  7-14 → 2 check-ins (every ~3.5 days)
+// Days 14-30 → 4 check-ins (every   4 days)
+// After 30   → every 7 days
+const CHECKIN_PHASES = [
+  { start: 0,  end: 7,  count: 3 },
+  { start: 7,  end: 14, count: 2 },
+  { start: 14, end: 30, count: 4 },
+];
+const POST_PHASE_CADENCE = 7; // days after day 30
+
+function calcNextDue(enrolledAt, allCheckins) {
+  const DAY = 86400000;
+  const nowMs = Date.now();
+
+  if (!enrolledAt) {
+    // No enrollment date — overdue
+    return null;
+  }
+
+  const enrollMs = new Date(enrolledAt).getTime();
+  const sorted   = [...allCheckins].sort((a, b) => new Date(a.checked_at) - new Date(b.checked_at));
+
+  for (const ph of CHECKIN_PHASES) {
+    const phStartMs = enrollMs + ph.start * DAY;
+    const phEndMs   = enrollMs + ph.end   * DAY;
+    if (nowMs < phStartMs) return phStartMs; // Phase hasn't started yet
+
+    const interval    = (ph.end - ph.start) / ph.count * DAY;
+    const phCheckins  = sorted.filter(c => {
+      const t = new Date(c.checked_at).getTime();
+      return t >= phStartMs && t < phEndMs;
+    });
+    const done = phCheckins.length;
+
+    if (done < ph.count) {
+      // Next slot in this phase
+      return phStartMs + (done + 1) * interval;
+    }
+    // Phase complete → continue to next
+  }
+
+  // Past all phases → weekly cadence from last check-in
+  const lastMs = sorted.length ? new Date(sorted[sorted.length - 1].checked_at).getTime() : null;
+  return lastMs ? lastMs + POST_PHASE_CADENCE * DAY : nowMs - DAY; // overdue if never checked in
+}
+
 // ── GET /api/admin/checkins ──────────────────────────────────
 router.get('/checkins', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
@@ -193,40 +241,65 @@ router.get('/checkins', async (req, res) => {
     fetch('https://api.clerk.com/v1/users?limit=200&order_by=-created_at', {
       headers: { Authorization: `Bearer ${clerkKey}` },
     }),
-    supabase.from('student_profiles').select('user_id, checkin_cadence_days, member_status'),
-    supabase.from('student_checkins').select('user_id, checked_at').order('checked_at', { ascending: false }),
+    supabase.from('student_profiles').select('user_id, checkin_cadence_days, member_status, enrolled_at'),
+    supabase.from('student_checkins').select('user_id, checked_at').order('checked_at', { ascending: true }),
   ]);
 
   if (!clerkRes.ok) return res.status(502).json({ error: 'Clerk API error' });
   const clerkUsers = await clerkRes.json();
-  const adminId = process.env.VITE_ADMIN_USER_ID;
+  const adminId    = process.env.VITE_ADMIN_USER_ID;
+  const nowMs      = Date.now();
+  const DAY        = 86400000;
 
-  // Last check-in per user
-  const lastCheckin = {};
+  // Group checkins by user
+  const checkinsByUser = {};
   for (const c of checkins || []) {
-    if (!lastCheckin[c.user_id]) lastCheckin[c.user_id] = c.checked_at;
+    (checkinsByUser[c.user_id] = checkinsByUser[c.user_id] || []).push(c);
   }
 
-  const now = Date.now();
+  // Determine current phase label
+  function phaseLabel(enrolledAt) {
+    if (!enrolledAt) return null;
+    const days = (nowMs - new Date(enrolledAt).getTime()) / DAY;
+    if (days <= 7)  return 'שבוע 1';
+    if (days <= 14) return 'שבוע 2';
+    if (days <= 30) return 'חודש ראשון';
+    return 'שוטף';
+  }
+
   const students = clerkUsers
     .filter(u => u.id !== adminId)
     .map(u => {
-      const email   = u.email_addresses?.[0]?.email_address || '';
-      const name    = [u.first_name, u.last_name].filter(Boolean).join(' ') || email || u.id;
-      const profile = (profiles || []).find(p => p.user_id === u.id);
-      const cadence = profile?.checkin_cadence_days ?? 14;
-      const status  = profile?.member_status || 'active';
-      const lastAt  = lastCheckin[u.id] || null;
-      const lastMs  = lastAt ? new Date(lastAt).getTime() : null;
-      const daysSince = lastMs ? Math.floor((now - lastMs) / 86400000) : null;
-      const nextDue   = lastMs ? lastMs + cadence * 86400000 : null;
+      const email      = u.email_addresses?.[0]?.email_address || '';
+      const name       = [u.first_name, u.last_name].filter(Boolean).join(' ') || email || u.id;
+      const profile    = (profiles || []).find(p => p.user_id === u.id);
+      const status     = profile?.member_status || 'active';
+      const enrolledAt = profile?.enrolled_at   || null;
+      const userCheckins = checkinsByUser[u.id] || [];
+      const lastAt     = userCheckins.length ? userCheckins[userCheckins.length - 1].checked_at : null;
+      const lastMs     = lastAt ? new Date(lastAt).getTime() : null;
+      const daysSince  = lastMs ? Math.floor((nowMs - lastMs) / DAY) : null;
+      const nextDueMs  = calcNextDue(enrolledAt, userCheckins);
 
+      // Column logic:
+      // DONE     = last check-in within 3 days (tight window for onboarding phase)
+      // UPCOMING = next due is in the future
+      // OVERDUE  = next due is in the past (or no check-in and enrolled)
       let column;
-      if (lastMs && (now - lastMs) < 7 * 86400000) column = 'done';
-      else if (nextDue && nextDue > now) column = 'upcoming';
-      else column = 'overdue';
+      const recentWindow = enrolledAt && (nowMs - new Date(enrolledAt).getTime()) < 30 * DAY ? 2 * DAY : 7 * DAY;
+      if (lastMs && (nowMs - lastMs) < recentWindow) column = 'done';
+      else if (nextDueMs && nextDueMs > nowMs)        column = 'upcoming';
+      else                                            column = 'overdue';
 
-      return { id: u.id, name, email, image_url: u.image_url || null, cadence, status, last_checkin: lastAt, days_since: daysSince, next_due: nextDue ? new Date(nextDue).toISOString() : null, column };
+      return {
+        id: u.id, name, email, image_url: u.image_url || null,
+        status, enrolled_at: enrolledAt,
+        last_checkin: lastAt, days_since: daysSince,
+        next_due: nextDueMs ? new Date(nextDueMs).toISOString() : null,
+        phase: phaseLabel(enrolledAt),
+        checkin_count: userCheckins.length,
+        column,
+      };
     })
     .filter(s => s.status === 'active');
 
