@@ -22,6 +22,7 @@ import {
   Zap,
   PanelLeftClose,
   PanelLeftOpen,
+  Activity,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -37,6 +38,7 @@ const NAV_ITEMS = [
 
 const ENGINE_ITEMS = [
   { to: '/roadmap',         label: 'מפת דרכים',    icon: MapIcon },
+  { to: '/diagnosis',       label: 'אבחון עסקי',   icon: Target },
   { to: '/content-library', label: 'ספריית תכנים', icon: Library },
 ];
 
@@ -59,6 +61,7 @@ const TOOLS_ITEMS = [
 
 const ADMIN_ITEMS = [
   { to: '/admin/members', label: 'תלמידים — רשת', icon: ShieldCheck },
+  { to: '/admin/events',  label: 'אירועי משתמשים', icon: Activity },
   {
     to: '/admin/students',
     label: 'פאנל ניהול',

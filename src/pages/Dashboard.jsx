@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
@@ -49,6 +50,7 @@ const FLYWHEEL_STAGES = [
 ];
 
 function getRank(amount) {
+  useTrackPage('דשבורד');
   return [...SEGMENTS].reverse().find(s => amount >= s.min) || SEGMENTS[0];
 }
 

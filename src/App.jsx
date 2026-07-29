@@ -20,6 +20,10 @@ import Transcriptions from './pages/Transcriptions.jsx';
 import ZoomRecordings from './pages/ZoomRecordings.jsx';
 import TaskManager from './pages/TaskManager.jsx';
 import QuarterlyScorecard from './pages/QuarterlyScorecard.jsx';
+import ExpertiseEngineAudit from './pages/ExpertiseEngineAudit.jsx';
+import AdminMembersGrid from './pages/AdminMembersGrid.jsx';
+import AdminMemberDetail from './pages/AdminMemberDetail.jsx';
+import AdminEvents from './pages/AdminEvents.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -55,17 +59,42 @@ export default function App() {
             <Route path="calculator"      element={<PricingCalculator />} />
             <Route path="transcriptions"  element={<Transcriptions />} />
             <Route path="tasks"           element={<TaskManager />} />
-            <Route path="self-audit/quarterly" element={<QuarterlyScorecard />} />
+            <Route path="self-audit/quarterly"        element={<QuarterlyScorecard />} />
+            <Route path="self-audit/expertise-engine" element={<ExpertiseEngineAudit />} />
             <Route path="members"         element={<Members />} />
             <Route path="members/:id"     element={<MemberDetail />} />
             <Route path="settings"        element={<Settings />} />
 
             {/* ── Admin-only routes ──────────────────────────── */}
             <Route
+              path="admin/members"
+              element={
+                <AdminRoute>
+                  <AdminMembersGrid />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="admin/members/:userId"
+              element={
+                <AdminRoute>
+                  <AdminMemberDetail />
+                </AdminRoute>
+              }
+            />
+            <Route
               path="admin/students/*"
               element={
                 <AdminRoute>
                   <AdminStudents />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="admin/events"
+              element={
+                <AdminRoute>
+                  <AdminEvents />
                 </AdminRoute>
               }
             />

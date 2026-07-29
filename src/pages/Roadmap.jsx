@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { useUser } from '@clerk/clerk-react';
 import { supabase } from '../lib/supabase.js';
 import { useIsAdmin } from '../hooks/useIsAdmin.js';
@@ -21,6 +22,7 @@ const CATEGORY_COLORS = {
   'AI & Systems': { bg: 'rgba(20,184,166,0.18)',  color: '#5eead4' },
 };
 function categoryStyle(label) {
+  useTrackPage('מפת דרכים');
   return CATEGORY_COLORS[label] || { bg: 'rgba(245,193,24,0.15)', color: '#F5C118' };
 }
 

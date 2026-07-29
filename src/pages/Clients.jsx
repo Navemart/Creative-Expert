@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { useUser } from '@clerk/clerk-react';
 import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
@@ -18,6 +19,7 @@ const STATUS = {
   inactive: { label: 'לא פעיל',       color: '#64748b', bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.20)' },
 };
 function normStatus(s) {
+  useTrackPage('לקוחות ופרויקטים');
   if (STATUS[s]) return s;
   return { '#22c55e': 'green', '#f97316': 'orange', '#ef4444': 'red' }[s] || 'green';
 }

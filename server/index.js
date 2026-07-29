@@ -18,6 +18,7 @@ import authRouter         from './routes/auth.js';
 import adminRouter           from './routes/admin.js';
 import instagramApifyRouter  from './routes/instagram-apify.js';
 import cronRouter            from './routes/cron.js';
+import eventsRouter          from './routes/events.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -44,6 +45,7 @@ app.use('/api/auth',          authRouter);
 app.use('/api/admin',         adminRouter);
 app.use('/api/instagram-apify', instagramApifyRouter);
 app.use('/api/cron',          cronRouter);
+app.use('/api/events',        eventsRouter);
 
 // -----------------------------------------------------------------------------
 // In production, serve the built frontend from /dist so everything runs on one

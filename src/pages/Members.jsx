@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { Link } from 'react-router-dom';
 import { Search, LayoutGrid, List, ChevronDown } from 'lucide-react';
 import { supabase } from '../lib/supabase.js';
@@ -30,6 +31,7 @@ const FILTERS = [
 ];
 
 function Avatar({ name, index, size = 'md' }) {
+  useTrackPage('חברים');
   const sizes = {
     md: 'h-16 w-16 text-base',
     sm: 'h-10 w-10 text-sm',

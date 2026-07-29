@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { supabase } from '../lib/supabase.js';
 import { useIsAdmin } from '../hooks/useIsAdmin.js';
 import {
@@ -39,6 +40,7 @@ const S = {
 const EMPTY_FORM = { name: '', tm: false, description: '', url: '', category: 'content' };
 
 function ToolModal({ initial, onSave, onClose }) {
+  useTrackPage('AI ScaleKit');
   const [form, setForm]   = useState(initial ? {
     id:          initial.id,
     name:        initial.name        ?? '',

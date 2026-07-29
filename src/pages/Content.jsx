@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { useUser } from '@clerk/clerk-react';
 import {
   Instagram, Users, Heart, TrendingUp,
@@ -23,6 +24,7 @@ const heDate = d =>
 
 // ── connect screen ────────────────────────────────────────────
 function ConnectScreen({ userId, error }) {
+  useTrackPage('תוכן');
   const connectUrl = `/api/instagram/connect?userId=${userId}`;
   return (
     <div className="w-full flex flex-col items-center justify-center py-24 gap-8" dir="rtl">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
@@ -36,6 +37,7 @@ const EMPTY_LEAD = {
 };
 
 function fmtDate(d) {
+  useTrackPage('לידים ומכירות');
   if (!d) return null;
   return new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: '2-digit' });
 }

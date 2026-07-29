@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTrackPage } from '../hooks/useTrack.js';
 import { useUser, useClerk } from '@clerk/clerk-react';
 import { supabase } from '../lib/supabase.js';
 import { User, Briefcase, MapPin, Globe, Instagram, Phone, Save, Check, Loader2, LogOut } from 'lucide-react';
@@ -10,6 +11,7 @@ const BUSINESS_TYPES = [
 ];
 
 function SectionHeader({ icon: Icon, label, color = '#F5C118' }) {
+  useTrackPage('הגדרות');
   return (
     <div className="flex items-center gap-2.5 mb-5">
       <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-none" style={{ background:`${color}18` }}>
