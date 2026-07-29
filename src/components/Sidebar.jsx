@@ -47,7 +47,7 @@ const SELF_AUDIT_ITEMS = {
   icon:     ScanSearch,
   children: [
     { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
-    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap, disabled: true },
+    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap },
   ],
 };
 
@@ -245,7 +245,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onClo
             <ul className="space-y-1">
               <NavItemExpandable item={SELF_AUDIT_ITEMS} collapsed={collapsed} onCloseMobile={onCloseMobile} />
               {ENGINE_ITEMS.map((item) => {
-                if (item.to === '/diagnosis' && !isAdmin) {
+                if (item.to === '/diagnosis') {
                   return (
                     <li key={item.to}>
                       <div
