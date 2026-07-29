@@ -80,7 +80,7 @@ function Photo({ name, src, style = {} }) {
 
 // ── FILTER TABS (member_status) ────────────────────────────────
 const FILTER_TABS = [
-  { k: 'all',       l: 'הכל' },
+  { k: 'all',       l: 'סטטוס' },
   { k: 'active',    l: 'פעיל' },
   { k: 'graduated', l: 'בוגר' },
   { k: 'churned',   l: 'עזב' },
