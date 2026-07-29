@@ -3,8 +3,9 @@ import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, Extern
 import { NavLink } from 'react-router-dom';
 import { useUser, SignedIn, SignedOut, SignInButton, useClerk } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
-import { usePaymentAlerts } from '../hooks/usePaymentAlerts.js';
-import { useNpsAlerts }     from '../hooks/useNpsAlerts.js';
+import { usePaymentAlerts }  from '../hooks/usePaymentAlerts.js';
+import { useNpsAlerts }      from '../hooks/useNpsAlerts.js';
+import { useCheckinAlerts }  from '../hooks/useCheckinAlerts.js';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -66,9 +67,38 @@ function NpsAlertRow({ item, onDismiss }) {
 }
 
 // ── Notification panel ─────────────────────────────────────────
-function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps }) {
+function CheckinAlertRow({ student }) {
+  const navigate = useNavigate();
+  const isOverdue = student.column === 'overdue';
+  return (
+    <button onClick={() => navigate('/admin/checkins')}
+      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+    >
+      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+        {student.image_url
+          ? <img src={student.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : (student.name || '?')[0].toUpperCase()}
+      </div>
+      <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
+        <p style={{ margin: '2px 0 0', fontSize: 11, color: isOverdue ? '#ef4444' : '#f59e0b' }}>
+          {isOverdue
+            ? student.days_since ? `פנייה לפני ${student.days_since} ימים` : 'מעולם לא נפנה'
+            : 'צ׳קאין בקרוב'}
+        </p>
+      </div>
+      {student.phase && (
+        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,193,24,0.1)', color: 'rgba(245,193,24,0.6)', flexShrink: 0 }}>{student.phase}</span>
+      )}
+    </button>
+  );
+}
+
+function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming }) {
   const payTotal = upcoming.length + overdue.length;
-  const total    = payTotal + npsAlerts.length;
+  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length;
   return (
     <div className="absolute right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
       style={{ width: 340, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
@@ -83,6 +113,26 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
         </div>
       ) : (
         <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+          {/* צ'קאינס באיחור */}
+          {checkinOverdue.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
+                style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
+                <AlertCircle size={11} /> צ׳קאין באיחור — {checkinOverdue.length}
+              </div>
+              {checkinOverdue.map(s => <CheckinAlertRow key={s.id} student={s} />)}
+            </>
+          )}
+          {/* צ'קאינס בקרוב */}
+          {checkinUpcoming.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
+                style={{ background: 'rgba(245,193,24,0.06)', color: '#f59e0b' }}>
+                <Clock size={11} /> צ׳קאין בקרוב — {checkinUpcoming.length}
+              </div>
+              {checkinUpcoming.map(s => <CheckinAlertRow key={s.id} student={s} />)}
+            </>
+          )}
           {/* NPS נמוך */}
           {npsAlerts.length > 0 && (
             <>
@@ -419,11 +469,12 @@ export default function Header({ onOpenMobile }) {
 
   const { upcoming, overdue, total: payTotal, dismiss, reload } = usePaymentAlerts();
   const { npsAlerts, dismissNps, npsTotal } = useNpsAlerts();
-  const total      = payTotal + npsTotal;
-  const hasOverdue = overdue.length > 0 || npsTotal > 0;
+  const { checkinOverdue, checkinUpcoming, checkinTotal, reloadCheckins } = useCheckinAlerts();
+  const total      = payTotal + npsTotal + checkinTotal;
+  const hasOverdue = overdue.length > 0 || npsTotal > 0 || checkinOverdue.length > 0;
   const badgeColor = hasOverdue ? '#ef4444' : '#f97316';
 
-  useEffect(() => { if (bellOpen) reload(); }, [bellOpen]);
+  useEffect(() => { if (bellOpen) { reload(); reloadCheckins(); } }, [bellOpen]);
 
   useEffect(() => {
     function handle(e) {
@@ -465,7 +516,7 @@ export default function Header({ onOpenMobile }) {
               </span>
             )}
           </button>
-          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} />}
+          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} checkinOverdue={checkinOverdue} checkinUpcoming={checkinUpcoming} />}
         </div>
 
         {/* ── Daily Standard (flame) ── */}
