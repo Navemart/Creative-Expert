@@ -47,7 +47,7 @@ const SELF_AUDIT_ITEMS = {
   icon:     ScanSearch,
   children: [
     { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
-    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap },
+    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap, disabled: true },
   ],
 };
 
@@ -115,20 +115,29 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
         <ul className="mt-0.5 mb-1 space-y-0.5" style={{ paddingRight: '0.75rem', borderRight: '2px solid rgba(255,255,255,0.07)', marginRight: '1rem' }}>
           {item.children.map(child => (
             <li key={child.to}>
-              <NavLink
-                to={child.to}
-                end={child.end}
-                onClick={onCloseMobile}
-                className={({ isActive }) =>
-                  ['block rounded-md px-3 py-1.5 text-sm transition-colors', isActive ? 'font-semibold' : 'hover:bg-white/10'].join(' ')
-                }
-                style={({ isActive }) => ({
-                  color: isActive ? '#F5C118' : 'rgba(255,255,255,0.55)',
-                  background: isActive ? 'rgba(245,193,24,0.08)' : 'transparent',
-                })}
-              >
-                {child.label}
-              </NavLink>
+              {child.disabled ? (
+                <span
+                  className="block rounded-md px-3 py-1.5 text-sm cursor-not-allowed select-none"
+                  style={{ color: 'rgba(255,255,255,0.25)' }}
+                >
+                  {child.label}
+                </span>
+              ) : (
+                <NavLink
+                  to={child.to}
+                  end={child.end}
+                  onClick={onCloseMobile}
+                  className={({ isActive }) =>
+                    ['block rounded-md px-3 py-1.5 text-sm transition-colors', isActive ? 'font-semibold' : 'hover:bg-white/10'].join(' ')
+                  }
+                  style={({ isActive }) => ({
+                    color: isActive ? '#F5C118' : 'rgba(255,255,255,0.55)',
+                    background: isActive ? 'rgba(245,193,24,0.08)' : 'transparent',
+                  })}
+                >
+                  {child.label}
+                </NavLink>
+              )}
             </li>
           ))}
         </ul>
