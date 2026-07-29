@@ -177,10 +177,25 @@ export default function AdminEvents() {
                 ) : events.map(ev => (
                   <tr key={ev.id} style={{ background: ev.ignore_on ? 'rgba(255,255,255,0.02)' : 'transparent', opacity: ev.ignore_on ? 0.4 : 1 }}>
                     <td style={cell}><span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>{ev.id}</span></td>
-                    <td style={{ ...cell, maxWidth: 160 }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255,255,255,0.5)' }} title={ev.clerk_user_id}>
-                        {ev.clerk_user_id ? ev.clerk_user_id.slice(0, 16) + '…' : '—'}
-                      </span>
+                    <td style={{ ...cell, maxWidth: 200 }}>
+                      {ev.user_info ? (
+                        <div className="flex items-center gap-2">
+                          {ev.user_info.photo
+                            ? <img src={ev.user_info.photo} alt="" style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                            : <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'rgba(245,193,24,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: '#F5C118', flexShrink: 0 }}>
+                                {(ev.user_info.name || '?')[0].toUpperCase()}
+                              </div>
+                          }
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.85)', lineHeight: 1.2 }}>{ev.user_info.name}</div>
+                            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{ev.user_info.email}</div>
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ fontFamily: 'monospace', fontSize: 10, color: 'rgba(255,255,255,0.3)' }} title={ev.clerk_user_id}>
+                          {ev.clerk_user_id ? ev.clerk_user_id.slice(0, 14) + '…' : '—'}
+                        </span>
+                      )}
                     </td>
                     <td style={{ ...cell, textAlign: 'center' }}>
                       <span style={{ color: ev.ignore_on ? '#f87171' : 'rgba(255,255,255,0.25)', fontSize: 11, fontFamily: 'monospace' }}>

@@ -10,6 +10,28 @@ function sb() {
   );
 }
 
+// Fetch all Clerk users and return a map: { userId → { name, email, photo } }
+async function getClerkUsersMap() {
+  const clerkKey = process.env.CLERK_SECRET_KEY;
+  if (!clerkKey) return {};
+  try {
+    const res = await fetch('https://api.clerk.com/v1/users?limit=500&order_by=-created_at', {
+      headers: { Authorization: `Bearer ${clerkKey}` },
+    });
+    const users = await res.json();
+    const map = {};
+    for (const u of Array.isArray(users) ? users : []) {
+      const name  = [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || '—';
+      const email = u.email_addresses?.[0]?.email_address || '—';
+      const photo = u.image_url || null;
+      map[u.id] = { name, email, photo };
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 // POST /api/events — save a user event
 router.post('/', async (req, res) => {
   const { clerk_user_id, event, page, metadata, session_id } = req.body;
@@ -27,7 +49,7 @@ router.post('/', async (req, res) => {
   res.json({ ok: true });
 });
 
-// GET /api/events — admin: list events with filters
+// GET /api/events — admin: list events with filters + Clerk user info
 router.get('/', async (req, res) => {
   const adminId = process.env.VITE_ADMIN_USER_ID;
   if (!adminId || req.headers['x-admin-id'] !== adminId) {
@@ -50,7 +72,14 @@ router.get('/', async (req, res) => {
 
   const { data, error } = await q;
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ events: data });
+
+  const usersMap = await getClerkUsersMap();
+  const events = (data || []).map(ev => ({
+    ...ev,
+    user_info: ev.clerk_user_id ? (usersMap[ev.clerk_user_id] || null) : null,
+  }));
+
+  res.json({ events, users: usersMap });
 });
 
 // GET /api/events/stats — counts per event type + per page
