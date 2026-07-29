@@ -961,7 +961,6 @@ export default function Dashboard() {
   async function fetchAll() {
     const [
       { data: md },
-      { data: profileData },
       { data: wd },
       { data: dd },
       { data: pData },
@@ -970,7 +969,6 @@ export default function Dashboard() {
       { data: cData },
     ] = await Promise.all([
       supabase.from('monthly_submissions').select('*').eq('user_id', userId).order('month'),
-      supabase.from('student_profiles').select('admin_rank').eq('user_id', userId).maybeSingle(),
       supabase.from('sunday_wins').select('*').eq('user_id', userId).order('week_date', { ascending: false }),
       supabase.from('deals').select('total_amount, received_amount, created_at').eq('user_id', userId),
       supabase.from('roadmap_phases').select('id, title, sort_order').order('sort_order'),
@@ -980,9 +978,13 @@ export default function Dashboard() {
     ]);
     const submissions = md || [];
     setMonthlyData(submissions);
-    setAdminRankOverride(profileData?.admin_rank || null);
     setWins(wd || []);
     setDeals(dd || []);
+
+    // Fetch admin rank override separately so it can't affect roadmap loading
+    supabase.from('student_profiles').select('admin_rank').eq('user_id', userId).maybeSingle()
+      .then(({ data }) => { if (data?.admin_rank) setAdminRankOverride(data.admin_rank); })
+      .catch(() => {});
 
     // ── Retroactive rank fix for imported users ──────────────────
     // If the best historical rank is higher than what's stored, fix it silently.
