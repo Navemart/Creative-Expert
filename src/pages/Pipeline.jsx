@@ -591,19 +591,16 @@ export default function Pipeline() {
   const noFitCount    = leads.filter(l => l.call_status === 'אין התאמה').length;
   const total         = leads.length;
 
-  // Close rate denominator: only leads that actually reached a sales call.
-  // Booking a call isn't enough — they need to have shown up (sales_scheduled)
-  // or been explicitly marked as no-show / closed / follow-up.
-  // "אין התאמה" = successful filter, not a failed close — excluded.
-  // Only leads who actually showed up (sales_scheduled=true) count toward close rate.
-  // "לא הגיע" = no-show, excluded. "אין התאמה" = filtered out, excluded.
-  const leadsWithCall  = leads.filter(l => l.call_status === 'נסגר' || l.call_status === 'פולואפ' || l.call_status === 'לא נסגר');
-  const closePct       = leadsWithCall.length > 0 ? Math.round(closedCount / leadsWithCall.length * 100) : 0;
+  // מי שנקבעה לו שיחת מכירה — המכנה לשני האחוזים
+  const leadsScheduled = leads.filter(l => l.sales_scheduled);
 
-  // Show-up rate: showed up / any lead with any call booked (matching OR sales)
-  const leadsWithSales   = leadsWithCall; // same denominator — any call booked
-  const showedUpCount    = leads.filter(l => l.sales_scheduled).length;
-  const showPct          = leadsWithCall.length > 0 ? Math.round(showedUpCount / leadsWithCall.length * 100) : 0;
+  // הגיע לשיחה = יש call_status ואינו "לא הגיע"
+  const showedUpCount  = leadsScheduled.filter(l => l.call_status && l.call_status !== 'לא הגיע').length;
+  const showPct        = leadsScheduled.length > 0 ? Math.round(showedUpCount / leadsScheduled.length * 100) : 0;
+
+  // נסגר מתוך מי שהגיע ולא "אין התאמה"
+  const leadsWithCall  = leadsScheduled.filter(l => l.call_status === 'נסגר' || l.call_status === 'פולואפ' || l.call_status === 'לא נסגר');
+  const closePct       = leadsWithCall.length > 0 ? Math.round(closedCount / leadsWithCall.length * 100) : 0;
 
   if (loading) return (
     <div className="space-y-2">
@@ -701,11 +698,11 @@ export default function Pipeline() {
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
             אחוז סגירה
-            {leadsWithCall.length > 0 && <span className="font-normal opacity-60"> (מתוך {leadsWithCall.length} עם שיחה)</span>}
+            {leadsScheduled.length > 0 && <span className="font-normal opacity-60"> · {leadsScheduled.length} שיחות</span>}
           </div>
           <div className="flex items-end gap-2">
             <span className="text-[26px] font-bold leading-none" style={{ color: '#22c55e' }}>{closePct}%</span>
-            <span className="text-sm mb-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{closedCount}/{leadsWithCall.length}</span>
+            <span className="text-sm mb-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.3)' }}>{closedCount} מתוך {leadsWithCall.length} רלוונטיים</span>
           </div>
           <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
             <div className="h-full transition-all duration-700"
