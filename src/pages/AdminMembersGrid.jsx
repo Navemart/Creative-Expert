@@ -592,17 +592,6 @@ export default function AdminMembersGrid() {
             רענן
           </button>
 
-          {/* Member Intel */}
-          <button style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border: `1px solid ${borderClr}`, cursor: 'pointer', fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
-            <Eye size={14} style={{ color: 'rgba(255,255,255,0.3)' }} />
-            סיכום תלמיד
-          </button>
-
-          {/* Manage (yellow) */}
-          <button style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '7px 16px', borderRadius: 8, background: '#F5C118', border: 'none', cursor: 'pointer', fontSize: 13, color: 'white', fontWeight: 700 }}>
-            <Share2 size={14} />
-            ניהול תלמידים
-          </button>
         </div>
 
         {/* ── GRID / LIST ─────────────────────────────────── */}
