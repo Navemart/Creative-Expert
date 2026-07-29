@@ -549,18 +549,6 @@ export default function AdminMemberDetail() {
               {savingEnrolled && <span style={{ fontSize: 10, color: muted }}>שומר...</span>}
             </span>
             {student.total_paid  && <span style={{ fontSize: 12, color: '#4fc38a', fontWeight: 700 }}>שילם {fmt(student.total_paid)}</span>}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: muted }}>
-              צ׳קאין כל
-              <select
-                value={cadence}
-                onChange={e => saveCadence(e.target.value)}
-                disabled={savingCadence}
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'white', fontSize: 12, padding: '2px 6px', cursor: 'pointer' }}
-              >
-                {[7, 10, 14, 21, 30].map(d => <option key={d} value={d}>{d} ימים</option>)}
-              </select>
-              {savingCadence && <span style={{ fontSize: 10, color: muted }}>שומר...</span>}
-            </span>
           </div>
         </div>
 
