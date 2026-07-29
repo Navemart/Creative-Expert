@@ -275,6 +275,55 @@ router.post('/ai-summary', async (req, res) => {
   }
 });
 
+// ── syncUpcomingMeetings (called by daily cron) ───────────────
+// Fetches upcoming meetings from Zoom and caches them in Supabase.
+export async function syncUpcomingMeetings() {
+  try {
+    const token  = await getZoomToken();
+    const userId = getZoomUser();
+    const now    = new Date();
+
+    const apiRes = await fetch(
+      `https://api.zoom.us/v2/users/${userId}/meetings?type=upcoming&page_size=50`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const data = await apiRes.json();
+
+    const RELEVANT_TOPICS = ['פגישה שבועית', 'מעבדת היכולות'];
+    const rawMeetings = (data.meetings || []).filter(m =>
+      RELEVANT_TOPICS.some(t => m.topic?.includes(t))
+    );
+
+    const meetings = await Promise.all(rawMeetings.map(async m => {
+      let start_time = m.start_time || null;
+      if (!start_time && m.type === 3) {
+        start_time = await estimateNextOccurrence(token, userId, m.id);
+      }
+      return { id: String(m.id), topic: m.topic, start_time, duration: m.duration, join_url: m.join_url };
+    }));
+
+    const valid = meetings.filter(m => {
+      if (!m.start_time) return false;
+      const end = new Date(new Date(m.start_time).getTime() + (m.duration || 0) * 60000);
+      return end >= now;
+    });
+
+    // Upsert into Supabase
+    if (valid.length) {
+      await supabase.from('zoom_upcoming_cache').delete().neq('id', '');
+      await supabase.from('zoom_upcoming_cache').insert(
+        valid.map(m => ({ ...m, updated_at: now.toISOString() }))
+      );
+    }
+
+    console.log(`[zoom] Synced ${valid.length} upcoming meetings to cache`);
+    return valid.length;
+  } catch (e) {
+    console.error('[zoom] syncUpcomingMeetings error:', e.message);
+    return 0;
+  }
+}
+
 // ── syncAllNotionSummaries (called by nightly cron) ──────────
 // Loops over all recordings, finds ones without a cached summary,
 // and fetches + caches them from Notion.
@@ -471,80 +520,96 @@ router.post('/summary', async (req, res) => {
 async function estimateNextOccurrence(token, userId, meetingId) {
   try {
     const now  = new Date();
-    const from = new Date(now); from.setDate(from.getDate() - 21); // look back 3 weeks
+    const from = new Date(now); from.setDate(from.getDate() - 42); // look back 6 weeks
     const recordings = await fetchMonthRecordings(
       token, userId,
       from.toISOString().slice(0, 10),
       now.toISOString().slice(0, 10)
     );
-    // Find recordings for this specific meeting ID (sorted newest first)
     const mine = recordings
       .filter(r => String(r.id) === String(meetingId) && r.start_time)
-      .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+      .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
+      .slice(0, 5); // take up to 5 most recent
 
     if (!mine.length) return null;
 
+    // Find dominant day-of-week from recent recordings
+    const dayCounts = {};
+    for (const r of mine) {
+      const d = new Date(r.start_time).getDay(); // 0=Sun … 6=Sat
+      dayCounts[d] = (dayCounts[d] || 0) + 1;
+    }
+    const dominantDay = Number(Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0][0]);
+
+    // Use the time-of-day from the most recent recording
     const lastStart = new Date(mine[0].start_time);
-    // Add 7 days (weekly recurrence) and keep the same time
-    const next = new Date(lastStart.getTime() + 7 * 24 * 60 * 60 * 1000);
-    // Only return if next is in the future
+    const hours   = lastStart.getUTCHours();
+    const minutes = lastStart.getUTCMinutes();
+
+    // Find the next upcoming date that falls on dominantDay
+    const next = new Date(now);
+    next.setUTCHours(hours, minutes, 0, 0);
+    const daysUntil = (dominantDay - now.getDay() + 7) % 7 || 7; // at least 1 day ahead
+    next.setDate(next.getDate() + daysUntil);
+
     return next > now ? next.toISOString() : null;
   } catch {
     return null;
   }
 }
 
-// ── GET /api/zoom/upcoming — meetings this week ──────────────
+// ── GET /api/zoom/upcoming — reads from Supabase cache ───────
 router.get('/upcoming', async (req, res) => {
   try {
+    const now = new Date();
+
+    // Try Supabase cache first
+    const { data: cached, error } = await supabase
+      .from('zoom_upcoming_cache')
+      .select('*')
+      .order('start_time', { ascending: true });
+
+    if (!error && cached?.length) {
+      // Filter out meetings that have already ended
+      const valid = cached.filter(m => {
+        if (!m.start_time) return false;
+        const end = new Date(new Date(m.start_time).getTime() + (m.duration || 0) * 60000);
+        return end >= now;
+      });
+      if (valid.length) return res.json({ meetings: valid, cached: true });
+    }
+
+    // Fallback: fetch live from Zoom (e.g. cache empty or first run)
     const token  = await getZoomToken();
     const userId = getZoomUser();
-
-    const now = new Date();
-    // Look 2 weeks ahead (wider window so we always show next meeting)
-    const lookAhead = new Date(now);
-    lookAhead.setDate(now.getDate() + 14);
+    const lookAhead = new Date(now); lookAhead.setDate(now.getDate() + 14);
 
     const apiRes = await fetch(
       `https://api.zoom.us/v2/users/${userId}/meetings?type=upcoming&page_size=50`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     const data = await apiRes.json();
-
     const RELEVANT_TOPICS = ['פגישה שבועית', 'מעבדת היכולות'];
 
     const rawMeetings = (data.meetings || []).filter(m => {
-      const topicMatch = RELEVANT_TOPICS.some(t => m.topic?.includes(t));
-      if (!topicMatch) return false;
-      if (m.type === 3) return true; // recurring/no fixed time — handle separately
+      if (!RELEVANT_TOPICS.some(t => m.topic?.includes(t))) return false;
+      if (m.type === 3) return true;
       if (!m.start_time) return false;
-      const start = new Date(m.start_time);
-      const end   = new Date(start.getTime() + (m.duration || 0) * 60000);
-      // Keep the meeting visible until it actually ends, not just until start time passes
-      return end >= now && start <= lookAhead;
+      const end = new Date(new Date(m.start_time).getTime() + (m.duration || 0) * 60000);
+      return end >= now && new Date(m.start_time) <= lookAhead;
     });
 
-    // Enrich recurring meetings with estimated next occurrence from recordings
     const meetings = await Promise.all(rawMeetings.map(async m => {
       let start_time = m.start_time || null;
       if (!start_time && m.type === 3) {
         start_time = await estimateNextOccurrence(token, userId, m.id);
       }
-      return {
-        id:         m.id,
-        topic:      m.topic,
-        start_time,
-        duration:   m.duration,
-        join_url:   m.join_url,
-        recurring:  m.type === 3,
-      };
+      return { id: m.id, topic: m.topic, start_time, duration: m.duration, join_url: m.join_url };
     }));
 
     meetings.sort((a, b) => {
       if (a.start_time && b.start_time) return new Date(a.start_time) - new Date(b.start_time);
-      if (a.start_time) return -1;
-      if (b.start_time) return 1;
-      return 0;
+      return a.start_time ? -1 : 1;
     });
 
     res.json({ meetings });

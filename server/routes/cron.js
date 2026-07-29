@@ -145,4 +145,18 @@ export async function runDbBackup() {
   return { tablesBackedUp: backed };
 }
 
+// ── Zoom upcoming meetings daily sync (07:00) ─────────────────
+router.get('/zoom-upcoming-sync', async (req, res) => {
+  if (!authorized(req)) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const { syncUpcomingMeetings } = await import('./zoom.js');
+    const count = await syncUpcomingMeetings();
+    console.log(`[cron] Zoom upcoming sync done — ${count} meetings cached`);
+    res.json({ ok: true, count });
+  } catch (e) {
+    console.error('[cron] Zoom upcoming sync error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 export default router;
