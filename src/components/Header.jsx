@@ -181,7 +181,7 @@ function DailyPanel({ onClose }) {
   const barColor    = pct >= 100 ? '#4ade80' : pct >= 60 ? '#F5C118' : '#f97316';
 
   return (
-    <div className="absolute left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" dir="rtl"
+    <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" dir="rtl"
       style={{ width: 270, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
 
       {/* Header */}
@@ -407,7 +407,7 @@ function ProfileAvatar() {
 }
 
 // ── Header ─────────────────────────────────────────────────────
-export default function Header({ onToggleCollapse, onOpenMobile }) {
+export default function Header({ onOpenMobile }) {
   const { user } = useUser();
   const isAdmin = user?.id === ADMIN_ID;
   const [bellOpen,  setBellOpen]  = useState(false);
@@ -446,54 +446,37 @@ export default function Header({ onToggleCollapse, onOpenMobile }) {
         <Menu size={20} />
       </button>
 
-      {/* Desktop: collapse sidebar */}
-      <button type="button" onClick={onToggleCollapse}
-        className="hidden rounded-md p-2 md:inline-flex hover:bg-white/10"
-        style={{ color: 'rgba(255,255,255,0.75)' }}>
-        <PanelLeftClose size={20} />
-      </button>
-
-      {/* ── Bell — ליד כפתורי הניווט ── */}
-      <div ref={bellRef} className="relative">
-        <button type="button" onClick={() => setBellOpen(o => !o)}
-          className="relative rounded-md p-2 hover:bg-white/10 transition-colors"
-          style={{ color: total > 0 ? badgeColor : 'rgba(255,255,255,0.75)' }}>
-          <Bell size={18} className={total > 0 ? 'bell-ring' : ''} />
-          {total > 0 && (
-            <span className={`absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-bold leading-none${hasOverdue ? ' badge-pulse' : ''}`}
-              style={{ background: badgeColor, color: 'white' }}>
-              {total}
-            </span>
-          )}
-        </button>
-        {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} />}
-      </div>
 
       {/* Spacer */}
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
 
+        {/* ── Bell ── */}
+        <div ref={bellRef} className="relative">
+          <button type="button" onClick={() => setBellOpen(o => !o)}
+            className="relative rounded-md p-2 hover:bg-white/10 transition-colors"
+            style={{ color: total > 0 ? badgeColor : 'rgba(255,255,255,0.75)' }}>
+            <Bell size={18} className={total > 0 ? 'bell-ring' : ''} />
+            {total > 0 && (
+              <span className={`absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-bold leading-none${hasOverdue ? ' badge-pulse' : ''}`}
+                style={{ background: badgeColor, color: 'white' }}>
+                {total}
+              </span>
+            )}
+          </button>
+          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} />}
+        </div>
+
         {/* ── Daily Standard (flame) ── */}
         <div ref={dailyRef} className="relative">
-          <button type="button" onClick={() => { setDailyOpen(o => !o); setToolsOpen(false); }}
+          <button type="button" onClick={() => setDailyOpen(o => !o)}
             className="rounded-md p-2 hover:bg-white/10 transition-colors"
             style={{ color: dailyOpen ? '#F5C118' : 'rgba(255,255,255,0.75)' }}
             title="סטנדרט יומי">
             <Flame size={18} />
           </button>
           {dailyOpen && <DailyPanel onClose={() => setDailyOpen(false)} />}
-        </div>
-
-        {/* ── Tools (wrench) ── */}
-        <div ref={toolsRef} className="relative">
-          <button type="button" onClick={() => { setToolsOpen(o => !o); setDailyOpen(false); }}
-            className="rounded-md p-2 hover:bg-white/10 transition-colors"
-            style={{ color: toolsOpen ? '#F5C118' : 'rgba(255,255,255,0.75)' }}
-            title="כלי עבודה">
-            <Wrench size={18} />
-          </button>
-          {toolsOpen && <ToolsPanel onClose={() => setToolsOpen(false)} isAdmin={isAdmin} />}
         </div>
 
         {/* ── Profile avatar → Settings ── */}

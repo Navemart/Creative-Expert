@@ -11,13 +11,13 @@ export default function Layout() {
     <div className="flex h-full w-full bg-slate-50">
       <Sidebar
         collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed((v) => !v)}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header
-          onToggleCollapse={() => setCollapsed((v) => !v)}
           onOpenMobile={() => setMobileOpen(true)}
         />
         <main className="flex-1 overflow-y-auto px-3 py-4 sm:px-5 sm:py-6 lg:px-8">

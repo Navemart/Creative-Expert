@@ -19,6 +19,9 @@ import {
   ListTodo,
   ScanSearch,
   ClipboardList,
+  Zap,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -43,7 +46,8 @@ const SELF_AUDIT_ITEMS = {
   label:    'כלי אבחון עצמי',
   icon:     ScanSearch,
   children: [
-    { to: '/self-audit/quarterly', label: 'כרטיסיית אבחון רבעוני', icon: ClipboardList },
+    { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
+    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap },
   ],
 };
 
@@ -55,9 +59,10 @@ const TOOLS_ITEMS = [
 ];
 
 const ADMIN_ITEMS = [
+  { to: '/admin/members', label: 'תלמידים — רשת', icon: ShieldCheck },
   {
     to: '/admin/students',
-    label: 'תלמידים',
+    label: 'פאנל ניהול',
     icon: ShieldCheck,
     children: [
       { to: '/admin/students',           label: 'תלמידים',          end: true },
@@ -155,7 +160,7 @@ function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile }) {
   );
 }
 
-export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
+export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) {
   const { user } = useUser();
   const isAdmin = user?.id === ADMIN_ID;
   return (
@@ -181,12 +186,12 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
         aria-label="Primary"
       >
         <div className="flex h-16 items-center justify-between px-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-2 overflow-hidden">
-            {collapsed
-              ? <img src="/icon.png" alt="Creative Expert" className="h-8 w-8 flex-none rounded-md object-cover" />
-              : <img src="/logo.png" alt="Creative Expert 3.0" className="h-7 w-auto flex-none object-contain" />
-            }
-          </div>
+          {!collapsed && (
+            <div className="flex items-center gap-2 overflow-hidden">
+              <img src="/logo.png" alt="Creative Expert 3.0" className="h-7 w-auto flex-none object-contain" />
+            </div>
+          )}
+          {/* Mobile close */}
           <button
             type="button"
             onClick={onCloseMobile}
@@ -195,6 +200,16 @@ export default function Sidebar({ collapsed, mobileOpen, onCloseMobile }) {
             aria-label="Close navigation"
           >
             <X size={18} />
+          </button>
+          {/* Desktop collapse toggle */}
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="hidden md:inline-flex rounded-md p-1.5 hover:bg-white/10 transition-colors"
+            style={{ color: 'rgba(255,255,255,0.5)' }}
+            aria-label="Toggle sidebar"
+          >
+            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
           </button>
         </div>
 

@@ -529,28 +529,39 @@ async function estimateNextOccurrence(token, userId, meetingId) {
     const mine = recordings
       .filter(r => String(r.id) === String(meetingId) && r.start_time)
       .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
-      .slice(0, 5); // take up to 5 most recent
+      .slice(0, 5);
 
     if (!mine.length) return null;
 
     // Find dominant day-of-week from recent recordings
     const dayCounts = {};
     for (const r of mine) {
-      const d = new Date(r.start_time).getDay(); // 0=Sun … 6=Sat
+      const d = new Date(r.start_time).getUTCDay(); // 0=Sun … 6=Sat
       dayCounts[d] = (dayCounts[d] || 0) + 1;
     }
     const dominantDay = Number(Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0][0]);
 
-    // Use the time-of-day from the most recent recording
-    const lastStart = new Date(mine[0].start_time);
-    const hours   = lastStart.getUTCHours();
-    const minutes = lastStart.getUTCMinutes();
+    // Check for manual time override (env: ZOOM_TIME_OVERRIDES = {"meetingId":"HH:MM"} in UTC)
+    let hours, minutes;
+    try {
+      const overrides = JSON.parse(process.env.ZOOM_TIME_OVERRIDES || '{}');
+      const override  = overrides[String(meetingId)];
+      if (override) {
+        [hours, minutes] = override.split(':').map(Number);
+      }
+    } catch { /* ignore parse errors */ }
+
+    if (hours === undefined) {
+      const lastStart = new Date(mine[0].start_time);
+      hours   = lastStart.getUTCHours();
+      minutes = lastStart.getUTCMinutes();
+    }
 
     // Find the next upcoming date that falls on dominantDay
     const next = new Date(now);
     next.setUTCHours(hours, minutes, 0, 0);
-    const daysUntil = (dominantDay - now.getDay() + 7) % 7 || 7; // at least 1 day ahead
-    next.setDate(next.getDate() + daysUntil);
+    const daysUntil = (dominantDay - now.getUTCDay() + 7) % 7 || 7;
+    next.setUTCDate(next.getUTCDate() + daysUntil);
 
     return next > now ? next.toISOString() : null;
   } catch {
