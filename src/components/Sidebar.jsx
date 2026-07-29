@@ -111,7 +111,7 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
                   style={{ color: 'rgba(255,255,255,0.25)' }}
                 >
                   {child.label}
-                  {child.soon && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>בנייה</span>}
+                  {child.soon && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>בקרוב</span>}
                 </span>
               ) : (
                 <NavLink
@@ -149,7 +149,7 @@ function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon })
           {!collapsed && (
             <>
               <span className="flex-1 text-right">{label}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.04em' }}>בנייה</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.04em' }}>בקרוב</span>
             </>
           )}
         </div>
