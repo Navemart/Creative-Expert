@@ -48,7 +48,7 @@ const SELF_AUDIT_ITEMS = {
   icon:     ScanSearch,
   children: [
     { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
-    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap },
+    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap, disabled: true },
   ],
 };
 
@@ -60,7 +60,7 @@ const TOOLS_ITEMS = [
 ];
 
 const ADMIN_ITEMS = [
-  { to: '/admin/members', label: 'תלמידים — רשת',  icon: ShieldCheck },
+  { to: '/admin/members', label: 'תלמידים',  icon: ShieldCheck },
   { to: '/admin/events',  label: 'אירועי משתמשים', icon: Activity },
 ];
 
