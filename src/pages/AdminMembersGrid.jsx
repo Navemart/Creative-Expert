@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, LayoutGrid, List, ChevronUp, ChevronDown, X, Eye, Share2, RefreshCw } from 'lucide-react';
+import { Search, LayoutGrid, List, ChevronUp, ChevronDown, X, Eye, Share2, RefreshCw, TrendingUp, Users, Trophy, Star } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -482,17 +482,20 @@ export default function AdminMembersGrid() {
             : null;
 
           const KPIS = [
-            { label: 'סה״כ עסקאות — כל הזמנים', value: totalRevenue > 0 ? `₪${totalRevenue.toLocaleString('he-IL')}` : '—', color: '#F5C118', sub: `${allDealsEver.length} עסקאות` },
-            { label: 'ממוצע LTV',                 value: avgLTV ? `₪${avgLTV.toLocaleString('he-IL')}` : '—',               color: '#4fc38a', sub: 'שווי לקוח ממוצע' },
-            { label: 'חודש שיא עסקאות',            value: bestMonthTotal > 0 ? `₪${bestMonthTotal.toLocaleString('he-IL')}` : '—', color: '#a78bfa', sub: bestMonthLabel || '' },
-            { label: 'הכי רווחי',                  value: topStudent?.total > 0 ? `₪${topStudent.total.toLocaleString('he-IL')}` : '—', color: '#38bdf8', sub: topStudent?.name || '' },
+            { label: 'סה״כ עסקאות — כל הזמנים', value: totalRevenue > 0 ? `₪${totalRevenue.toLocaleString('he-IL')}` : '—', icon: TrendingUp, iconColor: '#F5C118', sub: `${allDealsEver.length} עסקאות` },
+            { label: 'ממוצע LTV',                 value: avgLTV ? `₪${avgLTV.toLocaleString('he-IL')}` : '—',               icon: Users,      iconColor: '#4fc38a', sub: 'שווי לקוח ממוצע' },
+            { label: 'חודש שיא עסקאות',            value: bestMonthTotal > 0 ? `₪${bestMonthTotal.toLocaleString('he-IL')}` : '—', icon: Trophy, iconColor: '#a78bfa', sub: bestMonthLabel || '' },
+            { label: 'הכי רווחי',                  value: topStudent?.total > 0 ? `₪${topStudent.total.toLocaleString('he-IL')}` : '—', icon: Star, iconColor: '#38bdf8', sub: topStudent?.name || '' },
           ];
           return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-              {KPIS.map(({ label, value, color, sub }) => (
+              {KPIS.map(({ label, value, icon: Icon, iconColor, sub }) => (
                 <div key={label} style={{ borderRadius: 14, padding: '16px 18px', background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-                  <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.28)', margin: '0 0 8px' }}>{label}</p>
-                  <p style={{ fontSize: 22, fontWeight: 900, color, margin: 0, lineHeight: 1 }}>{value}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.28)', margin: 0 }}>{label}</p>
+                    <Icon size={15} style={{ color: iconColor, flexShrink: 0 }} />
+                  </div>
+                  <p style={{ fontSize: 22, fontWeight: 900, color: 'rgba(255,255,255,0.92)', margin: 0, lineHeight: 1 }}>{value}</p>
                   {sub && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.28)', margin: '6px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</p>}
                 </div>
               ))}
