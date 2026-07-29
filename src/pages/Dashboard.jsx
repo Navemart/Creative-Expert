@@ -479,6 +479,61 @@ function RatingRow({ value, onChange }) {
   );
 }
 
+function SubmitDropdown({ onDeal, onWin, onMonthly }) {
+  const [open, setOpen, ref] = useCloseOnOutsideClick();
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
+        style={{ borderColor: 'rgba(255,255,255,0.15)', color: 'white' }}
+      >
+        <Plus size={15} />
+        הגש טופס
+        <ChevronDown size={13} style={{ opacity: 0.5 }} />
+      </button>
+      {open && (
+        <div
+          style={{
+            position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 50,
+            background: '#1c1c1e', border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: 10, padding: 6, minWidth: 180,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+          }}
+        >
+          {[
+            { icon: <Plus size={14} />, label: 'עסקה חדשה', action: onDeal },
+            { icon: <Trophy size={14} />, label: 'נצחונות שבועיים', action: onWin },
+            { icon: <Calendar size={14} />, label: 'נתונים חודשיים', action: onMonthly },
+          ].map(({ icon, label, action }) => (
+            <button
+              key={label}
+              onClick={() => { action(); setOpen(false); }}
+              className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-left transition hover:bg-white/10"
+              style={{ color: 'rgba(255,255,255,0.85)' }}
+            >
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}>{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function useCloseOnOutsideClick() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    function handle(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [open]);
+  return [open, setOpen, ref];
+}
+
 function SubmitBtn({ onClick, children }) {
   return (
     <button
@@ -1492,17 +1547,16 @@ export default function Dashboard() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl sm:text-4xl font-bold text-white">{getGreeting()}, {firstName}.</h1>
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setModal('deal')} className={btnClass} style={btnStyle}><Plus size={15} /> עסקה חדשה</button>
-          <button onClick={() => { setWinStep(1); setModal('win'); }} className={btnClass} style={btnStyle}><Trophy size={15} /> נצחונות שבועיים</button>
-          <button
-            onClick={() => {
+          <SubmitDropdown
+            onDeal={() => setModal('deal')}
+            onWin={() => { setWinStep(1); setModal('win'); }}
+            onMonthly={() => {
               const _prev = new Date(); _prev.setDate(1); _prev.setMonth(_prev.getMonth() - 1);
               const _prevStr = `${_prev.getFullYear()}-${String(_prev.getMonth()+1).padStart(2,'0')}`;
               setMonthlyForm({ report_month: _prevStr, total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '', new_clients: '', client_satisfaction: '', on_time_delivery: '', biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '', nps: '', program_feedback: '' });
               setEditingSubmission(null); setModal('monthly');
             }}
-            className={btnClass} style={btnStyle}
-          ><Calendar size={15} /> נתונים חודשיים</button>
+          />
           <button onClick={() => setModal('edit')} className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90 transition"><Edit2 size={15} /> עריכת נתונים</button>
           {isAdmin && (
             <button onClick={() => setLabelEditMode(m => !m)} className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-white/10"
