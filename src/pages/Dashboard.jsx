@@ -485,8 +485,7 @@ function SubmitDropdown({ onDeal, onWin, onMonthly }) {
     <div ref={ref} style={{ position: 'relative' }}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition hover:bg-white/10"
-        style={{ borderColor: 'rgba(255,255,255,0.15)', color: 'white' }}
+        className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold transition hover:opacity-90 text-accent-foreground"
       >
         <Plus size={15} />
         הגש טופס
