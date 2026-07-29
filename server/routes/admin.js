@@ -50,7 +50,7 @@ router.get('/students', async (req, res) => {
       { data: completions },
     ] = await Promise.all([
       supabase.from('monthly_submissions').select('*').order('month'),
-      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active, member_status, checkin_cadence_days'),
+      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active, member_status, checkin_cadence_days, admin_rank'),
       supabase.from('rank_upgrade_requests').select('*').eq('status', 'pending'),
       supabase.from('sunday_wins').select('*').order('week_date', { ascending: false }),
       supabase.from('deals').select('*').order('created_at', { ascending: false }),
@@ -110,6 +110,9 @@ router.get('/students', async (req, res) => {
           completions:   userCompletions,
           latest_income: latestIncome,
           latest_rank:   latest?.current_rank || null,
+          auto_rank:     calcAutoRank(userSubs),
+          admin_rank:    profile?.admin_rank   || null,
+          effective_rank: profile?.admin_rank || calcAutoRank(userSubs),
           latest_month:  latest?.month || null,
           rank_request:  rankReq || null,
           has_revenue_drop: hasRevenueDrop,
@@ -149,7 +152,7 @@ router.patch('/students/:userId/profile', async (req, res) => {
     } catch { body = {}; }
   }
 
-  const allowed = ['health_status', 'enrolled_at', 'total_paid', 'member_status', 'checkin_cadence_days'];
+  const allowed = ['health_status', 'enrolled_at', 'total_paid', 'member_status', 'checkin_cadence_days', 'admin_rank'];
   const updates = {};
   allowed.forEach(k => { if (body[k] !== undefined) updates[k] = body[k]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Nothing to update' });
@@ -177,6 +180,34 @@ router.delete('/deals/:id', async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
   res.json({ ok: true });
 });
+
+// ── Rank thresholds ──────────────────────────────────────────────
+const RANKS = [
+  { label: 'TRAINEE',        nextThreshold: 5000  },
+  { label: 'CREW',           nextThreshold: 10000 },
+  { label: 'SECOND OFFICER', nextThreshold: 15000 },
+  { label: 'CO-PILOT',       nextThreshold: 20000 },
+  { label: 'CAPTAIN',        nextThreshold: 30000 },
+  { label: 'EXPERT',         nextThreshold: Infinity },
+];
+
+// Returns the auto-calculated rank based on 2 consecutive months above threshold
+function calcAutoRank(userSubs) {
+  if (!userSubs.length) return 'TRAINEE';
+  const sorted = [...userSubs].sort((a, b) => (a.month || '').localeCompare(b.month || ''));
+  let currentRank = 'TRAINEE';
+  for (let i = 1; i < sorted.length; i++) {
+    const rankIdx = RANKS.findIndex(r => r.label === currentRank);
+    if (rankIdx === RANKS.length - 1) break;
+    const threshold = RANKS[rankIdx].nextThreshold;
+    const prev = Number(sorted[i - 1].total_income || sorted[i - 1].amount || 0);
+    const curr = Number(sorted[i].total_income     || sorted[i].amount     || 0);
+    if (prev >= threshold && curr >= threshold) {
+      currentRank = RANKS[rankIdx + 1].label;
+    }
+  }
+  return currentRank;
+}
 
 // Phase-based schedule:
 // Days  0-7  → 3 check-ins (every ~2.3 days)

@@ -401,6 +401,45 @@ function Empty({ text }) {
   return <div style={{ padding: '60px 0', textAlign: 'center', color: muted, fontSize: 13 }}>{text}</div>;
 }
 
+// ── Rank picker ────────────────────────────────────────────────
+const ALL_RANKS = ['TRAINEE','CREW','SECOND OFFICER','CO-PILOT','CAPTAIN','EXPERT'];
+
+function RankPicker({ value, autoRank, onChange, saving }) {
+  const [open, setOpen] = useState(false);
+  const display = value || autoRank || 'TRAINEE';
+  const color   = RANK_COLORS[display] || '#9ca3af';
+  const isAuto  = !value;
+  return (
+    <div style={{ position: 'relative' }}>
+      <button onClick={() => setOpen(o => !o)} disabled={saving}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, border: `1px solid ${color}55`, background: color + '18', cursor: 'pointer' }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color }}>{saving ? 'שומר...' : display}</span>
+        {isAuto && <span style={{ fontSize: 9, color: color + 'aa', fontWeight: 600 }}>אוטו׳</span>}
+        <ChevronDown size={11} style={{ color: color + '80' }} />
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: 'rgb(var(--bg-chrome))', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, minWidth: 180, boxShadow: '0 12px 40px rgba(0,0,0,0.7)', zIndex: 200, overflow: 'hidden' }}>
+          <button onClick={() => { onChange(null); setOpen(false); }}
+            style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: 12, color: 'rgba(255,255,255,0.4)', background: !value ? 'rgba(255,255,255,0.05)' : 'transparent', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>אוטומטי ({autoRank || 'TRAINEE'})</span>
+            {!value && <span style={{ fontSize: 10 }}>✓</span>}
+          </button>
+          {ALL_RANKS.map(r => {
+            const c = RANK_COLORS[r] || '#9ca3af';
+            return (
+              <button key={r} onClick={() => { onChange(r); setOpen(false); }}
+                style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: 12, fontWeight: 700, color: c, background: value === r ? c + '12' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <span>{r}</span>
+                {value === r && <span style={{ fontSize: 10 }}>✓</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Status picker ──────────────────────────────────────────────
 function StatusPicker({ value, onChange, saving }) {
   const [open, setOpen] = useState(false);
@@ -439,8 +478,10 @@ export default function AdminMemberDetail() {
   const [memberStatus, setMemberStatus] = useState(student?.member_status || 'active');
   const [cadence, setCadence]         = useState(student?.checkin_cadence_days ?? 14);
   const [enrolledAt, setEnrolledAt]   = useState(student?.enrolled_at ? student.enrolled_at.slice(0, 10) : '');
+  const [adminRank, setAdminRank]     = useState(student?.admin_rank || null);
   const [savingCadence, setSavingCadence]     = useState(false);
   const [savingEnrolled, setSavingEnrolled]   = useState(false);
+  const [savingRank, setSavingRank]           = useState(false);
   const [saving, setSaving]     = useState(false);
 
   if (!student) {
@@ -453,9 +494,24 @@ export default function AdminMemberDetail() {
     );
   }
 
-  const photoSrc  = student.email ? (slackPhotos[student.email.toLowerCase()] || student.image_url) : student.image_url;
-  const sm        = STATUS_META[memberStatus] || STATUS_META.active;
-  const rankColor = RANK_COLORS[student.latest_rank] || '#9ca3af';
+  const photoSrc      = student.email ? (slackPhotos[student.email.toLowerCase()] || student.image_url) : student.image_url;
+  const sm            = STATUS_META[memberStatus] || STATUS_META.active;
+  const effectiveRank = adminRank || student.auto_rank || student.latest_rank || null;
+  const rankColor     = RANK_COLORS[effectiveRank] || '#9ca3af';
+
+  async function saveAdminRank(rank) {
+    setSavingRank(true);
+    try {
+      await fetch(`/api/admin/students/${student.id}/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': ADMIN_ID || '' },
+        body: JSON.stringify({ admin_rank: rank }),
+      });
+      setAdminRank(rank);
+    } finally {
+      setSavingRank(false);
+    }
+  }
 
   async function saveEnrolledAt(date) {
     setSavingEnrolled(true);
@@ -528,11 +584,7 @@ export default function AdminMemberDetail() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
             <h1 style={{ fontSize: 20, fontWeight: 900, color: 'white', margin: 0 }}>{student.name}</h1>
             <StatusPicker value={memberStatus} onChange={saveStatus} saving={saving} />
-            {student.latest_rank && (
-              <span style={{ fontSize: 10, fontWeight: 700, color: rankColor, background: rankColor + '18', border: `1px solid ${rankColor}30`, padding: '3px 9px', borderRadius: 20 }}>
-                {student.latest_rank}
-              </span>
-            )}
+            <RankPicker value={adminRank} autoRank={student.auto_rank || student.latest_rank} onChange={saveAdminRank} saving={savingRank} />
           </div>
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
             {student.email && <span style={{ fontSize: 12, color: muted }}>{student.email}</span>}

@@ -106,10 +106,10 @@ const SORT_OPTIONS = [
 
 // ── MEMBER CARD (grid) ─────────────────────────────────────────
 function MemberCard({ student, photoSrc, onClick }) {
-  const { name, latest_rank, member_status, latest_income } = student;
+  const { name, effective_rank, member_status, latest_income } = student;
 
   const sm = STATUS_META[member_status] || STATUS_META.active;
-  const rankColor = getRankColor(latest_rank);
+  const rankColor = getRankColor(effective_rank);
   const income = fmtK(latest_income);
 
   return (
@@ -145,9 +145,9 @@ function MemberCard({ student, photoSrc, onClick }) {
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: sm.color, flexShrink: 0 }} />
             {sm.label}
           </span>
-          {latest_rank && (
+          {effective_rank && (
             <span style={{ fontSize: 10, fontWeight: 700, color: rankColor, padding: '1px 6px', borderRadius: 5, background: rankColor + '18', border: `1px solid ${rankColor}35` }}>
-              {latest_rank}
+              {effective_rank}
             </span>
           )}
         </div>
@@ -164,9 +164,9 @@ function MemberCard({ student, photoSrc, onClick }) {
 
 // ── MEMBER ROW (list) ──────────────────────────────────────────
 function MemberRow({ student, photoSrc, onClick }) {
-  const { name, latest_rank, member_status, latest_income, enrolled_at, total_paid } = student;
+  const { name, effective_rank, member_status, latest_income, enrolled_at, total_paid } = student;
   const sm = STATUS_META[member_status] || STATUS_META.active;
-  const rankColor = getRankColor(latest_rank);
+  const rankColor = getRankColor(effective_rank);
   const income = fmtK(latest_income);
 
   return (
@@ -191,7 +191,7 @@ function MemberRow({ student, photoSrc, onClick }) {
 
       {/* Status + rank badges */}
       <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: sm.color + '18', color: sm.color, border: `1px solid ${sm.color}40`, flexShrink: 0 }}>{sm.label}</span>
-      {latest_rank && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: rankColor + '18', color: rankColor, border: `1px solid ${rankColor}40`, flexShrink: 0 }}>{latest_rank}</span>}
+      {effective_rank && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: rankColor + '18', color: rankColor, border: `1px solid ${rankColor}40`, flexShrink: 0 }}>{effective_rank}</span>}
 
       {/* Income */}
       <span style={{ fontSize: 14, fontWeight: 800, color: income ? '#F5C118' : 'rgba(255,255,255,0.2)', flexShrink: 0, minWidth: 80, textAlign: 'left' }}>
@@ -236,7 +236,7 @@ function StudentModal({ student, photoSrc, onClose }) {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
               <p style={{ fontWeight: 900, fontSize: 20, color: 'white', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>{student.name}</p>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                {student.latest_rank && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: getRankColor(student.latest_rank) + '30', color: 'white', border: `1px solid ${getRankColor(student.latest_rank)}60`, backdropFilter: 'blur(4px)' }}>{student.latest_rank}</span>}
+                {student.effective_rank && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: getRankColor(student.effective_rank) + '30', color: 'white', border: `1px solid ${getRankColor(student.effective_rank)}60`, backdropFilter: 'blur(4px)' }}>{student.effective_rank}</span>}
                 {h && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: h.color + '30', color: 'white', border: `1px solid ${h.color}60`, backdropFilter: 'blur(4px)' }}>{h.label}</span>}
                 {student.enrolled_at && <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', padding: '3px 9px', borderRadius: 20, background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(4px)' }}>הצטרף {fmtDate(student.enrolled_at)}</span>}
                 {student.total_paid && <span style={{ fontSize: 10, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: 'rgba(79,195,138,0.2)', color: '#4fc38a', border: '1px solid rgba(79,195,138,0.4)', backdropFilter: 'blur(4px)' }}>שילם ₪{Number(student.total_paid).toLocaleString('he-IL')}</span>}
@@ -446,7 +446,7 @@ export default function AdminMembersGrid() {
       if (sortKey === 'name')   { av = a.name || ''; bv = b.name || ''; return av.localeCompare(bv, 'he') * sortDir; }
       if (sortKey === 'income') { av = num(a.latest_income); bv = num(b.latest_income); }
       if (sortKey === 'joined') { av = a.enrolled_at || ''; bv = b.enrolled_at || ''; return av.localeCompare(bv) * sortDir; }
-      if (sortKey === 'rank')   { av = SEGMENTS.findIndex(s => s.label === a.latest_rank); bv = SEGMENTS.findIndex(s => s.label === b.latest_rank); }
+      if (sortKey === 'rank')   { av = SEGMENTS.findIndex(s => s.label === a.effective_rank); bv = SEGMENTS.findIndex(s => s.label === b.effective_rank); }
       return (av - bv) * sortDir;
     });
     return list;
@@ -463,8 +463,8 @@ export default function AdminMembersGrid() {
         {students.length > 0 && (() => {
           const allDealsEver = students.flatMap(s => s.deals || []);
           const totalRevenue = allDealsEver.reduce((s, d) => s + num(d.total_amount), 0);
-          const studentsWithDeals = students.filter(s => (s.deals || []).length > 0);
-          const avgLTV       = studentsWithDeals.length ? Math.round(totalRevenue / studentsWithDeals.length) : null;
+          const studentsWithPaid = students.filter(s => num(s.total_paid) > 0);
+          const avgLTV       = studentsWithPaid.length ? Math.round(studentsWithPaid.reduce((s, st) => s + num(st.total_paid), 0) / studentsWithPaid.length) : null;
           const d30          = new Date(); d30.setMonth(d30.getMonth() - 1);
           const recentDeals  = allDealsEver.filter(d => d.created_at && new Date(d.created_at) >= d30);
           const newDealsTotal = recentDeals.reduce((s, d) => s + num(d.total_amount), 0);
