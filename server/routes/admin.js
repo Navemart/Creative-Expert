@@ -363,6 +363,68 @@ router.post('/checkins', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── GET /api/admin/rank-upgrades ────────────────────────────────
+router.get('/rank-upgrades', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const clerkKey = process.env.CLERK_SECRET_KEY;
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { data: requests, error } = await supabase
+    .from('rank_upgrade_requests')
+    .select('*')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false });
+  if (error) return res.status(500).json({ error: error.message });
+
+  // Enrich with Clerk photo
+  let clerkUsers = [];
+  try {
+    const r = await fetch('https://api.clerk.com/v1/users?limit=200', { headers: { Authorization: `Bearer ${clerkKey}` } });
+    clerkUsers = r.ok ? await r.json() : [];
+  } catch {}
+  const photoMap = {};
+  clerkUsers.forEach(u => { photoMap[u.id] = u.image_url || null; });
+
+  const enriched = (requests || []).map(r => ({ ...r, image_url: photoMap[r.user_id] || null }));
+  res.json({ requests: enriched });
+});
+
+// ── POST /api/admin/rank-upgrades/:id/approve ────────────────────
+router.post('/rank-upgrades/:id/approve', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const { id } = req.params;
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { data: req_, error: fetchErr } = await supabase
+    .from('rank_upgrade_requests').select('user_id, proposed_rank').eq('id', id).single();
+  if (fetchErr) return res.status(404).json({ error: 'Not found' });
+
+  const [{ error: profileErr }, { error: reqErr }] = await Promise.all([
+    supabase.from('student_profiles').upsert({ user_id: req_.user_id, admin_rank: req_.proposed_rank }, { onConflict: 'user_id' }),
+    supabase.from('rank_upgrade_requests').update({ status: 'approved', reviewed_at: new Date().toISOString() }).eq('id', id),
+  ]);
+  if (profileErr || reqErr) return res.status(500).json({ error: (profileErr || reqErr).message });
+  res.json({ ok: true });
+});
+
+// ── POST /api/admin/rank-upgrades/:id/reject ─────────────────────
+router.post('/rank-upgrades/:id/reject', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const { id } = req.params;
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { error } = await supabase
+    .from('rank_upgrade_requests').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
 // keep old route for backward compat
 router.patch('/students/:userId/health', async (req, res) => {
   req.url = req.url.replace('/health', '/profile');

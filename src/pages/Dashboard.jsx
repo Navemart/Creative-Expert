@@ -1390,11 +1390,9 @@ export default function Dashboard() {
         );
         const afterRank  = calcBestHistoricalRank(afterSubs) || SEGMENTS[0];
 
-        // Editing can move rank up OR down — recalculate from all pairs
-        finalRank = afterRank?.label || SEGMENTS[0].label;
-
+        finalRank = beforeRank.label; // keep current rank until admin approves
         if (afterRank.min > beforeRank.min) {
-          // Rank went up → confetti + approval request
+          // Rank went up → create approval request (no immediate rank change)
           const sortedAfter = [...afterSubs].sort((a, b) => new Date(a.month) - new Date(b.month));
           let bestIdx = 1;
           let bestAvg = 0;
@@ -1430,7 +1428,7 @@ export default function Dashboard() {
         const newRankObj = getRank(avg);
 
         if (newRankObj.min > currentRankObj.min) {
-          finalRank = newRankObj.label;
+          finalRank = currentRankLabel; // keep current rank until admin approves
           pendingUpgradeData = {
             user_id:        userId,
             first_name:     user?.firstName || '',
@@ -1514,9 +1512,9 @@ export default function Dashboard() {
       }
     }
 
-    // Save pending request for admin to see (Slack sent only when admin approves)
+    // Save pending request for admin approval
     if (pendingUpgradeData) {
-      await supabase.from('rank_upgrade_requests').insert(pendingUpgradeData);
+      await supabase.from('rank_upgrade_requests').insert({ ...pendingUpgradeData, status: 'pending' });
     }
 
     setMonthlyForm({
@@ -1531,15 +1529,6 @@ export default function Dashboard() {
       nps: '', program_feedback: '',
     });
     setModal(null);
-
-    // Show confetti immediately when rank upgraded (no admin approval needed)
-    if (pendingUpgradeData) {
-      const rankObj = SEGMENTS.find(s => s.label === pendingUpgradeData.proposed_rank);
-      if (rankObj) {
-        setRankUpRank(rankObj);
-        setConfetti(true);
-      }
-    }
 
     fetchAll();
   }

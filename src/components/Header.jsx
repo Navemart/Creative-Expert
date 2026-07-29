@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, ExternalLink, ChevronLeft, Plus, Trash2, Pencil, ToggleLeft, ToggleRight, Flame } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, ExternalLink, ChevronLeft, Plus, Trash2, Pencil, ToggleLeft, ToggleRight, Flame, TrendingUp } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useUser, SignedIn, SignedOut, SignInButton, useClerk } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
@@ -66,6 +66,59 @@ function NpsAlertRow({ item, onDismiss }) {
   );
 }
 
+// ── Rank upgrade row ──────────────────────────────────────────
+const RANK_COLORS = {
+  'TRAINEE': '#9ca3af', 'CREW': '#f97316', 'SECOND OFFICER': '#eab308',
+  'CO-PILOT': '#22c55e', 'CAPTAIN': '#06b6d4', 'EXPERT': '#a855f7',
+};
+function fmtK(n) { const v = Number(n); if (!v) return '—'; return v >= 1000 ? `₪${Math.round(v/1000)}K` : '₪'+Math.round(v).toLocaleString('he-IL'); }
+
+function RankUpgradeRow({ item, onApprove, onReject }) {
+  const [loading, setLoading] = useState(false);
+  const fromColor = RANK_COLORS[item.current_rank]  || '#9ca3af';
+  const toColor   = RANK_COLORS[item.proposed_rank] || '#a855f7';
+
+  async function handle(action) {
+    setLoading(true);
+    await action();
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+          {item.image_url ? <img src={item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (item.first_name || '?')[0].toUpperCase()}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.88)' }}>{item.first_name}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: fromColor }}>{item.current_rank}</span>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>→</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: toColor }}>{item.proposed_rank}</span>
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
+        <span>{fmtK(item.month_1_income)}</span>
+        <span>·</span>
+        <span>{fmtK(item.month_2_income)}</span>
+        <span style={{ marginRight: 'auto', color: '#4fc38a', fontWeight: 700 }}>ממוצע {fmtK(item.avg_income)}</span>
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button onClick={() => handle(onReject)} disabled={loading}
+          style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          דחה
+        </button>
+        <button onClick={() => handle(onApprove)} disabled={loading}
+          style={{ flex: 2, padding: '6px 0', borderRadius: 8, border: 'none', background: toColor, color: '#13152A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+          {loading ? '...' : `✓ אשר — ${item.proposed_rank}`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Notification panel ─────────────────────────────────────────
 function CheckinAlertRow({ student }) {
   const navigate = useNavigate();
@@ -96,9 +149,9 @@ function CheckinAlertRow({ student }) {
   );
 }
 
-function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming }) {
+function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming, rankUpgrades, onApproveRank, onRejectRank }) {
   const payTotal = upcoming.length + overdue.length;
-  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length;
+  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length;
   return (
     <div className="absolute right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
       style={{ width: 340, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
@@ -113,6 +166,20 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
         </div>
       ) : (
         <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+          {/* עליות דרגה ממתינות */}
+          {rankUpgrades.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
+                style={{ background: 'rgba(168,85,247,0.08)', color: '#a855f7' }}>
+                <TrendingUp size={11} /> עליית דרגה — לאישור — {rankUpgrades.length}
+              </div>
+              {rankUpgrades.map(item => (
+                <RankUpgradeRow key={item.id} item={item}
+                  onApprove={() => onApproveRank(item.id)}
+                  onReject={() => onRejectRank(item.id)} />
+              ))}
+            </>
+          )}
           {/* צ'קאינס באיחור */}
           {checkinOverdue.length > 0 && (
             <>
@@ -470,11 +537,31 @@ export default function Header({ onOpenMobile }) {
   const { upcoming, overdue, total: payTotal, dismiss, reload } = usePaymentAlerts();
   const { npsAlerts, dismissNps, npsTotal } = useNpsAlerts();
   const { checkinOverdue, checkinUpcoming, checkinTotal, reloadCheckins } = useCheckinAlerts();
-  const total      = payTotal + npsTotal + checkinTotal;
-  const hasOverdue = overdue.length > 0 || npsTotal > 0 || checkinOverdue.length > 0;
-  const badgeColor = hasOverdue ? '#ef4444' : '#f97316';
+  const [rankUpgrades, setRankUpgrades] = useState([]);
 
-  useEffect(() => { if (bellOpen) { reload(); reloadCheckins(); } }, [bellOpen]);
+  const reloadRankUpgrades = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await fetch('/api/admin/rank-upgrades', { headers: { 'x-admin-id': ADMIN_ID || '' } });
+      if (res.ok) { const d = await res.json(); setRankUpgrades(d.requests || []); }
+    } catch {}
+  }, [isAdmin]);
+
+  async function approveRank(id) {
+    await fetch(`/api/admin/rank-upgrades/${id}/approve`, { method: 'POST', headers: { 'x-admin-id': ADMIN_ID || '' } });
+    setRankUpgrades(prev => prev.filter(r => r.id !== id));
+  }
+  async function rejectRank(id) {
+    await fetch(`/api/admin/rank-upgrades/${id}/reject`, { method: 'POST', headers: { 'x-admin-id': ADMIN_ID || '' } });
+    setRankUpgrades(prev => prev.filter(r => r.id !== id));
+  }
+
+  const rankUpgradeTotal = rankUpgrades.length;
+  const total      = payTotal + npsTotal + checkinTotal + rankUpgradeTotal;
+  const hasOverdue = overdue.length > 0 || npsTotal > 0 || checkinOverdue.length > 0;
+  const badgeColor = hasOverdue ? '#ef4444' : rankUpgradeTotal > 0 ? '#a855f7' : '#f97316';
+
+  useEffect(() => { if (bellOpen) { reload(); reloadCheckins(); reloadRankUpgrades(); } }, [bellOpen]);
 
   useEffect(() => {
     function handle(e) {
@@ -516,7 +603,7 @@ export default function Header({ onOpenMobile }) {
               </span>
             )}
           </button>
-          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} checkinOverdue={checkinOverdue} checkinUpcoming={checkinUpcoming} />}
+          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} checkinOverdue={checkinOverdue} checkinUpcoming={checkinUpcoming} rankUpgrades={rankUpgrades} onApproveRank={approveRank} onRejectRank={rejectRank} />}
         </div>
 
         {/* ── Daily Standard (flame) ── */}
