@@ -48,12 +48,12 @@ const SELF_AUDIT_ITEMS = {
   icon:     ScanSearch,
   children: [
     { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
-    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap, disabled: true },
+    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap, soon: true },
   ],
 };
 
 const TOOLS_ITEMS = [
-  { to: '/tasks',           label: 'מארגן משימות',   icon: ListTodo },
+  { to: '/tasks',           label: 'מארגן משימות',   icon: ListTodo, soon: true },
   { to: '/agents',          label: 'AI ScaleKit',    icon: Bot },
   { to: '/calculator',      label: 'מחשבון תמחור',   icon: Calculator },
   { to: '/transcriptions',  label: 'תמלול',           icon: Mic2 },
@@ -105,12 +105,13 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
         <ul className="mt-0.5 mb-1 space-y-0.5" style={{ paddingRight: '0.75rem', borderRight: '2px solid rgba(255,255,255,0.07)', marginRight: '1rem' }}>
           {item.children.map(child => (
             <li key={child.to}>
-              {child.disabled ? (
+              {(child.disabled || child.soon) ? (
                 <span
-                  className="block rounded-md px-3 py-1.5 text-sm cursor-not-allowed select-none"
+                  className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm cursor-not-allowed select-none"
                   style={{ color: 'rgba(255,255,255,0.25)' }}
                 >
                   {child.label}
+                  {child.soon && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>בנייה</span>}
                 </span>
               ) : (
                 <NavLink
@@ -136,7 +137,25 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
   );
 }
 
-function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile }) {
+function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon }) {
+  if (soon) {
+    return (
+      <li>
+        <div
+          className={['flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium cursor-not-allowed select-none', collapsed ? 'md:justify-center md:px-2' : ''].join(' ')}
+          style={{ color: 'rgba(255,255,255,0.28)' }}
+        >
+          <Icon size={18} className="flex-none" />
+          {!collapsed && (
+            <>
+              <span className="flex-1 text-right">{label}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.04em' }}>בנייה</span>
+            </>
+          )}
+        </div>
+      </li>
+    );
+  }
   return (
     <li>
       <NavLink
@@ -235,27 +254,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onClo
             <ul className="space-y-1">
               <NavItemExpandable item={SELF_AUDIT_ITEMS} collapsed={collapsed} onCloseMobile={onCloseMobile} />
               {ENGINE_ITEMS.map((item) => {
-                if (item.to === '/diagnosis' && !isAdmin) {
-                  return (
-                    <li key={item.to}>
-                      <div
-                        className={['flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium cursor-not-allowed select-none', collapsed ? 'md:justify-center md:px-2' : ''].join(' ')}
-                        style={{ color: 'rgba(255,255,255,0.3)' }}
-                        title="בנייה — בקרוב"
-                      >
-                        <item.icon size={18} className="flex-none" />
-                        {!collapsed && (
-                          <span className="flex items-center gap-2">
-                            {item.label}
-                            <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,193,24,0.15)', color: 'rgba(245,193,24,0.6)', border: '1px solid rgba(245,193,24,0.2)' }}>
-                              בנייה
-                            </span>
-                          </span>
-                        )}
-                      </div>
-                    </li>
-                  );
-                }
+                if (item.to === '/diagnosis' && import.meta.env.PROD) return null;
                 return <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />;
               })}
             </ul>
