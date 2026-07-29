@@ -24,6 +24,7 @@ import ExpertiseEngineAudit from './pages/ExpertiseEngineAudit.jsx';
 import AdminMembersGrid from './pages/AdminMembersGrid.jsx';
 import AdminMemberDetail from './pages/AdminMemberDetail.jsx';
 import AdminEvents from './pages/AdminEvents.jsx';
+import AdminCheckins from './pages/AdminCheckins.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -95,6 +96,14 @@ export default function App() {
               element={
                 <AdminRoute>
                   <AdminEvents />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="admin/checkins"
+              element={
+                <AdminRoute>
+                  <AdminCheckins />
                 </AdminRoute>
               }
             />

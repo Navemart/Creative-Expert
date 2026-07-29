@@ -437,6 +437,8 @@ export default function AdminMemberDetail() {
   const slackPhotos = state?.slackPhotos || {};
   const [tab, setTab]           = useState('overview');
   const [memberStatus, setMemberStatus] = useState(student?.member_status || 'active');
+  const [cadence, setCadence]   = useState(student?.checkin_cadence_days ?? 14);
+  const [savingCadence, setSavingCadence] = useState(false);
   const [saving, setSaving]     = useState(false);
 
   if (!student) {
@@ -452,6 +454,20 @@ export default function AdminMemberDetail() {
   const photoSrc  = student.email ? (slackPhotos[student.email.toLowerCase()] || student.image_url) : student.image_url;
   const sm        = STATUS_META[memberStatus] || STATUS_META.active;
   const rankColor = RANK_COLORS[student.latest_rank] || '#9ca3af';
+
+  async function saveCadence(days) {
+    setSavingCadence(true);
+    try {
+      await fetch(`/api/admin/students/${student.id}/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': ADMIN_ID || '' },
+        body: JSON.stringify({ checkin_cadence_days: Number(days) }),
+      });
+      setCadence(Number(days));
+    } finally {
+      setSavingCadence(false);
+    }
+  }
 
   async function saveStatus(newStatus) {
     setSaving(true);
@@ -502,10 +518,22 @@ export default function AdminMemberDetail() {
               </span>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
             {student.email      && <span style={{ fontSize: 12, color: muted }}>{student.email}</span>}
             {student.enrolled_at && <span style={{ fontSize: 12, color: muted }}>הצטרף {fmtDate(student.enrolled_at)}</span>}
             {student.total_paid  && <span style={{ fontSize: 12, color: '#4fc38a', fontWeight: 700 }}>שילם {fmt(student.total_paid)}</span>}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: muted }}>
+              צ׳קאין כל
+              <select
+                value={cadence}
+                onChange={e => saveCadence(e.target.value)}
+                disabled={savingCadence}
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'white', fontSize: 12, padding: '2px 6px', cursor: 'pointer' }}
+              >
+                {[7, 10, 14, 21, 30].map(d => <option key={d} value={d}>{d} ימים</option>)}
+              </select>
+              {savingCadence && <span style={{ fontSize: 10, color: muted }}>שומר...</span>}
+            </span>
           </div>
         </div>
 

@@ -50,7 +50,7 @@ router.get('/students', async (req, res) => {
       { data: completions },
     ] = await Promise.all([
       supabase.from('monthly_submissions').select('*').order('month'),
-      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active, member_status'),
+      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active, member_status, checkin_cadence_days'),
       supabase.from('rank_upgrade_requests').select('*').eq('status', 'pending'),
       supabase.from('sunday_wins').select('*').order('week_date', { ascending: false }),
       supabase.from('deals').select('*').order('created_at', { ascending: false }),
@@ -102,7 +102,8 @@ router.get('/students', async (req, res) => {
           enrolled_at:   profile?.enrolled_at   || null,
           total_paid:    profile?.total_paid     ?? null,
           is_active:     profile?.is_active      ?? true,
-          member_status: profile?.member_status  || 'active',
+          member_status:        profile?.member_status        || 'active',
+          checkin_cadence_days: profile?.checkin_cadence_days ?? 14,
           monthly:       userSubs,
           wins:          userWins,
           deals:         userDeals,
@@ -148,7 +149,7 @@ router.patch('/students/:userId/profile', async (req, res) => {
     } catch { body = {}; }
   }
 
-  const allowed = ['health_status', 'enrolled_at', 'total_paid', 'member_status'];
+  const allowed = ['health_status', 'enrolled_at', 'total_paid', 'member_status', 'checkin_cadence_days'];
   const updates = {};
   allowed.forEach(k => { if (body[k] !== undefined) updates[k] = body[k]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Nothing to update' });
@@ -173,6 +174,87 @@ router.delete('/deals/:id', async (req, res) => {
     process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
   );
   const { error } = await supabase.from('deals').delete().eq('id', id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+// ── GET /api/admin/checkins ──────────────────────────────────
+router.get('/checkins', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const clerkKey = process.env.CLERK_SECRET_KEY;
+  if (!clerkKey) return res.status(500).json({ error: 'CLERK_SECRET_KEY not configured' });
+
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+
+  const [clerkRes, { data: profiles }, { data: checkins }] = await Promise.all([
+    fetch('https://api.clerk.com/v1/users?limit=200&order_by=-created_at', {
+      headers: { Authorization: `Bearer ${clerkKey}` },
+    }),
+    supabase.from('student_profiles').select('user_id, checkin_cadence_days, member_status'),
+    supabase.from('student_checkins').select('user_id, checked_at').order('checked_at', { ascending: false }),
+  ]);
+
+  if (!clerkRes.ok) return res.status(502).json({ error: 'Clerk API error' });
+  const clerkUsers = await clerkRes.json();
+  const adminId = process.env.VITE_ADMIN_USER_ID;
+
+  // Last check-in per user
+  const lastCheckin = {};
+  for (const c of checkins || []) {
+    if (!lastCheckin[c.user_id]) lastCheckin[c.user_id] = c.checked_at;
+  }
+
+  const now = Date.now();
+  const students = clerkUsers
+    .filter(u => u.id !== adminId)
+    .map(u => {
+      const email   = u.email_addresses?.[0]?.email_address || '';
+      const name    = [u.first_name, u.last_name].filter(Boolean).join(' ') || email || u.id;
+      const profile = (profiles || []).find(p => p.user_id === u.id);
+      const cadence = profile?.checkin_cadence_days ?? 14;
+      const status  = profile?.member_status || 'active';
+      const lastAt  = lastCheckin[u.id] || null;
+      const lastMs  = lastAt ? new Date(lastAt).getTime() : null;
+      const daysSince = lastMs ? Math.floor((now - lastMs) / 86400000) : null;
+      const nextDue   = lastMs ? lastMs + cadence * 86400000 : null;
+
+      let column;
+      if (lastMs && (now - lastMs) < 7 * 86400000) column = 'done';
+      else if (nextDue && nextDue > now) column = 'upcoming';
+      else column = 'overdue';
+
+      return { id: u.id, name, email, image_url: u.image_url || null, cadence, status, last_checkin: lastAt, days_since: daysSince, next_due: nextDue ? new Date(nextDue).toISOString() : null, column };
+    })
+    .filter(s => s.status === 'active');
+
+  res.json({ students });
+});
+
+// ── POST /api/admin/checkins ─────────────────────────────────
+router.post('/checkins', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+
+  let body = req.body;
+  if (!body || !body.user_id) {
+    try {
+      const raw = await new Promise((resolve, reject) => {
+        let d = ''; req.on('data', c => { d += c; }); req.on('end', () => resolve(d)); req.on('error', reject);
+      });
+      body = raw ? JSON.parse(raw) : {};
+    } catch { body = {}; }
+  }
+
+  const { user_id, notes } = body;
+  if (!user_id) return res.status(400).json({ error: 'user_id required' });
+
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { error } = await supabase.from('student_checkins').insert({ user_id, notes: notes || null });
   if (error) return res.status(500).json({ error: error.message });
   res.json({ ok: true });
 });
