@@ -151,4 +151,34 @@ router.post('/rank-upgrade', async (req, res) => {
   }
 });
 
+// ── GET /api/slack/member-photos — returns { email: photo_url } map ──
+let _photoCache = null;
+let _photoCacheAt = 0;
+router.get('/member-photos', async (req, res) => {
+  const token = process.env.SLACK_BOT_TOKEN;
+  if (!token) return res.json({});
+  // Cache 10 minutes
+  if (_photoCache && Date.now() - _photoCacheAt < 600_000) return res.json(_photoCache);
+  try {
+    const r = await fetch('https://slack.com/api/users.list?limit=200', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const d = await r.json();
+    if (!d.ok) return res.json({});
+    const map = {};
+    (d.members || []).forEach(m => {
+      if (m.deleted || m.is_bot) return;
+      const email = m.profile?.email;
+      const photo = m.profile?.image_192 || m.profile?.image_72;
+      if (email && photo) map[email.toLowerCase()] = photo;
+    });
+    _photoCache = map;
+    _photoCacheAt = Date.now();
+    res.json(map);
+  } catch (e) {
+    console.error('[slack/member-photos]', e.message);
+    res.json({});
+  }
+});
+
 export default router;
