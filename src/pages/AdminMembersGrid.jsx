@@ -339,6 +339,46 @@ function StudentModal({ student, photoSrc, onClose }) {
 }
 
 // ── SORT DROPDOWN ──────────────────────────────────────────────
+function StatusDropdown({ value, onChange, countFor }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const cur = FILTER_TABS.find(f => f.k === value);
+
+  useEffect(() => {
+    if (!open) return;
+    const fn = e => { if (!ref.current?.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', fn);
+    return () => document.removeEventListener('mousedown', fn);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: value !== 'all' ? 'rgba(245,193,24,0.1)' : 'rgb(var(--bg-surface))', border: `1px solid ${value !== 'all' ? 'rgba(245,193,24,0.4)' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', fontSize: 13, color: value !== 'all' ? '#F5C118' : 'rgba(255,255,255,0.75)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+        {value !== 'all' && STATUS_META[value] && <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_META[value].color, flexShrink: 0 }} />}
+        {cur?.l || 'סטטוס תלמיד'}
+        <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, minWidth: 160, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
+          {FILTER_TABS.map(f => {
+            const dot = STATUS_META[f.k]?.color;
+            const count = countFor(f.k);
+            return (
+              <button key={f.k} onClick={() => { onChange(f.k); setOpen(false); }}
+                style={{ width: '100%', textAlign: 'right', padding: '9px 14px', fontSize: 13, color: f.k === value ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: f.k === value ? 700 : 500, background: f.k === value ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                {dot ? <span style={{ width: 7, height: 7, borderRadius: '50%', background: dot, flexShrink: 0 }} /> : <span style={{ width: 7 }} />}
+                <span style={{ flex: 1 }}>{f.l}</span>
+                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SortDropdown({ sortKey, sortDir, onChange }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -516,30 +556,7 @@ export default function AdminMembersGrid() {
           </div>
         )}
 
-        {/* ── ROW 1: Filter tabs + count ──────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
-          {FILTER_TABS.map(f => {
-            const isActive = filter === f.k;
-            const count    = countFor(f.k);
-            const dotColor = STATUS_META[f.k]?.color || null;
-            return (
-              <button key={f.k} onClick={() => setFilter(f.k)}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 13px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
-                  border: `1px solid ${isActive ? '#F5C118' : borderClr}`,
-                  background: isActive ? '#F5C118' : 'rgba(255,255,255,0.05)',
-                  color: isActive ? '#111827' : 'rgba(255,255,255,0.5)' }}>
-                {dotColor && <span style={{ width: 7, height: 7, borderRadius: '50%', background: isActive ? '#111827' : dotColor, flexShrink: 0 }} />}
-                {f.l}
-                <span style={{ fontSize: 10, opacity: 0.65 }}>({count})</span>
-              </button>
-            );
-          })}
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginRight: 6, fontWeight: 500 }}>
-            {filtered.length} מוצגים
-          </span>
-        </div>
-
-        {/* ── ROW 2: Search + view + sort | right buttons ─── */}
+        {/* ── ROW: Search + view + sort | right buttons ─── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
 
           {/* Search */}
@@ -562,6 +579,8 @@ export default function AdminMembersGrid() {
 
           {/* Sort */}
           <SortDropdown sortKey={sortKey} sortDir={sortDir} onChange={(k, d) => { setSortKey(k); setSortDir(d); }} />
+          <StatusDropdown value={filter} onChange={setFilter} countFor={countFor} />
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>{filtered.length} מוצגים</span>
 
           {/* Spacer */}
           <div style={{ flex: 1 }} />
