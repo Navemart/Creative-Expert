@@ -37,7 +37,6 @@ const NAV_ITEMS = [
 
 const ENGINE_ITEMS = [
   { to: '/roadmap',         label: 'מפת דרכים',    icon: MapIcon },
-  { to: '/diagnosis',       label: 'אבחון עסקי',   icon: Target },
   { to: '/content-library', label: 'ספריית תכנים', icon: Library },
 ];
 
@@ -245,7 +244,7 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onClo
             <ul className="space-y-1">
               <NavItemExpandable item={SELF_AUDIT_ITEMS} collapsed={collapsed} onCloseMobile={onCloseMobile} />
               {ENGINE_ITEMS.map((item) => {
-                if (item.to === '/diagnosis') {
+                if (item.to === '/diagnosis' && !isAdmin) {
                   return (
                     <li key={item.to}>
                       <div
