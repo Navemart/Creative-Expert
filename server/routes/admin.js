@@ -50,7 +50,7 @@ router.get('/students', async (req, res) => {
       { data: completions },
     ] = await Promise.all([
       supabase.from('monthly_submissions').select('*').order('month'),
-      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active'),
+      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active, member_status'),
       supabase.from('rank_upgrade_requests').select('*').eq('status', 'pending'),
       supabase.from('sunday_wins').select('*').order('week_date', { ascending: false }),
       supabase.from('deals').select('*').order('created_at', { ascending: false }),
@@ -102,6 +102,7 @@ router.get('/students', async (req, res) => {
           enrolled_at:   profile?.enrolled_at   || null,
           total_paid:    profile?.total_paid     ?? null,
           is_active:     profile?.is_active      ?? true,
+          member_status: profile?.member_status  || 'active',
           monthly:       userSubs,
           wins:          userWins,
           deals:         userDeals,
@@ -132,9 +133,24 @@ router.get('/students', async (req, res) => {
 router.patch('/students/:userId/profile', async (req, res) => {
   if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
   const { userId } = req.params;
-  const allowed = ['health_status', 'enrolled_at', 'total_paid'];
+
+  // On Vercel, req.body may not be parsed yet — read raw body if needed
+  let body = req.body;
+  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
+    try {
+      const raw = await new Promise((resolve, reject) => {
+        let data = '';
+        req.on('data', chunk => { data += chunk; });
+        req.on('end', () => resolve(data));
+        req.on('error', reject);
+      });
+      body = raw ? JSON.parse(raw) : {};
+    } catch { body = {}; }
+  }
+
+  const allowed = ['health_status', 'enrolled_at', 'total_paid', 'member_status'];
   const updates = {};
-  allowed.forEach(k => { if (req.body[k] !== undefined) updates[k] = req.body[k]; });
+  allowed.forEach(k => { if (body[k] !== undefined) updates[k] = body[k]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Nothing to update' });
 
   const supabase = createClient(
