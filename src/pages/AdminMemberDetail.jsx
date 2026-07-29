@@ -456,12 +456,19 @@ export default function AdminMemberDetail() {
   async function saveStatus(newStatus) {
     setSaving(true);
     try {
-      await fetch(`/api/admin/students/${student.id}/profile`, {
+      const res = await fetch(`/api/admin/students/${student.id}/profile`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'x-admin-id': ADMIN_ID || '' },
         body: JSON.stringify({ member_status: newStatus }),
       });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`שגיאה בשמירה: ${err.error || res.status}`);
+        return;
+      }
       setMemberStatus(newStatus);
+    } catch (e) {
+      alert(`שגיאה: ${e.message}`);
     } finally {
       setSaving(false);
     }
