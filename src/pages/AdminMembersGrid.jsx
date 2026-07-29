@@ -465,16 +465,26 @@ export default function AdminMembersGrid() {
           const totalRevenue = allDealsEver.reduce((s, d) => s + num(d.total_amount), 0);
           const studentsWithPaid = students.filter(s => num(s.total_paid) > 0);
           const avgLTV       = studentsWithPaid.length ? Math.round(studentsWithPaid.reduce((s, st) => s + num(st.total_paid), 0) / studentsWithPaid.length) : null;
-          const d30          = new Date(); d30.setMonth(d30.getMonth() - 1);
-          const recentDeals  = allDealsEver.filter(d => d.created_at && new Date(d.created_at) >= d30);
-          const newDealsTotal = recentDeals.reduce((s, d) => s + num(d.total_amount), 0);
           const perStudent   = students.map(s => ({ name: s.name, total: (s.deals||[]).reduce((a,d) => a + num(d.total_amount), 0) }));
           const topStudent   = perStudent.length ? perStudent.sort((a,b) => b.total - a.total)[0] : null;
+
+          // Best month: group all deals by YYYY-MM, find month with highest total
+          const byMonth = {};
+          allDealsEver.forEach(d => {
+            if (!d.created_at) return;
+            const m = d.created_at.slice(0, 7);
+            byMonth[m] = (byMonth[m] || 0) + num(d.total_amount);
+          });
+          const bestMonthKey = Object.keys(byMonth).sort((a, b) => byMonth[b] - byMonth[a])[0] || null;
+          const bestMonthTotal = bestMonthKey ? byMonth[bestMonthKey] : 0;
+          const bestMonthLabel = bestMonthKey
+            ? new Date(bestMonthKey + '-01').toLocaleString('he-IL', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+            : null;
 
           const KPIS = [
             { label: 'סה״כ עסקאות — כל הזמנים', value: totalRevenue > 0 ? `₪${totalRevenue.toLocaleString('he-IL')}` : '—', color: '#F5C118', sub: `${allDealsEver.length} עסקאות` },
             { label: 'ממוצע LTV',                 value: avgLTV ? `₪${avgLTV.toLocaleString('he-IL')}` : '—',               color: '#4fc38a', sub: 'שווי לקוח ממוצע' },
-            { label: 'עסקאות חדשות — 30י׳',       value: newDealsTotal > 0 ? `₪${newDealsTotal.toLocaleString('he-IL')}` : '—', color: '#a78bfa', sub: `${recentDeals.length} עסקאות` },
+            { label: 'חודש שיא עסקאות',            value: bestMonthTotal > 0 ? `₪${bestMonthTotal.toLocaleString('he-IL')}` : '—', color: '#a78bfa', sub: bestMonthLabel || '' },
             { label: 'הכי רווחי',                  value: topStudent?.total > 0 ? `₪${topStudent.total.toLocaleString('he-IL')}` : '—', color: '#38bdf8', sub: topStudent?.name || '' },
           ];
           return (
