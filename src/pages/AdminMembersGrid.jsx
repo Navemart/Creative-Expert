@@ -2,6 +2,12 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { Search, LayoutGrid, List, ChevronUp, ChevronDown, X, Eye, Share2, RefreshCw } from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -372,16 +378,17 @@ function SortDropdown({ sortKey, sortDir, onChange }) {
 export default function AdminMembersGrid() {
   const { user } = useUser();
   const navigate = useNavigate();
-  const [students,    setStudents]    = useState([]);
-  const [roadmap,     setRoadmap]     = useState(null);
-  const [slackPhotos, setSlackPhotos] = useState({});
-  const [loading,     setLoading]     = useState(true);
-  const [search,      setSearch]      = useState('');
-  const [filter,      setFilter]      = useState('all');
-  const [viewMode,    setViewMode]    = useState('grid');
-  const [sortKey,     setSortKey]     = useState('income');
-  const [sortDir,     setSortDir]     = useState(-1);
-  const [refreshing,  setRefreshing]  = useState(false);
+  const [students,      setStudents]      = useState([]);
+  const [roadmap,       setRoadmap]       = useState(null);
+  const [slackPhotos,   setSlackPhotos]   = useState({});
+  const [loading,       setLoading]       = useState(true);
+  const [search,        setSearch]        = useState('');
+  const [filter,        setFilter]        = useState('all');
+  const [viewMode,      setViewMode]      = useState('grid');
+  const [sortKey,       setSortKey]       = useState('income');
+  const [sortDir,       setSortDir]       = useState(-1);
+  const [refreshing,    setRefreshing]    = useState(false);
+  const [unposted,      setUnposted]      = useState({ wins: 0, deals: 0 });
 
   if (user && user.id !== ADMIN_ID) {
     return <div style={{ display: 'flex', height: 240, alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>אין גישה</div>;
@@ -407,7 +414,14 @@ export default function AdminMembersGrid() {
     }
   }
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    fetchAll();
+    const since = new Date(Date.now() - 72 * 3600000).toISOString();
+    Promise.all([
+      supabase.from('sunday_wins').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
+      supabase.from('deals').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
+    ]).then(([wRes, dRes]) => setUnposted({ wins: wRes.count || 0, deals: dRes.count || 0 }));
+  }, []);
 
   // Best photo: Slack first (by email), fallback to Clerk image_url
   function getPhoto(student) {
@@ -443,6 +457,19 @@ export default function AdminMembersGrid() {
   return (
     <div dir="rtl" style={{  padding: '28px 24px' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+
+        {/* ── Slack unposted alert ────────────────────────── */}
+        {(unposted.wins > 0 || unposted.deals > 0) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 10, marginBottom: 16, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+            <span style={{ color: '#fca5a5', fontSize: 13, fontWeight: 600 }}>
+              ⚠️ לא פורסם לסלאק:
+              {unposted.wins > 0 && ` ${unposted.wins} נצחונות`}
+              {unposted.wins > 0 && unposted.deals > 0 && ' ·'}
+              {unposted.deals > 0 && ` ${unposted.deals} עסקאות`}
+              {' — '}הCron יפרסם ב-09:00, או פרסם ידנית מפאנל הניהול הישן.
+            </span>
+          </div>
+        )}
 
         {/* ── ROW 1: Filter tabs + count ──────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>

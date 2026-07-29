@@ -48,7 +48,7 @@ const SELF_AUDIT_ITEMS = {
   icon:     ScanSearch,
   children: [
     { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
-    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap, disabled: true },
+    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap },
   ],
 };
 
@@ -60,20 +60,8 @@ const TOOLS_ITEMS = [
 ];
 
 const ADMIN_ITEMS = [
-  { to: '/admin/members', label: 'תלמידים — רשת', icon: ShieldCheck },
+  { to: '/admin/members', label: 'תלמידים — רשת',  icon: ShieldCheck },
   { to: '/admin/events',  label: 'אירועי משתמשים', icon: Activity },
-  {
-    to: '/admin/students',
-    label: 'פאנל ניהול',
-    icon: ShieldCheck,
-    children: [
-      { to: '/admin/students',           label: 'תלמידים',          end: true },
-      { to: '/admin/students/monthly',   label: 'נתונים חודשיים' },
-      { to: '/admin/students/wins',      label: 'נצחונות שבועיים' },
-      { to: '/admin/students/deals',     label: 'עסקאות חדשות' },
-      { to: '/admin/students/checklist', label: 'צ׳קליסט' },
-    ],
-  },
 ];
 
 
