@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, LayoutGrid, List, ChevronUp, ChevronDown, X, Eye, Share2, RefreshCw } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -378,6 +378,7 @@ function SortDropdown({ sortKey, sortDir, onChange }) {
 export default function AdminMembersGrid() {
   const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [students,      setStudents]      = useState([]);
   const [roadmap,       setRoadmap]       = useState(null);
   const [slackPhotos,   setSlackPhotos]   = useState({});
@@ -421,7 +422,7 @@ export default function AdminMembersGrid() {
       supabase.from('sunday_wins').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
       supabase.from('deals').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
     ]).then(([wRes, dRes]) => setUnposted({ wins: wRes.count || 0, deals: dRes.count || 0 }));
-  }, []);
+  }, [location.key]);
 
   // Best photo: Slack first (by email), fallback to Clerk image_url
   function getPhoto(student) {
