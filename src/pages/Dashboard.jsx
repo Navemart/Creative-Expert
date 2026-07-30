@@ -1889,8 +1889,11 @@ export default function Dashboard() {
           );
           const currentIdx = allOrderedTasks.findIndex(t => !rdDone.has(t.id));
           const anchor = currentIdx === -1 ? allOrderedTasks.length - 1 : currentIdx;
-          const from = Math.max(0, anchor - 2);
-          const to   = Math.min(allOrderedTasks.length, anchor + 3);
+          // Show more tasks on large screens — window expands around the current task
+          const windowSize = typeof window !== 'undefined' && window.innerHeight > 900 ? 10 : 5;
+          const before = Math.floor(windowSize / 3);
+          const from = Math.max(0, anchor - before);
+          const to   = Math.min(allOrderedTasks.length, from + windowSize);
           const visible = allOrderedTasks.slice(from, to);
           const doneCount = allOrderedTasks.filter(t => rdDone.has(t.id)).length;
           const pct = allOrderedTasks.length > 0 ? Math.round(doneCount / allOrderedTasks.length * 100) : 0;
@@ -1904,8 +1907,8 @@ export default function Dashboard() {
                     {rdPhases.length > 0 && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש {rdCurrentPhaseIndex} מתוך {rdPhases.length}</span>}
                   </div>
                 </div>
-                <button onClick={() => navigate('/roadmap')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition flex-none mt-1" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                  מלאה <ChevronLeft size={13} />
+                <button onClick={() => navigate('/roadmap')} className="flex items-center gap-1 text-xs font-semibold hover:opacity-100 transition flex-none mt-1 px-3 py-1.5 rounded-lg" style={{ color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)' }}>
+                  מעבר למפת הדרכים <ChevronLeft size={13} />
                 </button>
               </div>
 
