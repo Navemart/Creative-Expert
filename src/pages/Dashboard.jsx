@@ -1568,7 +1568,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div dir="rtl" className="w-full space-y-6">
+    <div dir="rtl" className="w-full h-full flex flex-col gap-4 overflow-hidden">
 
       {/* ── 1. Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1611,10 +1611,10 @@ export default function Dashboard() {
       />
 
       {/* ── 3. Focus + Streak (ימין) | גרף הכנסות (שמאל) ── */}
-      <div className="flex gap-5" style={{ alignItems: 'stretch' }}>
+      <div className="flex gap-5 flex-1 min-h-0">
 
         {/* ימין: הצעד הבא + סטריק */}
-        <div className="flex flex-col gap-4" style={{ width: '37%', flexShrink: 0 }}>
+        <div className="flex flex-col gap-4 min-h-0 overflow-y-auto" style={{ width: '37%', flexShrink: 0 }}>
 
           {/* הצעד הבא */}
           <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', flex: 1 }}>
@@ -1674,7 +1674,7 @@ export default function Dashboard() {
         </div>
 
         {/* שמאל: גרף הכנסות */}
-        <div className="flex-1 rounded-2xl p-6" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex-1 rounded-2xl p-6 flex flex-col min-h-0" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
           {(() => {
             const rangeTotal = chartData.reduce((s, d) => s + (d.revenue || 0), 0);
             const rangeLabel = chartRange === 'all' ? 'כל הזמן' : chartRange === '1M' ? 'חודש אחרון' : chartRange === '3M' ? '3 חודשים' : '6 חודשים';
@@ -1696,8 +1696,8 @@ export default function Dashboard() {
             );
           })()}
           {chartData.length > 0 ? (
-            <div dir="ltr">
-              <ResponsiveContainer width="100%" height={200}>
+            <div dir="ltr" style={{ flex: 1, minHeight: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1836,17 +1836,17 @@ export default function Dashboard() {
       })()}
 
       {/* ── 6. פגישות קרובות (ימין) | מפת דרכים (שמאל) ── */}
-      <div className="flex gap-5" style={{ alignItems: 'stretch' }}>
+      <div className="flex gap-5 flex-1 min-h-0">
 
         {/* ימין: פגישות קרובות */}
-        <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="rounded-2xl p-5 flex flex-col gap-4 min-h-0" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
             <button onClick={() => navigate('/zoom')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
               כל הפגישות <ChevronLeft size={13} />
             </button>
           </div>
-          <div className="flex flex-col gap-2 flex-1">
+          <div className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-0">
             {upcomingMeetings === null && <div className="flex-1 flex items-center justify-center"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
             {upcomingMeetings?.length === 0 && <div className="flex-1 flex items-center justify-center"><p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p></div>}
             {upcomingMeetings?.map(m => {
@@ -1895,7 +1895,7 @@ export default function Dashboard() {
           const doneCount = allOrderedTasks.filter(t => rdDone.has(t.id)).length;
           const pct = allOrderedTasks.length > 0 ? Math.round(doneCount / allOrderedTasks.length * 100) : 0;
           return (
-            <div className="flex-1 rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div className="flex-1 rounded-2xl p-5 flex flex-col gap-3 min-h-0" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
               <div className="flex items-start justify-between">
                 <div>
                   <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>מפת דרכים</span>
@@ -1918,7 +1918,7 @@ export default function Dashboard() {
               </div>
 
               {/* Tasks window */}
-              <div className="flex flex-col gap-0.5 flex-1">
+              <div className="flex flex-col gap-0.5 flex-1 overflow-y-auto min-h-0">
                 {!roadmapAllData && <p className="text-xs text-center py-4" style={{ color: 'rgba(255,255,255,0.2)' }}>טוען...</p>}
                 {from > 0 && (
                   <p className="text-[11px] px-2 pb-1" style={{ color: 'rgba(255,255,255,0.18)' }}>· · · {from} משימות קודמות</p>
