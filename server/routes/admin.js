@@ -351,16 +351,40 @@ router.post('/checkins', async (req, res) => {
     } catch { body = {}; }
   }
 
-  const { user_id, notes } = body;
+  const { user_id, notes, focus, bottleneck, checked_date } = body;
   if (!user_id) return res.status(400).json({ error: 'user_id required' });
 
   const supabase = createClient(
     process.env.VITE_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
   );
-  const { error } = await supabase.from('student_checkins').insert({ user_id, notes: notes || null });
+  const { error } = await supabase.from('student_checkins').insert({
+    user_id,
+    notes: notes || null,
+    focus: focus || null,
+    bottleneck: bottleneck || null,
+    checked_date: checked_date || null,
+  });
   if (error) return res.status(500).json({ error: error.message });
   res.json({ ok: true });
+});
+
+// ── GET /api/admin/checkins/:userId/history ──────────────────
+router.get('/checkins/:userId/history', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const { userId } = req.params;
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { data, error } = await supabase
+    .from('student_checkins')
+    .select('id, checked_at, checked_date, focus, bottleneck, notes')
+    .eq('user_id', userId)
+    .order('checked_at', { ascending: false })
+    .limit(20);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ history: data || [] });
 });
 
 // ── GET /api/admin/rank-upgrades ────────────────────────────────
