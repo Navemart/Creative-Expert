@@ -214,20 +214,7 @@ function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onTo
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-<span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>#{student.checkin_count || 0}</span>
-        <button
-          onClick={onToggle}
-          title="פתח פרטים"
-          style={{
-            width: 28, height: 28, borderRadius: 8, border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-            background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', transition: 'background 0.12s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
-        >
-          <ChevronDown size={14} />
-        </button>
+        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>#{student.checkin_count || 0}</span>
         <button
           onClick={() => onCheckin(student.id)}
           disabled={checking === student.id}
@@ -242,6 +229,19 @@ function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onTo
           onMouseLeave={e => { e.currentTarget.style.background = checking === student.id ? 'rgba(34,197,94,0.3)' : 'rgba(34,197,94,0.12)'; }}
         >
           <Check size={14} />
+        </button>
+        <button
+          onClick={onToggle}
+          title="פתח פרטים"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            color: 'rgba(255,255,255,0.35)', padding: 2, transition: 'color 0.12s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)'; }}
+        >
+          <ChevronDown size={15} />
         </button>
       </div>
     </div>
