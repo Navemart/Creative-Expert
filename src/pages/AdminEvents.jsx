@@ -68,6 +68,7 @@ export default function AdminEvents() {
   const [stats, setStats]       = useState(null);
   const [loading, setLoading]   = useState(true);
   const [filters, setFilters]   = useState({ user: '', event: '', page: '', from: '', to: '' });
+  const [hideAdmin, setHideAdmin] = useState(true);
   const [tab, setTab]           = useState('table'); // 'table' | 'stats'
 
   const headers = { 'x-admin-id': user?.id || '' };
@@ -106,6 +107,8 @@ export default function AdminEvents() {
 
   if (!isAdmin) return <div style={{ color: 'rgba(255,255,255,0.4)', padding: 40, textAlign: 'center' }}>גישה מוגבלת</div>;
 
+  const visibleEvents = hideAdmin ? events.filter(ev => ev.clerk_user_id !== ADMIN_ID) : events;
+
   const cell = { padding: '10px 12px', fontSize: 12, color: 'rgba(255,255,255,0.75)', borderBottom: '1px solid rgba(255,255,255,0.05)', verticalAlign: 'middle', whiteSpace: 'nowrap' };
   const th   = { ...cell, color: 'rgba(255,255,255,0.35)', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', background: 'rgb(var(--bg-elevated))' };
 
@@ -118,7 +121,7 @@ export default function AdminEvents() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>אירועי משתמשים</h1>
           {stats && (
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
-              {stats.uniqueUsers} משתמשים פעילים · {events.length} אירועים מוצגים
+              {stats.uniqueUsers} משתמשים פעילים · {visibleEvents.length} אירועים מוצגים
             </p>
           )}
         </div>
@@ -129,6 +132,10 @@ export default function AdminEvents() {
               {t === 'table' ? 'טבלה' : 'סטטיסטיקות'}
             </button>
           ))}
+            <button onClick={() => setHideAdmin(v => !v)}
+            style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.12)', background: hideAdmin ? 'rgba(239,68,68,0.12)' : 'transparent', color: hideAdmin ? '#f87171' : 'rgba(255,255,255,0.5)' }}>
+            {hideAdmin ? 'מסתיר אדמין' : 'הצג אדמין'}
+          </button>
           <button onClick={load} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -174,7 +181,7 @@ export default function AdminEvents() {
                   <tr><td colSpan={9} style={{ ...cell, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>טוען...</td></tr>
                 ) : events.length === 0 ? (
                   <tr><td colSpan={9} style={{ ...cell, textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: 40 }}>אין אירועים</td></tr>
-                ) : events.map(ev => (
+                ) : visibleEvents.map(ev => (
                   <tr key={ev.id} style={{ background: ev.ignore_on ? 'rgba(255,255,255,0.02)' : 'transparent', opacity: ev.ignore_on ? 0.4 : 1 }}>
                     <td style={cell}><span style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'monospace' }}>{ev.id}</span></td>
                     <td style={{ ...cell, maxWidth: 200 }}>
