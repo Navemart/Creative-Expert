@@ -37,6 +37,10 @@ router.post('/', async (req, res) => {
   const { clerk_user_id, event, page, metadata, session_id } = req.body;
   if (!event) return res.status(400).json({ error: 'event required' });
 
+  // Skip tracking for the admin user
+  const adminId = process.env.VITE_ADMIN_USER_ID;
+  if (adminId && clerk_user_id === adminId) return res.json({ ok: true, skipped: true });
+
   const { error } = await sb().from('user_events').insert({
     clerk_user_id: clerk_user_id || null,
     event,
@@ -61,6 +65,7 @@ router.get('/', async (req, res) => {
   let q = sb()
     .from('user_events')
     .select('*')
+    .neq('clerk_user_id', adminId)
     .order('created_at', { ascending: false })
     .limit(Number(limit));
 
@@ -91,11 +96,12 @@ router.get('/stats', async (req, res) => {
 
   const db = sb();
 
+  const adminId = process.env.VITE_ADMIN_USER_ID;
   const [byEvent, byPage, byUser, daily] = await Promise.all([
-    db.from('user_events').select('event').neq('ignore_on', true),
-    db.from('user_events').select('page').eq('event', 'page_view').neq('ignore_on', true),
-    db.from('user_events').select('clerk_user_id').neq('ignore_on', true).neq('clerk_user_id', null),
-    db.from('user_events').select('created_at').eq('event', 'page_view').neq('ignore_on', true)
+    db.from('user_events').select('event').neq('ignore_on', true).neq('clerk_user_id', adminId),
+    db.from('user_events').select('page').eq('event', 'page_view').neq('ignore_on', true).neq('clerk_user_id', adminId),
+    db.from('user_events').select('clerk_user_id').neq('ignore_on', true).neq('clerk_user_id', null).neq('clerk_user_id', adminId),
+    db.from('user_events').select('created_at').eq('event', 'page_view').neq('ignore_on', true).neq('clerk_user_id', adminId)
       .gte('created_at', new Date(Date.now() - 30 * 24 * 3600000).toISOString()),
   ]);
 
