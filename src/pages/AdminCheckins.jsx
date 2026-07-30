@@ -214,12 +214,7 @@ function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onTo
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        {student.phase && (
-          <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,193,24,0.1)', color: 'rgba(245,193,24,0.6)', border: '1px solid rgba(245,193,24,0.2)' }}>
-            {student.phase}
-          </span>
-        )}
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>#{student.checkin_count || 0}</span>
+<span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>#{student.checkin_count || 0}</span>
         <button
           onClick={onToggle}
           title="פתח פרטים"
