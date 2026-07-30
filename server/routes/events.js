@@ -37,6 +37,11 @@ router.post('/', async (req, res) => {
   const { clerk_user_id, event, page, metadata, session_id } = req.body;
   if (!event) return res.status(400).json({ error: 'event required' });
 
+  // Don't track admin actions
+  if (clerk_user_id && clerk_user_id === process.env.VITE_ADMIN_USER_ID) {
+    return res.json({ ok: true });
+  }
+
   const { error } = await sb().from('user_events').insert({
     clerk_user_id: clerk_user_id || null,
     event,
