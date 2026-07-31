@@ -2562,7 +2562,7 @@ export default function Dashboard() {
                       onClick={() => setMonthlyForm(f => ({ ...f, _datePicker: !f._datePicker }))}
                       style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.06)',
                         border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>
-                      <span style={{ fontSize: '1.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{monthLabel} {rmYear}</span>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>{monthLabel} {rmYear}</span>
                       <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
                     </button>
                     {monthlyForm._datePicker && (
