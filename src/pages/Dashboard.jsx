@@ -1521,6 +1521,7 @@ export default function Dashboard() {
       await supabase.from('rank_upgrade_requests').insert({ ...pendingUpgradeData, status: 'pending' });
     }
 
+    setMonthlyStep(1);
     setMonthlyForm({
       report_month: '', total_new_deals: '', retainers: '', total_income: '',
       software_expenses: '', variable_expenses: '', paid_ads: '',
@@ -2647,7 +2648,7 @@ export default function Dashboard() {
                     הבא: {MSTEP_META[monthlyStep].label} →
                   </button>
                 ) : (
-                  <button onClick={() => { submitMonthly(); setMonthlyStep(1); }}
+                  <button onClick={submitMonthly}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90"
                     style={{ background: mAccent, color: '#fff' }}>
                     שלח סיכום {monthLabel} ✓
