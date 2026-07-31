@@ -231,7 +231,7 @@ function Input({ placeholder, value, onChange, type = 'text', min }) {
 const minput = {
   width: '100%', background: 'rgb(var(--bg-elevated))',
   border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
-  padding: '9px 12px', fontSize: 14, color: 'rgba(255,255,255,0.9)',
+  padding: '9px 12px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.9)',
   outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
 };
 
@@ -239,8 +239,8 @@ function MSection({ icon, label, color = '#F5C118', children }) {
   return (
     <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '20px 20px 16px', marginBottom: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <span style={{ fontSize: 18 }}>{icon}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+        <span style={{ fontSize: '1.125rem' }}>{icon}</span>
+        <span style={{ fontSize: '0.8125rem', fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>{children}</div>
     </div>
@@ -258,10 +258,10 @@ function MGrid({ cols = 2, children }) {
 function MField({ label, hint, required, children, full }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, gridColumn: full ? '1 / -1' : undefined }}>
-      <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.82)' }}>
+      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)' }}>
         {label}{required && <span style={{ color: '#f87171', marginRight: 3 }}>*</span>}
       </label>
-      {hint && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', marginTop: -2 }}>{hint}</p>}
+      {hint && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.25)', marginTop: -2 }}>{hint}</p>}
       {children}
     </div>
   );
@@ -273,6 +273,32 @@ function MInput({ value, onChange, placeholder, type = 'text' }) {
       style={minput} onWheel={type === 'number' ? e => e.currentTarget.blur() : undefined} />
   );
 }
+
+function MInputC({ value, onChange, placeholder, type = 'text' }) {
+  return (
+    <input type={type} value={value} onChange={onChange} placeholder={placeholder}
+      style={{ width: '100%', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 8, padding: '7px 10px', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.9)',
+        outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', textAlign: 'right' }}
+      onWheel={type === 'number' ? e => e.currentTarget.blur() : undefined} />
+  );
+}
+
+function MRow({ label, hint, required, children }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 128px', alignItems: 'center', gap: 12 }}>
+      <div>
+        <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
+          {label}{required && <span style={{ color: '#f87171', marginRight: 3 }}>*</span>}
+        </p>
+        {hint && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>{hint}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const MDivider = () => <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', margin: '4px 0' }} />;
 
 // inject slider CSS once
 if (typeof document !== 'undefined' && !document.getElementById('mslider-style')) {
@@ -330,12 +356,12 @@ function MSlider({ value, onChange, min = 1, max = 10 }) {
     <div>
       {/* Value */}
       <div style={{ display:'flex', alignItems:'baseline', justifyContent:'center', gap:4, marginBottom:14 }}>
-        <span style={{ fontSize:40, fontWeight:900, lineHeight:1,
+        <span style={{ fontSize:'2.5rem', fontWeight:900, lineHeight:1,
           color: v > 0 ? ACCENT : 'rgba(255,255,255,0.2)',
           textShadow: v > 0 ? `0 0 24px ${ACCENT}66` : 'none', transition:'color 0.2s' }}>
           {v > 0 ? v : '—'}
         </span>
-        <span style={{ fontSize:13, color:'rgba(255,255,255,0.25)' }}>/{max}</span>
+        <span style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.25)' }}>/{max}</span>
       </div>
 
       {/* Track */}
@@ -370,7 +396,7 @@ function MSlider({ value, onChange, min = 1, max = 10 }) {
       <div style={{ display:'flex', justifyContent:'space-between', direction:'rtl', marginTop:10, padding:'0 6px' }}>
         {Array.from({length: max-min+1}, (_,i) => i+min).map(n => (
           <span key={n} onClick={() => onChange(String(n))}
-            style={{ fontSize:11, cursor:'pointer', userSelect:'none', transition:'all 0.1s',
+            style={{ fontSize:'0.6875rem', cursor:'pointer', userSelect:'none', transition:'all 0.1s',
               color: v === n ? ACCENT : n <= (v || 0) ? `${ACCENT}66` : 'rgba(255,255,255,0.18)',
               fontWeight: v === n ? 900 : 400,
               transform: v === n ? 'scale(1.25)' : 'scale(1)', display:'inline-block',
@@ -492,19 +518,19 @@ function RankInfoButton() {
         onMouseEnter={e => { e.currentTarget.style.background = '#F5C118'; e.currentTarget.querySelector('span').style.color = '#13152A'; }}
         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.querySelector('span').style.color = '#F5C118'; }}
       >
-        <span style={{ fontSize: 9, fontWeight: 800, color: '#F5C118', lineHeight: 1 }}>?</span>
+        <span style={{ fontSize: '0.5625rem', fontWeight: 800, color: '#F5C118', lineHeight: 1 }}>?</span>
       </button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }} onClick={() => setOpen(false)}>
           <div dir="rtl" className="rounded-2xl p-6 w-full max-w-md" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 24px 60px rgba(0,0,0,0.7)' }} onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 800, color: 'white', margin: 0 }}>איך עובדות הדרגות?</h3>
-              <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
+              <h3 style={{ fontSize: '0.9375rem', fontWeight: 800, color: 'white', margin: 0 }}>איך עובדות הדרגות?</h3>
+              <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', fontSize: '1.25rem', lineHeight: 1, padding: 0 }}>×</button>
             </div>
 
             {/* הסבר */}
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, marginBottom: 20 }}>
+            <div style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.8, marginBottom: 20 }}>
               <p style={{ marginBottom: 10 }}>
                 הדרגה שלך נקבעת לפי <strong style={{ color: 'rgba(255,255,255,0.85)' }}>ממוצע ההכנסה החודשית שלך בשני החודשים האחרונים</strong>. זה אומר שדרגה אחת חודש טוב לא מספיקה — צריך עקביות.
               </p>
@@ -517,7 +543,7 @@ function RankInfoButton() {
             </div>
 
             {/* טבלת דרגות */}
-            <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>טבלת הדרגות</p>
+            <p style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>טבלת הדרגות</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {[
                 { label: 'TRAINEE',        range: '₪0 – ₪5K',    color: '#ef4444' },
@@ -528,8 +554,8 @@ function RankInfoButton() {
                 { label: 'EXPERT',         range: '₪30K+',        color: '#a855f7' },
               ].map(({ label, range, color }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: `1px solid ${color}35` }}>
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{range}</span>
-                  <span style={{ fontSize: 12, fontWeight: 800, color, letterSpacing: '0.04em' }}>{label}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{range}</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 800, color, letterSpacing: '0.04em' }}>{label}</span>
                 </div>
               ))}
             </div>
@@ -617,8 +643,8 @@ function FormConfigEditor({ onClose }) {
         {/* Header */}
         <div style={{ padding:'18px 20px 14px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
           <div>
-            <h2 style={{ fontSize:16, fontWeight:700, color:'white', margin:0 }}>⚙️ עריכת שדות הטופס</h2>
-            <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)', marginTop:2 }}>הפעל/כבה שדות, ערוך טקסטים — נשמר לכל התלמידים</p>
+            <h2 style={{ fontSize:'1rem', fontWeight:700, color:'white', margin:0 }}>⚙️ עריכת שדות הטופס</h2>
+            <p style={{ fontSize:'0.6875rem', color:'rgba(255,255,255,0.35)', marginTop:2 }}>הפעל/כבה שדות, ערוך טקסטים — נשמר לכל התלמידים</p>
           </div>
           <button onClick={onClose} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.4)', display:'flex' }}><X size={18} /></button>
         </div>
@@ -629,7 +655,7 @@ function FormConfigEditor({ onClose }) {
             const secFields = fields.filter(f => f.section === sec);
             return (
               <div key={sec} style={{ marginBottom:16 }}>
-                <p style={{ fontSize:11, fontWeight:700, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8, paddingRight:4 }}>{secLabel}</p>
+                <p style={{ fontSize:'0.6875rem', fontWeight:700, color:'rgba(255,255,255,0.35)', textTransform:'uppercase', letterSpacing:'0.07em', marginBottom:8, paddingRight:4 }}>{secLabel}</p>
                 {secFields.map(field => (
                   <div key={field.key} style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 10px', borderRadius:10, marginBottom:4,
                     background: field.enabled ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.01)',
@@ -646,9 +672,9 @@ function FormConfigEditor({ onClose }) {
                         <input autoFocus value={draft} onChange={e => setDraft(e.target.value)}
                           onKeyDown={e => { if(e.key==='Enter') saveEdit(field.key); if(e.key==='Escape') setEditingKey(null); }}
                           onBlur={() => saveEdit(field.key)}
-                          style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(245,193,24,0.4)', borderRadius:6, padding:'3px 8px', fontSize:13, color:'white', outline:'none', fontFamily:'inherit' }} />
+                          style={{ width:'100%', background:'rgba(255,255,255,0.07)', border:'1px solid rgba(245,193,24,0.4)', borderRadius:6, padding:'3px 8px', fontSize:'0.8125rem', color:'white', outline:'none', fontFamily:'inherit' }} />
                       ) : (
-                        <span style={{ fontSize:13, color: field.enabled ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', cursor:'text' }}
+                        <span style={{ fontSize:'0.8125rem', color: field.enabled ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)', cursor:'text' }}
                           onClick={() => startEdit(field.key, field.label)}>
                           {field.label}
                         </span>
@@ -668,10 +694,10 @@ function FormConfigEditor({ onClose }) {
 
         {/* Footer */}
         <div style={{ padding:'12px 16px', borderTop:'1px solid rgba(255,255,255,0.07)', display:'flex', gap:10, flexShrink:0 }}>
-          <button onClick={reset} style={{ padding:'9px 16px', borderRadius:8, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontFamily:'inherit', fontSize:13 }}>
+          <button onClick={reset} style={{ padding:'9px 16px', borderRadius:8, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontFamily:'inherit', fontSize:'0.8125rem' }}>
             איפוס לברירת מחדל
           </button>
-          <button onClick={save} style={{ flex:1, padding:'9px 16px', borderRadius:8, background:'#F5C118', border:'none', color:'#13152A', fontWeight:800, cursor:'pointer', fontFamily:'inherit', fontSize:13 }}>
+          <button onClick={save} style={{ flex:1, padding:'9px 16px', borderRadius:8, background:'#F5C118', border:'none', color:'#13152A', fontWeight:800, cursor:'pointer', fontFamily:'inherit', fontSize:'0.8125rem' }}>
             שמור שינויים ✓
           </button>
         </div>
@@ -1578,7 +1604,7 @@ export default function Dashboard() {
       {/* ── 1. Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl sm:text-4xl font-bold text-white">{getGreeting()}, {firstName}.</h1>
+          <h1 className="font-bold text-white" style={{ fontSize: '2.25rem' }}>{getGreeting()}, {firstName}.</h1>
           {storedRank && (
             <span className="rounded-md px-2.5 py-1 text-xs font-bold whitespace-nowrap"
               style={{ border: `1.5px solid ${storedRank.color}`, color: storedRank.color, background: storedRank.color + '18' }}>
@@ -1622,7 +1648,7 @@ export default function Dashboard() {
           {/* הצעד הבא */}
           <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', flex: 1 }}>
             <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הצעד הבא</span>
+              <span className="uppercase tracking-widest font-semibold" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>הצעד הבא</span>
               <span className="text-sm font-semibold text-white">היום</span>
             </div>
             <div className="flex flex-col gap-2">
@@ -1709,9 +1735,9 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={48} />
-                  <Tooltip contentStyle={{ background: 'rgb(19,21,40)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 13 }} formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
+                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={48} />
+                  <Tooltip contentStyle={{ background: 'rgb(19,21,40)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: '0.8125rem' }} formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
                   <Area type="monotone" dataKey="revenue" stroke="#F5C118" strokeWidth={2.5} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 5, fill: '#F5C118', stroke: '#fff', strokeWidth: 2 }} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -2376,7 +2402,7 @@ export default function Dashboard() {
           { n: 2, label: 'להוביל',  desc: 'נתוני מכירות — לידים, שיחות ועסקאות' },
           { n: 3, label: 'לשלוט',   desc: 'לקוחות ופרויקטים — מצב שוטף ואיכות שירות' },
           { n: 4, label: 'לספק',    desc: 'נתונים עסקיים — הכנסות, הוצאות ודרגה' },
-          { n: 5, label: 'רפלקשן',  desc: 'סיכום החודש — נצחונות, פוקוס ופידבק' },
+          { n: 5, label: 'פידבק',   desc: 'סיכום החודש — נצחונות, פוקוס ופידבק' },
         ];
         const ACCENT   = '#F5C118';
         const BTN_TEXT = '#0f172a';
@@ -2431,97 +2457,122 @@ export default function Dashboard() {
           );
         })();
 
+        // per-step summary card data (filled values only)
+        const fmt = n => n ? Number(n).toLocaleString('he-IL') : null;
+        const stepSummary = [
+          [ { label: 'עוקבים', value: fmt(monthlyForm.followers) }, { label: 'חשיפה', value: fmt(monthlyForm.reach) }, { label: 'פוסטים', value: monthlyForm.posts_count || null }, { label: 'ממומן (₪)', value: monthlyForm.paid_ads ? `₪${monthlyForm.paid_ads}` : null } ],
+          [ { label: 'לידים', value: monthlyForm.leads || null }, { label: 'שיחות שנקבעו', value: monthlyForm.sales_calls_set || null }, { label: 'הגיעו לשיחה', value: monthlyForm.sales_calls_showed || null }, { label: 'נסגרו', value: monthlyForm.closings_count || null } ],
+          [ { label: 'לקוחות חדשים', value: monthlyForm.new_clients || null }, { label: 'פעילים סה״כ', value: monthlyForm.active_clients || null }, { label: 'ריטיינרים', value: monthlyForm.retainers_count || null } ],
+          [ { label: 'עסקאות (₪)', value: monthlyForm.total_new_deals ? `₪${fmt(monthlyForm.total_new_deals)}` : null }, { label: 'ריטיינרים (₪)', value: monthlyForm.retainers ? `₪${monthlyForm.retainers}` : null }, { label: 'הכנסה (₪)', value: monthlyForm.total_income ? `₪${fmt(monthlyForm.total_income)}` : null } ],
+          [ { label: 'המלצה (NPS)', value: monthlyForm.nps ? `${monthlyForm.nps}/10` : null }, { label: 'נצחון גדול', value: monthlyForm.biggest_win ? (monthlyForm.biggest_win.slice(0, 22) + (monthlyForm.biggest_win.length > 22 ? '…' : '')) : null } ],
+        ];
+        const curSummary = stepSummary[monthlyStep - 1].filter(r => r.value);
+
         const stepContent = [
           /* Step 1 — לבלוט */
-          <div className="space-y-4" key={1}>
-            <MGrid cols={2}>
-              <MField label="עוקבים" required><MInput placeholder="0" type="number" value={monthlyForm.followers} onChange={e => setMonthlyForm(f => ({ ...f, followers: e.target.value }))} /></MField>
-              <MField label="חשיפה (Reach)" required><MInput placeholder="0" type="number" value={monthlyForm.reach} onChange={e => setMonthlyForm(f => ({ ...f, reach: e.target.value }))} /></MField>
-            </MGrid>
-            <MGrid cols={2}>
-              <MField label="פוסטים שפורסמו" required><MInput placeholder="0" type="number" value={monthlyForm.posts_count} onChange={e => setMonthlyForm(f => ({ ...f, posts_count: e.target.value }))} /></MField>
-              <MField label="השקעה על ממומן (₪)" hint="פרסום ממומן על תוכן"><MInput placeholder="0" type="number" value={monthlyForm.paid_ads} onChange={e => setMonthlyForm(f => ({ ...f, paid_ads: e.target.value }))} /></MField>
-            </MGrid>
+          <div key={1} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MRow label="עוקבים" required><MInputC placeholder="0" type="number" value={monthlyForm.followers} onChange={e => setMonthlyForm(f => ({ ...f, followers: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="חשיפה (Reach)" required><MInputC placeholder="0" type="number" value={monthlyForm.reach} onChange={e => setMonthlyForm(f => ({ ...f, reach: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="פוסטים שפורסמו" required><MInputC placeholder="0" type="number" value={monthlyForm.posts_count} onChange={e => setMonthlyForm(f => ({ ...f, posts_count: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="השקעה על ממומן (₪)" hint="פרסום ממומן על תוכן"><MInputC placeholder="0" type="number" value={monthlyForm.paid_ads} onChange={e => setMonthlyForm(f => ({ ...f, paid_ads: e.target.value }))} /></MRow>
+            <MDivider />
             <MField label="ביטחון בתוכן החודש (1–10)" required>
               <MSlider value={monthlyForm.content_confidence} onChange={v => setMonthlyForm(f => ({ ...f, content_confidence: v }))} />
             </MField>
           </div>,
 
           /* Step 2 — להוביל */
-          <div className="space-y-4" key={2}>
-            <MGrid cols={3}>
-              <MField label="לידים שהגיעו" required><MInput placeholder="0" type="number" value={monthlyForm.leads} onChange={e => setMonthlyForm(f => ({ ...f, leads: e.target.value }))} /></MField>
-              <MField label="הצעות שהצעתי" hint="סטורי, פוסט, DM וכד׳"><MInput placeholder="0" type="number" value={monthlyForm.proposals} onChange={e => setMonthlyForm(f => ({ ...f, proposals: e.target.value }))} /></MField>
-              <MField label="שיחות אסטרטגיה"><MInput placeholder="0" type="number" value={monthlyForm.strategy_calls} onChange={e => setMonthlyForm(f => ({ ...f, strategy_calls: e.target.value }))} /></MField>
-            </MGrid>
-            <MGrid cols={3}>
-              <MField label="שיחות מכירה שנקבעו" required><MInput placeholder="0" type="number" value={monthlyForm.sales_calls_set} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_set: e.target.value }))} /></MField>
-              <MField label="הגיעו לשיחה" required><MInput placeholder="0" type="number" value={monthlyForm.sales_calls_showed} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_showed: e.target.value }))} /></MField>
-              <MField label="נסגרו" hint="כולל לקוחות קיימים"><MInput placeholder="0" type="number" value={monthlyForm.closings_count} onChange={e => setMonthlyForm(f => ({ ...f, closings_count: e.target.value }))} /></MField>
-            </MGrid>
-            <MGrid cols={2}>
-              <MField label="הצעות מחיר נשלחו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_sent} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_sent: e.target.value }))} /></MField>
-              <MField label="הצעות מחיר אושרו"><MInput placeholder="0" type="number" value={monthlyForm.price_quotes_approved} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_approved: e.target.value }))} /></MField>
-            </MGrid>
+          <div key={2} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MRow label="לידים שהגיעו" required><MInputC placeholder="0" type="number" value={monthlyForm.leads} onChange={e => setMonthlyForm(f => ({ ...f, leads: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="הצעות שהצעתי" hint="סטורי, פוסט, DM וכד׳"><MInputC placeholder="0" type="number" value={monthlyForm.proposals} onChange={e => setMonthlyForm(f => ({ ...f, proposals: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="שיחות אסטרטגיה"><MInputC placeholder="0" type="number" value={monthlyForm.strategy_calls} onChange={e => setMonthlyForm(f => ({ ...f, strategy_calls: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="שיחות מכירה שנקבעו" required><MInputC placeholder="0" type="number" value={monthlyForm.sales_calls_set} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_set: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="הגיעו לשיחה" required><MInputC placeholder="0" type="number" value={monthlyForm.sales_calls_showed} onChange={e => setMonthlyForm(f => ({ ...f, sales_calls_showed: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="נסגרו" hint="כולל לקוחות קיימים"><MInputC placeholder="0" type="number" value={monthlyForm.closings_count} onChange={e => setMonthlyForm(f => ({ ...f, closings_count: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="הצעות מחיר נשלחו"><MInputC placeholder="0" type="number" value={monthlyForm.price_quotes_sent} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_sent: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="הצעות מחיר אושרו"><MInputC placeholder="0" type="number" value={monthlyForm.price_quotes_approved} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_approved: e.target.value }))} /></MRow>
+            <MDivider />
             <MField label="ביטחון בתהליך המכירה (1–10)" required>
               <MSlider value={monthlyForm.sales_confidence} onChange={v => setMonthlyForm(f => ({ ...f, sales_confidence: v }))} />
             </MField>
           </div>,
 
           /* Step 3 — לשלוט */
-          <div className="space-y-4" key={3}>
-            <MGrid cols={3}>
-              <MField label="לקוחות חדשים החודש" required><MInput placeholder="0" type="number" value={monthlyForm.new_clients} onChange={e => setMonthlyForm(f => ({ ...f, new_clients: e.target.value }))} /></MField>
-              <MField label="לקוחות פעילים סה״כ" required><MInput placeholder="0" type="number" value={monthlyForm.active_clients} onChange={e => setMonthlyForm(f => ({ ...f, active_clients: e.target.value }))} /></MField>
-              <MField label="ריטיינרים פעילים" hint="מספר לא סכום"><MInput placeholder="0" type="number" value={monthlyForm.retainers_count} onChange={e => setMonthlyForm(f => ({ ...f, retainers_count: e.target.value }))} /></MField>
-            </MGrid>
-            <MField label="הפרויקט / לקוח המרכזי החודש">
-              <MInput placeholder="על מה הכי השקעתם?" value={monthlyForm.main_project} onChange={e => setMonthlyForm(f => ({ ...f, main_project: e.target.value }))} />
-            </MField>
-            <MField label="שביעות רצון של הלקוחות (1–10)" hint="הערכה שלכם">
+          <div key={3} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MRow label="לקוחות חדשים החודש" required><MInputC placeholder="0" type="number" value={monthlyForm.new_clients} onChange={e => setMonthlyForm(f => ({ ...f, new_clients: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="לקוחות פעילים סה״כ" required><MInputC placeholder="0" type="number" value={monthlyForm.active_clients} onChange={e => setMonthlyForm(f => ({ ...f, active_clients: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="ריטיינרים פעילים" hint="מספר לא סכום"><MInputC placeholder="0" type="number" value={monthlyForm.retainers_count} onChange={e => setMonthlyForm(f => ({ ...f, retainers_count: e.target.value }))} /></MRow>
+            <MDivider />
+            <MField label="כמה אתם מרגישים רווחיים בפרויקטים שלכם (1–10)">
               <MSlider value={monthlyForm.client_satisfaction} onChange={v => setMonthlyForm(f => ({ ...f, client_satisfaction: v }))} />
             </MField>
           </div>,
 
           /* Step 4 — לספק */
-          <div className="space-y-4" key={4}>
-            <MGrid cols={2}>
-              <MField label="עסקאות חדשות שנסגרו (₪)" required><MInput placeholder="0" type="number" value={monthlyForm.total_new_deals} onChange={e => setMonthlyForm(f => ({ ...f, total_new_deals: e.target.value }))} /></MField>
-              <MField label="ריטיינרים ותשלומים קבועים (₪)"><MInput placeholder="0" type="number" value={monthlyForm.retainers} onChange={e => setMonthlyForm(f => ({ ...f, retainers: e.target.value }))} /></MField>
-            </MGrid>
-            <MField label="הכנסה כוללת (₪)" required>
-              <MInput placeholder="כמה כסף נכנס לבנק החודש?" type="number" value={monthlyForm.total_income} onChange={e => setMonthlyForm(f => ({ ...f, total_income: e.target.value }))} />
-            </MField>
-            <MGrid cols={2}>
-              <MField label="הוצאות תוכנות (₪)"><MInput placeholder="0" type="number" value={monthlyForm.software_expenses} onChange={e => setMonthlyForm(f => ({ ...f, software_expenses: e.target.value }))} /></MField>
-              <MField label="הוצאות משתנות (₪)"><MInput placeholder="0" type="number" value={monthlyForm.variable_expenses} onChange={e => setMonthlyForm(f => ({ ...f, variable_expenses: e.target.value }))} /></MField>
-            </MGrid>
+          <div key={4} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MRow label="עסקאות חדשות שנסגרו (₪)" required><MInputC placeholder="0" type="number" value={monthlyForm.total_new_deals} onChange={e => setMonthlyForm(f => ({ ...f, total_new_deals: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="ריטיינרים ותשלומים קבועים (₪)"><MInputC placeholder="0" type="number" value={monthlyForm.retainers} onChange={e => setMonthlyForm(f => ({ ...f, retainers: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="הכנסה כוללת (₪)" required><MInputC placeholder="0" type="number" value={monthlyForm.total_income} onChange={e => setMonthlyForm(f => ({ ...f, total_income: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="הוצאות תוכנות (₪)"><MInputC placeholder="0" type="number" value={monthlyForm.software_expenses} onChange={e => setMonthlyForm(f => ({ ...f, software_expenses: e.target.value }))} /></MRow>
+            <MDivider />
+            <MRow label="הוצאות משתנות (₪)"><MInputC placeholder="0" type="number" value={monthlyForm.variable_expenses} onChange={e => setMonthlyForm(f => ({ ...f, variable_expenses: e.target.value }))} /></MRow>
+            <MDivider />
             {rankBlock}
+            <MDivider />
             <MField label="ביטחון בביצועים העסקיים (1–10)" required>
               <MSlider value={monthlyForm.business_confidence} onChange={v => setMonthlyForm(f => ({ ...f, business_confidence: v }))} />
             </MField>
           </div>,
 
-          /* Step 5 — רפלקשן */
-          <div className="space-y-4" key={5}>
-            <MField label="כמה תמליץ על התוכנית לחבר? (0–10)" required>
+          /* Step 5 — פידבק */
+          <div key={5} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MField label="כמה תמליץ על התוכנית? (1–10)" required>
               <MSlider value={monthlyForm.nps} onChange={v => setMonthlyForm(f => ({ ...f, nps: v }))} />
             </MField>
+            <MDivider />
             <MField label="הנצחון הגדול ביותר החודש" required>
               <textarea rows={2} placeholder="מה הלך הכי טוב?" value={monthlyForm.biggest_win}
                 onChange={e => setMonthlyForm(f => ({ ...f, biggest_win: e.target.value }))}
                 className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
                 style={{ background: fBg, border: fBorder, color: 'white' }} />
             </MField>
+            <MDivider />
             <MField label="למי תמליץ להצטרף לתוכנית?">
-              <MInput placeholder="שם, תחום, מה מתאים לו?" value={monthlyForm.recommendation} onChange={e => setMonthlyForm(f => ({ ...f, recommendation: e.target.value }))} />
+              <input type="text" placeholder="שם, תחום, מה מתאים לו?" value={monthlyForm.recommendation}
+                onChange={e => setMonthlyForm(f => ({ ...f, recommendation: e.target.value }))}
+                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                style={{ background: fBg, border: fBorder, color: 'white' }} />
             </MField>
+            <MDivider />
             <MField label="כלים / מערכות / הכוונה שצריכים החודש">
-              <MInput placeholder="איפה אתם צריכים תמיכה?" value={monthlyForm.systems_needed} onChange={e => setMonthlyForm(f => ({ ...f, systems_needed: e.target.value }))} />
+              <textarea rows={2} placeholder="איפה אתם צריכים תמיכה?" value={monthlyForm.systems_needed}
+                onChange={e => setMonthlyForm(f => ({ ...f, systems_needed: e.target.value }))}
+                className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
+                style={{ background: fBg, border: fBorder, color: 'white' }} />
             </MField>
+            <MDivider />
             <MField label="הפוקוס החשוב ביותר לחודש הבא">
-              <MInput placeholder="דבר אחד. ממוקד." value={monthlyForm.focus_next_month} onChange={e => setMonthlyForm(f => ({ ...f, focus_next_month: e.target.value }))} />
+              <textarea rows={4} placeholder="דבר אחד. ממוקד." value={monthlyForm.focus_next_month}
+                onChange={e => setMonthlyForm(f => ({ ...f, focus_next_month: e.target.value }))}
+                className="w-full rounded-lg px-3 py-2.5 text-sm resize-none outline-none"
+                style={{ background: fBg, border: fBorder, color: 'white' }} />
             </MField>
+            <MDivider />
             <MField label="פידבק לתוכנית">
               <textarea rows={2} placeholder="מה יעזור לך לרוץ מהר יותר?" value={monthlyForm.program_feedback}
                 onChange={e => setMonthlyForm(f => ({ ...f, program_feedback: e.target.value }))}
@@ -2531,32 +2582,33 @@ export default function Dashboard() {
           </div>,
         ];
 
-        // gradient progress bar — fills left (RTL: right is start, left is end)
+        // gradient progress bar
         const gradBar = (() => {
           const stops = Object.values(MSTEP_COLORS).slice(0, monthlyStep);
           if (stops.length === 1) return stops[0];
           return `linear-gradient(to left, ${stops[0]}, ${stops[stops.length - 1]})`;
         })();
-        const mAccent = ACCENT;
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
-            <div dir="rtl" className="w-full max-w-2xl rounded-2xl overflow-hidden flex flex-col" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', maxHeight: 'calc(100vh - 2rem)' }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(3px)' }}>
+            <div dir="rtl" style={{ width: '100%', maxWidth: 760, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, maxHeight: 'calc(100vh - 2rem)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base font-bold text-white">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '16px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '1rem', fontWeight: 600, color: 'white', lineHeight: 1.2 }}>
                     {editingSubmission ? 'עריכת נתונים חודשיים' : 'סיכום חודשי'}
                   </span>
-                  {/* Month picker — shows "יוני 2026 ↓", click opens popover */}
-                  <div className="relative">
+                  <span style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.25)', fontWeight: 300 }}>·</span>
+                  {/* Month picker */}
+                  <div style={{ position: 'relative' }}>
                     <button
                       onClick={() => setMonthlyForm(f => ({ ...f, _datePicker: !f._datePicker }))}
-                      className="flex items-center gap-1 rounded-lg px-2.5 py-1 transition hover:bg-white/10"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.9)' }}>{monthLabel} {rmYear}</span>
-                      <ChevronDown size={13} style={{ color: 'rgba(255,255,255,0.45)' }} />
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.06)',
+                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{monthLabel} {rmYear}</span>
+                      <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
                     </button>
                     {monthlyForm._datePicker && (
                       <div className="absolute top-full mt-1 right-0 z-10 rounded-xl p-3 space-y-2 shadow-xl"
@@ -2593,73 +2645,100 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Progress bar */}
-              <div className="px-5 pt-3 pb-0 flex-shrink-0">
-                <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: 'rgba(255,255,255,0.08)', display: 'flex' }}>
-                  <div style={{ marginLeft: 'auto', marginRight: 0, flexShrink: 0, borderRadius: 999, transition: 'width 0.5s ease', width: `${(monthlyStep / mTotal) * 100}%`, background: gradBar }} />
-                </div>
-              </div>
-
-              {/* Step tabs */}
-              <div className="flex flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              {/* Step tabs — each with a colored bottom bar; progress bar IS the bar */}
+              <div style={{ display: 'flex', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 {MSTEP_META.map(({ n, label }) => (
                   <button key={n} onClick={() => setMonthlyStep(n)}
-                    className="flex-1 py-2.5 text-xs font-medium transition"
-                    style={{
-                      color: monthlyStep === n ? ACCENT : 'rgba(255,255,255,0.35)',
-                      borderBottom: monthlyStep === n ? `2px solid ${ACCENT}` : '2px solid transparent',
-                      background: 'transparent',
-                    }}>
-                    {label}
+                    style={{ flex: 1, padding: '10px 4px 0', background: 'transparent', textAlign: 'right', cursor: 'pointer' }}>
+                    <p style={{ fontSize: '0.625rem', fontWeight: 500, marginBottom: 8,
+                      color: monthlyStep === n ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
+                      letterSpacing: '0.01em', paddingRight: 10 }}>
+                      {label}
+                    </p>
+                    <div style={{ height: 3, borderRadius: 2,
+                      background: monthlyStep === n ? MSTEP_COLORS[n] : (n < monthlyStep ? `${MSTEP_COLORS[n]}55` : 'rgba(255,255,255,0.06)'),
+                      transition: 'background 0.3s' }} />
                   </button>
                 ))}
               </div>
 
-              {/* Body */}
-              <div className="flex overflow-hidden flex-1">
-                {/* Left — context panel */}
-                <div className="flex-none w-44 p-5 space-y-3 flex-shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
-                  <p className="text-xs font-bold tabular-nums" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              {/* Body — 2 columns */}
+              <div style={{ display: 'flex', overflow: 'hidden', flex: 1 }}>
+
+                {/* Left panel */}
+                <div style={{ flexShrink: 0, width: 180, padding: '20px 16px', borderLeft: '1px solid rgba(255,255,255,0.07)',
+                  background: 'rgba(255,255,255,0.012)', display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  <p style={{ fontSize: '0.625rem', fontWeight: 700, color: ACCENT, letterSpacing: '0.06em', marginBottom: 6 }}>
                     {String(monthlyStep).padStart(2,'0')} / {String(mTotal).padStart(2,'0')}
                   </p>
-                  <p className="text-sm font-bold text-white">{MSTEP_META[monthlyStep-1].label}</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  <p style={{ fontSize: '1.1875rem', fontWeight: 700, color: 'white', lineHeight: 1.2, marginBottom: 8 }}>
+                    {MSTEP_META[monthlyStep-1].label}
+                  </p>
+                  <p style={{ fontSize: '0.6875rem', lineHeight: 1.55, color: 'rgba(255,255,255,0.45)', marginBottom: 0 }}>
                     {MSTEP_META[monthlyStep-1].desc}
                   </p>
-                  <div className="pt-2 space-y-1">
-                    <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.25)' }}>החודש המדווח</p>
-                    <p className="text-sm font-bold" style={{ color: ACCENT }}>{monthLabel} {rmYear}</p>
-                  </div>
+
+                  {/* Summary card — shows filled values for this step */}
+                  {curSummary.length > 0 && (
+                    <div style={{ marginTop: 18, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)',
+                      borderRadius: 10, padding: '11px 13px' }}>
+                      <p style={{ fontSize: '0.5625rem', fontWeight: 600, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase',
+                        letterSpacing: '0.08em', marginBottom: 9 }}>מה מולא</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                        {curSummary.map(r => (
+                          <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 4 }}>
+                            <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.38)', flexShrink: 0 }}>{r.label}</span>
+                            <span style={{ fontSize: '0.625rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)', textAlign: 'left', wordBreak: 'break-all' }}>{r.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Right — form */}
-                <div className="flex-1 p-5 overflow-y-auto">
+                {/* Right — form fields */}
+                <div style={{ flex: 1, padding: '20px 22px', overflowY: 'auto' }}>
                   {stepContent[monthlyStep - 1]}
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center',
+                padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
                 <button
                   onClick={() => monthlyStep === 1 ? (setModal(null), setEditingSubmission(null), setMonthlyStep(1)) : setMonthlyStep(s => s - 1)}
-                  className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
-                  style={{ color: 'rgba(255,255,255,0.6)' }}>
-                  {monthlyStep === 1 ? <><ChevronLeft size={15} /> ביטול</> : <><ChevronLeft size={15} /> חזרה</>}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none',
+                    color: 'rgba(255,255,255,0.55)', fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer',
+                    padding: '6px 10px', borderRadius: 8, justifySelf: 'start' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                  <ChevronLeft size={15} />
+                  {monthlyStep === 1 ? 'ביטול' : 'חזרה'}
                 </button>
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>שלב {monthlyStep} מתוך {mTotal}</span>
-                {canNext ? (
-                  <button onClick={() => setMonthlyStep(s => s + 1)}
-                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90"
-                    style={{ background: ACCENT, color: BTN_TEXT }}>
-                    {MSTEP_META[monthlyStep].label} <ChevronRight size={15} />
-                  </button>
-                ) : (
-                  <button onClick={submitMonthly} disabled={monthlySubmitting}
-                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-60"
-                    style={{ background: ACCENT, color: BTN_TEXT }}>
-                    {monthlySubmitting ? 'שולח...' : `שלח סיכום ${monthLabel} ✓`}
-                  </button>
-                )}
+                <span style={{ fontSize: '0.625rem', fontWeight: 600, color: 'rgba(255,255,255,0.25)',
+                  textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center' }}>
+                  שלב {monthlyStep} / {mTotal}
+                </span>
+                <div style={{ justifySelf: 'end' }}>
+                  {canNext ? (
+                    <button onClick={() => setMonthlyStep(s => s + 1)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, background: ACCENT, color: BTN_TEXT,
+                        border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: '0.8125rem', fontWeight: 700,
+                        cursor: 'pointer', transition: 'opacity 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+                      הבא — {MSTEP_META[monthlyStep].label}
+                      <ChevronLeft size={14} />
+                    </button>
+                  ) : (
+                    <button onClick={submitMonthly} disabled={monthlySubmitting}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, background: ACCENT, color: BTN_TEXT,
+                        border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: '0.8125rem', fontWeight: 700,
+                        cursor: monthlySubmitting ? 'not-allowed' : 'pointer', opacity: monthlySubmitting ? 0.6 : 1, transition: 'opacity 0.15s' }}>
+                      {monthlySubmitting ? 'שולח...' : `שלח סיכום ${monthLabel} ✓`}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
