@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import { useIsAdmin } from '../hooks/useIsAdmin.js';
 import confettiLib from 'canvas-confetti';
-import { Plus, Trophy, Calendar, Edit2, X, TrendingUp, Users, Image, Banknote, Settings2, FolderPlus, ExternalLink, Zap, ListChecks, ChevronLeft, ChevronDown, Video, ToggleLeft, ToggleRight, GripVertical } from 'lucide-react';
+import { Plus, Trophy, Calendar, Edit2, X, TrendingUp, Users, Image, Banknote, Settings2, FolderPlus, ExternalLink, Zap, ListChecks, ChevronLeft, ChevronRight, ChevronDown, Video, ToggleLeft, ToggleRight, GripVertical } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip,
   ResponsiveContainer, CartesianGrid,
