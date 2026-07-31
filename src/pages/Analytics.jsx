@@ -120,13 +120,13 @@ function Section({ title, sub, right, children, noPad }) {
 
 // ── Chart shared ────────────────────────────────────────────────
 const TIP = {
-  contentStyle: { background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, color:'white', fontSize:12, direction:'rtl' },
+  contentStyle: { background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, color:'white', fontSize:'0.75rem', direction:'rtl' },
   cursor: { stroke:'rgba(255,255,255,0.07)', strokeWidth:1 },
 };
 const GRID = <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />;
-const XAXIS = <XAxis dataKey="month" tick={{ fill:'rgba(255,255,255,0.28)', fontSize:11 }} axisLine={false} tickLine={false} />;
-const YILS  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v=>v===0?'₪0':`₪${Math.round(v/1000)}K`} width={44} />;
-const YCNT  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />;
+const XAXIS = <XAxis dataKey="month" tick={{ fill:'rgba(255,255,255,0.28)', fontSize:'0.6875rem' }} axisLine={false} tickLine={false} />;
+const YILS  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} tickFormatter={v=>v===0?'₪0':`₪${Math.round(v/1000)}K`} width={44} />;
+const YCNT  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />;
 
 // ── Funnel bar ──────────────────────────────────────────────────
 function FunnelRow({ label, value, total, color, sub }) {
@@ -885,10 +885,10 @@ export default function Analytics() {
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={salesData} barGap={2} barCategoryGap="25%" margin={{ top:8, right:4, left:0, bottom:0 }}>
                   {GRID}
-                  <XAxis dataKey="month" tick={{ fill:'rgba(255,255,255,0.28)', fontSize:11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tick={{ fill:'rgba(255,255,255,0.28)', fontSize:'0.6875rem' }} axisLine={false} tickLine={false} />
                   {YCNT}
                   <Tooltip
-                    contentStyle={{ background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, color:'white', fontSize:12, direction:'rtl' }}
+                    contentStyle={{ background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:12, color:'white', fontSize:'0.75rem', direction:'rtl' }}
                     cursor={{ fill:'rgba(30,58,120,0.35)' }}
                     formatter={(v, name) => [v, name]}
                   />
@@ -1107,9 +1107,9 @@ export default function Analytics() {
                     </linearGradient>
                   </defs>
                   {GRID}{XAXIS}
-                  <YAxis yAxisId="left" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false}
+                  <YAxis yAxisId="left" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false}
                     tickFormatter={v=>v>=1000?`${Math.round(v/1000)}K`:v} width={40} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: 11 }}
+                  <YAxis yAxisId="right" orientation="right" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }}
                     axisLine={false} tickLine={false} allowDecimals={false} width={24} />
                   <Tooltip {...TIP} formatter={(v,n)=>[n==='עוקבים'?v.toLocaleString('he-IL'):v, n]} />
                   <Area yAxisId="left" type="monotone" dataKey="עוקבים"

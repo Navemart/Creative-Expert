@@ -34,7 +34,7 @@ function Photo({ name, src }) {
       style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />;
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(255,255,255,0.08)', borderRadius: '50%', fontWeight: 900, fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>
+      background: 'rgba(255,255,255,0.08)', borderRadius: '50%', fontWeight: 900, fontSize: '1rem', color: 'rgba(255,255,255,0.3)' }}>
       {(name || '?')[0].toUpperCase()}
     </div>
   );
@@ -43,7 +43,7 @@ function Photo({ name, src }) {
 const inputStyle = {
   width: '100%', boxSizing: 'border-box',
   background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 8, padding: '8px 10px', fontSize: 12, color: 'white',
+  borderRadius: 8, padding: '8px 10px', fontSize: '0.75rem', color: 'white',
   outline: 'none', resize: 'vertical', fontFamily: 'inherit',
 };
 
@@ -96,8 +96,8 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
           <Photo name={student.name} src={student.image_url} />
         </div>
         <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-          <p style={{ fontWeight: 700, fontSize: 13, color: 'white', margin: 0 }}>{student.name}</p>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
+          <p style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'white', margin: 0 }}>{student.name}</p>
+          <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
             {student.last_checkin ? fmtDays(student.days_since) : 'אין צ׳קאין'}
           </p>
         </div>
@@ -114,26 +114,26 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
             { label: 'מחזור', value: cycleLabel },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '8px 10px', textAlign: 'right' }}>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-              <p style={{ fontSize: 12, fontWeight: 700, color: 'white', margin: 0 }}>{value}</p>
+              <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+              <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'white', margin: 0 }}>{value}</p>
             </div>
           ))}
         </div>
 
         {/* Form */}
-        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', textAlign: 'right' }}>תאריך צ׳קאין</p>
+        <p style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', textAlign: 'right' }}>תאריך צ׳קאין</p>
         <input type="date" value={date} onChange={e => setDate(e.target.value)}
           style={{ ...inputStyle, marginBottom: 10, cursor: 'pointer' }} />
 
-        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px', textAlign: 'right' }}>פוקוס</p>
+        <p style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px', textAlign: 'right' }}>פוקוס</p>
         <textarea rows={2} placeholder="על מה הם עובדים?" value={focus} onChange={e => setFocus(e.target.value)}
           style={{ ...inputStyle, marginBottom: 10 }} />
 
-        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px', textAlign: 'right' }}>חסמים</p>
+        <p style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px', textAlign: 'right' }}>חסמים</p>
         <textarea rows={2} placeholder="במה הם תקועים?" value={bottleneck} onChange={e => setBottleneck(e.target.value)}
           style={{ ...inputStyle, marginBottom: 10 }} />
 
-        <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px', textAlign: 'right' }}>הערות</p>
+        <p style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 6px', textAlign: 'right' }}>הערות</p>
         <textarea rows={2} placeholder="כל מה שחשוב לציין..." value={notes} onChange={e => setNotes(e.target.value)}
           style={{ ...inputStyle, marginBottom: 12 }} />
 
@@ -142,7 +142,7 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
           disabled={saving}
           style={{
             width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: saving ? 'default' : 'pointer',
-            background: saving ? 'rgba(245,193,24,0.3)' : 'rgba(245,193,24,0.85)', color: '#000', fontWeight: 700, fontSize: 13,
+            background: saving ? 'rgba(245,193,24,0.3)' : 'rgba(245,193,24,0.85)', color: '#000', fontWeight: 700, fontSize: '0.8125rem',
             transition: 'background 0.12s', marginBottom: 14,
           }}
         >
@@ -151,20 +151,20 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
 
         {/* History */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 12, marginBottom: 14 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', textAlign: 'right' }}>היסטוריה</p>
+          <p style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', textAlign: 'right' }}>היסטוריה</p>
           {loadingH ? (
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>טוען...</p>
+            <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>טוען...</p>
           ) : !history || history.length === 0 ? (
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>אין היסטוריה</p>
+            <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>אין היסטוריה</p>
           ) : (
             history.map((h, i) => (
               <div key={i} style={{ borderBottom: i < history.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', paddingBottom: 10, marginBottom: 10 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(245,193,24,0.8)', margin: '0 0 4px', textAlign: 'right' }}>
+                <p style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'rgba(245,193,24,0.8)', margin: '0 0 4px', textAlign: 'right' }}>
                   {fmtDate(h.checked_date || h.checked_at)}
                 </p>
-                {h.focus     && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>פוקוס: </span>{h.focus}</p>}
-                {h.bottleneck && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>חסמים: </span>{h.bottleneck}</p>}
-                {h.notes     && <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>הערות: </span>{h.notes}</p>}
+                {h.focus     && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>פוקוס: </span>{h.focus}</p>}
+                {h.bottleneck && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>חסמים: </span>{h.bottleneck}</p>}
+                {h.notes     && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>הערות: </span>{h.notes}</p>}
               </div>
             ))
           )}
@@ -207,14 +207,14 @@ function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onTo
       </div>
 
       <div style={{ flex: 1, minWidth: 0, textAlign: 'right', cursor: 'pointer' }} onClick={onToggle}>
-        <p style={{ fontWeight: 700, fontSize: 13, color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
-        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
+        <p style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
+        <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
           {student.last_checkin ? fmtDays(student.days_since) : 'אין צ׳קאין'}
         </p>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>#{student.checkin_count || 0}</span>
+        <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.25)' }}>#{student.checkin_count || 0}</span>
         <button
           onClick={() => onCheckin(student.id)}
           disabled={checking === student.id}
@@ -327,7 +327,7 @@ export default function AdminCheckins() {
   }
 
   if (isUnauthorized) {
-    return <div style={{ display: 'flex', height: 240, alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>אין גישה</div>;
+    return <div style={{ display: 'flex', height: 240, alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' }}>אין גישה</div>;
   }
 
   const counts = Object.fromEntries(COLUMNS.map(c => [c.key, students.filter(s => s.column === c.key).length]));
@@ -340,13 +340,13 @@ export default function AdminCheckins() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: 'white', margin: 0 }}>צ׳קאינס</h1>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>מעקב אחר פנייה לתלמידים פעילים</p>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'white', margin: 0 }}>צ׳קאינס</h1>
+            <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>מעקב אחר פנייה לתלמידים פעילים</p>
           </div>
           <button
             onClick={() => { setRefreshing(true); fetchAll().then(() => setRefreshing(false)); }}
             disabled={refreshing}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border, cursor: 'pointer', fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border, cursor: 'pointer', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}
           >
             <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none', color: 'rgba(255,255,255,0.3)' }} />
             רענן
@@ -354,7 +354,7 @@ export default function AdminCheckins() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>טוען...</div>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem' }}>טוען...</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'start' }}>
             {COLUMNS.map(col => {
@@ -376,17 +376,17 @@ export default function AdminCheckins() {
                   {/* Column header */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderBottom: border }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: col.dot, flexShrink: 0 }} />
-                    <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>{col.label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: col.dot, background: col.dot + '18', border: `1px solid ${col.dot}30`, padding: '2px 8px', borderRadius: 20 }}>
+                    <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>{col.label}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: col.dot, background: col.dot + '18', border: `1px solid ${col.dot}30`, padding: '2px 8px', borderRadius: 20 }}>
                       {counts[col.key]}
                     </span>
                   </div>
-                  <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', margin: '0', padding: '6px 16px 10px', borderBottom: colStudents.length ? border : 'none' }}>{col.desc}</p>
+                  <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.25)', margin: '0', padding: '6px 16px 10px', borderBottom: colStudents.length ? border : 'none' }}>{col.desc}</p>
 
                   {/* Cards */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: colStudents.length ? 10 : 0 }}>
                     {colStudents.length === 0 ? (
-                      <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: 12, padding: '32px 0' }}>אין תלמידים</p>
+                      <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '0.75rem', padding: '32px 0' }}>אין תלמידים</p>
                     ) : (
                       colStudents.map(s => (
                         <StudentCard

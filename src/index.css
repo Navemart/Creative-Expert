@@ -310,3 +310,7 @@ select:focus {
   border-left: none;
   transform: rotate(45deg);
 }
+
+button {
+  font-size: 0.875rem !important;
+}

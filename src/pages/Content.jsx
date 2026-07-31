@@ -427,12 +427,12 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }}
+                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: '0.6875rem' }}
                   axisLine={false} tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11 }}
+                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: '0.6875rem' }}
                   axisLine={false} tickLine={false}
                   tickFormatter={fmtK}
                   width={48}
@@ -774,11 +774,11 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.28)', fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: 11 }} axisLine={false} tickLine={false}
+              <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.28)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false}
                 tickFormatter={metric.fmt} width={48} domain={['auto', 'auto']} />
               <Tooltip
-                contentStyle={{ background: 'rgba(8,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 12 }}
+                contentStyle={{ background: 'rgba(8,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: '0.75rem' }}
                 formatter={v => [metric.fmt(v), metric.label]}
               />
               <Area type="monotone" dataKey="value" stroke={metric.color} strokeWidth={2.5}

@@ -258,7 +258,7 @@ function MGrid({ cols = 2, children }) {
 function MField({ label, hint, required, children, full }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 5, gridColumn: full ? '1 / -1' : undefined }}>
-      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)' }}>
+      <label style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)' }}>
         {label}{required && <span style={{ color: '#f87171', marginRight: 3 }}>*</span>}
       </label>
       {hint && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.25)', marginTop: -2 }}>{hint}</p>}
@@ -288,7 +288,7 @@ function MRow({ label, hint, required, children }) {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 128px', alignItems: 'center', gap: 12 }}>
       <div>
-        <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
+        <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
           {label}{required && <span style={{ color: '#f87171', marginRight: 3 }}>*</span>}
         </p>
         {hint && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>{hint}</p>}
@@ -319,11 +319,32 @@ if (typeof document !== 'undefined' && !document.getElementById('mslider-style')
   document.head.appendChild(s);
 }
 
+function sliderColor(v, min, max) {
+  if (v <= 0) return '#ef4444';
+  const t = (v - min) / (max - min); // 0→1
+  // red → yellow → orange → green
+  const stops = [
+    [0,    [239, 68,  68 ]],  // red
+    [0.33, [249,115,  22 ]],  // orange
+    [0.66, [234,179,   8 ]],  // yellow
+    [1,    [ 34,197,  94 ]],  // green
+  ];
+  let lo = stops[0], hi = stops[stops.length - 1];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t >= stops[i][0] && t <= stops[i+1][0]) { lo = stops[i]; hi = stops[i+1]; break; }
+  }
+  const r = (hi[0] - lo[0]) === 0 ? 0 : (t - lo[0]) / (hi[0] - lo[0]);
+  const lerp = (a, b) => Math.round(a + (b - a) * r);
+  const [R, G, B] = [0,1,2].map(i => lerp(lo[1][i], hi[1][i]));
+  return `rgb(${R},${G},${B})`;
+}
+
 function MSlider({ value, onChange, min = 1, max = 10 }) {
   const v = Number(value) || 0;
   const pct = v > 0 ? ((v - min) / (max - min)) * 100 : 0;
   const trackRef = useRef(null);
-  const ACCENT = '#F5C118';
+  const color = sliderColor(v, min, max);
+  const ACCENT = v > 0 ? color : '#F5C118';
 
   function calcValue(clientX) {
     const rect = trackRef.current?.getBoundingClientRect();
@@ -354,19 +375,23 @@ function MSlider({ value, onChange, min = 1, max = 10 }) {
 
   return (
     <div>
-      {/* Value */}
-      <div style={{ display:'flex', alignItems:'baseline', justifyContent:'center', gap:4, marginBottom:14 }}>
-        <span style={{ fontSize:'2.5rem', fontWeight:900, lineHeight:1,
-          color: v > 0 ? ACCENT : 'rgba(255,255,255,0.2)',
-          textShadow: v > 0 ? `0 0 24px ${ACCENT}66` : 'none', transition:'color 0.2s' }}>
-          {v > 0 ? v : '—'}
-        </span>
-        <span style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.25)' }}>/{max}</span>
-      </div>
-
-      {/* Track */}
+      {/* Track + floating value label */}
       <div ref={trackRef} onMouseDown={onMouseDown} onTouchStart={onTouchStart}
-        style={{ position:'relative', height:8, borderRadius:99, cursor:'pointer', margin:'0 6px', userSelect:'none' }}>
+        style={{ position:'relative', height:8, borderRadius:99, cursor:'pointer', margin:'0 6px', marginTop:36, userSelect:'none' }}>
+        {/* Floating value above thumb */}
+        <div style={{
+          position:'absolute', bottom:'calc(100% + 10px)',
+          right:`calc(${pct}% - 18px)`,
+          transition:'right 0.15s ease',
+          display:'flex', alignItems:'baseline', gap:2, pointerEvents:'none',
+        }}>
+          <span style={{ fontSize:'2rem', fontWeight:900, lineHeight:1,
+            color: v > 0 ? ACCENT : 'rgba(255,255,255,0.2)',
+            textShadow: v > 0 ? `0 0 20px ${ACCENT}66` : 'none', transition:'color 0.2s' }}>
+            {v > 0 ? v : '—'}
+          </span>
+          <span style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.25)' }}>/{max}</span>
+        </div>
         {/* Gray base */}
         <div style={{ position:'absolute', inset:0, borderRadius:99, background:'rgba(255,255,255,0.08)' }} />
         {/* Yellow fill — grows from RIGHT toward LEFT (RTL: right=low) */}
@@ -392,15 +417,11 @@ function MSlider({ value, onChange, min = 1, max = 10 }) {
         }} />
       </div>
 
-      {/* Labels: 1 on right, 10 on left */}
-      <div style={{ display:'flex', justifyContent:'space-between', direction:'rtl', marginTop:10, padding:'0 6px' }}>
-        {Array.from({length: max-min+1}, (_,i) => i+min).map(n => (
-          <span key={n} onClick={() => onChange(String(n))}
-            style={{ fontSize:'0.6875rem', cursor:'pointer', userSelect:'none', transition:'all 0.1s',
-              color: v === n ? ACCENT : n <= (v || 0) ? `${ACCENT}66` : 'rgba(255,255,255,0.18)',
-              fontWeight: v === n ? 900 : 400,
-              transform: v === n ? 'scale(1.25)' : 'scale(1)', display:'inline-block',
-            }}>{n}</span>
+      {/* Labels: min on right, max on left only */}
+      <div style={{ display:'flex', justifyContent:'space-between', direction:'rtl', marginTop:8, padding:'0 6px' }}>
+        {[min, max].map(n => (
+          <span key={n}
+            style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.25)', userSelect:'none' }}>{n}</span>
         ))}
       </div>
     </div>
@@ -2046,30 +2067,31 @@ export default function Dashboard() {
       {/* ── Modals ── */}
 
       {modal === 'deal' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
-          <div dir="rtl" className="w-full max-w-2xl rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+          <div dir="rtl" className="w-full rounded-2xl overflow-hidden flex flex-col" style={{ maxWidth: 760, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
 
-            {/* Header bar */}
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-center gap-3">
-                <span className="text-base font-bold text-white">נצחון עסקה חדשה 🛡️</span>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: '1.5rem', fontWeight: 600, color: 'white', lineHeight: 1.2 }}>עסקה חדשה</span>
+                <span style={{ fontSize: '1.5rem', color: 'rgba(255,255,255,0.25)', fontWeight: 300 }}>·</span>
                 <div className="relative">
                   <button
                     onClick={() => setDealForm(f => ({ ...f, _datePicker: !f._datePicker }))}
-                    className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 hover:bg-white/15 transition"
-                    style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)' }}>
-                    <Calendar size={11} />
-                    {new Date(dealForm.deal_date + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
-                    <ChevronDown size={10} />
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>
+                      {new Date(dealForm.deal_date + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })}
+                    </span>
+                    <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
                   </button>
                   {dealForm._datePicker && (
                     <div className="absolute top-full mt-2 right-0 z-50 rounded-xl p-4 shadow-2xl"
                       style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.15)', minWidth: 220 }}>
-                      <p className="text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>מתי נסגרה העסקה?</p>
+                      <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>מתי נסגרה העסקה?</p>
                       <input type="date" value={dealForm.deal_date}
                         onChange={e => setDealForm(f => ({ ...f, deal_date: e.target.value, _datePicker: false }))}
-                        className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
-                        style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.15)' }} />
+                        className="w-full rounded-lg px-3 py-2 text-white outline-none"
+                        style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.15)', fontSize: '0.875rem' }} />
                     </div>
                   )}
                 </div>
@@ -2079,73 +2101,62 @@ export default function Dashboard() {
               </button>
             </div>
 
-            {/* Sub-header */}
-            <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-              <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                ברכות על סגירת עסקה חדשה! הכניסו את הפרטים ושתפו את הנצחון עם הקבוצה.
-              </p>
-            </div>
-
             {/* Body — two columns */}
-            <div className="flex gap-0" style={{ minHeight: 320 }}>
+            <div style={{ display: 'flex', minHeight: 320 }}>
 
-              {/* Left — context */}
-              <div className="flex-none w-48 p-5 space-y-4" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e' }}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-green-400" /> עסקה חדשה
-                </span>
-                <div>
-                  <p className="text-sm font-bold text-white mb-1">🛡️ הנצחון</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    תרשמו את ערך העסקה ומה גביתם בפועל, ואז קבעו את יעד הדרגה הבאה שלכם.
-                  </p>
-                </div>
+              {/* Left panel — context */}
+              <div style={{ flexShrink: 0, width: 180, padding: '24px 16px', borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>01 / 01</p>
+                <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', lineHeight: 1.2, margin: 0 }}>🛡️ הנצחון</p>
+                <p style={{ fontSize: '0.875rem', lineHeight: 1.55, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
+                  תרשמו את ערך העסקה ומה גביתם בפועל, ואז קבעו את יעד הדרגה הבאה שלכם.
+                </p>
               </div>
 
               {/* Right — form */}
-              <div className="flex-1 p-5 space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {/* שווי העסקה */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 128px', alignItems: 'center', gap: 12 }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
                     סה״כ שווי העסקה <span style={{ color: '#f87171' }}>*</span>
-                  </label>
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <span className="px-3 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>₪</span>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={dealForm.total_amount}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', borderRadius: 8, overflow: 'hidden', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <span style={{ padding: '0 10px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>₪</span>
+                    <input type="number" placeholder="0" value={dealForm.total_amount}
                       onChange={e => setDealForm(f => ({ ...f, total_amount: e.target.value }))}
-                      className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                    />
+                      style={{ flex: 1, background: 'transparent', padding: '7px 8px', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', textAlign: 'right', width: 0 }}
+                      onWheel={e => e.currentTarget.blur()} />
                   </div>
                 </div>
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                {/* כסף שנכנס */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 128px', alignItems: 'center', gap: 12 }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
                     כסף שנכנס בפועל <span style={{ color: '#f87171' }}>*</span>
-                  </label>
-                  <div className="flex items-center rounded-lg overflow-hidden" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <span className="px-3 text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>₪</span>
-                    <input
-                      type="number"
-                      placeholder="0"
-                      value={dealForm.received_amount}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', borderRadius: 8, overflow: 'hidden', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <span style={{ padding: '0 10px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.35)', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>₪</span>
+                    <input type="number" placeholder="0" value={dealForm.received_amount}
                       onChange={e => setDealForm(f => ({ ...f, received_amount: e.target.value }))}
-                      className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                    />
+                      style={{ flex: 1, background: 'transparent', padding: '7px 8px', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', textAlign: 'right', width: 0 }}
+                      onWheel={e => e.currentTarget.blur()} />
                   </div>
                 </div>
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                    מה הדרגה הבאה שאתה מכוון אליה?
-                  </label>
-                  <select
-                    value={dealForm.next_rank}
-                    onChange={e => setDealForm(f => ({ ...f, next_rank: e.target.value }))}
-                    className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
-                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: dealForm.next_rank ? 'white' : 'rgba(255,255,255,0.25)' }}
-                  >
+                {/* דרגה הבאה */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>מה הדרגה הבאה שאתה מכוון אליה?</p>
+                    {storedRank && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '2px 10px', borderRadius: 20, background: (storedRank.color || '#9ca3af') + '22', color: storedRank.color || '#9ca3af', border: `1px solid ${storedRank.color || '#9ca3af'}44`, whiteSpace: 'nowrap' }}>
+                        עכשיו: {storedRank.label}
+                      </span>
+                    )}
+                  </div>
+                  <select value={dealForm.next_rank} onChange={e => setDealForm(f => ({ ...f, next_rank: e.target.value }))}
+                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: dealForm.next_rank ? 'white' : 'rgba(255,255,255,0.25)', outline: 'none' }}>
                     <option value="">בחר דרגה...</option>
                     <option value="CREW">₪5K בחודש / Crew ⚪</option>
                     <option value="SECOND OFFICER">₪10K בחודש / Second-Officer 🟡</option>
@@ -2154,38 +2165,25 @@ export default function Dashboard() {
                     <option value="EXPERT">₪30K בחודש / Expert 🟣</option>
                   </select>
                 </div>
+                <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הערות</label>
-                  <textarea
-                    placeholder="פרטים נוספים על העסקה הזו..."
-                    rows={3}
-                    value={dealForm.notes || ''}
+                {/* הערות */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>הערות</p>
+                  <textarea placeholder="פרטים נוספים על העסקה הזו..." rows={3} value={dealForm.notes || ''}
                     onChange={e => setDealForm(f => ({ ...f, notes: e.target.value }))}
-                    className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none"
-                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
-                  />
+                    style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'white', outline: 'none', resize: 'none', fontFamily: 'inherit' }} />
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-              <button
-                onClick={() => setModal(null)}
-                className="rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
-                style={{ color: 'rgba(255,255,255,0.55)' }}
-              >
-                ביטול
-              </button>
-              <button
-                onClick={submitDeal}
-                disabled={!dealForm.total_amount}
-                className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
-                style={{ background: '#22c55e', color: '#1e3a8a' }}
-              >
-                שלח עסקה ✓
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+              <button onClick={() => setModal(null)} style={{ color: 'rgba(255,255,255,0.55)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8, padding: '8px 16px' }}
+                className="hover:bg-white/10 transition">ביטול</button>
+              <button onClick={submitDeal} disabled={!dealForm.total_amount}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#22c55e', color: '#0f2d0f', border: 'none', borderRadius: 8, padding: '9px 20px', fontWeight: 700, cursor: 'pointer', opacity: dealForm.total_amount ? 1 : 0.4 }}
+                className="transition hover:opacity-90">שלח עסקה ✓</button>
             </div>
           </div>
         </div>
@@ -2194,33 +2192,33 @@ export default function Dashboard() {
       {modal === 'win' && (() => {
         const STEP_COLORS = { 1: '#F5C118', 2: '#f97316' };
         const accent = STEP_COLORS[winStep];
-        const stepBg = 'rgb(var(--bg-surface))';
         const fieldBg = 'rgb(var(--bg-elevated))';
         const fieldBorder = '1px solid rgba(255,255,255,0.1)';
+        const fBg2 = fieldBg; const fBorder2 = fieldBorder;
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)' }}>
-            <div dir="rtl" className="w-full max-w-2xl rounded-2xl overflow-hidden" style={{ background: stepBg, border: '1px solid rgba(255,255,255,0.1)' }}>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
+            <div dir="rtl" className="w-full rounded-2xl overflow-hidden flex flex-col" style={{ maxWidth: 760, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
 
-              {/* Header bar */}
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                <div className="flex items-center gap-3">
-                  <span className="text-base font-bold text-white">נצחונות שבועיים</span>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 600, color: 'white', lineHeight: 1.2 }}>נצחונות שבועיים</span>
+                  <span style={{ fontSize: '1.5rem', color: 'rgba(255,255,255,0.25)', fontWeight: 300 }}>·</span>
                   <div className="relative">
                     <button onClick={() => setWinForm(f => ({ ...f, _datePicker: !f._datePicker }))}
-                      className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1 hover:bg-white/15 transition"
-                      style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)' }}>
-                      <Calendar size={11} />
-                      {new Date(winForm.week_date + 'T12:00:00').toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
-                      <ChevronDown size={10} />
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.75)' }}>
+                        {new Date(winForm.week_date + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })}
+                      </span>
+                      <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
                     </button>
                     {winForm._datePicker && (
                       <div className="absolute top-full mt-2 right-0 z-50 rounded-xl p-4 shadow-2xl"
                         style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.15)', minWidth: 220 }}>
-                        <p className="text-xs font-semibold mb-2" style={{ color: 'rgba(255,255,255,0.5)' }}>על איזה שבוע הנצחונות?</p>
+                        <p style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>על איזה שבוע הנצחונות?</p>
                         <input type="date" value={winForm.week_date}
                           onChange={e => setWinForm(f => ({ ...f, week_date: e.target.value, _datePicker: false }))}
-                          className="w-full rounded-lg px-3 py-2 text-sm text-white outline-none"
-                          style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.15)' }} />
+                          style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'white', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
                       </div>
                     )}
                   </div>
@@ -2230,59 +2228,40 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Sub-header */}
-              <div className="px-5 py-2.5" style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
-                  שתפו את 3 הנצחונות הכי גדולים מהשבוע שעבר, ואת עדיפות השבוע הקרוב.
-                </p>
-              </div>
-
-              {/* Progress bar — ABOVE tabs, fills right→left for RTL */}
-              <div className="px-5 pt-3 pb-0">
-                <div className="w-full rounded-full overflow-hidden" style={{ height: 5, background: 'rgba(255,255,255,0.08)', display: 'flex' }}>
-                  <div style={{ marginLeft: 'auto', marginRight: 0, flexShrink: 0, transition: 'width 0.5s ease', borderRadius: 999,
-                    width: winStep === 1 ? '50%' : '100%',
-                    background: winStep === 1 ? STEP_COLORS[1] : `linear-gradient(to left, ${STEP_COLORS[1]}, ${STEP_COLORS[2]})`,
-                  }} />
-                </div>
-              </div>
-
               {/* Step tabs */}
-              <div className="flex" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
                 {[{ n: 1, label: 'נצחונות' }, { n: 2, label: 'השבוע הקרוב' }].map(({ n, label }) => (
-                  <button
-                    key={n}
-                    onClick={() => setWinStep(n)}
-                    className="flex-1 py-2.5 text-sm font-medium transition"
-                    style={{
-                      color: winStep === n ? STEP_COLORS[n] : 'rgba(255,255,255,0.35)',
-                      borderBottom: winStep === n ? `2px solid ${STEP_COLORS[n]}` : '2px solid transparent',
-                      background: 'transparent',
-                    }}
-                  >
-                    {label}
+                  <button key={n} onClick={() => setWinStep(n)}
+                    style={{ flex: 1, padding: '10px 4px 0', background: 'transparent', cursor: 'pointer', textAlign: 'center' }}>
+                    <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: 8,
+                      color: winStep === n ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)' }}>
+                      {label}
+                    </p>
+                    <div style={{ height: 3, borderRadius: 2,
+                      background: winStep === n ? STEP_COLORS[n] : (n < winStep ? `${STEP_COLORS[n]}55` : 'rgba(255,255,255,0.06)'),
+                      transition: 'background 0.3s' }} />
                   </button>
                 ))}
               </div>
 
               {/* Body */}
-              <div className="flex" style={{ minHeight: 320 }}>
-                {/* Right — context (in RTL this renders on the right) */}
-                <div className="flex-none w-48 p-5 space-y-3" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
-                  <p className="text-xs font-bold tabular-nums" style={{ color: accent }}>
+              <div style={{ display: 'flex', minHeight: 320 }}>
+                {/* Left panel */}
+                <div style={{ flexShrink: 0, width: 180, padding: '24px 16px', borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>
                     {String(winStep).padStart(2,'0')} / 02
                   </p>
                   {winStep === 1 ? (
                     <>
-                      <p className="text-sm font-bold text-white">🏆 3 הנצחונות</p>
-                      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', lineHeight: 1.2, margin: 0 }}>🏆 הנצחונות</p>
+                      <p style={{ fontSize: '0.875rem', lineHeight: 1.55, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
                         תרשמו את הנצחונות מהשבוע שעבר — קטנים כגדולים, הכל מצטבר.
                       </p>
                     </>
                   ) : (
                     <>
-                      <p className="text-sm font-bold text-white">🎯 השבוע הקרוב</p>
-                      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', lineHeight: 1.2, margin: 0 }}>🎯 השבוע הקרוב</p>
+                      <p style={{ fontSize: '0.875rem', lineHeight: 1.55, color: 'rgba(255,255,255,0.45)', margin: 0 }}>
                         קבעו את המוקד וספרו לנו מה מעכב אתכם כדי שנוכל לעזור.
                       </p>
                     </>
@@ -2290,64 +2269,46 @@ export default function Dashboard() {
                 </div>
 
                 {/* Right — form fields */}
-                <div className="flex-1 p-5 space-y-4">
+                <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
                   {winStep === 1 ? (
                     <>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הנצחון הגדול ביותר</label>
-                        <input
-                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                          style={{ background: fieldBg, border: winForm.win_1 ? `1px solid ${accent}66` : fieldBorder }}
-                          placeholder="הנצחון הכי גדול שלך..."
-                          value={winForm.win_1}
-                          onChange={e => setWinForm(f => ({ ...f, win_1: e.target.value }))}
-                        />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)' }}>הנצחון הגדול ביותר</label>
+                        <input style={{ background: fBg2, border: winForm.win_1 ? `1px solid ${accent}66` : fBorder2, borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'white', outline: 'none', fontFamily: 'inherit' }}
+                          placeholder="הנצחון הכי גדול שלך..." value={winForm.win_1}
+                          onChange={e => setWinForm(f => ({ ...f, win_1: e.target.value }))} />
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הנצחון השני</label>
-                        <input
-                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                          style={{ background: fieldBg, border: fieldBorder }}
-                          placeholder="עוד משהו טוב שקרה..."
-                          value={winForm.win_2}
-                          onChange={e => setWinForm(f => ({ ...f, win_2: e.target.value }))}
-                        />
+                      <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)' }}>הנצחון השני</label>
+                        <input style={{ background: fBg2, border: fBorder2, borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'white', outline: 'none', fontFamily: 'inherit' }}
+                          placeholder="עוד משהו טוב שקרה..." value={winForm.win_2}
+                          onChange={e => setWinForm(f => ({ ...f, win_2: e.target.value }))} />
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>הנצחון השלישי</label>
-                        <input
-                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                          style={{ background: fieldBg, border: fieldBorder }}
-                          placeholder="ועוד אחד..."
-                          value={winForm.win_3}
-                          onChange={e => setWinForm(f => ({ ...f, win_3: e.target.value }))}
-                        />
+                      <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)' }}>הנצחון השלישי</label>
+                        <input style={{ background: fBg2, border: fBorder2, borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'white', outline: 'none', fontFamily: 'inherit' }}
+                          placeholder="ועוד אחד..." value={winForm.win_3}
+                          onChange={e => setWinForm(f => ({ ...f, win_3: e.target.value }))} />
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>״הדבר האחד״ שתתמקד בו</label>
-                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>המוקד הכי חשוב לשבוע הקרוב.</p>
-                        <input
-                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none text-white placeholder:text-white/20"
-                          style={{ background: fieldBg, border: winForm.focus_next_week ? `1px solid ${accent}66` : fieldBorder }}
-                          placeholder="הדבר האחד שהכי חשוב..."
-                          value={winForm.focus_next_week}
-                          onChange={e => setWinForm(f => ({ ...f, focus_next_week: e.target.value }))}
-                        />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)' }}>״הדבר האחד״ שתתמקד בו</label>
+                        <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>המוקד הכי חשוב לשבוע הקרוב.</p>
+                        <input style={{ background: fBg2, border: winForm.focus_next_week ? `1px solid ${accent}66` : fBorder2, borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'white', outline: 'none', fontFamily: 'inherit' }}
+                          placeholder="הדבר האחד שהכי חשוב..." value={winForm.focus_next_week}
+                          onChange={e => setWinForm(f => ({ ...f, focus_next_week: e.target.value }))} />
                       </div>
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>המעצור הכי גדול שלך</label>
-                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>מה מרגיש כמו חסם? מה אנחנו יכולים לעזור לך לפתור?</p>
-                        <textarea
-                          className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none text-white placeholder:text-white/20"
-                          style={{ background: fieldBg, border: fieldBorder }}
-                          placeholder="איפה אתה צריך תמיכה?"
-                          rows={4}
-                          value={winForm.blocker}
-                          onChange={e => setWinForm(f => ({ ...f, blocker: e.target.value }))}
-                        />
+                      <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <label style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)' }}>המעצור הכי גדול שלך</label>
+                        <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.35)', margin: 0 }}>מה מרגיש כמו חסם? מה אנחנו יכולים לעזור לך לפתור?</p>
+                        <textarea style={{ background: fBg2, border: fBorder2, borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'white', outline: 'none', resize: 'none', fontFamily: 'inherit' }}
+                          placeholder="איפה אתה צריך תמיכה?" rows={4} value={winForm.blocker}
+                          onChange={e => setWinForm(f => ({ ...f, blocker: e.target.value }))} />
                       </div>
                     </>
                   )}
@@ -2355,31 +2316,25 @@ export default function Dashboard() {
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-                <button
-                  onClick={() => winStep === 1 ? (setModal(null), setWinStep(1)) : setWinStep(1)}
-                  className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
-                  style={{ color: 'rgba(255,255,255,0.55)' }}
-                >
-                  {winStep === 1 ? 'ביטול' : 'חזרה →'}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <button onClick={() => winStep === 1 ? (setModal(null), setWinStep(1)) : setWinStep(1)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.55)', borderRadius: 8, padding: '8px 16px', justifySelf: 'start' }}
+                  className="hover:bg-white/10 transition">
+                  {winStep === 1 ? 'ביטול' : '← חזרה'}
                 </button>
-                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>שלב {winStep} מתוך 2</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center' }}>
+                  שלב {winStep} / 2
+                </span>
                 {winStep === 1 ? (
-                  <button
-                    onClick={() => setWinStep(2)}
-                    disabled={!winForm.win_1.trim()}
-                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
-                    style={{ background: accent, color: '#1e3a8a' }}
-                  >
-                    ← הבא: השבוע הקרוב
+                  <button onClick={() => setWinStep(2)} disabled={!winForm.win_1.trim()}
+                    style={{ background: accent, color: '#1e3a8a', border: 'none', borderRadius: 8, padding: '9px 20px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end', opacity: winForm.win_1.trim() ? 1 : 0.4 }}
+                    className="transition hover:opacity-90">
+                    הבא — השבוע הקרוב <ChevronLeft size={15} />
                   </button>
                 ) : (
-                  <button
-                    onClick={() => { submitWin(); }}
-                    disabled={!winForm.focus_next_week.trim()}
-                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
-                    style={{ background: accent, color: '#1e3a8a' }}
-                  >
+                  <button onClick={submitWin} disabled={!winForm.focus_next_week.trim()}
+                    style={{ background: accent, color: '#1e3a8a', border: 'none', borderRadius: 8, padding: '9px 20px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end', opacity: winForm.focus_next_week.trim() ? 1 : 0.4 }}
+                    className="transition hover:opacity-90">
                     שלח נצחונות ✓
                   </button>
                 )}
@@ -2471,6 +2426,10 @@ export default function Dashboard() {
         const stepContent = [
           /* Step 1 — לבלוט */
           <div key={1} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MField label="ביטחון בתוכן החודש (1–10)" required>
+              <MSlider value={monthlyForm.content_confidence} onChange={v => setMonthlyForm(f => ({ ...f, content_confidence: v }))} />
+            </MField>
+            <MDivider />
             <MRow label="עוקבים" required><MInputC placeholder="0" type="number" value={monthlyForm.followers} onChange={e => setMonthlyForm(f => ({ ...f, followers: e.target.value }))} /></MRow>
             <MDivider />
             <MRow label="חשיפה (Reach)" required><MInputC placeholder="0" type="number" value={monthlyForm.reach} onChange={e => setMonthlyForm(f => ({ ...f, reach: e.target.value }))} /></MRow>
@@ -2478,14 +2437,14 @@ export default function Dashboard() {
             <MRow label="פוסטים שפורסמו" required><MInputC placeholder="0" type="number" value={monthlyForm.posts_count} onChange={e => setMonthlyForm(f => ({ ...f, posts_count: e.target.value }))} /></MRow>
             <MDivider />
             <MRow label="השקעה על ממומן (₪)" hint="פרסום ממומן על תוכן"><MInputC placeholder="0" type="number" value={monthlyForm.paid_ads} onChange={e => setMonthlyForm(f => ({ ...f, paid_ads: e.target.value }))} /></MRow>
-            <MDivider />
-            <MField label="ביטחון בתוכן החודש (1–10)" required>
-              <MSlider value={monthlyForm.content_confidence} onChange={v => setMonthlyForm(f => ({ ...f, content_confidence: v }))} />
-            </MField>
           </div>,
 
           /* Step 2 — להוביל */
           <div key={2} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MField label="ביטחון בתהליך המכירה (1–10)" required>
+              <MSlider value={monthlyForm.sales_confidence} onChange={v => setMonthlyForm(f => ({ ...f, sales_confidence: v }))} />
+            </MField>
+            <MDivider />
             <MRow label="לידים שהגיעו" required><MInputC placeholder="0" type="number" value={monthlyForm.leads} onChange={e => setMonthlyForm(f => ({ ...f, leads: e.target.value }))} /></MRow>
             <MDivider />
             <MRow label="הצעות שהצעתי" hint="סטורי, פוסט, DM וכד׳"><MInputC placeholder="0" type="number" value={monthlyForm.proposals} onChange={e => setMonthlyForm(f => ({ ...f, proposals: e.target.value }))} /></MRow>
@@ -2501,27 +2460,27 @@ export default function Dashboard() {
             <MRow label="הצעות מחיר נשלחו"><MInputC placeholder="0" type="number" value={monthlyForm.price_quotes_sent} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_sent: e.target.value }))} /></MRow>
             <MDivider />
             <MRow label="הצעות מחיר אושרו"><MInputC placeholder="0" type="number" value={monthlyForm.price_quotes_approved} onChange={e => setMonthlyForm(f => ({ ...f, price_quotes_approved: e.target.value }))} /></MRow>
-            <MDivider />
-            <MField label="ביטחון בתהליך המכירה (1–10)" required>
-              <MSlider value={monthlyForm.sales_confidence} onChange={v => setMonthlyForm(f => ({ ...f, sales_confidence: v }))} />
-            </MField>
           </div>,
 
           /* Step 3 — לשלוט */
           <div key={3} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MField label="כמה אתם מרגישים רווחיים בפרויקטים שלכם (1–10)">
+              <MSlider value={monthlyForm.client_satisfaction} onChange={v => setMonthlyForm(f => ({ ...f, client_satisfaction: v }))} />
+            </MField>
+            <MDivider />
             <MRow label="לקוחות חדשים החודש" required><MInputC placeholder="0" type="number" value={monthlyForm.new_clients} onChange={e => setMonthlyForm(f => ({ ...f, new_clients: e.target.value }))} /></MRow>
             <MDivider />
             <MRow label="לקוחות פעילים סה״כ" required><MInputC placeholder="0" type="number" value={monthlyForm.active_clients} onChange={e => setMonthlyForm(f => ({ ...f, active_clients: e.target.value }))} /></MRow>
             <MDivider />
             <MRow label="ריטיינרים פעילים" hint="מספר לא סכום"><MInputC placeholder="0" type="number" value={monthlyForm.retainers_count} onChange={e => setMonthlyForm(f => ({ ...f, retainers_count: e.target.value }))} /></MRow>
-            <MDivider />
-            <MField label="כמה אתם מרגישים רווחיים בפרויקטים שלכם (1–10)">
-              <MSlider value={monthlyForm.client_satisfaction} onChange={v => setMonthlyForm(f => ({ ...f, client_satisfaction: v }))} />
-            </MField>
           </div>,
 
           /* Step 4 — לספק */
           <div key={4} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <MField label="ביטחון בביצועים העסקיים (1–10)" required>
+              <MSlider value={monthlyForm.business_confidence} onChange={v => setMonthlyForm(f => ({ ...f, business_confidence: v }))} />
+            </MField>
+            <MDivider />
             <MRow label="עסקאות חדשות שנסגרו (₪)" required><MInputC placeholder="0" type="number" value={monthlyForm.total_new_deals} onChange={e => setMonthlyForm(f => ({ ...f, total_new_deals: e.target.value }))} /></MRow>
             <MDivider />
             <MRow label="ריטיינרים ותשלומים קבועים (₪)"><MInputC placeholder="0" type="number" value={monthlyForm.retainers} onChange={e => setMonthlyForm(f => ({ ...f, retainers: e.target.value }))} /></MRow>
@@ -2533,10 +2492,6 @@ export default function Dashboard() {
             <MRow label="הוצאות משתנות (₪)"><MInputC placeholder="0" type="number" value={monthlyForm.variable_expenses} onChange={e => setMonthlyForm(f => ({ ...f, variable_expenses: e.target.value }))} /></MRow>
             <MDivider />
             {rankBlock}
-            <MDivider />
-            <MField label="ביטחון בביצועים העסקיים (1–10)" required>
-              <MSlider value={monthlyForm.business_confidence} onChange={v => setMonthlyForm(f => ({ ...f, business_confidence: v }))} />
-            </MField>
           </div>,
 
           /* Step 5 — פידבק */
@@ -2597,17 +2552,17 @@ export default function Dashboard() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '16px 20px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '1rem', fontWeight: 600, color: 'white', lineHeight: 1.2 }}>
-                    {editingSubmission ? 'עריכת נתונים חודשיים' : 'סיכום חודשי'}
+                  <span style={{ fontSize: '1.5rem', fontWeight: 600, color: 'white', lineHeight: 1.2 }}>
+                    סיכום חודשי
                   </span>
-                  <span style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.25)', fontWeight: 300 }}>·</span>
+                  <span style={{ fontSize: '1.5rem', color: 'rgba(255,255,255,0.25)', fontWeight: 300 }}>·</span>
                   {/* Month picker */}
                   <div style={{ position: 'relative' }}>
                     <button
                       onClick={() => setMonthlyForm(f => ({ ...f, _datePicker: !f._datePicker }))}
                       style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.06)',
                         border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '4px 10px', cursor: 'pointer' }}>
-                      <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{monthLabel} {rmYear}</span>
+                      <span style={{ fontSize: '1.5rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{monthLabel} {rmYear}</span>
                       <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
                     </button>
                     {monthlyForm._datePicker && (
@@ -2650,7 +2605,7 @@ export default function Dashboard() {
                 {MSTEP_META.map(({ n, label }) => (
                   <button key={n} onClick={() => setMonthlyStep(n)}
                     style={{ flex: 1, padding: '10px 4px 0', background: 'transparent', textAlign: 'right', cursor: 'pointer' }}>
-                    <p style={{ fontSize: '0.625rem', fontWeight: 500, marginBottom: 8,
+                    <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: 8,
                       color: monthlyStep === n ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.3)',
                       letterSpacing: '0.01em', paddingRight: 10 }}>
                       {label}
@@ -2671,10 +2626,10 @@ export default function Dashboard() {
                   <p style={{ fontSize: '0.625rem', fontWeight: 700, color: ACCENT, letterSpacing: '0.06em', marginBottom: 6 }}>
                     {String(monthlyStep).padStart(2,'0')} / {String(mTotal).padStart(2,'0')}
                   </p>
-                  <p style={{ fontSize: '1.1875rem', fontWeight: 700, color: 'white', lineHeight: 1.2, marginBottom: 8 }}>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', lineHeight: 1.2, marginBottom: 8 }}>
                     {MSTEP_META[monthlyStep-1].label}
                   </p>
-                  <p style={{ fontSize: '0.6875rem', lineHeight: 1.55, color: 'rgba(255,255,255,0.45)', marginBottom: 0 }}>
+                  <p style={{ fontSize: '0.875rem', lineHeight: 1.55, color: 'rgba(255,255,255,0.45)', marginBottom: 0 }}>
                     {MSTEP_META[monthlyStep-1].desc}
                   </p>
 

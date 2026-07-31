@@ -845,7 +845,7 @@ export default function Roadmap() {
                             <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
                               {task.level_label ? (
                                 <span style={{
-                                  fontSize: 11, lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  fontSize: '0.6875rem', lineHeight: '20px', height: 22, padding: '1px 8px',
                                   borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
                                   maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
                                   background: levelStyle(task.level_label).bg,
@@ -861,7 +861,7 @@ export default function Roadmap() {
                             <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
                               {task.category_label ? (
                                 <span style={{
-                                  fontSize: 11, lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  fontSize: '0.6875rem', lineHeight: '20px', height: 22, padding: '1px 8px',
                                   borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
                                   maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
                                   background: categoryStyle(task.category_label).bg,
@@ -877,7 +877,7 @@ export default function Roadmap() {
                             <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
                               {task.tag ? (
                                 <span style={{
-                                  fontSize: 11, lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  fontSize: '0.6875rem', lineHeight: '20px', height: 22, padding: '1px 8px',
                                   borderRadius: 6, fontWeight: 700, fontFamily: 'monospace', display: 'inline-block',
                                   background: 'rgba(245,193,24,0.12)',
                                   color: '#F5C118',

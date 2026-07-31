@@ -39,21 +39,21 @@ const inputStyle = {
   width: '100%', boxSizing: 'border-box',
   background: C.elevated, border: `1px solid ${C.border2}`,
   borderRadius: 8, padding: '9px 12px',
-  fontSize: 14, color: 'rgba(255,255,255,0.92)',
+  fontSize: '0.875rem', color: 'rgba(255,255,255,0.92)',
   outline: 'none', fontFamily: 'inherit',
 };
 
 const btnPrimary = {
   display: 'inline-flex', alignItems: 'center', gap: 6,
   padding: '10px 20px', borderRadius: 9, background: C.accent,
-  color: '#000', fontSize: 14, fontWeight: 700, border: 'none',
+  color: '#000', fontSize: '0.875rem', fontWeight: 700, border: 'none',
   cursor: 'pointer', fontFamily: 'inherit',
 };
 
 const btnGhost = {
   display: 'inline-flex', alignItems: 'center', gap: 6,
   padding: '10px 20px', borderRadius: 9, background: C.elevated,
-  color: 'rgba(255,255,255,0.85)', fontSize: 14, fontWeight: 500,
+  color: 'rgba(255,255,255,0.85)', fontSize: '0.875rem', fontWeight: 500,
   border: `1px solid ${C.border2}`, cursor: 'pointer', fontFamily: 'inherit',
 };
 
@@ -62,9 +62,9 @@ const btnGhost = {
 function StatCard({ label, value, color, sub }) {
   return (
     <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px 24px' }}>
-      <div style={{ fontSize: 11, color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, color: color || 'white', lineHeight: 1.1 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 5 }}>{sub}</div>}
+      <div style={{ fontSize: '0.6875rem', color: C.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: '1.625rem', fontWeight: 700, color: color || 'white', lineHeight: 1.1 }}>{value}</div>
+      {sub && <div style={{ fontSize: '0.75rem', color: C.muted, marginTop: 5 }}>{sub}</div>}
     </div>
   );
 }
@@ -73,7 +73,7 @@ function Badge({ label, color }) {
   return (
     <span style={{
       display: 'inline-flex', alignItems: 'center',
-      padding: '3px 10px', borderRadius: 99, fontSize: 11, fontWeight: 700,
+      padding: '3px 10px', borderRadius: 99, fontSize: '0.6875rem', fontWeight: 700,
       background: `${color}18`, border: `1px solid ${color}55`, color,
       whiteSpace: 'nowrap',
     }}>{label}</span>
@@ -83,7 +83,7 @@ function Badge({ label, color }) {
 function Field({ label, children, half }) {
   return (
     <div style={{ marginBottom: 14, gridColumn: half ? undefined : undefined }}>
-      <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
+      <div style={{ fontSize: '0.6875rem', color: C.muted, fontWeight: 600, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</div>
       {children}
     </div>
   );
@@ -97,7 +97,7 @@ function Modal({ title, onClose, onSave, saveLabel = 'שמור', children }) {
     >
       <div style={{ background: C.surface, border: `1px solid ${C.border2}`, borderRadius: 20, padding: 28, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: 'white' }}>{title}</div>
+          <div style={{ fontSize: '1.125rem', fontWeight: 700, color: 'white' }}>{title}</div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, display: 'flex' }}>
             <X size={18} />
           </button>
@@ -119,12 +119,12 @@ function ProjectMiniRow({ project, onEdit, onDelete }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: C.elevated, marginBottom: 6 }}>
       <Badge label={st.label} color={st.color} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.name}</div>
-        {project.deadline && <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>דדליין: {fmtDate(project.deadline)}</div>}
+        <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{project.name}</div>
+        {project.deadline && <div style={{ fontSize: '0.6875rem', color: C.muted, marginTop: 2 }}>דדליין: {fmtDate(project.deadline)}</div>}
       </div>
       <div style={{ flexShrink: 0, textAlign: 'left' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: C.accent }}>{fmt(project.total_amount)}</div>
-        {outstanding > 0 && <div style={{ fontSize: 11, color: C.red, marginTop: 1 }}>חוב: {fmt(outstanding)}</div>}
+        <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: C.accent }}>{fmt(project.total_amount)}</div>
+        {outstanding > 0 && <div style={{ fontSize: '0.6875rem', color: C.red, marginTop: 1 }}>חוב: {fmt(outstanding)}</div>}
       </div>
       <button onClick={() => onEdit(project)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex' }}><Edit2 size={13} /></button>
       <button onClick={() => onDelete(project.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.red, padding: 4, display: 'flex' }}><Trash2 size={13} /></button>
@@ -145,34 +145,34 @@ function ClientRow({ client, projects, onEditClient, onDeleteClient, onAddProjec
         onClick={() => setOpen(o => !o)}
         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'right' }}
       >
-        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(245,193,24,0.12)', border: '1.5px solid rgba(245,193,24,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: C.accent, flexShrink: 0 }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'rgba(245,193,24,0.12)', border: '1.5px solid rgba(245,193,24,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 700, color: C.accent, flexShrink: 0 }}>
           {client.name?.[0]?.toUpperCase() || '?'}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: 'white' }}>{client.name}</span>
+            <span style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'white' }}>{client.name}</span>
             <span>{src.icon}</span>
             <Badge label={src.label} color={src.color} />
           </div>
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 3 }}>
+          <div style={{ fontSize: '0.75rem', color: C.muted, marginTop: 3 }}>
             {[client.email, client.phone].filter(Boolean).join(' · ') || 'אין פרטי קשר'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{clientProjects.length}</div>
-            <div style={{ fontSize: 11, color: C.muted }}>פרויקטים</div>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white' }}>{clientProjects.length}</div>
+            <div style={{ fontSize: '0.6875rem', color: C.muted }}>פרויקטים</div>
           </div>
           {totalValue > 0 && (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.accent }}>{fmt(totalValue)}</div>
-              <div style={{ fontSize: 11, color: C.muted }}>סה"כ ערך</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: C.accent }}>{fmt(totalValue)}</div>
+              <div style={{ fontSize: '0.6875rem', color: C.muted }}>סה"כ ערך</div>
             </div>
           )}
           {outstanding > 0 && (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 700, color: C.red }}>{fmt(outstanding)}</div>
-              <div style={{ fontSize: 11, color: C.muted }}>חוב פתוח</div>
+              <div style={{ fontSize: '1rem', fontWeight: 700, color: C.red }}>{fmt(outstanding)}</div>
+              <div style={{ fontSize: '0.6875rem', color: C.muted }}>חוב פתוח</div>
             </div>
           )}
         </div>
@@ -187,14 +187,14 @@ function ClientRow({ client, projects, onEditClient, onDeleteClient, onAddProjec
         <div style={{ padding: '0 20px 16px', borderTop: `1px solid ${C.border}` }}>
           <div style={{ paddingTop: 14 }}>
             {clientProjects.length === 0
-              ? <div style={{ fontSize: 13, color: C.muted, paddingBottom: 10 }}>אין פרויקטים ללקוח זה עדיין</div>
+              ? <div style={{ fontSize: '0.8125rem', color: C.muted, paddingBottom: 10 }}>אין פרויקטים ללקוח זה עדיין</div>
               : clientProjects.map(p => (
                   <ProjectMiniRow key={p.id} project={p} onEdit={onEditProject} onDelete={onDeleteProject} />
                 ))
             }
             <button
               onClick={() => onAddProject(client.id)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, background: 'transparent', border: '1px dashed rgba(245,193,24,0.4)', borderRadius: 8, padding: '8px 14px', color: C.accent, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, background: 'transparent', border: '1px dashed rgba(245,193,24,0.4)', borderRadius: 8, padding: '8px 14px', color: C.accent, fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'inherit' }}
             >
               <Plus size={14} /> הוסף פרויקט ללקוח זה
             </button>
@@ -214,8 +214,8 @@ function ProjectRow({ project, clientName, onEdit, onDelete }) {
     <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 12, padding: '14px 18px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
       <Badge label={st.label} color={st.color} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'white' }}>{project.name}</div>
-        <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+        <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'white' }}>{project.name}</div>
+        <div style={{ fontSize: '0.75rem', color: C.muted, marginTop: 2 }}>
           {clientName || 'ללא לקוח'}{project.deadline ? ` · דדליין: ${fmtDate(project.deadline)}` : ''}
         </div>
         {project.total_amount > 0 && (
@@ -225,10 +225,10 @@ function ProjectRow({ project, clientName, onEdit, onDelete }) {
         )}
       </div>
       <div style={{ flexShrink: 0, textAlign: 'left' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: C.accent }}>{fmt(project.total_amount)}</div>
+        <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: C.accent }}>{fmt(project.total_amount)}</div>
         {outstanding > 0
-          ? <div style={{ fontSize: 11, color: C.red, marginTop: 2 }}>חוב: {fmt(outstanding)}</div>
-          : project.total_amount > 0 && <div style={{ fontSize: 11, color: C.green, marginTop: 2 }}>שולם במלואו ✓</div>
+          ? <div style={{ fontSize: '0.6875rem', color: C.red, marginTop: 2 }}>חוב: {fmt(outstanding)}</div>
+          : project.total_amount > 0 && <div style={{ fontSize: '0.6875rem', color: C.green, marginTop: 2 }}>שולם במלואו ✓</div>
         }
       </div>
       <button onClick={() => onEdit(project)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, padding: 6, display: 'flex' }}><Edit2 size={14} /></button>
@@ -261,14 +261,14 @@ function WfTemplateEditor({ template, onSave, onClose }) {
     >
       <div style={{ background: C.surface, border: `1px solid ${C.border2}`, borderRadius: 20, padding: 28, width: '100%', maxWidth: 460 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div style={{ fontSize: 17, fontWeight: 700, color: 'white' }}>
+          <div style={{ fontSize: '1.0625rem', fontWeight: 700, color: 'white' }}>
             {template ? 'עריכת תבנית' : 'תבנית חדשה'}
           </div>
           <button onClick={onClose} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted }}><X size={18} /></button>
         </div>
 
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>שם התבנית</div>
+          <div style={{ fontSize: '0.6875rem', color: C.muted, fontWeight: 600, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>שם התבנית</div>
           <input
             style={inputStyle} value={name}
             onChange={e => setName(e.target.value)}
@@ -278,7 +278,7 @@ function WfTemplateEditor({ template, onSave, onClose }) {
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: '0.6875rem', color: C.muted, fontWeight: 600, marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             שלבי התהליך <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(שורה לכל שלב)</span>
           </div>
           <textarea
@@ -350,8 +350,8 @@ function WfPanel({ userId }) {
                     style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'right', fontFamily: 'inherit' }}
                   >
                     <ChevronRight size={13} style={{ color: C.muted, transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{tpl.name}</span>
-                    <span style={{ fontSize: 11, color: C.muted, marginRight: 2 }}>{stepLines.length} שלבים</span>
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)' }}>{tpl.name}</span>
+                    <span style={{ fontSize: '0.6875rem', color: C.muted, marginRight: 2 }}>{stepLines.length} שלבים</span>
                   </button>
                   <button onClick={() => { setEditorTpl(tpl); setEditingIdx(idx); }}
                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.muted, padding: 4, display: 'flex' }}>
@@ -368,8 +368,8 @@ function WfPanel({ userId }) {
                   <div style={{ borderTop: `1px solid ${C.border}`, padding: '10px 14px 12px' }}>
                     {stepLines.map((step, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', border: `1.5px solid rgba(245,193,24,0.4)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: C.accent, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
-                        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)', lineHeight: 1.5 }}>{step}</span>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', border: `1.5px solid rgba(245,193,24,0.4)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700, color: C.accent, flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                        <span style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.78)', lineHeight: 1.5 }}>{step}</span>
                       </div>
                     ))}
                   </div>
@@ -384,14 +384,14 @@ function WfPanel({ userId }) {
       {canAdd && (
         <button
           onClick={() => { setEditorTpl({}); setEditingIdx(null); }}
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: '1px dashed rgba(245,193,24,0.35)', borderRadius: 8, padding: '8px 14px', color: C.accent, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'transparent', border: '1px dashed rgba(245,193,24,0.35)', borderRadius: 8, padding: '8px 14px', color: C.accent, fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit' }}
         >
           <Plus size={13} />
           {templates.length === 0 ? 'הוסף תבנית לתהליך עבודה' : `הוסף תבנית נוספת (${templates.length}/${MAX_TEMPLATES})`}
         </button>
       )}
       {!canAdd && (
-        <div style={{ fontSize: 11, color: C.muted }}>הגעת למקסימום 3 תבניות — מחק אחת כדי להוסיף חדשה.</div>
+        <div style={{ fontSize: '0.6875rem', color: C.muted }}>הגעת למקסימום 3 תבניות — מחק אחת כדי להוסיף חדשה.</div>
       )}
 
       {/* Editor modal */}
@@ -516,7 +516,7 @@ export default function ClientsProjects() {
 
   const clientName = id => clients.find(c => c.id === id)?.name || '';
 
-  if (loading) return <div style={{ padding: 40, color: C.muted, fontSize: 14 }}>טוען...</div>;
+  if (loading) return <div style={{ padding: 40, color: C.muted, fontSize: '0.875rem' }}>טוען...</div>;
 
   return (
     <div className="w-full space-y-6">
@@ -524,8 +524,8 @@ export default function ClientsProjects() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 28, color: 'white', margin: 0 }}>לקוחות ופרויקטים</h1>
-          <p style={{ fontSize: 14, color: C.muted, marginTop: 4 }}>
+          <h1 style={{ fontSize: '1.75rem', color: 'white', margin: 0 }}>לקוחות ופרויקטים</h1>
+          <p style={{ fontSize: '0.875rem', color: C.muted, marginTop: 4 }}>
             {clients.length} לקוחות · {projects.length} פרויקטים
           </p>
         </div>
@@ -552,7 +552,7 @@ export default function ClientsProjects() {
           <button key={t.key} onClick={() => setTab(t.key)} style={{
             display: 'flex', alignItems: 'center', gap: 6,
             padding: '8px 18px', borderRadius: 7, border: 'none', cursor: 'pointer',
-            fontFamily: 'inherit', fontSize: 14, fontWeight: 600,
+            fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600,
             background: tab === t.key ? C.accent : 'transparent',
             color:      tab === t.key ? '#000'   : C.muted,
             transition: 'all 0.15s',
@@ -566,7 +566,7 @@ export default function ClientsProjects() {
       {tab === 'clients' && (
         <div>
           {clients.length === 0
-            ? <div style={{ borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', padding: '48px 24px', textAlign: 'center', color: C.muted, fontSize: 14 }}>
+            ? <div style={{ borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', padding: '48px 24px', textAlign: 'center', color: C.muted, fontSize: '0.875rem' }}>
                 אין לקוחות עדיין — לחץ על "לקוח חדש" כדי להתחיל 👆
               </div>
             : clients.map(c => (
@@ -585,7 +585,7 @@ export default function ClientsProjects() {
       {tab === 'projects' && (
         <div>
           {projects.length === 0
-            ? <div style={{ borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', padding: '48px 24px', textAlign: 'center', color: C.muted, fontSize: 14 }}>
+            ? <div style={{ borderRadius: 16, border: '1px dashed rgba(255,255,255,0.1)', padding: '48px 24px', textAlign: 'center', color: C.muted, fontSize: '0.875rem' }}>
                 אין פרויקטים עדיין — לחץ על "פרויקט חדש" כדי להתחיל 👆
               </div>
             : Object.entries(STATUSES).map(([key, st]) => {
@@ -595,8 +595,8 @@ export default function ClientsProjects() {
                   <div key={key} style={{ marginBottom: 24 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
                       <div style={{ width: 8, height: 8, borderRadius: '50%', background: st.color }} />
-                      <span style={{ fontSize: 12, fontWeight: 700, color: st.color, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{st.label}</span>
-                      <span style={{ fontSize: 11, color: C.muted }}>({group.length})</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: st.color, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{st.label}</span>
+                      <span style={{ fontSize: '0.6875rem', color: C.muted }}>({group.length})</span>
                     </div>
                     {group.map(p => (
                       <ProjectRow key={p.id} project={p} clientName={clientName(p.client_id)} onEdit={openEditProject} onDelete={deleteProject} />
@@ -627,8 +627,8 @@ export default function ClientsProjects() {
               {Object.entries(SOURCES).map(([key, src]) => (
                 <button key={key} onClick={() => setClientForm(f => ({ ...f, source: key }))}
                   style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 9, border: `1.5px solid ${clientForm.source === key ? src.color : C.border2}`, background: clientForm.source === key ? `${src.color}15` : C.elevated, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}>
-                  <span style={{ fontSize: 18 }}>{src.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: clientForm.source === key ? src.color : C.muted }}>{src.label}</span>
+                  <span style={{ fontSize: '1.125rem' }}>{src.icon}</span>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: clientForm.source === key ? src.color : C.muted }}>{src.label}</span>
                 </button>
               ))}
             </div>
@@ -655,7 +655,7 @@ export default function ClientsProjects() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {Object.entries(STATUSES).map(([key, st]) => (
                 <button key={key} onClick={() => setProjectForm(f => ({ ...f, status: key }))}
-                  style={{ padding: '7px 14px', borderRadius: 8, border: `1.5px solid ${projectForm.status === key ? st.color : C.border2}`, background: projectForm.status === key ? `${st.color}18` : C.elevated, color: projectForm.status === key ? st.color : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600, transition: 'all 0.15s' }}>
+                  style={{ padding: '7px 14px', borderRadius: 8, border: `1.5px solid ${projectForm.status === key ? st.color : C.border2}`, background: projectForm.status === key ? `${st.color}18` : C.elevated, color: projectForm.status === key ? st.color : C.muted, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.8125rem', fontWeight: 600, transition: 'all 0.15s' }}>
                   {st.label}
                 </button>
               ))}
@@ -683,7 +683,7 @@ export default function ClientsProjects() {
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 16, marginTop: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
               <LayoutTemplate size={14} style={{ color: C.accent }} />
-              <span style={{ fontSize: 12, fontWeight: 700, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.06em' }}>תבניות תהליך עבודה</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.06em' }}>תבניות תהליך עבודה</span>
             </div>
             <WfPanel userId={user.id} />
           </div>

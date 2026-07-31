@@ -49,10 +49,10 @@ function playBeep(freq = 700, dur = 0.6) {
 
 // ── Styles ────────────────────────────────────────────────────
 const S = {
-  label:  { display:'block', fontSize: 11, color:'rgba(255,255,255,0.4)', marginBottom:5, fontWeight:700, textTransform:'uppercase', letterSpacing:1 },
-  input:  { width:'100%', background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'8px 12px', color:'inherit', fontSize:14, outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'inherit' },
-  navBtn: { background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, width:28, height:28, cursor:'pointer', color:'inherit', fontSize:18, display:'flex', alignItems:'center', justifyContent:'center', padding:0, flexShrink:0 },
-  chip:   (active, color) => ({ padding:'3px 10px', borderRadius:20, border:`1px solid ${color ? color+'50' : 'rgba(255,255,255,0.15)'}`, background: active ? (color ? color+'20' : 'rgba(255,255,255,0.12)') : 'transparent', color: active && color ? color : active ? 'white' : 'rgba(255,255,255,0.45)', cursor:'pointer', fontSize:12, fontWeight: active ? 700 : 400 }),
+  label:  { display:'block', fontSize: '0.6875rem', color:'rgba(255,255,255,0.4)', marginBottom:5, fontWeight:700, textTransform:'uppercase', letterSpacing:1 },
+  input:  { width:'100%', background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'8px 12px', color:'inherit', fontSize:'0.875rem', outline:'none', boxSizing:'border-box', marginBottom:14, fontFamily:'inherit' },
+  navBtn: { background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, width:28, height:28, cursor:'pointer', color:'inherit', fontSize:'1.125rem', display:'flex', alignItems:'center', justifyContent:'center', padding:0, flexShrink:0 },
+  chip:   (active, color) => ({ padding:'3px 10px', borderRadius:20, border:`1px solid ${color ? color+'50' : 'rgba(255,255,255,0.15)'}`, background: active ? (color ? color+'20' : 'rgba(255,255,255,0.12)') : 'transparent', color: active && color ? color : active ? 'white' : 'rgba(255,255,255,0.45)', cursor:'pointer', fontSize:'0.75rem', fontWeight: active ? 700 : 400 }),
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -438,10 +438,10 @@ export default function TaskManager() {
 
           {/* Date navigation */}
           <button onClick={prevDay} style={S.navBtn}>›</button>
-          <div style={{ fontWeight:700, fontSize:14, flex:1, textAlign:'center', minWidth:160 }}>
+          <div style={{ fontWeight:700, fontSize:'0.875rem', flex:1, textAlign:'center', minWidth:160 }}>
             {fmtHebDate(selDate)}
             {selStr !== todayStr && (
-              <button onClick={() => setSelDate(new Date())} style={{ background:'none', border:'none', color:'rgba(245,193,24,0.7)', cursor:'pointer', fontSize:11, padding:'0 8px', marginRight:4 }}>← היום</button>
+              <button onClick={() => setSelDate(new Date())} style={{ background:'none', border:'none', color:'rgba(245,193,24,0.7)', cursor:'pointer', fontSize:'0.6875rem', padding:'0 8px', marginRight:4 }}>← היום</button>
             )}
           </div>
           <button onClick={nextDay} style={{ ...S.navBtn, transform:'scaleX(-1)' }}>›</button>
@@ -451,29 +451,29 @@ export default function TaskManager() {
             {pomMode && pomStart ? (
               /* Active pomodoro mini display */
               <div style={{ display:'flex', alignItems:'center', gap:8, background: pomPhase==='focus' ? 'rgba(251,146,60,0.1)' : 'rgba(74,222,128,0.08)', borderRadius:10, padding:'5px 10px', border:`1px solid ${pomPhase==='focus' ? 'rgba(251,146,60,0.3)' : 'rgba(74,222,128,0.25)'}` }}>
-                <span style={{ fontSize:11, color: pomPhase==='focus' ? '#fb923c' : '#4ade80', fontWeight:700 }}>{pomPhase==='focus' ? '🍅' : '☕'}</span>
-                <span style={{ fontSize:18, fontVariantNumeric:'tabular-nums', fontWeight:900, color: pomPhase==='focus' ? '#fb923c' : '#4ade80' }}>{fmtPom(pomRemaining)}</span>
+                <span style={{ fontSize:'0.6875rem', color: pomPhase==='focus' ? '#fb923c' : '#4ade80', fontWeight:700 }}>{pomPhase==='focus' ? '🍅' : '☕'}</span>
+                <span style={{ fontSize:'1.125rem', fontVariantNumeric:'tabular-nums', fontWeight:900, color: pomPhase==='focus' ? '#fb923c' : '#4ade80' }}>{fmtPom(pomRemaining)}</span>
                 <div style={{ width:48, height:4, borderRadius:99, background:'rgba(255,255,255,0.1)', overflow:'hidden' }}>
                   <div style={{ height:'100%', width:`${pomPct}%`, background: pomPhase==='focus' ? '#fb923c' : '#4ade80', borderRadius:99 }} />
                 </div>
                 <button onClick={() => { setPomStart(null); setPomPaused(false); setPomAlert(null); pomSavedSecs.current = 0; }}
-                  style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.35)', fontSize:13, padding:0, lineHeight:1 }}>✕</button>
+                  style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.35)', fontSize:'0.8125rem', padding:0, lineHeight:1 }}>✕</button>
               </div>
             ) : (
               /* Inactive — mode chips + start */
               <>
-                <span style={{ fontSize:11, color:'rgba(255,255,255,0.35)', fontWeight:600 }}>🍅</span>
+                <span style={{ fontSize:'0.6875rem', color:'rgba(255,255,255,0.35)', fontWeight:600 }}>🍅</span>
                 {POMODORO_MODES.map(m => (
                   <button key={m.id} onClick={() => { setPomMode(m.id); setPomStart(null); setPomPhase('focus'); setPomAlert(null); }}
                     style={S.chip(pomMode===m.id, '#fb923c')}>{m.label}</button>
                 ))}
                 {pomMode && (
                   <button onClick={() => { setPomPhase('focus'); setPomStart(Date.now()); setPomPaused(false); pomSavedSecs.current = 0; setPomAlert(null); }}
-                    style={{ background:'rgba(251,146,60,0.18)', border:'1px solid rgba(251,146,60,0.4)', borderRadius:8, padding:'3px 10px', cursor:'pointer', color:'#fb923c', fontSize:12, fontWeight:700 }}>▶</button>
+                    style={{ background:'rgba(251,146,60,0.18)', border:'1px solid rgba(251,146,60,0.4)', borderRadius:8, padding:'3px 10px', cursor:'pointer', color:'#fb923c', fontSize:'0.75rem', fontWeight:700 }}>▶</button>
                 )}
                 {pomMode && (
                   <button onClick={() => { setPomMode(null); setPomStart(null); setPomAlert(null); }}
-                    style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.25)', fontSize:13, padding:0 }}>✕</button>
+                    style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.25)', fontSize:'0.8125rem', padding:0 }}>✕</button>
                 )}
               </>
             )}
@@ -483,8 +483,8 @@ export default function TaskManager() {
         {/* Pomodoro alert banner */}
         {pomAlert && (
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 16px', flexShrink:0, background: pomAlert.type==='break' ? 'rgba(251,146,60,0.1)' : 'rgba(74,222,128,0.08)', borderBottom:`1px solid ${pomAlert.type==='break' ? 'rgba(251,146,60,0.3)' : 'rgba(74,222,128,0.2)'}` }}>
-            <span style={{ fontSize:13, color: pomAlert.type==='break' ? '#fb923c' : '#4ade80', fontWeight:600 }}>{pomAlert.msg}</span>
-            <button onClick={() => setPomAlert(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.4)', fontSize:16, padding:'0 4px' }}>×</button>
+            <span style={{ fontSize:'0.8125rem', color: pomAlert.type==='break' ? '#fb923c' : '#4ade80', fontWeight:600 }}>{pomAlert.msg}</span>
+            <button onClick={() => setPomAlert(null)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.4)', fontSize:'1rem', padding:'0 4px' }}>×</button>
           </div>
         )}
 
@@ -498,9 +498,9 @@ export default function TaskManager() {
             </colgroup>
             <thead>
               <tr style={{ position:'sticky', top:0, zIndex:3, background:'rgb(var(--bg-surface))' }}>
-                <th style={{ padding:'7px 0', borderBottom:'2px solid rgba(255,255,255,0.1)', fontSize:11, color:'rgba(255,255,255,0.2)', fontWeight:600 }}></th>
-                <th style={{ padding:'7px 0', borderBottom:'2px solid rgba(255,255,255,0.1)', borderLeft:'1px solid rgba(255,255,255,0.07)', fontSize:13, color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:2, textAlign:'center' }}>00</th>
-                <th style={{ padding:'7px 0', borderBottom:'2px solid rgba(255,255,255,0.1)', borderLeft:'1px solid rgba(255,255,255,0.05)', fontSize:13, color:'rgba(255,255,255,0.3)', fontWeight:600, letterSpacing:2, textAlign:'center' }}>30</th>
+                <th style={{ padding:'7px 0', borderBottom:'2px solid rgba(255,255,255,0.1)', fontSize:'0.6875rem', color:'rgba(255,255,255,0.2)', fontWeight:600 }}></th>
+                <th style={{ padding:'7px 0', borderBottom:'2px solid rgba(255,255,255,0.1)', borderLeft:'1px solid rgba(255,255,255,0.07)', fontSize:'0.8125rem', color:'rgba(255,255,255,0.5)', fontWeight:700, letterSpacing:2, textAlign:'center' }}>00</th>
+                <th style={{ padding:'7px 0', borderBottom:'2px solid rgba(255,255,255,0.1)', borderLeft:'1px solid rgba(255,255,255,0.05)', fontSize:'0.8125rem', color:'rgba(255,255,255,0.3)', fontWeight:600, letterSpacing:2, textAlign:'center' }}>30</th>
               </tr>
             </thead>
             <tbody>
@@ -509,7 +509,7 @@ export default function TaskManager() {
                 return (
                   <tr key={h} style={{ background: isCurH ? 'rgba(245,193,24,0.015)' : 'transparent' }}>
                     <td style={{ verticalAlign:'middle', textAlign:'center', userSelect:'none', borderBottom:'1px solid rgba(255,255,255,0.04)', padding:'0 4px' }}>
-                      <span style={{ fontSize:12, fontWeight:700, color: isCurH ? '#F5C118' : h%2===0 ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.18)' }}>{h}</span>
+                      <span style={{ fontSize:'0.75rem', fontWeight:700, color: isCurH ? '#F5C118' : h%2===0 ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.18)' }}>{h}</span>
                     </td>
 
                     {[0, 30].map(min => {
@@ -573,12 +573,12 @@ export default function TaskManager() {
                                 onKeyDown={e => { if (e.key==='Enter') submitQuickAdd(); if (e.key==='Escape') setQuickAdd(null); }}
                                 onBlur={() => { setTimeout(() => setQuickAdd(null), 150); }}
                                 placeholder="שם משימה… Enter לשמור"
-                                style={{ width:'100%', background:'rgba(245,193,24,0.1)', border:'1px solid rgba(245,193,24,0.4)', borderRadius:6, padding:'6px 8px', color:'white', fontSize:12, outline:'none', fontFamily:'inherit', boxSizing:'border-box' }}
+                                style={{ width:'100%', background:'rgba(245,193,24,0.1)', border:'1px solid rgba(245,193,24,0.4)', borderRadius:6, padding:'6px 8px', color:'white', fontSize:'0.75rem', outline:'none', fontFamily:'inherit', boxSizing:'border-box' }}
                               />
                               <div style={{ display:'flex', gap:3, marginTop:3 }}>
                                 {Object.entries(PRIORITIES).slice(0,4).map(([k,v]) => (
                                   <button key={k} onMouseDown={e => { e.preventDefault(); setQuickAdd(q => ({...q, priority:k})); }}
-                                    style={{ padding:'1px 6px', borderRadius:4, border:`1px solid ${quickAdd.priority===k ? v.color+'80' : 'rgba(255,255,255,0.1)'}`, background: quickAdd.priority===k ? `${v.color}20` : 'transparent', color: quickAdd.priority===k ? v.color : 'rgba(255,255,255,0.3)', cursor:'pointer', fontSize: 11 }}>
+                                    style={{ padding:'1px 6px', borderRadius:4, border:`1px solid ${quickAdd.priority===k ? v.color+'80' : 'rgba(255,255,255,0.1)'}`, background: quickAdd.priority===k ? `${v.color}20` : 'transparent', color: quickAdd.priority===k ? v.color : 'rgba(255,255,255,0.3)', cursor:'pointer', fontSize: '0.6875rem' }}>
                                     {v.emoji}
                                   </button>
                                 ))}
@@ -591,7 +591,7 @@ export default function TaskManager() {
                           )}
 
                           {isOver && slotTasks.length===0 && !isQA && (
-                            <div style={{ minHeight:SLOT_H-8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, color:'rgba(245,193,24,0.6)' }}>{slot} ←</div>
+                            <div style={{ minHeight:SLOT_H-8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.6875rem', color:'rgba(245,193,24,0.6)' }}>{slot} ←</div>
                           )}
                         </td>
                       );
@@ -605,7 +605,7 @@ export default function TaskManager() {
 
         {/* ── Bottom stats bar ─── */}
         <div style={{ padding:'8px 16px', borderTop:'1px solid rgba(255,255,255,0.07)', flexShrink:0, display:'flex', alignItems:'center', gap:16, flexWrap:'wrap' }}>
-          <span style={{ fontSize:12, color:'rgba(255,255,255,0.45)' }}>
+          <span style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.45)' }}>
             <b style={{ color:'rgba(255,255,255,0.75)' }}>{calTasks.length}</b> משימות
             {' · '}
             <b style={{ color:'#4ade80' }}>{doneToday.length}</b> בוצעו
@@ -614,7 +614,7 @@ export default function TaskManager() {
             {routineAllDone && <> · <span style={{ color:'#4ade80' }}>🎯 שגרה הושלמה</span></>}
           </span>
           {aiTip && (
-            <span style={{ fontSize:11, color:'rgba(245,193,24,0.7)', marginRight:'auto' }}>{aiTip}</span>
+            <span style={{ fontSize:'0.6875rem', color:'rgba(245,193,24,0.7)', marginRight:'auto' }}>{aiTip}</span>
           )}
         </div>
       </div>
@@ -625,8 +625,8 @@ export default function TaskManager() {
         {/* ── Top 3 priorities ─── */}
         <div style={{ padding:'14px 14px 10px', borderBottom:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
           <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-            <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.7)' }}>טופ 3 הכי חשובות</span>
-            <span style={{ fontSize: 11, color:'rgba(255,255,255,0.25)' }}>גרור מהרשימה</span>
+            <span style={{ fontSize:'0.75rem', fontWeight:700, color:'rgba(255,255,255,0.7)' }}>טופ 3 הכי חשובות</span>
+            <span style={{ fontSize: '0.6875rem', color:'rgba(255,255,255,0.25)' }}>גרור מהרשימה</span>
           </div>
           {[0,1,2].map(i => {
             const taskId = topPriorities[i];
@@ -653,13 +653,13 @@ export default function TaskManager() {
                   transition:'all 0.15s',
                 }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px' }}>
-                  <span style={{ fontSize:13, fontWeight:900, color: task ? p.color : 'rgba(255,255,255,0.12)', minWidth:16, textAlign:'center', flexShrink:0 }}>{i+1}</span>
+                  <span style={{ fontSize:'0.8125rem', fontWeight:900, color: task ? p.color : 'rgba(255,255,255,0.12)', minWidth:16, textAlign:'center', flexShrink:0 }}>{i+1}</span>
                   {task ? (
                     <>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <div style={{ fontSize:13, fontWeight:700, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', color: done ? 'rgba(255,255,255,0.35)' : 'white', textDecoration: done ? 'line-through' : 'none' }}>{task.title}</div>
+                        <div style={{ fontSize:'0.8125rem', fontWeight:700, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', color: done ? 'rgba(255,255,255,0.35)' : 'white', textDecoration: done ? 'line-through' : 'none' }}>{task.title}</div>
                         {estS > 0 && (
-                          <div style={{ fontSize:11, color: over ? '#ef4444' : 'rgba(255,255,255,0.35)', fontVariantNumeric:'tabular-nums', marginTop:1 }}>
+                          <div style={{ fontSize:'0.6875rem', color: over ? '#ef4444' : 'rgba(255,255,255,0.35)', fontVariantNumeric:'tabular-nums', marginTop:1 }}>
                             {fmtSecs(el)} / {fmtMin(task.estimated_minutes)}
                           </div>
                         )}
@@ -673,18 +673,18 @@ export default function TaskManager() {
                           )}
                           <button onClick={() => active ? pauseTimer(task) : startTimer(task)}
                             style={{ width:20, height:20, borderRadius:4, border:`1px solid ${active ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)'}`, background: active ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.05)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
-                            <span style={{ fontSize:7 }}>{active ? '⏸' : '▶'}</span>
+                            <span style={{ fontSize:'0.4375rem' }}>{active ? '⏸' : '▶'}</span>
                           </button>
                           <button onClick={() => markDone(task)}
                             style={{ width:20, height:20, borderRadius:4, border:'1px solid rgba(255,255,255,0.1)', background:'rgba(255,255,255,0.05)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
-                            <span style={{ fontSize: 11 }}>✓</span>
+                            <span style={{ fontSize: '0.6875rem' }}>✓</span>
                           </button>
                         </div>
                       )}
-                      <button onClick={() => removeFromPriority(i)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.2)', fontSize:14, padding:0, lineHeight:1, flexShrink:0 }}>×</button>
+                      <button onClick={() => removeFromPriority(i)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.2)', fontSize:'0.875rem', padding:0, lineHeight:1, flexShrink:0 }}>×</button>
                     </>
                   ) : (
-                    <span style={{ flex:1, fontSize:11, color:'rgba(255,255,255,0.18)', fontStyle:'italic' }}>
+                    <span style={{ flex:1, fontSize:'0.6875rem', color:'rgba(255,255,255,0.18)', fontStyle:'italic' }}>
                       {isOver ? 'שחרר כאן...' : 'גרור לכאן'}
                     </span>
                   )}
@@ -703,10 +703,10 @@ export default function TaskManager() {
         <div style={{ borderBottom:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
           <button onClick={() => setRoutineSidebarOpen(v => !v)}
             style={{ width:'100%', display:'flex', alignItems:'center', gap:8, padding:'10px 14px', background:'none', border:'none', color:'inherit', cursor:'pointer', textAlign:'right' }}>
-            <span style={{ fontSize:11, color:'rgba(255,255,255,0.25)' }}>{routineSidebarOpen ? '▼' : '▶'}</span>
-            <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.65)' }}>משימות קבועות</span>
+            <span style={{ fontSize:'0.6875rem', color:'rgba(255,255,255,0.25)' }}>{routineSidebarOpen ? '▼' : '▶'}</span>
+            <span style={{ fontSize:'0.75rem', fontWeight:700, color:'rgba(255,255,255,0.65)' }}>משימות קבועות</span>
             {routineTotal > 0 && (
-              <span style={{ marginRight:'auto', fontSize:11, color: routineAllDone ? '#4ade80' : 'rgba(255,255,255,0.35)', fontWeight:700 }}>
+              <span style={{ marginRight:'auto', fontSize:'0.6875rem', color: routineAllDone ? '#4ade80' : 'rgba(255,255,255,0.35)', fontWeight:700 }}>
                 {routineDone}/{routineTotal} {routineAllDone ? '✅' : ''}
               </span>
             )}
@@ -729,12 +729,12 @@ export default function TaskManager() {
                     style={{ display:'flex', alignItems:'center', gap:8, padding:'7px 8px', borderRadius:8, marginBottom:4, background: checked ? 'rgba(74,222,128,0.06)' : 'rgba(255,255,255,0.03)', border:`1px solid ${checked ? 'rgba(74,222,128,0.18)' : 'rgba(255,255,255,0.06)'}`, cursor:'grab', transition:'all 0.15s' }}>
                     <button onClick={() => toggleRoutine(task.id)}
                       style={{ flexShrink:0, width:18, height:18, borderRadius:'50%', border:`2px solid ${checked ? '#4ade80' : 'rgba(255,255,255,0.2)'}`, background: checked ? '#4ade80' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
-                      {checked && <span style={{ fontSize: 11, color:'#13152A', fontWeight:900 }}>✓</span>}
+                      {checked && <span style={{ fontSize: '0.6875rem', color:'#13152A', fontWeight:900 }}>✓</span>}
                     </button>
-                    <span style={{ flex:1, fontSize:12, color: checked ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', textDecoration: checked ? 'line-through' : 'none', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{task.title}</span>
+                    <span style={{ flex:1, fontSize:'0.75rem', color: checked ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', textDecoration: checked ? 'line-through' : 'none', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{task.title}</span>
                     <button onClick={() => { setRoutineDropMins(30); setPendingRoutineDrop({ task, slot: null }); }}
-                      style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, cursor:'pointer', color:'rgba(255,255,255,0.4)', fontSize: 11, padding:'1px 6px', flexShrink:0 }}>+לוח</button>
-                    {routineEditMode && <button onClick={() => deleteRoutineTask(task.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.45)', fontSize:12, padding:0 }}>✕</button>}
+                      style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, cursor:'pointer', color:'rgba(255,255,255,0.4)', fontSize: '0.6875rem', padding:'1px 6px', flexShrink:0 }}>+לוח</button>
+                    {routineEditMode && <button onClick={() => deleteRoutineTask(task.id)} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.45)', fontSize:'0.75rem', padding:0 }}>✕</button>}
                   </div>
                 );
               })}
@@ -744,14 +744,14 @@ export default function TaskManager() {
                     onChange={e => setRoutineNewTitle(e.target.value)}
                     onKeyDown={e => { if (e.key==='Enter') addRoutineTask(); if (e.key==='Escape') { setRoutineAdding(false); setRoutineNewTitle(''); } }}
                     placeholder="שם משימה קבועה..."
-                    style={{ flex:1, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:7, padding:'5px 9px', color:'inherit', fontSize:12, outline:'none', fontFamily:'inherit' }} />
-                  <button onClick={addRoutineTask} style={{ background:'#F5C118', border:'none', borderRadius:7, padding:'5px 9px', fontWeight:700, cursor:'pointer', fontSize:11 }}>שמור</button>
-                  <button onClick={() => { setRoutineAdding(false); setRoutineNewTitle(''); }} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'5px 8px', color:'inherit', cursor:'pointer', fontSize:11 }}>ביטול</button>
+                    style={{ flex:1, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:7, padding:'5px 9px', color:'inherit', fontSize:'0.75rem', outline:'none', fontFamily:'inherit' }} />
+                  <button onClick={addRoutineTask} style={{ background:'#F5C118', border:'none', borderRadius:7, padding:'5px 9px', fontWeight:700, cursor:'pointer', fontSize:'0.6875rem' }}>שמור</button>
+                  <button onClick={() => { setRoutineAdding(false); setRoutineNewTitle(''); }} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'5px 8px', color:'inherit', cursor:'pointer', fontSize:'0.6875rem' }}>ביטול</button>
                 </div>
               ) : (
                 <div style={{ display:'flex', gap:5, marginTop:6 }}>
-                  <button onClick={() => setRoutineAdding(true)} style={{ flex:1, padding:'6px', borderRadius:7, border:'1px dashed rgba(255,255,255,0.12)', background:'none', color:'rgba(255,255,255,0.35)', cursor:'pointer', fontSize:11 }}>＋ הוסף</button>
-                  <button onClick={() => setRoutineEditMode(m => !m)} style={{ background: routineEditMode ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.05)', border:`1px solid ${routineEditMode ? 'rgba(245,193,24,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius:7, padding:'6px 9px', color: routineEditMode ? '#F5C118' : 'rgba(255,255,255,0.45)', cursor:'pointer', fontSize:11, fontWeight: routineEditMode ? 700 : 400 }}>ערוך</button>
+                  <button onClick={() => setRoutineAdding(true)} style={{ flex:1, padding:'6px', borderRadius:7, border:'1px dashed rgba(255,255,255,0.12)', background:'none', color:'rgba(255,255,255,0.35)', cursor:'pointer', fontSize:'0.6875rem' }}>＋ הוסף</button>
+                  <button onClick={() => setRoutineEditMode(m => !m)} style={{ background: routineEditMode ? 'rgba(245,193,24,0.12)' : 'rgba(255,255,255,0.05)', border:`1px solid ${routineEditMode ? 'rgba(245,193,24,0.35)' : 'rgba(255,255,255,0.08)'}`, borderRadius:7, padding:'6px 9px', color: routineEditMode ? '#F5C118' : 'rgba(255,255,255,0.45)', cursor:'pointer', fontSize:'0.6875rem', fontWeight: routineEditMode ? 700 : 400 }}>ערוך</button>
                 </div>
               )}
             </div>
@@ -767,10 +767,10 @@ export default function TaskManager() {
           <div style={{ padding:'10px 14px 6px', flexShrink:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:4, marginBottom:8 }}>
               {[['bank','משימות'],['done','בוצעו']].map(([k,l]) => (
-                <button key={k} onClick={() => setBankTab(k)} style={{ padding:'4px 10px', borderRadius:6, border:'none', background: bankTab===k ? 'rgba(255,255,255,0.12)' : 'transparent', color: bankTab===k ? 'white' : 'rgba(255,255,255,0.4)', fontWeight: bankTab===k ? 700 : 400, fontSize:12, cursor:'pointer', borderBottom: bankTab===k ? '2px solid #F5C118' : '2px solid transparent' }}>{l}</button>
+                <button key={k} onClick={() => setBankTab(k)} style={{ padding:'4px 10px', borderRadius:6, border:'none', background: bankTab===k ? 'rgba(255,255,255,0.12)' : 'transparent', color: bankTab===k ? 'white' : 'rgba(255,255,255,0.4)', fontWeight: bankTab===k ? 700 : 400, fontSize:'0.75rem', cursor:'pointer', borderBottom: bankTab===k ? '2px solid #F5C118' : '2px solid transparent' }}>{l}</button>
               ))}
               {bankTab==='bank' && (
-                <button onClick={() => openCreate()} style={{ marginRight:'auto', background:'#F5C118', border:'none', borderRadius:6, padding:'4px 10px', fontWeight:700, cursor:'pointer', fontSize:11, color:'#13152A' }}>+ חדש</button>
+                <button onClick={() => openCreate()} style={{ marginRight:'auto', background:'#F5C118', border:'none', borderRadius:6, padding:'4px 10px', fontWeight:700, cursor:'pointer', fontSize:'0.6875rem', color:'#13152A' }}>+ חדש</button>
               )}
             </div>
 
@@ -792,7 +792,7 @@ export default function TaskManager() {
                 <div key={priority}>
                   <div style={{ display:'flex', alignItems:'center', gap:5, margin:'8px 0 4px' }}>
                     <div style={{ flex:1, height:1, background:`${PRIORITIES[priority].color}20` }} />
-                    <span style={{ fontSize: 11, color: PRIORITIES[priority].color, fontWeight:700, whiteSpace:'nowrap' }}>{PRIORITIES[priority].emoji} {PRIORITIES[priority].label}</span>
+                    <span style={{ fontSize: '0.6875rem', color: PRIORITIES[priority].color, fontWeight:700, whiteSpace:'nowrap' }}>{PRIORITIES[priority].emoji} {PRIORITIES[priority].label}</span>
                     <div style={{ flex:1, height:1, background:`${PRIORITIES[priority].color}20` }} />
                   </div>
                   {items.map(task => (
@@ -819,9 +819,9 @@ export default function TaskManager() {
         <div style={{ borderTop:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
           <button onClick={() => setBrainOpen(v => !v)}
             style={{ width:'100%', display:'flex', alignItems:'center', gap:8, padding:'8px 14px', background:'none', border:'none', color:'inherit', cursor:'pointer', textAlign:'right' }}>
-            <span style={{ fontSize:11, color:'rgba(255,255,255,0.25)' }}>{brainOpen ? '▼' : '▶'}</span>
-            <span style={{ fontSize:12, fontWeight:700, color:'rgba(255,255,255,0.55)' }}>🧠 Brain Dump</span>
-            {brainDump.trim() && <span style={{ marginRight:'auto', fontSize: 11, color:'rgba(255,255,255,0.25)' }}>{brainDump.trim().split(/\s+/).filter(Boolean).length} מילים</span>}
+            <span style={{ fontSize:'0.6875rem', color:'rgba(255,255,255,0.25)' }}>{brainOpen ? '▼' : '▶'}</span>
+            <span style={{ fontSize:'0.75rem', fontWeight:700, color:'rgba(255,255,255,0.55)' }}>🧠 Brain Dump</span>
+            {brainDump.trim() && <span style={{ marginRight:'auto', fontSize: '0.6875rem', color:'rgba(255,255,255,0.25)' }}>{brainDump.trim().split(/\s+/).filter(Boolean).length} מילים</span>}
           </button>
           {brainOpen && (
             <div style={{ padding:'0 14px 12px' }}>
@@ -832,7 +832,7 @@ export default function TaskManager() {
                 style={{
                   width:'100%', height:120, background:'rgba(255,255,255,0.02)',
                   border:'1px solid rgba(255,255,255,0.08)', borderRadius:8,
-                  padding:'10px', color:'inherit', fontSize:12, outline:'none',
+                  padding:'10px', color:'inherit', fontSize:'0.75rem', outline:'none',
                   resize:'none', fontFamily:'inherit', lineHeight:1.7,
                   boxSizing:'border-box',
                   backgroundImage:'repeating-linear-gradient(transparent, transparent 26px, rgba(255,255,255,0.04) 26px, rgba(255,255,255,0.04) 27px)',
@@ -846,25 +846,25 @@ export default function TaskManager() {
       {/* ── Routine drop modal ─────────────────────────────── */}
       {pendingRoutineDrop && (
         <Modal onClose={() => setPendingRoutineDrop(null)}>
-          <p style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>🔁 {pendingRoutineDrop.task.title}</p>
+          <p style={{ fontWeight:700, fontSize:'0.9375rem', marginBottom:4 }}>🔁 {pendingRoutineDrop.task.title}</p>
           {!pendingRoutineDrop.slot ? (
             <>
-              <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginBottom:8 }}>בחר שעה:</p>
+              <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.4)', marginBottom:8 }}>בחר שעה:</p>
               <div style={{ display:'flex', flexWrap:'wrap', gap:4, marginBottom:14, maxHeight:150, overflowY:'auto' }}>
                 {HOURS.flatMap(h => ['00','30'].map(m => `${String(h).padStart(2,'0')}:${m}`)).map(s => (
                   <button key={s} onClick={() => setPendingRoutineDrop(p => ({...p, slot: s}))}
-                    style={{ padding:'3px 8px', borderRadius:6, border:'1px solid rgba(255,255,255,0.12)', background:'transparent', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:11 }}>{s}</button>
+                    style={{ padding:'3px 8px', borderRadius:6, border:'1px solid rgba(255,255,255,0.12)', background:'transparent', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:'0.6875rem' }}>{s}</button>
                 ))}
               </div>
             </>
           ) : (
-            <p style={{ fontSize:12, color:'#34d399', marginBottom:12 }}>⏰ {pendingRoutineDrop.slot} · <button onClick={() => setPendingRoutineDrop(p=>({...p,slot:null}))} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.4)',fontSize:11}}>שנה</button></p>
+            <p style={{ fontSize:'0.75rem', color:'#34d399', marginBottom:12 }}>⏰ {pendingRoutineDrop.slot} · <button onClick={() => setPendingRoutineDrop(p=>({...p,slot:null}))} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.4)',fontSize:'0.6875rem'}}>שנה</button></p>
           )}
-          <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', marginBottom:6 }}>כמה דקות?</p>
+          <p style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.4)', marginBottom:6 }}>כמה דקות?</p>
           <div style={{ display:'flex', gap:5, marginBottom:18, flexWrap:'wrap' }}>
             {[15,25,30,45,60].map(m => (
               <button key={m} onClick={() => setRoutineDropMins(m)}
-                style={{ padding:'5px 9px', borderRadius:8, border:`1px solid ${routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.12)'}`, background: routineDropMins===m ? 'rgba(52,211,153,0.15)' : 'transparent', color: routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:12, fontWeight: routineDropMins===m ? 700 : 400 }}>{m}′</button>
+                style={{ padding:'5px 9px', borderRadius:8, border:`1px solid ${routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.12)'}`, background: routineDropMins===m ? 'rgba(52,211,153,0.15)' : 'transparent', color: routineDropMins===m ? '#34d399' : 'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:'0.75rem', fontWeight: routineDropMins===m ? 700 : 400 }}>{m}′</button>
             ))}
           </div>
           <div style={{ display:'flex', gap:8 }}>
@@ -875,8 +875,8 @@ export default function TaskManager() {
               const { data } = await supabase.from('tasks').insert(payload).select().single();
               if (data) setTasks(prev => [data, ...prev]);
               setPendingRoutineDrop(null);
-            }} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:13, opacity: pendingRoutineDrop.slot ? 1 : 0.4 }}>הוסף ללוח</button>
-            <button onClick={() => setPendingRoutineDrop(null)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:13 }}>ביטול</button>
+            }} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:'0.8125rem', opacity: pendingRoutineDrop.slot ? 1 : 0.4 }}>הוסף ללוח</button>
+            <button onClick={() => setPendingRoutineDrop(null)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:'0.8125rem' }}>ביטול</button>
           </div>
         </Modal>
       )}
@@ -899,7 +899,7 @@ function SlotEmptyCell({ onClick, height }) {
   return (
     <div onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{ minHeight: height - 8, display:'flex', alignItems:'center', justifyContent:'center', cursor:'text', borderRadius:6, transition:'background 0.1s', background: hov ? 'rgba(255,255,255,0.025)' : 'transparent' }}>
-      {hov && <span style={{ fontSize:16, color:'rgba(255,255,255,0.12)', userSelect:'none' }}>＋</span>}
+      {hov && <span style={{ fontSize:'1rem', color:'rgba(255,255,255,0.12)', userSelect:'none' }}>＋</span>}
     </div>
   );
 }
@@ -934,27 +934,27 @@ function SlotCard({ task, elapsed, isDragging, dragTaskIdRef, onDragStart, onDra
         <div style={{ display:'flex', alignItems:'center', gap:5 }}>
           <button onClick={e => { e.stopPropagation(); onDone(); }}
             style={{ flexShrink:0, width:14, height:14, borderRadius:'50%', border:`1.5px solid ${isDone ? '#4ade80' : 'rgba(255,255,255,0.3)'}`, background: isDone ? '#4ade80' : 'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
-            {isDone && <span style={{ fontSize:8, color:'#13152A', fontWeight:900 }}>✓</span>}
+            {isDone && <span style={{ fontSize:'0.5rem', color:'#13152A', fontWeight:900 }}>✓</span>}
           </button>
-          <span style={{ flex:1, fontSize:12, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.35)' : 'white' }}>
+          <span style={{ flex:1, fontSize:'0.75rem', fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis', textDecoration: isDone ? 'line-through' : 'none', color: isDone ? 'rgba(255,255,255,0.35)' : 'white' }}>
             {task.title}
           </span>
           <div style={{ display:'flex', gap:2, flexShrink:0 }}>
-            <button onClick={e => { e.stopPropagation(); onEdit(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.2)', fontSize:11, padding:'0 2px', lineHeight:1 }}>✏️</button>
-            <button onClick={e => { e.stopPropagation(); onRemove(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.2)', fontSize:11, padding:'0 2px', lineHeight:1 }}>✕</button>
+            <button onClick={e => { e.stopPropagation(); onEdit(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.2)', fontSize:'0.6875rem', padding:'0 2px', lineHeight:1 }}>✏️</button>
+            <button onClick={e => { e.stopPropagation(); onRemove(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.2)', fontSize:'0.6875rem', padding:'0 2px', lineHeight:1 }}>✕</button>
           </div>
         </div>
 
         {!isDone && (
           <div style={{ display:'flex', alignItems:'center', gap:4 }}>
-            <span style={{ fontSize:11, fontVariantNumeric:'tabular-nums', fontWeight:700, color: over ? '#ef4444' : elapsed > 0 ? bar : 'rgba(255,255,255,0.2)', minWidth:38 }}>
+            <span style={{ fontSize:'0.6875rem', fontVariantNumeric:'tabular-nums', fontWeight:700, color: over ? '#ef4444' : elapsed > 0 ? bar : 'rgba(255,255,255,0.2)', minWidth:38 }}>
               {fmtSecs(elapsed)}
             </span>
-            <span style={{ fontSize: 11, color:'rgba(255,255,255,0.25)' }}>
+            <span style={{ fontSize: '0.6875rem', color:'rgba(255,255,255,0.25)' }}>
               {task.estimated_minutes ? `/${fmtMin(task.estimated_minutes)}` : ''}
             </span>
             {over && (
-              <button onClick={e => { e.stopPropagation(); onAddTime(); }} style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:4, padding:'1px 4px', cursor:'pointer', color:'#fca5a5', fontSize: 11, fontWeight:600 }}>+15ד'</button>
+              <button onClick={e => { e.stopPropagation(); onAddTime(); }} style={{ background:'rgba(239,68,68,0.12)', border:'1px solid rgba(239,68,68,0.3)', borderRadius:4, padding:'1px 4px', cursor:'pointer', color:'#fca5a5', fontSize: '0.6875rem', fontWeight:600 }}>+15ד'</button>
             )}
             <div style={{ marginRight:'auto', display:'flex', gap:2 }}>
               {elapsed > 0 && (
@@ -965,7 +965,7 @@ function SlotCard({ task, elapsed, isDragging, dragTaskIdRef, onDragStart, onDra
               )}
               <button onClick={e => { e.stopPropagation(); onTimer(); }}
                 style={{ width:18, height:18, borderRadius:4, border:`1px solid ${active ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)'}`, background: active ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.05)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', padding:0 }}>
-                <span style={{ fontSize:7 }}>{active ? '⏸' : '▶'}</span>
+                <span style={{ fontSize:'0.4375rem' }}>{active ? '⏸' : '▶'}</span>
               </button>
             </div>
           </div>
@@ -987,13 +987,13 @@ function BankCard({ task, onDragStart, onDragEnd, onEdit, onDelete }) {
   return (
     <div draggable onDragStart={onDragStart} onDragEnd={onDragEnd}
       style={{ background:'rgb(var(--bg-elevated))', borderRadius:8, padding:'7px 9px', marginBottom:5, border:'1px solid rgba(255,255,255,0.06)', borderRight:`3px solid ${p.color}`, cursor:'grab', display:'flex', alignItems:'center', gap:6 }}>
-      {task.status === 'returned' && <span style={{ fontSize: 11, background:'rgba(249,115,22,0.2)', color:'#f97316', borderRadius:3, padding:'1px 4px', flexShrink:0 }}>↩</span>}
-      <span style={{ flex:1, fontSize:13, fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{task.title}</span>
+      {task.status === 'returned' && <span style={{ fontSize: '0.6875rem', background:'rgba(249,115,22,0.2)', color:'#f97316', borderRadius:3, padding:'1px 4px', flexShrink:0 }}>↩</span>}
+      <span style={{ flex:1, fontSize:'0.8125rem', fontWeight:600, overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{task.title}</span>
       <div style={{ display:'flex', gap:3, flexShrink:0, alignItems:'center' }}>
-        {task.estimated_minutes && <span style={{ fontSize: 11, color:'rgba(255,255,255,0.3)' }}>{fmtMin(task.estimated_minutes)}</span>}
-        {task.due_date && <span style={{ fontSize: 11, color: task.due_date < toDateStr(new Date()) ? '#ef4444' : 'rgba(255,255,255,0.3)' }}>{task.due_date.slice(5)}</span>}
-        <button onClick={e => { e.stopPropagation(); onEdit(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.3)', fontSize:11, padding:'0 2px' }}>✏️</button>
-        <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.4)', fontSize:11, padding:'0 2px' }}>🗑</button>
+        {task.estimated_minutes && <span style={{ fontSize: '0.6875rem', color:'rgba(255,255,255,0.3)' }}>{fmtMin(task.estimated_minutes)}</span>}
+        {task.due_date && <span style={{ fontSize: '0.6875rem', color: task.due_date < toDateStr(new Date()) ? '#ef4444' : 'rgba(255,255,255,0.3)' }}>{task.due_date.slice(5)}</span>}
+        <button onClick={e => { e.stopPropagation(); onEdit(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(255,255,255,0.3)', fontSize:'0.6875rem', padding:'0 2px' }}>✏️</button>
+        <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.4)', fontSize:'0.6875rem', padding:'0 2px' }}>🗑</button>
       </div>
     </div>
   );
@@ -1003,16 +1003,16 @@ function DoneCard({ task, onRestore, onDelete }) {
   const p = PRIORITIES[task.priority];
   return (
     <div style={{ background:'rgb(var(--bg-elevated))', borderRadius:8, padding:'7px 9px', marginBottom:5, border:'1px solid rgba(255,255,255,0.04)', borderRight:`3px solid ${p.color}`, opacity:0.6, display:'flex', alignItems:'center', gap:6 }}>
-      <span style={{ fontSize:12 }}>✅</span>
-      <span style={{ flex:1, fontSize:13, textDecoration:'line-through', color:'rgba(255,255,255,0.4)', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{task.title}</span>
-      <button onClick={onRestore} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'inherit', fontSize: 11, flexShrink:0 }}>↩</button>
-      <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.4)', fontSize:11, padding:'0 2px', flexShrink:0 }}>🗑</button>
+      <span style={{ fontSize:'0.75rem' }}>✅</span>
+      <span style={{ flex:1, fontSize:'0.8125rem', textDecoration:'line-through', color:'rgba(255,255,255,0.4)', overflow:'hidden', whiteSpace:'nowrap', textOverflow:'ellipsis' }}>{task.title}</span>
+      <button onClick={onRestore} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:5, padding:'2px 7px', cursor:'pointer', color:'inherit', fontSize: '0.6875rem', flexShrink:0 }}>↩</button>
+      <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ background:'none', border:'none', cursor:'pointer', color:'rgba(252,165,165,0.4)', fontSize:'0.6875rem', padding:'0 2px', flexShrink:0 }}>🗑</button>
     </div>
   );
 }
 
 function EmptyState({ text }) {
-  return <div style={{ textAlign:'center', color:'rgba(255,255,255,0.25)', marginTop:24, fontSize:13, padding:'0 8px' }}>{text}</div>;
+  return <div style={{ textAlign:'center', color:'rgba(255,255,255,0.25)', marginTop:24, fontSize:'0.8125rem', padding:'0 8px' }}>{text}</div>;
 }
 
 function Modal({ onClose, children }) {
@@ -1044,8 +1044,8 @@ function TaskModal({ data, isEdit, preSlot, onChange, onSave, onClose }) {
   return (
     <Modal onClose={onClose}>
       <div style={{ display:'flex', justifyContent:'space-between', marginBottom:18 }}>
-        <span style={{ fontWeight:700, fontSize:16 }}>{isEdit ? 'עריכת משימה' : preSlot ? `משימה ב-${preSlot}` : 'משימה חדשה'}</span>
-        <button onClick={onClose} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:18, padding:0 }}>×</button>
+        <span style={{ fontWeight:700, fontSize:'1rem' }}>{isEdit ? 'עריכת משימה' : preSlot ? `משימה ב-${preSlot}` : 'משימה חדשה'}</span>
+        <button onClick={onClose} style={{ background:'none', border:'none', color:'rgba(255,255,255,0.5)', cursor:'pointer', fontSize:'1.125rem', padding:0 }}>×</button>
       </div>
 
       <label style={S.label}>כותרת</label>
@@ -1060,8 +1060,8 @@ function TaskModal({ data, isEdit, preSlot, onChange, onSave, onClose }) {
       <div style={{ display:'flex', flexDirection:'column', gap:5, marginBottom:14 }}>
         {Object.entries(PRIORITIES).map(([k, v]) => (
           <button key={k} onClick={() => set('priority', k)}
-            style={{ padding:'7px 12px', borderRadius:8, border:`1px solid ${data.priority===k ? v.color+'60' : 'rgba(255,255,255,0.1)'}`, background: data.priority===k ? `${v.color}18` : 'rgba(255,255,255,0.02)', color: data.priority===k ? v.color : 'rgba(255,255,255,0.65)', cursor:'pointer', fontSize:12, fontWeight: data.priority===k ? 700 : 400, textAlign:'right', display:'flex', alignItems:'center', gap:8, borderRight:`3px solid ${data.priority===k ? v.color : 'rgba(255,255,255,0.1)'}`, transition:'all 0.15s' }}>
-            <span>{v.emoji}</span><span style={{ flex:1 }}>{v.label}</span>{data.priority===k && <span style={{ fontSize: 11, opacity:0.7 }}>{v.short}</span>}
+            style={{ padding:'7px 12px', borderRadius:8, border:`1px solid ${data.priority===k ? v.color+'60' : 'rgba(255,255,255,0.1)'}`, background: data.priority===k ? `${v.color}18` : 'rgba(255,255,255,0.02)', color: data.priority===k ? v.color : 'rgba(255,255,255,0.65)', cursor:'pointer', fontSize:'0.75rem', fontWeight: data.priority===k ? 700 : 400, textAlign:'right', display:'flex', alignItems:'center', gap:8, borderRight:`3px solid ${data.priority===k ? v.color : 'rgba(255,255,255,0.1)'}`, transition:'all 0.15s' }}>
+            <span>{v.emoji}</span><span style={{ flex:1 }}>{v.label}</span>{data.priority===k && <span style={{ fontSize: '0.6875rem', opacity:0.7 }}>{v.short}</span>}
           </button>
         ))}
       </div>
@@ -1070,10 +1070,10 @@ function TaskModal({ data, isEdit, preSlot, onChange, onSave, onClose }) {
       <div style={{ display:'flex', gap:8, marginBottom:14, alignItems:'center' }}>
         <input type="number" min="0.5" step={timeUnit==='hours' ? 0.5 : 5} value={timeVal}
           onChange={e => handleTime(Number(e.target.value))}
-          style={{ width:80, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 10px', color:'inherit', fontSize:13, outline:'none', textAlign:'center' }} />
+          style={{ width:80, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 10px', color:'inherit', fontSize:'0.8125rem', outline:'none', textAlign:'center' }} />
         <div style={{ display:'flex', borderRadius:8, overflow:'hidden', border:'1px solid rgba(255,255,255,0.12)' }}>
           {[['minutes','דקות'],['hours','שעות']].map(([u,l]) => (
-            <button key={u} onClick={() => handleUnit(u)} style={{ padding:'7px 12px', border:'none', cursor:'pointer', fontSize:12, fontWeight: timeUnit===u ? 700 : 400, background: timeUnit===u ? 'rgba(255,255,255,0.12)' : 'transparent', color:'inherit' }}>{l}</button>
+            <button key={u} onClick={() => handleUnit(u)} style={{ padding:'7px 12px', border:'none', cursor:'pointer', fontSize:'0.75rem', fontWeight: timeUnit===u ? 700 : 400, background: timeUnit===u ? 'rgba(255,255,255,0.12)' : 'transparent', color:'inherit' }}>{l}</button>
           ))}
         </div>
       </div>
@@ -1082,8 +1082,8 @@ function TaskModal({ data, isEdit, preSlot, onChange, onSave, onClose }) {
       <input type="date" value={data.due_date} onChange={e => set('due_date', e.target.value)} style={{ ...S.input, width:'100%' }} />
 
       <div style={{ display:'flex', gap:8, marginTop:6 }}>
-        <button onClick={onSave} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:14 }}>{isEdit ? 'עדכן' : 'שמור'}</button>
-        <button onClick={onClose} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:13 }}>ביטול</button>
+        <button onClick={onSave} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:'0.875rem' }}>{isEdit ? 'עדכן' : 'שמור'}</button>
+        <button onClick={onClose} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:'0.8125rem' }}>ביטול</button>
       </div>
     </Modal>
   );

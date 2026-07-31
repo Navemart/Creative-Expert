@@ -164,12 +164,12 @@ function TipBox({ type }) {
         type="button"
         onMouseEnter={()=>setShow(true)}
         onMouseLeave={()=>setShow(false)}
-        style={{ width:18, height:18, borderRadius:'50%', background:C.accent, color:'#000', fontSize: 11, fontWeight:700, border:'none', cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginRight:6, lineHeight:1 }}
+        style={{ width:18, height:18, borderRadius:'50%', background:C.accent, color:'#000', fontSize: '0.6875rem', fontWeight:700, border:'none', cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center', flexShrink:0, marginRight:6, lineHeight:1 }}
       >?</button>
       {show && (
         <div style={{ position:'absolute', right:0, top:26, width:280, background:C.surface, border:`1px solid rgba(245,197,24,0.3)`, borderRadius:12, padding:'14px 16px', zIndex:100, boxShadow:'0 8px 24px rgba(0,0,0,0.4)' }}>
-          <div style={{ fontSize:12, fontWeight:700, color:C.accent, marginBottom:8 }}>{t.title}</div>
-          <div style={{ fontSize:12, color:C.muted, lineHeight:1.7, whiteSpace:'pre-line' }}>{t.body}</div>
+          <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.accent, marginBottom:8 }}>{t.title}</div>
+          <div style={{ fontSize:'0.75rem', color:C.muted, lineHeight:1.7, whiteSpace:'pre-line' }}>{t.body}</div>
         </div>
       )}
     </div>
@@ -183,7 +183,7 @@ const posNum = (val, setter) => { const n = parseFloat(val); setter(isNaN(n) ? '
 function NumberInput({ value, onChange, placeholder='0', width=70 }) {
   return (
     <div style={{ display:'inline-flex', alignItems:'center', gap:3, background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:8, padding:'5px 8px' }}>
-      <span style={{ fontSize:13, color:C.accent, fontWeight:700, flexShrink:0 }}>₪</span>
+      <span style={{ fontSize:'0.8125rem', color:C.accent, fontWeight:700, flexShrink:0 }}>₪</span>
       <input
         type="number"
         min="0"
@@ -192,7 +192,7 @@ function NumberInput({ value, onChange, placeholder='0', width=70 }) {
         onKeyDown={blockMinus}
         onWheel={noScroll}
         placeholder={placeholder}
-        style={{ width, background:'transparent', border:'none', fontSize:15, color:'rgba(255,255,255,0.92)', textAlign:'center', outline:'none' }}
+        style={{ width, background:'transparent', border:'none', fontSize:'0.9375rem', color:'rgba(255,255,255,0.92)', textAlign:'center', outline:'none' }}
       />
     </div>
   );
@@ -201,8 +201,8 @@ function NumberInput({ value, onChange, placeholder='0', width=70 }) {
 function Chip({ label, value, color }) {
   return (
     <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start', gap:5 }}>
-      <div style={{ fontSize:12, color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.07em', lineHeight:1 }}>{label}</div>
-      <div style={{ fontSize:26, fontWeight:700, color, lineHeight:1 }}>{value}</div>
+      <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.4)', textTransform:'uppercase', letterSpacing:'0.07em', lineHeight:1 }}>{label}</div>
+      <div style={{ fontSize:'1.625rem', fontWeight:700, color, lineHeight:1 }}>{value}</div>
     </div>
   );
 }
@@ -219,15 +219,15 @@ function StepHeader({ number, title, subtitle, done }) {
         display:'flex', alignItems:'center', justifyContent:'center',
         background: done ? 'rgba(79,195,138,0.15)' : 'rgba(245,197,24,0.12)',
         border: `2px solid ${done ? '#4fc38a' : 'rgba(245,197,24,0.4)'}`,
-        fontSize:15, fontWeight:700,
+        fontSize:'0.9375rem', fontWeight:700,
         color: done ? '#4fc38a' : '#f5c518',
         transition:'all 0.3s',
       }}>
         {done ? '✓' : number}
       </div>
       <div>
-        <div style={{ fontSize:18, fontWeight:700, color:'white', lineHeight:1.2 }}>{title}</div>
-        {subtitle && <div style={{ fontSize:13, color:'rgba(255,255,255,0.4)', marginTop:3 }}>{subtitle}</div>}
+        <div style={{ fontSize:'1.125rem', fontWeight:700, color:'white', lineHeight:1.2 }}>{title}</div>
+        {subtitle && <div style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.4)', marginTop:3 }}>{subtitle}</div>}
       </div>
     </div>
   );
@@ -434,9 +434,9 @@ export default function PricingCalculator() {
 
   // ─── Render ────────────────────────────────────────────────────────────────
   const cardStyle = { background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:24 };
-  const inputStyle = { background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:8, padding:'7px 10px', fontSize:15, color:'rgba(255,255,255,0.92)', outline:'none', fontFamily:'inherit', width:'100%', boxSizing:'border-box' };
-  const btnPrimary = { padding:'9px 20px', borderRadius:9, background:C.accent, color:'#000', fontSize:14, fontWeight:700, border:'none', cursor:'pointer', fontFamily:'inherit' };
-  const btnGhost   = { padding:'9px 20px', borderRadius:9, background:C.elevated, color:'rgba(255,255,255,0.85)', fontSize:14, fontWeight:500, border:`1px solid ${C.border2}`, cursor:'pointer', fontFamily:'inherit' };
+  const inputStyle = { background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:8, padding:'7px 10px', fontSize:'0.9375rem', color:'rgba(255,255,255,0.92)', outline:'none', fontFamily:'inherit', width:'100%', boxSizing:'border-box' };
+  const btnPrimary = { padding:'9px 20px', borderRadius:9, background:C.accent, color:'#000', fontSize:'0.875rem', fontWeight:700, border:'none', cursor:'pointer', fontFamily:'inherit' };
+  const btnGhost   = { padding:'9px 20px', borderRadius:9, background:C.elevated, color:'rgba(255,255,255,0.85)', fontSize:'0.875rem', fontWeight:500, border:`1px solid ${C.border2}`, cursor:'pointer', fontFamily:'inherit' };
 
   // Bar position helpers for rec result
   const recBarLeft  = rec?.low  != null ? ((rec.low -20)/(200-20)*100).toFixed(1) : '0';
@@ -535,7 +535,7 @@ export default function PricingCalculator() {
           {/* Right: final price hero */}
           <div style={{ display:'flex', alignItems:'center', gap:20 }}>
             {selectedPct === null && (
-              <div style={{ fontSize:13, color:'rgba(255,255,255,0.35)', whiteSpace:'nowrap' }}>
+              <div style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.35)', whiteSpace:'nowrap' }}>
                 בחר אחוז רווח ←
               </div>
             )}
@@ -545,11 +545,11 @@ export default function PricingCalculator() {
               paddingRight:16,
               transition:'border-color 0.3s',
             }}>
-              <div style={{ fontSize:12, color:'rgba(255,255,255,0.45)', letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:5 }}>
+              <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.45)', letterSpacing:'0.08em', textTransform:'uppercase', marginBottom:5 }}>
                 מחיר סופי ללקוח
               </div>
               <div className="cr-price-sm" style={{
-                fontSize:48, fontWeight:700, lineHeight:1, letterSpacing:-2,
+                fontSize:'3rem', fontWeight:700, lineHeight:1, letterSpacing:-2,
                 color: selectedPct !== null ? C.accent : 'rgba(255,255,255,0.2)',
                 transition:'color 0.25s',
               }}>
@@ -565,7 +565,7 @@ export default function PricingCalculator() {
 
         {/* ── Topbar ───────────────────────────────────────────────────────── */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:28, flexWrap:'wrap', gap:12 }}>
-          <h1 style={{ fontSize:28, color:'white', margin:0 }}>מחשבון תמחור פרויקט</h1>
+          <h1 style={{ fontSize:'1.75rem', color:'white', margin:0 }}>מחשבון תמחור פרויקט</h1>
 
           <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
             {/* Quote name */}
@@ -576,7 +576,7 @@ export default function PricingCalculator() {
                 onChange={e=>setQuoteName(e.target.value)}
                 placeholder="שם ההצעה..."
                 className="calc-ghost-input"
-                style={{ fontSize:14, fontWeight:500, color:'rgba(255,255,255,0.9)', width:150 }}
+                style={{ fontSize:'0.875rem', fontWeight:500, color:'rgba(255,255,255,0.9)', width:150 }}
               />
             </div>
 
@@ -584,27 +584,27 @@ export default function PricingCalculator() {
             <div style={{ position:'relative' }} ref={historyRef}>
               <button type="button" onClick={()=>setShowHistory(o=>!o)}
                 style={{ ...btnGhost, display:'flex', alignItems:'center', gap:8, height:36, padding:'0 16px', color: showHistory ? C.accent : undefined, borderColor: showHistory ? C.accent : undefined }}>
-                🕐 היסטוריה {quotes.length>0 && <span style={{ fontSize:11, background:C.accent, color:'#000', borderRadius:10, padding:'1px 6px', fontWeight:700 }}>{quotes.length}</span>}
+                🕐 היסטוריה {quotes.length>0 && <span style={{ fontSize:'0.6875rem', background:C.accent, color:'#000', borderRadius:10, padding:'1px 6px', fontWeight:700 }}>{quotes.length}</span>}
               </button>
               {showHistory && (
                 <div style={{ position:'absolute', top:'calc(100% + 10px)', left:0, width:340, background:C.surface, border:`1px solid ${C.border2}`, borderRadius:16, padding:6, zIndex:200, boxShadow:'0 20px 48px rgba(0,0,0,0.6)' }}>
                   <div style={{ padding:'10px 14px 8px', borderBottom:`1px solid ${C.border}`, marginBottom:4 }}>
-                    <div style={{ fontSize:11, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.08em' }}>הצעות מחיר שמורות</div>
+                    <div style={{ fontSize:'0.6875rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.08em' }}>הצעות מחיר שמורות</div>
                   </div>
                   <div style={{ maxHeight:340, overflowY:'auto' }}>
                     {quotes.length===0 ? (
-                      <div style={{ fontSize:13, color:C.muted, padding:'24px 14px', textAlign:'center', lineHeight:1.6 }}>
-                        <div style={{ fontSize:28, marginBottom:8, opacity:0.5 }}>📂</div>
+                      <div style={{ fontSize:'0.8125rem', color:C.muted, padding:'24px 14px', textAlign:'center', lineHeight:1.6 }}>
+                        <div style={{ fontSize:'1.75rem', marginBottom:8, opacity:0.5 }}>📂</div>
                         אין הצעות שמורות עדיין.
                       </div>
                     ) : quotes.map(q=>(
                       <div key={q.id} className="history-item-r" onClick={()=>loadQuote(q)}>
-                        <div style={{ width:36, height:36, borderRadius:9, background:'rgba(245,197,24,0.1)', border:'1px solid rgba(245,197,24,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>📄</div>
+                        <div style={{ width:36, height:36, borderRadius:9, background:'rgba(245,197,24,0.1)', border:'1px solid rgba(245,197,24,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', flexShrink:0 }}>📄</div>
                         <div style={{ flex:1, minWidth:0 }}>
-                          <div style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.95)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{q.name}</div>
-                          <div style={{ fontSize:11, color:C.muted, marginTop:2 }}>{new Date(q.date).toLocaleDateString('he-IL')}</div>
+                          <div style={{ fontSize:'0.8125rem', fontWeight:700, color:'rgba(255,255,255,0.95)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{q.name}</div>
+                          <div style={{ fontSize:'0.6875rem', color:C.muted, marginTop:2 }}>{new Date(q.date).toLocaleDateString('he-IL')}</div>
                         </div>
-                        {q.finalPrice!=null && <div style={{ fontSize:14, fontWeight:700, color:C.accent, flexShrink:0 }}>{fmt(q.finalPrice)}</div>}
+                        {q.finalPrice!=null && <div style={{ fontSize:'0.875rem', fontWeight:700, color:C.accent, flexShrink:0 }}>{fmt(q.finalPrice)}</div>}
                         <button className="history-del-r" onClick={e=>deleteQuote(e,q.id)}>×</button>
                       </div>
                     ))}
@@ -631,13 +631,13 @@ export default function PricingCalculator() {
 
           {/* Work table */}
           <div style={cardStyle}>
-            <div style={{ fontSize:17, fontWeight:700, color:'white', marginBottom:4 }}>עלות עבודה על הפרויקט</div>
-            <div style={{ fontSize:14, color:C.muted, marginBottom:20 }}>ערוך את האנשים שיהיו מעורבים בפרויקט</div>
+            <div style={{ fontSize:'1.0625rem', fontWeight:700, color:'white', marginBottom:4 }}>עלות עבודה על הפרויקט</div>
+            <div style={{ fontSize:'0.875rem', color:C.muted, marginBottom:20 }}>ערוך את האנשים שיהיו מעורבים בפרויקט</div>
             <table style={{ width:'100%', borderCollapse:'collapse' }}>
               <thead>
                 <tr>
                   {['תפקיד','מחיר לשעה','שעות','סה"כ',''].map((h,i)=>(
-                    <th key={i} style={{ fontSize:13, fontWeight:600, color:C.muted, textAlign:i===0?'right':'center', padding:'0 6px 12px', borderBottom:`1px solid ${C.border}`, textTransform:'uppercase', letterSpacing:'0.04em', width:i===4?32:undefined }}>
+                    <th key={i} style={{ fontSize:'0.8125rem', fontWeight:600, color:C.muted, textAlign:i===0?'right':'center', padding:'0 6px 12px', borderBottom:`1px solid ${C.border}`, textTransform:'uppercase', letterSpacing:'0.04em', width:i===4?32:undefined }}>
                       {h}
                     </th>
                   ))}
@@ -651,11 +651,11 @@ export default function PricingCalculator() {
                       <td style={{ padding:'8px 0', borderBottom:`1px solid ${C.border}`, textAlign:'right' }}>
                         <div style={{ display:'flex', alignItems:'center', gap:6, padding:'0 4px' }}>
                           {row.fixed
-                            ? <span style={{ fontSize:14, color:'rgba(255,255,255,0.9)', fontWeight:500 }}>{row.name}</span>
+                            ? <span style={{ fontSize:'0.875rem', color:'rgba(255,255,255,0.9)', fontWeight:500 }}>{row.name}</span>
                             : <input type="text" value={row.name} onChange={e=>updateWorkRow(row.id,'name',e.target.value)}
                                 placeholder="שם תפקיד"
                                 className="calc-ghost-input"
-                                style={{ flex:1, padding:'4px 2px', fontSize:14, color:C.muted, minWidth:80 }} />
+                                style={{ flex:1, padding:'4px 2px', fontSize:'0.875rem', color:C.muted, minWidth:80 }} />
                           }
                           {row.tip && <TipBox type={row.tip} />}
                         </div>
@@ -667,9 +667,9 @@ export default function PricingCalculator() {
                         <input type="number" min="0" value={row.hours}
                           onChange={e=>updateWorkRow(row.id,'hours', String(Math.max(0, parseFloat(e.target.value)||0)||''))}
                           onKeyDown={blockMinus} onWheel={noScroll}
-                          style={{ width:70, background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:8, padding:'7px 8px', fontSize:15, color:'rgba(255,255,255,0.92)', textAlign:'center', outline:'none' }} />
+                          style={{ width:70, background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:8, padding:'7px 8px', fontSize:'0.9375rem', color:'rgba(255,255,255,0.92)', textAlign:'center', outline:'none' }} />
                       </td>
-                      <td style={{ padding:'8px 6px', borderBottom:`1px solid ${C.border}`, textAlign:'center', color:C.accent, fontWeight:700, fontSize:14 }}>
+                      <td style={{ padding:'8px 6px', borderBottom:`1px solid ${C.border}`, textAlign:'center', color:C.accent, fontWeight:700, fontSize:'0.875rem' }}>
                         {fmt(subtotal)}
                       </td>
                       <td style={{ padding:'8px 6px', borderBottom:`1px solid ${C.border}`, textAlign:'center' }}>
@@ -683,38 +683,38 @@ export default function PricingCalculator() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td style={{ padding:'12px 6px', color:C.muted, fontWeight:600, fontSize:14 }}>סה"כ</td>
+                  <td style={{ padding:'12px 6px', color:C.muted, fontWeight:600, fontSize:'0.875rem' }}>סה"כ</td>
                   <td></td>
                   <td style={{ padding:'12px 6px', textAlign:'center', fontWeight:700, color:C.accent, borderTop:`1px solid ${C.border2}` }}>{Math.round(totalHours)}</td>
-                  <td style={{ padding:'12px 6px', textAlign:'center', fontWeight:700, color:C.accent, borderTop:`1px solid ${C.border2}`, fontSize:16 }}>{fmt(totalWork)}</td>
+                  <td style={{ padding:'12px 6px', textAlign:'center', fontWeight:700, color:C.accent, borderTop:`1px solid ${C.border2}`, fontSize:'1rem' }}>{fmt(totalWork)}</td>
                   <td style={{ borderTop:`1px solid ${C.border2}` }}></td>
                 </tr>
               </tfoot>
             </table>
             {buffer === 0 && (
-              <div style={{ marginTop:14, padding:'12px 16px', borderRadius:10, background:'rgba(245,197,24,0.05)', border:'1px dashed rgba(245,197,24,0.2)', fontSize:13, color:'rgba(255,255,255,0.35)', lineHeight:1.6 }}>
+              <div style={{ marginTop:14, padding:'12px 16px', borderRadius:10, background:'rgba(245,197,24,0.05)', border:'1px dashed rgba(245,197,24,0.2)', fontSize:'0.8125rem', color:'rgba(255,255,255,0.35)', lineHeight:1.6 }}>
                 💡 התחל עם <strong style={{ color:'rgba(245,197,24,0.7)', fontWeight:600 }}>מחיר לשעה × שעות</strong> עבור כל תפקיד — המחיר יחושב אוטומטית
               </div>
             )}
-            <button type="button" className="add-row-r" onClick={addWorkRow}><span style={{fontSize:18}}>+</span> הוסף תפקיד</button>
+            <button type="button" className="add-row-r" onClick={addWorkRow}><span style={{fontSize:'1.125rem'}}>+</span> הוסף תפקיד</button>
           </div>
 
           {/* Expenses table */}
           <div style={cardStyle}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
               <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                <div style={{ fontSize:17, fontWeight:700, color:'white' }}>הוצאות לפרויקט</div>
+                <div style={{ fontSize:'1.0625rem', fontWeight:700, color:'white' }}>הוצאות לפרויקט</div>
                 <TipBox type="expenses" />
               </div>
               <button type="button" onClick={()=>setShowFeModal(true)}
-                style={{ ...btnGhost, fontSize:12, padding:'6px 14px' }}>💰 הוסף הוצאות קבועות</button>
+                style={{ ...btnGhost, fontSize:'0.75rem', padding:'6px 14px' }}>💰 הוסף הוצאות קבועות</button>
             </div>
-            <div style={{ fontSize:14, color:C.muted, marginBottom:20 }}>הוסף הוצאות ייעודיות לפרויקט והזן סכום</div>
+            <div style={{ fontSize:'0.875rem', color:C.muted, marginBottom:20 }}>הוסף הוצאות ייעודיות לפרויקט והזן סכום</div>
             <table style={{ width:'100%', borderCollapse:'collapse' }}>
               <thead>
                 <tr>
                   {['סוג הוצאה','סכום ₪',''].map((h,i)=>(
-                    <th key={i} style={{ fontSize:13, fontWeight:600, color:C.muted, textAlign:i===0?'right':'center', padding:'0 6px 12px', borderBottom:`1px solid ${C.border}`, textTransform:'uppercase', letterSpacing:'0.04em', width:i===2?32:undefined }}>
+                    <th key={i} style={{ fontSize:'0.8125rem', fontWeight:600, color:C.muted, textAlign:i===0?'right':'center', padding:'0 6px 12px', borderBottom:`1px solid ${C.border}`, textTransform:'uppercase', letterSpacing:'0.04em', width:i===2?32:undefined }}>
                       {h}
                     </th>
                   ))}
@@ -727,7 +727,7 @@ export default function PricingCalculator() {
                       <input type="text" value={row.name} onChange={e=>updateExpRow(row.id,'name',e.target.value)}
                         placeholder="סוג הוצאה"
                         className="calc-ghost-input"
-                        style={{ width:'100%', padding:'4px 2px', fontSize:14, color:C.muted }} />
+                        style={{ width:'100%', padding:'4px 2px', fontSize:'0.875rem', color:C.muted }} />
                     </td>
                     <td style={{ padding:'8px 6px', borderBottom:`1px solid ${C.border}`, textAlign:'center' }}>
                       <NumberInput value={row.amount} onChange={v=>updateExpRow(row.id,'amount',v)} />
@@ -740,26 +740,26 @@ export default function PricingCalculator() {
               </tbody>
               <tfoot>
                 <tr>
-                  <td style={{ padding:'12px 6px', color:C.muted, fontWeight:600, fontSize:14 }}>סה"כ הוצאות</td>
-                  <td style={{ padding:'12px 6px', textAlign:'center', fontWeight:700, color:C.accent, borderTop:`1px solid ${C.border2}`, fontSize:16 }}>{fmt(totalExp)}</td>
+                  <td style={{ padding:'12px 6px', color:C.muted, fontWeight:600, fontSize:'0.875rem' }}>סה"כ הוצאות</td>
+                  <td style={{ padding:'12px 6px', textAlign:'center', fontWeight:700, color:C.accent, borderTop:`1px solid ${C.border2}`, fontSize:'1rem' }}>{fmt(totalExp)}</td>
                   <td style={{ borderTop:`1px solid ${C.border2}` }}></td>
                 </tr>
               </tfoot>
             </table>
             {totalExp === 0 && (
-              <div style={{ marginTop:10, fontSize:12, color:'rgba(255,90,114,0.75)' }}>
+              <div style={{ marginTop:10, fontSize:'0.75rem', color:'rgba(255,90,114,0.75)' }}>
                 ⚠️ חובה להוסיף לפחות הוצאה אחת
               </div>
             )}
-            <button type="button" className="add-row-r" onClick={addExpRow}><span style={{fontSize:18}}>+</span> הוסף הוצאה</button>
+            <button type="button" className="add-row-r" onClick={addExpRow}><span style={{fontSize:'1.125rem'}}>+</span> הוסף הוצאה</button>
           </div>
 
         </div>
 
         {/* ── Cost buffer box ───────────────────────────────────────────────── */}
         <div style={{ marginTop:12, marginBottom:16, background:'rgba(176,106,255,0.08)', border:'1px solid rgba(176,106,255,0.25)', borderRadius:12, padding:'20px 24px', display:'flex', alignItems:'center', justifyContent:'center', gap:16, textAlign:'center' }}>
-          <div style={{ fontSize:16, color:C.purple, fontWeight:600 }}>עלות פרויקט + 10% מקום לטעויות</div>
-          <div style={{ fontSize:40, fontWeight:700, color:C.purple, letterSpacing:-1 }}>{fmt(buffer)}</div>
+          <div style={{ fontSize:'1rem', color:C.purple, fontWeight:600 }}>עלות פרויקט + 10% מקום לטעויות</div>
+          <div style={{ fontSize:'2.5rem', fontWeight:700, color:C.purple, letterSpacing:-1 }}>{fmt(buffer)}</div>
         </div>
 
         {/* ── Step 2 ───────────────────────────────────────────────────────── */}
@@ -772,8 +772,8 @@ export default function PricingCalculator() {
 
         {/* ── Recommendation block ──────────────────────────────────────────── */}
         <div style={{ ...cardStyle, marginBottom:16 }}>
-          <div style={{ fontSize:17, fontWeight:700, color:'white', marginBottom:4 }}>🎯 עוזר המלצת רווח</div>
-          <div style={{ fontSize:14, color:C.muted, marginBottom:16 }}>ענה על השאלות ונמליץ לך על אחוז רווח מתאים</div>
+          <div style={{ fontSize:'1.0625rem', fontWeight:700, color:'white', marginBottom:4 }}>🎯 עוזר המלצת רווח</div>
+          <div style={{ fontSize:'0.875rem', color:C.muted, marginBottom:16 }}>ענה על השאלות ונמליץ לך על אחוז רווח מתאים</div>
 
           {/* Progress bar */}
           <div style={{ height:3, background:C.border, borderRadius:2, marginBottom:20, overflow:'hidden' }}>
@@ -798,13 +798,13 @@ export default function PricingCalculator() {
               return (
                 <div key={key} style={{ display:'flex', flexDirection:'column', gap:12, background:C.elevated, borderRadius:10, padding:16 }}>
                   <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                    <div style={{ fontSize:14, fontWeight:600, color:'rgba(255,255,255,0.9)' }}>{label}</div>
+                    <div style={{ fontSize:'0.875rem', fontWeight:600, color:'rgba(255,255,255,0.9)' }}>{label}</div>
                     <div style={{
                       minWidth:36, height:36, borderRadius:8,
                       background: val > 0 ? sliderColor.replace('0.5','0.15') : 'rgba(255,255,255,0.06)',
                       border: `1.5px solid ${val > 0 ? sliderColor : 'rgba(255,255,255,0.12)'}`,
                       display:'flex', alignItems:'center', justifyContent:'center',
-                      fontSize:16, fontWeight:700,
+                      fontSize:'1rem', fontWeight:700,
                       color: val > 0 ? sliderColor : 'rgba(255,255,255,0.2)',
                       transition:'all 0.2s',
                     }}>
@@ -824,7 +824,7 @@ export default function PricingCalculator() {
                       color: sliderColor,
                     }}
                   />
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'rgba(255,255,255,0.3)', marginTop:-6 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.6875rem', color:'rgba(255,255,255,0.3)', marginTop:-6 }}>
                     <span>1 — {minLabel}</span>
                     <span>{maxLabel} — 10</span>
                   </div>
@@ -834,8 +834,8 @@ export default function PricingCalculator() {
 
             {/* Client temperature */}
             <div style={{ gridColumn:'1 / -1', display:'flex', flexDirection:'column', gap:10, background:C.elevated, borderRadius:10, padding:16 }}>
-              <div style={{ fontSize:14, fontWeight:600, color:'rgba(255,255,255,0.9)' }}>טמפרטורת הלקוח</div>
-              <div style={{ fontSize:13, color:C.muted, marginTop:-6 }}>כמה הלקוח מכיר אותך ומוכן לשלם</div>
+              <div style={{ fontSize:'0.875rem', fontWeight:600, color:'rgba(255,255,255,0.9)' }}>טמפרטורת הלקוח</div>
+              <div style={{ fontSize:'0.8125rem', color:C.muted, marginTop:-6 }}>כמה הלקוח מכיר אותך ומוכן לשלם</div>
               <div className="cr-client">
                 {[
                   { type:'referral_good', icon:'🔥', label:'רותח',  desc:'לקוח חוזר או המלצה חזקה', labelColor:'#ff6b35', activeBorder:'#ff6b35', activeBg:'rgba(255,107,53,0.08)' },
@@ -846,9 +846,9 @@ export default function PricingCalculator() {
                   <button key={t.type} type="button" className="temp-btn-r"
                     style={ clientType===t.type ? { borderColor:t.activeBorder, borderWidth:2, background:t.activeBg } : {} }
                     onClick={()=>setClientType(clientType===t.type?null:t.type)}>
-                    <div style={{ fontSize:26, lineHeight:1 }}>{t.icon}</div>
-                    <div style={{ fontSize:18, fontWeight:700, color:clientType===t.type?t.labelColor:'rgba(255,255,255,0.9)' }}>{t.label}</div>
-                    <div style={{ fontSize:13, color:C.muted, lineHeight:1.5 }}>{t.desc}</div>
+                    <div style={{ fontSize:'1.625rem', lineHeight:1 }}>{t.icon}</div>
+                    <div style={{ fontSize:'1.125rem', fontWeight:700, color:clientType===t.type?t.labelColor:'rgba(255,255,255,0.9)' }}>{t.label}</div>
+                    <div style={{ fontSize:'0.8125rem', color:C.muted, lineHeight:1.5 }}>{t.desc}</div>
                   </button>
                 ))}
               </div>
@@ -860,10 +860,10 @@ export default function PricingCalculator() {
               {/* Budget */}
               <div style={{ background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:14, padding:'18px 20px' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                  <div style={{ width:32, height:32, borderRadius:9, background:'rgba(245,197,24,0.1)', border:'1px solid rgba(245,197,24,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>💰</div>
+                  <div style={{ width:32, height:32, borderRadius:9, background:'rgba(245,197,24,0.1)', border:'1px solid rgba(245,197,24,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.9375rem', flexShrink:0 }}>💰</div>
                   <div>
-                    <div style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.9)' }}>הלקוח שיתף תקציב?</div>
-                    <div style={{ fontSize:11, color:C.muted, marginTop:1 }}>נתחשב בו אם הגיוני</div>
+                    <div style={{ fontSize:'0.8125rem', fontWeight:700, color:'rgba(255,255,255,0.9)' }}>הלקוח שיתף תקציב?</div>
+                    <div style={{ fontSize:'0.6875rem', color:C.muted, marginTop:1 }}>נתחשב בו אם הגיוני</div>
                   </div>
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
@@ -873,11 +873,11 @@ export default function PricingCalculator() {
                 {budgetMode==='yes' && (
                   <div style={{ marginTop:14 }}>
                     <div style={{ height:1, background:C.border, marginBottom:14 }} />
-                    <div style={{ fontSize:11, color:C.muted, marginBottom:8, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>תקציב הלקוח</div>
+                    <div style={{ fontSize:'0.6875rem', color:C.muted, marginBottom:8, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>תקציב הלקוח</div>
                     <div style={{ display:'flex', alignItems:'center', background:C.surface, border:'1px solid rgba(245,197,24,0.25)', borderRadius:10, padding:'10px 14px', gap:6 }}>
-                      <span style={{ fontSize:13, fontWeight:700, color:C.accent }}>₪</span>
+                      <span style={{ fontSize:'0.8125rem', fontWeight:700, color:C.accent }}>₪</span>
                       <input type="number" min="0" value={budgetAmount} onChange={e=>setBudgetAmount(String(Math.max(0,parseFloat(e.target.value)||0)||''))} onKeyDown={blockMinus} onWheel={noScroll} placeholder="0"
-                        style={{ flex:1, background:'transparent', border:'none', fontSize:18, fontWeight:700, color:C.accent, fontFamily:'inherit', outline:'none', textAlign:'right', width:'100%' }} />
+                        style={{ flex:1, background:'transparent', border:'none', fontSize:'1.125rem', fontWeight:700, color:C.accent, fontFamily:'inherit', outline:'none', textAlign:'right', width:'100%' }} />
                     </div>
                   </div>
                 )}
@@ -886,10 +886,10 @@ export default function PricingCalculator() {
               {/* Quoted range */}
               <div style={{ background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:14, padding:'18px 20px' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
-                  <div style={{ width:32, height:32, borderRadius:9, background:'rgba(176,106,255,0.1)', border:'1px solid rgba(176,106,255,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>💬</div>
+                  <div style={{ width:32, height:32, borderRadius:9, background:'rgba(176,106,255,0.1)', border:'1px solid rgba(176,106,255,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'0.9375rem', flexShrink:0 }}>💬</div>
                   <div>
-                    <div style={{ fontSize:13, fontWeight:700, color:'rgba(255,255,255,0.9)' }}>הלקוח שמע טווח מחירים?</div>
-                    <div style={{ fontSize:11, color:C.muted, marginTop:1 }}>ההמלצה תישאר קרוב לטווח</div>
+                    <div style={{ fontSize:'0.8125rem', fontWeight:700, color:'rgba(255,255,255,0.9)' }}>הלקוח שמע טווח מחירים?</div>
+                    <div style={{ fontSize:'0.6875rem', color:C.muted, marginTop:1 }}>ההמלצה תישאר קרוב לטווח</div>
                   </div>
                 </div>
                 <div style={{ display:'flex', gap:6 }}>
@@ -899,18 +899,18 @@ export default function PricingCalculator() {
                 {quotedRangeMode==='yes' && (
                   <div style={{ marginTop:14 }}>
                     <div style={{ height:1, background:C.border, marginBottom:14 }} />
-                    <div style={{ fontSize:11, color:C.muted, marginBottom:8, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>הטווח שציינת</div>
+                    <div style={{ fontSize:'0.6875rem', color:C.muted, marginBottom:8, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.06em' }}>הטווח שציינת</div>
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <div style={{ flex:1, display:'flex', alignItems:'center', background:C.surface, border:'1px solid rgba(176,106,255,0.25)', borderRadius:10, padding:'10px 14px', gap:6 }}>
-                        <span style={{ fontSize:13, fontWeight:700, color:C.purple }}>₪</span>
+                        <span style={{ fontSize:'0.8125rem', fontWeight:700, color:C.purple }}>₪</span>
                         <input type="number" min="0" value={rangeMin} onChange={e=>setRangeMin(String(Math.max(0,parseFloat(e.target.value)||0)||''))} onKeyDown={blockMinus} onWheel={noScroll} placeholder="מינ׳"
-                          style={{ flex:1, background:'transparent', border:'none', fontSize:16, fontWeight:700, color:C.purple, fontFamily:'inherit', outline:'none', textAlign:'right', width:'100%' }} />
+                          style={{ flex:1, background:'transparent', border:'none', fontSize:'1rem', fontWeight:700, color:C.purple, fontFamily:'inherit', outline:'none', textAlign:'right', width:'100%' }} />
                       </div>
-                      <span style={{ color:C.muted, fontSize:12, fontWeight:500, flexShrink:0 }}>עד</span>
+                      <span style={{ color:C.muted, fontSize:'0.75rem', fontWeight:500, flexShrink:0 }}>עד</span>
                       <div style={{ flex:1, display:'flex', alignItems:'center', background:C.surface, border:'1px solid rgba(176,106,255,0.25)', borderRadius:10, padding:'10px 14px', gap:6 }}>
-                        <span style={{ fontSize:13, fontWeight:700, color:C.purple }}>₪</span>
+                        <span style={{ fontSize:'0.8125rem', fontWeight:700, color:C.purple }}>₪</span>
                         <input type="number" min="0" value={rangeMax} onChange={e=>setRangeMax(String(Math.max(0,parseFloat(e.target.value)||0)||''))} onKeyDown={blockMinus} onWheel={noScroll} placeholder="מקס׳"
-                          style={{ flex:1, background:'transparent', border:'none', fontSize:16, fontWeight:700, color:C.purple, fontFamily:'inherit', outline:'none', textAlign:'right', width:'100%' }} />
+                          style={{ flex:1, background:'transparent', border:'none', fontSize:'1rem', fontWeight:700, color:C.purple, fontFamily:'inherit', outline:'none', textAlign:'right', width:'100%' }} />
                       </div>
                     </div>
                   </div>
@@ -924,26 +924,26 @@ export default function PricingCalculator() {
           {rec && !rec.incomplete && (
             <div style={{ marginTop:20, borderRadius:12, padding:'18px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:20, background:'rgba(79,195,138,0.07)', border:'1px solid rgba(79,195,138,0.2)' }}>
               <div style={{ minWidth:140 }}>
-                <div style={{ fontSize:13, color:C.muted, marginBottom:4 }}>אחוז רווח מומלץ</div>
-                <div style={{ fontSize:32, fontWeight:700, color:C.green, letterSpacing:-1 }}>
+                <div style={{ fontSize:'0.8125rem', color:C.muted, marginBottom:4 }}>אחוז רווח מומלץ</div>
+                <div style={{ fontSize:'2rem', fontWeight:700, color:C.green, letterSpacing:-1 }}>
                   {rec.recPct==='עלות' ? 'מחיר עלות' : `${rec.recPct}%`}
                 </div>
-                <div style={{ fontSize:13, color:C.muted, marginTop:4 }}>{rec.rangeLabel}</div>
+                <div style={{ fontSize:'0.8125rem', color:C.muted, marginTop:4 }}>{rec.rangeLabel}</div>
                 {rec.recPct !== 'עלות' && (
                   <div style={{ marginTop:10, height:6, background:'rgba(255,255,255,0.07)', borderRadius:6, position:'relative' }}>
                     <div style={{ position:'absolute', height:'100%', borderRadius:6, background:C.green, transition:'all 0.4s ease', left:`${recBarLeft}%`, width:`${recBarWidth}%` }} />
                   </div>
                 )}
               </div>
-              <div style={{ fontSize:13, color:'rgba(255,255,255,0.88)', lineHeight:1.6, maxWidth:500 }}>{rec.reason}</div>
+              <div style={{ fontSize:'0.8125rem', color:'rgba(255,255,255,0.88)', lineHeight:1.6, maxWidth:500 }}>{rec.reason}</div>
             </div>
           )}
           {rec?.incomplete && (
             <div style={{ marginTop:20, borderRadius:12, padding:'18px 22px', background:'rgba(255,255,255,0.03)', border:`1px solid ${C.border2}`, display:'flex', alignItems:'center', gap:14 }}>
-              <div style={{ fontSize:26, flexShrink:0 }}>🔒</div>
+              <div style={{ fontSize:'1.625rem', flexShrink:0 }}>🔒</div>
               <div>
-                <div style={{ fontSize:14, fontWeight:700, color:'rgba(255,255,255,0.95)', marginBottom:4 }}>ההמלצה תופיע כשכל השאלות יענו</div>
-                <div style={{ fontSize:13, color:C.muted, lineHeight:1.5 }}>ענה על כל הדירוגים, בחר סוג לקוח וציין תקציב וטווח מחיר.</div>
+                <div style={{ fontSize:'0.875rem', fontWeight:700, color:'rgba(255,255,255,0.95)', marginBottom:4 }}>ההמלצה תופיע כשכל השאלות יענו</div>
+                <div style={{ fontSize:'0.8125rem', color:C.muted, lineHeight:1.5 }}>ענה על כל הדירוגים, בחר סוג לקוח וציין תקציב וטווח מחיר.</div>
               </div>
             </div>
           )}
@@ -961,34 +961,34 @@ export default function PricingCalculator() {
         <div style={{ ...cardStyle, marginBottom:16 }}>
           <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:16, marginBottom:4 }}>
             <div>
-              <div style={{ fontSize:17, fontWeight:700, color:'white', marginBottom:4 }}>בחירת רווח</div>
-              <div style={{ fontSize:14, color:C.muted }}>לחץ על אחוז הרווח הרצוי</div>
+              <div style={{ fontSize:'1.0625rem', fontWeight:700, color:'white', marginBottom:4 }}>בחירת רווח</div>
+              <div style={{ fontSize:'0.875rem', color:C.muted }}>לחץ על אחוז הרווח הרצוי</div>
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8, alignItems:'flex-end' }}>
               {selectedPct==='עלות' && (
                 <div style={{ background:'rgba(255,90,114,0.07)', border:'1px solid rgba(255,90,114,0.3)', borderRadius:10, padding:'8px 14px', display:'flex', alignItems:'center', gap:8, minWidth:320 }}>
-                  <div style={{ fontSize:16, flexShrink:0 }}>⚠️</div>
+                  <div style={{ fontSize:'1rem', flexShrink:0 }}>⚠️</div>
                   <div>
-                    <div style={{ fontSize:12, fontWeight:700, color:C.red, marginBottom:2 }}>אין רווח בפרויקט הזה</div>
-                    <div style={{ fontSize:11, color:'rgba(255,90,114,0.8)', lineHeight:1.5 }}>כל הוצאה בלתי צפויה תגרום להפסד ישיר.</div>
+                    <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.red, marginBottom:2 }}>אין רווח בפרויקט הזה</div>
+                    <div style={{ fontSize:'0.6875rem', color:'rgba(255,90,114,0.8)', lineHeight:1.5 }}>כל הוצאה בלתי צפויה תגרום להפסד ישיר.</div>
                   </div>
                 </div>
               )}
               {selectedPct && selectedPct!=='עלות' && !rec?.recPct && (
                 <div style={{ background:'rgba(245,197,24,0.07)', border:'1px solid rgba(245,197,24,0.3)', borderRadius:10, padding:'8px 14px', display:'flex', alignItems:'center', gap:8, minWidth:320 }}>
-                  <div style={{ fontSize:16, flexShrink:0 }}>💡</div>
+                  <div style={{ fontSize:'1rem', flexShrink:0 }}>💡</div>
                   <div>
-                    <div style={{ fontSize:12, fontWeight:700, color:C.accent, marginBottom:2 }}>לא נלקחו בחשבון פרמטרים חשובים</div>
-                    <div style={{ fontSize:11, color:'rgba(245,197,24,0.8)', lineHeight:1.5 }}>ענה על השאלות למעלה כדי לקבל המלצה אישית.</div>
+                    <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.accent, marginBottom:2 }}>לא נלקחו בחשבון פרמטרים חשובים</div>
+                    <div style={{ fontSize:'0.6875rem', color:'rgba(245,197,24,0.8)', lineHeight:1.5 }}>ענה על השאלות למעלה כדי לקבל המלצה אישית.</div>
                   </div>
                 </div>
               )}
               {selectedPct && selectedPct!=='עלות' && rec && !rec.incomplete && typeof selectedPct==='number' && (selectedPct < rec.low || selectedPct > rec.high) && selectedPct !== rec.recPct && (
                 <div style={{ background:'rgba(245,197,24,0.07)', border:'1px solid rgba(245,197,24,0.3)', borderRadius:10, padding:'8px 14px', display:'flex', alignItems:'center', gap:8, minWidth:320 }}>
-                  <div style={{ fontSize:16, flexShrink:0 }}>⚠️</div>
+                  <div style={{ fontSize:'1rem', flexShrink:0 }}>⚠️</div>
                   <div>
-                    <div style={{ fontSize:12, fontWeight:700, color:C.accent, marginBottom:2 }}>מחוץ לטווח המומלץ</div>
-                    <div style={{ fontSize:11, color:'rgba(245,197,24,0.8)', lineHeight:1.5 }}>האחוז שבחרת חורג מההמלצה — שים לב.</div>
+                    <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.accent, marginBottom:2 }}>מחוץ לטווח המומלץ</div>
+                    <div style={{ fontSize:'0.6875rem', color:'rgba(245,197,24,0.8)', lineHeight:1.5 }}>האחוז שבחרת חורג מההמלצה — שים לב.</div>
                   </div>
                 </div>
               )}
@@ -1021,14 +1021,14 @@ export default function PricingCalculator() {
                   style={{ borderRadius:10, padding:'12px 6px 10px', textAlign:'center', border:`${isSelected?'2px':'1px'} ${isSpecial&&isSelected?'dashed':'solid'} ${border}`, cursor:'pointer', background:bg, position:'relative', overflow:'hidden', transition:'all 0.15s', userSelect:'none' }}>
                   {isSpecial ? (
                     <>
-                      <div style={{ fontSize:12, fontWeight:700, color:textColor, lineHeight:1.3, position:'relative', zIndex:1 }}>פרויקט<br/>במחיר עלות</div>
+                      <div style={{ fontSize:'0.75rem', fontWeight:700, color:textColor, lineHeight:1.3, position:'relative', zIndex:1 }}>פרויקט<br/>במחיר עלות</div>
                       <div style={{ marginTop:10, height:4, background:'rgba(255,255,255,0.07)', borderRadius:4, overflow:'hidden' }}>
                         <div style={{ height:'100%', borderRadius:4, background:isSelected?C.red:C.muted, width:'2%' }} />
                       </div>
                     </>
                   ) : (
                     <>
-                      <div style={{ fontSize:18, fontWeight:700, color:isSelected?textColor:undefined, position:'relative', zIndex:1 }}>{pct}%</div>
+                      <div style={{ fontSize:'1.125rem', fontWeight:700, color:isSelected?textColor:undefined, position:'relative', zIndex:1 }}>{pct}%</div>
                       <div style={{ marginTop:10, height:4, background:'rgba(255,255,255,0.07)', borderRadius:4, overflow:'hidden' }}>
                         <div style={{ height:'100%', borderRadius:4, background:isSelected?barColor:C.muted, width:`${barW}%`, transition:'width 0.3s ease' }} />
                       </div>
@@ -1044,21 +1044,21 @@ export default function PricingCalculator() {
         <div className="cr-banner" style={{ background:'linear-gradient(to left,rgba(245,197,24,0.22) 0%,rgba(245,197,24,0.06) 100%)', border:'1px solid rgba(245,197,24,0.3)', borderRadius:14 }}>
           <div style={{ display:'flex', gap:32 }}>
             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start' }}>
-              <div style={{ fontSize:14, color:C.muted, marginBottom:5 }}>רווח</div>
-              <div style={{ fontSize:26, fontWeight:700, color:C.accent }}>
+              <div style={{ fontSize:'0.875rem', color:C.muted, marginBottom:5 }}>רווח</div>
+              <div style={{ fontSize:'1.625rem', fontWeight:700, color:C.accent }}>
                 {selectedPct!==null ? fmt(finalProfit) : '—'}
               </div>
             </div>
             <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start' }}>
-              <div style={{ fontSize:14, color:C.muted, marginBottom:5 }}>אחוז רווח</div>
-              <div style={{ fontSize:26, fontWeight:700, color:C.accent }}>
+              <div style={{ fontSize:'0.875rem', color:C.muted, marginBottom:5 }}>אחוז רווח</div>
+              <div style={{ fontSize:'1.625rem', fontWeight:700, color:C.accent }}>
                 {selectedPct!==null ? (selectedPct==='עלות' ? 'מחיר עלות' : `${selectedPct}%`) : '—'}
               </div>
             </div>
           </div>
           <div style={{ textAlign:'right' }}>
-            <div style={{ fontSize:16, color:C.muted, marginBottom:8 }}>מחיר סופי ללקוח</div>
-            <div className="cr-banner-price" style={{ fontSize:58, fontWeight:700, color:C.accent, letterSpacing:-2, lineHeight:1 }}>
+            <div style={{ fontSize:'1rem', color:C.muted, marginBottom:8 }}>מחיר סופי ללקוח</div>
+            <div className="cr-banner-price" style={{ fontSize:'3.625rem', fontWeight:700, color:C.accent, letterSpacing:-2, lineHeight:1 }}>
               {selectedPct!==null ? fmt(finalPrice) : '—'}
             </div>
           </div>
@@ -1072,22 +1072,22 @@ export default function PricingCalculator() {
           style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center' }}>
           <div style={{ background:C.surface, border:`1px solid ${C.border2}`, borderRadius:20, padding:28, width:'90%', maxWidth:520, maxHeight:'90vh', overflowY:'auto' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
-              <div style={{ fontSize:18, fontWeight:700, color:'white' }}>⚡ חישוב הוצאות קבועות</div>
+              <div style={{ fontSize:'1.125rem', fontWeight:700, color:'white' }}>⚡ חישוב הוצאות קבועות</div>
               <button type="button" onClick={()=>setShowFeModal(false)} style={{ background:'transparent', border:'none', cursor:'pointer', color:C.muted, display:'flex', alignItems:'center' }}><X size={18}/></button>
             </div>
-            <div style={{ fontSize:13, color:C.muted, marginBottom:22, lineHeight:1.5 }}>הכנס הוצאות קבועות חודשיות — המערכת תחלק לפי שעות הפרויקט ותוסיף לרשימה.</div>
+            <div style={{ fontSize:'0.8125rem', color:C.muted, marginBottom:22, lineHeight:1.5 }}>הכנס הוצאות קבועות חודשיות — המערכת תחלק לפי שעות הפרויקט ותוסיף לרשימה.</div>
 
             <div style={{ marginBottom:20 }}>
-              <div style={{ fontSize:12, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>שעות עבודה</div>
+              <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>שעות עבודה</div>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:18 }}>
                 <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                  <div style={{ fontSize:12, color:C.muted, fontWeight:600 }}>שעות עבודה בחודש</div>
+                  <div style={{ fontSize:'0.75rem', color:C.muted, fontWeight:600 }}>שעות עבודה בחודש</div>
                   <input type="number" min="1" value={feMonthlyHours} onChange={e=>setFeMonthlyHours(String(Math.max(1,parseFloat(e.target.value)||1)))} onKeyDown={blockMinus} onWheel={noScroll} placeholder="160"
                     style={{ ...inputStyle }} />
                 </div>
                 <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-                  <div style={{ fontSize:12, color:C.muted, fontWeight:600 }}>שעות הפרויקט</div>
-                  <div style={{ background:'rgba(245,197,24,0.07)', border:'1px solid rgba(245,197,24,0.25)', borderRadius:8, padding:'8px 14px', fontSize:16, fontWeight:700, color:C.accent }}>
+                  <div style={{ fontSize:'0.75rem', color:C.muted, fontWeight:600 }}>שעות הפרויקט</div>
+                  <div style={{ background:'rgba(245,197,24,0.07)', border:'1px solid rgba(245,197,24,0.25)', borderRadius:8, padding:'8px 14px', fontSize:'1rem', fontWeight:700, color:C.accent }}>
                     {Math.round(feProjectHours)} שעות
                   </div>
                 </div>
@@ -1095,19 +1095,19 @@ export default function PricingCalculator() {
             </div>
 
             <div style={{ marginBottom:20 }}>
-              <div style={{ fontSize:12, fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>הוצאות חודשיות קבועות</div>
+              <div style={{ fontSize:'0.75rem', fontWeight:700, color:C.muted, textTransform:'uppercase', letterSpacing:'0.08em', marginBottom:10 }}>הוצאות חודשיות קבועות</div>
               {feRows.map(r=>(
                 <div key={r.id} style={{ display:'grid', gridTemplateColumns:'1fr auto', gap:10, alignItems:'center', marginBottom:10 }}>
                   <input type="text" value={r.name} onChange={e=>setFeRows(rows=>rows.map(x=>x.id===r.id?{...x,name:e.target.value}:x))}
                     placeholder="שם הוצאה" style={{ ...inputStyle, background:'rgb(var(--bg-elevated))', border:`1px solid ${C.border2}` }} />
                   <div style={{ display:'inline-flex', alignItems:'center', gap:3, background:C.elevated, border:`1px solid ${C.border2}`, borderRadius:8, padding:'5px 8px' }}>
-                    <span style={{ fontSize:13, color:C.accent, fontWeight:700 }}>₪</span>
+                    <span style={{ fontSize:'0.8125rem', color:C.accent, fontWeight:700 }}>₪</span>
                     <input type="number" min="0" value={r.amount} onKeyDown={blockMinus} onWheel={noScroll} onChange={e=>setFeRows(rows=>rows.map(x=>x.id===r.id?{...x,amount:String(Math.max(0,parseFloat(e.target.value)||0)||'')}:x))}
-                      placeholder="0" style={{ width:70, background:'transparent', border:'none', fontSize:15, color:'rgba(255,255,255,0.92)', textAlign:'center', outline:'none' }} />
+                      placeholder="0" style={{ width:70, background:'transparent', border:'none', fontSize:'0.9375rem', color:'rgba(255,255,255,0.92)', textAlign:'center', outline:'none' }} />
                   </div>
                 </div>
               ))}
-              <button type="button" className="add-row-r" style={{ marginTop:8 }} onClick={()=>setFeRows(r=>[...r,{id:uid(),name:'',amount:''}])}><span style={{fontSize:18}}>+</span> הוסף שורה</button>
+              <button type="button" className="add-row-r" style={{ marginTop:8 }} onClick={()=>setFeRows(r=>[...r,{id:uid(),name:'',amount:''}])}><span style={{fontSize:'1.125rem'}}>+</span> הוסף שורה</button>
             </div>
 
             <div style={{ display:'flex', gap:10, justifyContent:'flex-end', marginTop:4 }}>
@@ -1123,9 +1123,9 @@ export default function PricingCalculator() {
       {showOverwrite && (
         <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.65)', zIndex:300, display:'flex', alignItems:'center', justifyContent:'center' }}>
           <div style={{ background:C.surface, border:`1px solid ${C.border2}`, borderRadius:16, padding:28, width:'90%', maxWidth:360, textAlign:'center' }}>
-            <div style={{ fontSize:36, marginBottom:12 }}>💾</div>
-            <div style={{ fontSize:17, fontWeight:700, color:'white', marginBottom:8 }}>עדכן הצעה קיימת?</div>
-            <div style={{ fontSize:13, color:C.muted, lineHeight:1.6, marginBottom:22 }}>
+            <div style={{ fontSize:'2.25rem', marginBottom:12 }}>💾</div>
+            <div style={{ fontSize:'1.0625rem', fontWeight:700, color:'white', marginBottom:8 }}>עדכן הצעה קיימת?</div>
+            <div style={{ fontSize:'0.8125rem', color:C.muted, lineHeight:1.6, marginBottom:22 }}>
               ההצעה "{pendingSave}" כבר קיימת. האם לדרוס או לשמור כהצעה חדשה?
             </div>
             <div style={{ display:'flex', flexDirection:'column', gap:8 }}>

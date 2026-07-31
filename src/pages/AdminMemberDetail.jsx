@@ -63,7 +63,7 @@ function Photo({ name, src }) {
       style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />;
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'rgba(255,255,255,0.06)', fontSize: 28, fontWeight: 900, color: 'rgba(255,255,255,0.2)' }}>
+      background: 'rgba(255,255,255,0.06)', fontSize: '1.75rem', fontWeight: 900, color: 'rgba(255,255,255,0.2)' }}>
       {(name || '?')[0].toUpperCase()}
     </div>
   );
@@ -73,9 +73,9 @@ function Photo({ name, src }) {
 function Stat({ label, value, sub, valueColor }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <p style={{ fontSize: 11, color: muted, margin: 0, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
-      <p style={{ fontSize: 26, fontWeight: 900, color: valueColor || white, margin: 0, lineHeight: 1 }}>{value}</p>
-      {sub && <p style={{ fontSize: 11, color: muted, margin: 0 }}>{sub}</p>}
+      <p style={{ fontSize: '0.6875rem', color: muted, margin: 0, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</p>
+      <p style={{ fontSize: '1.625rem', fontWeight: 900, color: valueColor || white, margin: 0, lineHeight: 1 }}>{value}</p>
+      {sub && <p style={{ fontSize: '0.6875rem', color: muted, margin: 0 }}>{sub}</p>}
     </div>
   );
 }
@@ -85,7 +85,7 @@ function Section({ title, children, action }) {
   return (
     <div style={{ borderRadius: 12, border, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: border, background: 'rgba(255,255,255,0.02)' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>{title}</p>
+        <p style={{ fontSize: '0.75rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>{title}</p>
         {action}
       </div>
       <div style={{ padding: 16 }}>{children}</div>
@@ -145,12 +145,12 @@ function OverviewTab({ student }) {
                   <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 0', borderBottom: i < 5 ? border : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#4fc38a', flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: white }}>{fmtMonth(m.month)}</span>
-                      {m.current_rank && <span style={{ fontSize: 10, fontWeight: 700, color: RANK_COLORS[m.current_rank] || muted, background: (RANK_COLORS[m.current_rank] || muted) + '18', padding: '1px 7px', borderRadius: 10 }}>{m.current_rank}</span>}
+                      <span style={{ fontSize: '0.8125rem', color: white }}>{fmtMonth(m.month)}</span>
+                      {m.current_rank && <span style={{ fontSize: '0.625rem', fontWeight: 700, color: RANK_COLORS[m.current_rank] || muted, background: (RANK_COLORS[m.current_rank] || muted) + '18', padding: '1px 7px', borderRadius: 10 }}>{m.current_rank}</span>}
                     </div>
                     <div style={{ display: 'flex', gap: 20, textAlign: 'left' }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#F5C118' }}>{fmt(inc)}</span>
-                      <span style={{ fontSize: 12, color: net >= 0 ? '#4fc38a' : '#ff5a72', fontWeight: 600 }}>{fmt(net)} נטו</span>
+                      <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#F5C118' }}>{fmt(inc)}</span>
+                      <span style={{ fontSize: '0.75rem', color: net >= 0 ? '#4fc38a' : '#ff5a72', fontWeight: 600 }}>{fmt(net)} נטו</span>
                     </div>
                   </div>
                 );
@@ -165,8 +165,8 @@ function OverviewTab({ student }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 4 }}>
               {[['נצחון גדול', latest.biggest_win], ['פוקוס הבא', latest.focus_next_month], ['פידבק', latest.program_feedback]].filter(([, v]) => v).map(([l, v]) => (
                 <div key={l}>
-                  <p style={{ fontSize: 11, color: muted, margin: '0 0 4px', fontWeight: 600 }}>{l}</p>
-                  <p style={{ fontSize: 13, color: dim, lineHeight: 1.6, margin: 0 }}>{v}</p>
+                  <p style={{ fontSize: '0.6875rem', color: muted, margin: '0 0 4px', fontWeight: 600 }}>{l}</p>
+                  <p style={{ fontSize: '0.8125rem', color: dim, lineHeight: 1.6, margin: 0 }}>{v}</p>
                 </div>
               ))}
             </div>
@@ -176,9 +176,9 @@ function OverviewTab({ student }) {
 
       {/* Right column: admin notes */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <Section title="הערות אדמין" action={<span style={{ fontSize: 10, color: muted }}>פרטי — התלמיד לא רואה</span>}>
+        <Section title="הערות אדמין" action={<span style={{ fontSize: '0.625rem', color: muted }}>פרטי — התלמיד לא רואה</span>}>
           <textarea placeholder="הוסף הערות על התלמיד — הקשר משיחות, דברים למעקב, דגלים פנימיים..."
-            style={{ width: '100%', minHeight: 180, background: 'transparent', border: 'none', outline: 'none', color: dim, fontSize: 13, lineHeight: 1.6, resize: 'vertical', fontFamily: 'inherit' }} />
+            style={{ width: '100%', minHeight: 180, background: 'transparent', border: 'none', outline: 'none', color: dim, fontSize: '0.8125rem', lineHeight: 1.6, resize: 'vertical', fontFamily: 'inherit' }} />
         </Section>
 
         {/* Content */}
@@ -224,12 +224,12 @@ function MonthlyTab({ student }) {
   return (
     <div style={{ borderRadius: 12, border, overflow: 'hidden' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 18px', borderBottom: border, background: 'rgba(255,255,255,0.02)' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>נתונים חודשיים</p>
-        <span style={{ fontSize: 11, color: muted }}>{sorted.length} / {allMonths.length} הוגשו</span>
+        <p style={{ fontSize: '0.75rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>נתונים חודשיים</p>
+        <span style={{ fontSize: '0.6875rem', color: muted }}>{sorted.length} / {allMonths.length} הוגשו</span>
       </div>
       {/* Header */}
       <div style={{ display: 'grid', gridTemplateColumns: '150px repeat(8, 1fr)', padding: '9px 18px', borderBottom: border, background: 'rgba(255,255,255,0.015)' }}>
-        {COLS.map(c => <span key={c} style={{ fontSize: 10, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c}</span>)}
+        {COLS.map(c => <span key={c} style={{ fontSize: '0.625rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c}</span>)}
       </div>
       {allMonths.map((m, i) => {
         const sub     = subMap[m];
@@ -241,18 +241,18 @@ function MonthlyTab({ student }) {
 
         return (
           <div key={m} style={{ display: 'grid', gridTemplateColumns: '150px repeat(8, 1fr)', padding: '12px 18px', borderBottom: i < allMonths.length - 1 ? border : 'none', background: missing ? 'rgba(239,68,68,0.03)' : 'transparent', alignItems: 'center' }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: missing ? 'rgba(239,68,68,0.55)' : white }}>{fmtMonth(m)}</span>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: missing ? 'rgba(239,68,68,0.55)' : white }}>{fmtMonth(m)}</span>
             {missing
-              ? <span style={{ fontSize: 12, color: 'rgba(239,68,68,0.4)', gridColumn: '2 / -1' }}>לא הוגש</span>
+              ? <span style={{ fontSize: '0.75rem', color: 'rgba(239,68,68,0.4)', gridColumn: '2 / -1' }}>לא הוגש</span>
               : <>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#F5C118' }}>{fmt(income)}</span>
-                  <span style={{ fontSize: 13, color: dim }}>{fmt(exp)}</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: net >= 0 ? '#4fc38a' : '#ff5a72' }}>{fmt(net)}</span>
-                  <span style={{ fontSize: 13, color: dim }}>{sub.leads ?? '—'}</span>
-                  <span style={{ fontSize: 13, color: dim }}>{sub.sales_calls_showed ?? '—'}</span>
-                  <span style={{ fontSize: 13, color: dim }}>{sub.closings_count ?? '—'}</span>
-                  <span style={{ fontSize: 13, color: dim }}>{sub.followers != null ? Number(sub.followers).toLocaleString('he-IL') : '—'}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: rc }}>{sub.current_rank || '—'}</span>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#F5C118' }}>{fmt(income)}</span>
+                  <span style={{ fontSize: '0.8125rem', color: dim }}>{fmt(exp)}</span>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: net >= 0 ? '#4fc38a' : '#ff5a72' }}>{fmt(net)}</span>
+                  <span style={{ fontSize: '0.8125rem', color: dim }}>{sub.leads ?? '—'}</span>
+                  <span style={{ fontSize: '0.8125rem', color: dim }}>{sub.sales_calls_showed ?? '—'}</span>
+                  <span style={{ fontSize: '0.8125rem', color: dim }}>{sub.closings_count ?? '—'}</span>
+                  <span style={{ fontSize: '0.8125rem', color: dim }}>{sub.followers != null ? Number(sub.followers).toLocaleString('he-IL') : '—'}</span>
+                  <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: rc }}>{sub.current_rank || '—'}</span>
                 </>
             }
           </div>
@@ -315,22 +315,22 @@ function WinsTab({ student }) {
   const total = weeks.length;
 
   const thStyle = {
-    padding: '10px 14px', fontSize: 11, fontWeight: 700, color: muted,
+    padding: '10px 14px', fontSize: '0.6875rem', fontWeight: 700, color: muted,
     textTransform: 'uppercase', letterSpacing: '0.07em',
     textAlign: 'right', background: 'rgba(255,255,255,0.02)',
     borderBottom: border, whiteSpace: 'nowrap',
   };
-  const tdStyle = { padding: '11px 14px', fontSize: 13, verticalAlign: 'top', textAlign: 'right' };
+  const tdStyle = { padding: '11px 14px', fontSize: '0.8125rem', verticalAlign: 'top', textAlign: 'right' };
   const truncate = (s, n = 55) => s && s.length > n ? s.slice(0, n) + '…' : s;
 
   return (
     <div style={{ borderRadius: 12, border, overflow: 'hidden' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderBottom: border, background: 'rgba(255,255,255,0.02)' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>
+        <p style={{ fontSize: '0.75rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>
           נצחונות שבועיים
         </p>
-        <span style={{ fontSize: 12, fontWeight: 700, color: muted }}>{submitted} / {total}</span>
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: muted }}>{submitted} / {total}</span>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
@@ -367,16 +367,16 @@ function WinsTab({ student }) {
                     onMouseEnter={e => { if (!missed) e.currentTarget.style.background = isExp ? 'rgba(245,193,24,0.08)' : 'rgba(255,255,255,0.03)'; }}
                     onMouseLeave={e => { e.currentTarget.style.background = rowBg; }}
                   >
-                    <td style={{ ...tdStyle, color: missed ? 'rgba(239,68,68,0.7)' : muted, fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>
+                    <td style={{ ...tdStyle, color: missed ? 'rgba(239,68,68,0.7)' : muted, fontWeight: 600, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
                       {new Date(weekKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td style={{ ...tdStyle, color: textColor }}>
                       {missed ? 'No submission' : truncate(win.win_1)}
                     </td>
-                    <td style={{ ...tdStyle, color: dim, fontSize: 12 }}>
+                    <td style={{ ...tdStyle, color: dim, fontSize: '0.75rem' }}>
                       {!missed && truncate(win.focus_next_week, 50)}
                     </td>
-                    <td style={{ ...tdStyle, color: dim, fontSize: 12 }}>
+                    <td style={{ ...tdStyle, color: dim, fontSize: '0.75rem' }}>
                       {!missed && truncate(win.blocker, 45)}
                     </td>
                   </tr>
@@ -388,8 +388,8 @@ function WinsTab({ student }) {
                             .filter(([, v]) => v)
                             .map(([l, v]) => (
                               <div key={l} style={{ display: 'flex', gap: 14 }}>
-                                <span style={{ fontSize: 11, color: muted, flexShrink: 0, minWidth: 120, fontWeight: 700, paddingTop: 2 }}>{l}</span>
-                                <span style={{ fontSize: 13, color: white, lineHeight: 1.6 }}>{v}</span>
+                                <span style={{ fontSize: '0.6875rem', color: muted, flexShrink: 0, minWidth: 120, fontWeight: 700, paddingTop: 2 }}>{l}</span>
+                                <span style={{ fontSize: '0.8125rem', color: white, lineHeight: 1.6 }}>{v}</span>
                               </div>
                             ))}
                         </div>
@@ -415,21 +415,21 @@ function DealsTab({ student }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, borderRadius: 12, border, overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderBottom: border, background: 'rgba(255,255,255,0.02)' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>עסקאות — {deals.length}</p>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#4fc38a' }}>סה״כ {fmt(total)}</span>
+        <p style={{ fontSize: '0.75rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>עסקאות — {deals.length}</p>
+        <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#4fc38a' }}>סה״כ {fmt(total)}</span>
       </div>
       {deals.map((d, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: i < deals.length - 1 ? border : 'none' }}>
           <div>
-            <p style={{ fontSize: 13, color: white, margin: '0 0 4px', fontWeight: 600 }}>{d.notes || 'עסקה'}</p>
+            <p style={{ fontSize: '0.8125rem', color: white, margin: '0 0 4px', fontWeight: 600 }}>{d.notes || 'עסקה'}</p>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <span style={{ fontSize: 11, color: muted }}>{fmtDate(d.created_at)}</span>
-              {d.next_rank && <span style={{ fontSize: 10, fontWeight: 700, color: RANK_COLORS[d.next_rank] || muted }}>→ {d.next_rank}</span>}
+              <span style={{ fontSize: '0.6875rem', color: muted }}>{fmtDate(d.created_at)}</span>
+              {d.next_rank && <span style={{ fontSize: '0.625rem', fontWeight: 700, color: RANK_COLORS[d.next_rank] || muted }}>→ {d.next_rank}</span>}
             </div>
           </div>
           <div style={{ textAlign: 'left' }}>
-            <p style={{ fontSize: 16, fontWeight: 900, color: '#4fc38a', margin: 0 }}>{fmt(d.total_amount)}</p>
-            {d.received_amount && <p style={{ fontSize: 11, color: muted, margin: '2px 0 0' }}>נכנס: {fmt(d.received_amount)}</p>}
+            <p style={{ fontSize: '1rem', fontWeight: 900, color: '#4fc38a', margin: 0 }}>{fmt(d.total_amount)}</p>
+            {d.received_amount && <p style={{ fontSize: '0.6875rem', color: muted, margin: '2px 0 0' }}>נכנס: {fmt(d.received_amount)}</p>}
           </div>
         </div>
       ))}
@@ -458,8 +458,8 @@ function RoadmapTab({ student, roadmap }) {
       {/* Overall */}
       <div style={{ padding: '14px 18px', borderRadius: 12, border, background: 'rgba(255,255,255,0.02)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>התקדמות כללית</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: white }}>{totalDone}/{allTasks.length} ({totalPct}%)</span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>התקדמות כללית</span>
+          <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: white }}>{totalDone}/{allTasks.length} ({totalPct}%)</span>
         </div>
         <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)' }}>
           <div style={{ height: '100%', borderRadius: 2, background: '#F5C118', width: `${totalPct}%`, transition: 'width 0.4s' }} />
@@ -480,9 +480,9 @@ function RoadmapTab({ student, roadmap }) {
                 style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 16px', background: 'rgba(255,255,255,0.02)', border: 'none', cursor: 'pointer', textAlign: 'right' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   {isOpen ? <ChevronDown size={13} style={{ color: muted }} /> : <ChevronRight size={13} style={{ color: muted }} />}
-                  <span style={{ fontSize: 13, fontWeight: 700, color: white }}>{phase.title}</span>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: white }}>{phase.title}</span>
                 </div>
-                <span style={{ fontSize: 11, color: pDone === pTasks.length && pTasks.length > 0 ? '#4fc38a' : muted, fontWeight: 600 }}>
+                <span style={{ fontSize: '0.6875rem', color: pDone === pTasks.length && pTasks.length > 0 ? '#4fc38a' : muted, fontWeight: 600 }}>
                   {pDone}/{pTasks.length}
                 </span>
               </button>
@@ -491,7 +491,7 @@ function RoadmapTab({ student, roadmap }) {
                 const tasks = [...(tasksMap[week.id] || [])].sort((a, b) => a.sort_order - b.sort_order);
                 return (
                   <div key={week.id} style={{ borderTop: border, padding: '10px 16px 12px 28px' }}>
-                    <p style={{ fontSize: 11, color: muted, margin: '0 0 8px', fontWeight: 600 }}>{week.title}</p>
+                    <p style={{ fontSize: '0.6875rem', color: muted, margin: '0 0 8px', fontWeight: 600 }}>{week.title}</p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                       {tasks.map(task => {
                         const done = completions.has(task.id);
@@ -500,7 +500,7 @@ function RoadmapTab({ student, roadmap }) {
                             {done
                               ? <CheckSquare size={13} style={{ color: '#4fc38a', flexShrink: 0 }} />
                               : <Square size={13} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />}
-                            <span style={{ fontSize: 12, color: done ? dim : 'rgba(255,255,255,0.3)' }}>{task.title}</span>
+                            <span style={{ fontSize: '0.75rem', color: done ? dim : 'rgba(255,255,255,0.3)' }}>{task.title}</span>
                           </div>
                         );
                       })}
@@ -517,7 +517,7 @@ function RoadmapTab({ student, roadmap }) {
 }
 
 function Empty({ text }) {
-  return <div style={{ padding: '60px 0', textAlign: 'center', color: muted, fontSize: 13 }}>{text}</div>;
+  return <div style={{ padding: '60px 0', textAlign: 'center', color: muted, fontSize: '0.8125rem' }}>{text}</div>;
 }
 
 // ── Rank picker ────────────────────────────────────────────────
@@ -532,24 +532,24 @@ function RankPicker({ value, autoRank, onChange, saving }) {
     <div style={{ position: 'relative' }}>
       <button onClick={() => setOpen(o => !o)} disabled={saving}
         style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, border: `1px solid ${color}55`, background: color + '18', cursor: 'pointer' }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color }}>{saving ? 'שומר...' : display}</span>
-        {isAuto && <span style={{ fontSize: 9, color: color + 'aa', fontWeight: 600 }}>אוטו׳</span>}
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, color }}>{saving ? 'שומר...' : display}</span>
+        {isAuto && <span style={{ fontSize: '0.5625rem', color: color + 'aa', fontWeight: 600 }}>אוטו׳</span>}
         <ChevronDown size={11} style={{ color: color + '80' }} />
       </button>
       {open && (
         <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: 'rgb(var(--bg-chrome))', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, minWidth: 180, boxShadow: '0 12px 40px rgba(0,0,0,0.7)', zIndex: 200, overflow: 'hidden' }}>
           <button onClick={() => { onChange(null); setOpen(false); }}
-            style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: 12, color: 'rgba(255,255,255,0.4)', background: !value ? 'rgba(255,255,255,0.05)' : 'transparent', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', background: !value ? 'rgba(255,255,255,0.05)' : 'transparent', border: 'none', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>אוטומטי ({autoRank || 'TRAINEE'})</span>
-            {!value && <span style={{ fontSize: 10 }}>✓</span>}
+            {!value && <span style={{ fontSize: '0.625rem' }}>✓</span>}
           </button>
           {ALL_RANKS.map(r => {
             const c = RANK_COLORS[r] || '#9ca3af';
             return (
               <button key={r} onClick={() => { onChange(r); setOpen(false); }}
-                style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: 12, fontWeight: 700, color: c, background: value === r ? c + '12' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: '0.75rem', fontWeight: 700, color: c, background: value === r ? c + '12' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                 <span>{r}</span>
-                {value === r && <span style={{ fontSize: 10 }}>✓</span>}
+                {value === r && <span style={{ fontSize: '0.625rem' }}>✓</span>}
               </button>
             );
           })}
@@ -568,14 +568,14 @@ function StatusPicker({ value, onChange, saving }) {
       <button onClick={() => setOpen(o => !o)} disabled={saving}
         style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, border: `1px solid ${cur.color}55`, background: cur.color + '18', cursor: 'pointer' }}>
         <span style={{ width: 6, height: 6, borderRadius: '50%', background: cur.color }} />
-        <span style={{ fontSize: 12, fontWeight: 700, color: cur.color }}>{saving ? 'שומר...' : cur.label}</span>
+        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: cur.color }}>{saving ? 'שומר...' : cur.label}</span>
         <ChevronDown size={11} style={{ color: cur.color + '80' }} />
       </button>
       {open && (
         <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: 'rgb(var(--bg-chrome))', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, minWidth: 130, boxShadow: '0 12px 40px rgba(0,0,0,0.7)', zIndex: 200, overflow: 'hidden' }}>
           {Object.entries(STATUS_META).map(([k, v]) => (
             <button key={k} onClick={() => { onChange(k); setOpen(false); }}
-              style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: 12, fontWeight: 700, color: v.color, background: k === value ? v.color + '12' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              style={{ width: '100%', textAlign: 'right', padding: '10px 14px', fontSize: '0.75rem', fontWeight: 700, color: v.color, background: k === value ? v.color + '12' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: v.color, flexShrink: 0 }} />
               {v.label}
             </button>
@@ -607,9 +607,9 @@ export default function AdminMemberDetail() {
   if (!student) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
-        <p style={{ color: muted, fontSize: 13 }}>לא נמצאו נתונים</p>
+        <p style={{ color: muted, fontSize: '0.8125rem' }}>לא נמצאו נתונים</p>
         <button onClick={() => navigate('/admin/members')}
-          style={{ padding: '8px 18px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border, color: dim, cursor: 'pointer', fontSize: 13 }}>← חזרה לתלמידים</button>
+          style={{ padding: '8px 18px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border, color: dim, cursor: 'pointer', fontSize: '0.8125rem' }}>← חזרה לתלמידים</button>
       </div>
     );
   }
@@ -687,7 +687,7 @@ export default function AdminMemberDetail() {
 
       {/* Back */}
       <button onClick={() => navigate('/admin/members')}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: muted, fontSize: 13, marginBottom: 20, padding: 0 }}>
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', color: muted, fontSize: '0.8125rem', marginBottom: 20, padding: 0 }}>
         <ArrowRight size={13} />
         חזרה לתלמידים
       </button>
@@ -702,13 +702,13 @@ export default function AdminMemberDetail() {
         {/* Info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 8 }}>
-            <h1 style={{ fontSize: 20, fontWeight: 900, color: 'white', margin: 0 }}>{student.name}</h1>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'white', margin: 0 }}>{student.name}</h1>
             <StatusPicker value={memberStatus} onChange={saveStatus} saving={saving} />
             <RankPicker value={adminRank} autoRank={student.auto_rank || student.latest_rank} onChange={saveAdminRank} saving={savingRank} />
           </div>
           <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' }}>
-            {student.email && <span style={{ fontSize: 12, color: muted }}>{student.email}</span>}
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: muted }}>
+            {student.email && <span style={{ fontSize: '0.75rem', color: muted }}>{student.email}</span>}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', color: muted }}>
               הצטרף
               <input
                 type="date"
@@ -716,11 +716,11 @@ export default function AdminMemberDetail() {
                 onChange={e => setEnrolledAt(e.target.value)}
                 onBlur={e => { if (e.target.value) saveEnrolledAt(e.target.value); }}
                 disabled={savingEnrolled}
-                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'white', fontSize: 12, padding: '2px 6px', cursor: 'pointer', colorScheme: 'dark' }}
+                style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'white', fontSize: '0.75rem', padding: '2px 6px', cursor: 'pointer', colorScheme: 'dark' }}
               />
-              {savingEnrolled && <span style={{ fontSize: 10, color: muted }}>שומר...</span>}
+              {savingEnrolled && <span style={{ fontSize: '0.625rem', color: muted }}>שומר...</span>}
             </span>
-            {student.total_paid  && <span style={{ fontSize: 12, color: '#4fc38a', fontWeight: 700 }}>שילם {fmt(student.total_paid)}</span>}
+            {student.total_paid  && <span style={{ fontSize: '0.75rem', color: '#4fc38a', fontWeight: 700 }}>שילם {fmt(student.total_paid)}</span>}
           </div>
         </div>
 
@@ -730,9 +730,9 @@ export default function AdminMemberDetail() {
           const totalIncome = trackedDeals.reduce((s, d) => s + num(d.total_amount), 0);
           return (
             <div style={{ flexShrink: 0, padding: '14px 18px', borderRadius: 10, border, minWidth: 160 }}>
-              <p style={{ fontSize: 10, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 10px' }}>סה״כ מאז הצטרפות</p>
-              <p style={{ fontSize: 22, fontWeight: 900, color: '#F5C118', margin: '0 0 4px' }}>{fmt(totalIncome)}</p>
-              <p style={{ fontSize: 11, color: muted, margin: 0 }}>{trackedDeals.length} עסקאות (דצמבר 25 →)</p>
+              <p style={{ fontSize: '0.625rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: '0 0 10px' }}>סה״כ מאז הצטרפות</p>
+              <p style={{ fontSize: '1.375rem', fontWeight: 900, color: '#F5C118', margin: '0 0 4px' }}>{fmt(totalIncome)}</p>
+              <p style={{ fontSize: '0.6875rem', color: muted, margin: 0 }}>{trackedDeals.length} עסקאות (דצמבר 25 →)</p>
             </div>
           );
         })()}
@@ -742,7 +742,7 @@ export default function AdminMemberDetail() {
       <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: border }}>
         {TABS.map(t => (
           <button key={t.k} onClick={() => setTab(t.k)}
-            style={{ padding: '9px 18px', fontSize: 13, fontWeight: tab === t.k ? 700 : 500, background: 'none', border: 'none', cursor: 'pointer',
+            style={{ padding: '9px 18px', fontSize: '0.8125rem', fontWeight: tab === t.k ? 700 : 500, background: 'none', border: 'none', cursor: 'pointer',
               borderBottom: `2px solid ${tab === t.k ? '#F5C118' : 'transparent'}`,
               color: tab === t.k ? '#F5C118' : muted,
               marginBottom: -1, transition: 'all 0.12s' }}>

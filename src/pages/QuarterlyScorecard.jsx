@@ -679,10 +679,10 @@ export default function QuarterlyScorecard() {
           <ResponsiveContainer width="100%" height={320}>
             <LineChart data={chartData} margin={{ top: 10, right: 16, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-              <XAxis dataKey="quarter" tickFormatter={quarterLabel} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} tickLine={false} />
-              <YAxis domain={[0, 10]} ticks={[0, 3, 6, 10]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 12 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="quarter" tickFormatter={quarterLabel} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }} axisLine={{ stroke: 'rgba(255,255,255,0.1)' }} tickLine={false} />
+              <YAxis domain={[0, 10]} ticks={[0, 3, 6, 10]} tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }} axisLine={false} tickLine={false} />
               <Tooltip content={<ChartTooltip />} />
-              <Legend wrapperStyle={{ paddingTop: 20, direction: 'rtl', fontSize: 13 }} formatter={v => <span style={{ color: 'rgba(255,255,255,0.6)' }}>{v}</span>} />
+              <Legend wrapperStyle={{ paddingTop: 20, direction: 'rtl', fontSize: '0.8125rem' }} formatter={v => <span style={{ color: 'rgba(255,255,255,0.6)' }}>{v}</span>} />
               {EFFORT_METRICS.map(m => (
                 <Line key={m.key} type="monotone" dataKey={m.label} stroke={m.color} strokeWidth={2.5} dot={{ r: 6, fill: m.color, strokeWidth: 0 }} activeDot={{ r: 8 }} />
               ))}

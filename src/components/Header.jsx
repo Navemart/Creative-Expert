@@ -87,19 +87,19 @@ function RankUpgradeRow({ item, onApprove, onReject }) {
   return (
     <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+        <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
           {item.image_url ? <img src={item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (item.first_name || '?')[0].toUpperCase()}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.88)' }}>{item.first_name}</p>
+          <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(255,255,255,0.88)' }}>{item.first_name}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: fromColor }}>{item.current_rank}</span>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>→</span>
-            <span style={{ fontSize: 10, fontWeight: 700, color: toColor }}>{item.proposed_rank}</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 700, color: fromColor }}>{item.current_rank}</span>
+            <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.3)' }}>→</span>
+            <span style={{ fontSize: '0.625rem', fontWeight: 700, color: toColor }}>{item.proposed_rank}</span>
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 8, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
         <span>{fmtK(item.month_1_income)}</span>
         <span>·</span>
         <span>{fmtK(item.month_2_income)}</span>
@@ -107,11 +107,11 @@ function RankUpgradeRow({ item, onApprove, onReject }) {
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={() => handle(onReject)} disabled={loading}
-          style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
           דחה
         </button>
         <button onClick={() => handle(onApprove)} disabled={loading}
-          style={{ flex: 2, padding: '6px 0', borderRadius: 8, border: 'none', background: toColor, color: '#13152A', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+          style={{ flex: 2, padding: '6px 0', borderRadius: 8, border: 'none', background: toColor, color: '#13152A', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>
           {loading ? '...' : `✓ אשר — ${item.proposed_rank}`}
         </button>
       </div>
@@ -129,21 +129,21 @@ function CheckinAlertRow({ student }) {
       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
       onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
     >
-      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
         {student.image_url
           ? <img src={student.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : (student.name || '?')[0].toUpperCase()}
       </div>
       <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
-        <p style={{ margin: '2px 0 0', fontSize: 11, color: isOverdue ? '#ef4444' : '#f59e0b' }}>
+        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
+        <p style={{ margin: '2px 0 0', fontSize: '0.6875rem', color: isOverdue ? '#ef4444' : '#f59e0b' }}>
           {isOverdue
             ? student.days_since ? `פנייה לפני ${student.days_since} ימים` : 'מעולם לא נפנה'
             : 'צ׳קאין בקרוב'}
         </p>
       </div>
       {student.phase && (
-        <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,193,24,0.1)', color: 'rgba(245,193,24,0.6)', flexShrink: 0 }}>{student.phase}</span>
+        <span style={{ fontSize: '0.625rem', fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,193,24,0.1)', color: 'rgba(245,193,24,0.6)', flexShrink: 0 }}>{student.phase}</span>
       )}
     </button>
   );
@@ -161,7 +161,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
       </div>
       {total === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10">
-          <span style={{ fontSize: 28 }}>🎉</span>
+          <span style={{ fontSize: '1.75rem' }}>🎉</span>
           <span className="text-sm" style={{ color: 'rgba(255,255,255,0.32)' }}>אין התראות פתוחות</span>
         </div>
       ) : (
@@ -398,7 +398,7 @@ function ToolsPanel({ onClose, isAdmin }) {
   }
 
   const visible = editMode ? tools : tools.filter(t => t.enabled);
-  const inp = { background:'rgba(255,255,255,0.08)', border:'1px solid rgba(245,193,24,0.4)', borderRadius:6, padding:'3px 8px', fontSize:12, color:'white', outline:'none', fontFamily:'inherit', width:'100%' };
+  const inp = { background:'rgba(255,255,255,0.08)', border:'1px solid rgba(245,193,24,0.4)', borderRadius:6, padding:'3px 8px', fontSize:'0.75rem', color:'white', outline:'none', fontFamily:'inherit', width:'100%' };
 
   return (
     <div className="absolute left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
@@ -434,8 +434,8 @@ function ToolsPanel({ onClose, isAdmin }) {
                 </div>
                 <input value={draft.href} onChange={e=>setDraft(d=>({...d,href:e.target.value}))} placeholder="קישור או /נתיב" style={inp} dir="ltr" />
                 <div className="flex gap-1.5 justify-end">
-                  <button onClick={()=>setEditingId(null)} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.3)',fontSize:11}}>ביטול</button>
-                  <button onClick={()=>saveEdit(t.id)} style={{background:'#F5C118',border:'none',borderRadius:5,cursor:'pointer',color:'#13152A',fontSize:11,fontWeight:700,padding:'2px 10px'}}>שמור</button>
+                  <button onClick={()=>setEditingId(null)} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.3)',fontSize:'0.6875rem'}}>ביטול</button>
+                  <button onClick={()=>saveEdit(t.id)} style={{background:'#F5C118',border:'none',borderRadius:5,cursor:'pointer',color:'#13152A',fontSize:'0.6875rem',fontWeight:700,padding:'2px 10px'}}>שמור</button>
                 </div>
               </div>
             ) : (
@@ -444,7 +444,7 @@ function ToolsPanel({ onClose, isAdmin }) {
                   <NavLink to={t.href} onClick={onClose}
                     className="flex items-center gap-2.5 flex-1 text-sm"
                     style={{ color: t.enabled?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.3)', textDecoration:'none' }}>
-                    <span style={{fontSize:15}}>{t.icon}</span>
+                    <span style={{fontSize:'0.9375rem'}}>{t.icon}</span>
                     <span>{t.label}</span>
                     {!editMode && <ChevronLeft size={12} className="mr-auto opacity-25"/>}
                   </NavLink>
@@ -452,7 +452,7 @@ function ToolsPanel({ onClose, isAdmin }) {
                   <a href={t.href} target="_blank" rel="noopener noreferrer" onClick={onClose}
                     className="flex items-center gap-2.5 flex-1 text-sm"
                     style={{ color: t.enabled?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.3)', textDecoration:'none' }}>
-                    <span style={{fontSize:15}}>{t.icon}</span>
+                    <span style={{fontSize:'0.9375rem'}}>{t.icon}</span>
                     <span>{t.label}</span>
                     {!editMode && <ExternalLink size={11} className="mr-auto opacity-25"/>}
                   </a>
@@ -483,8 +483,8 @@ function ToolsPanel({ onClose, isAdmin }) {
               </div>
               <input value={newItem.href} onChange={e=>setNewItem(n=>({...n,href:e.target.value}))} placeholder="https://... או /נתיב" style={inp} dir="ltr" />
               <div className="flex gap-1.5 justify-end">
-                <button onClick={()=>setAddingNew(false)} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.3)',fontSize:11}}>ביטול</button>
-                <button onClick={addTool} style={{background:'#F5C118',border:'none',borderRadius:5,cursor:'pointer',color:'#13152A',fontSize:11,fontWeight:700,padding:'2px 10px'}}>הוסף</button>
+                <button onClick={()=>setAddingNew(false)} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(255,255,255,0.3)',fontSize:'0.6875rem'}}>ביטול</button>
+                <button onClick={addTool} style={{background:'#F5C118',border:'none',borderRadius:5,cursor:'pointer',color:'#13152A',fontSize:'0.6875rem',fontWeight:700,padding:'2px 10px'}}>הוסף</button>
               </div>
             </div>
           ) : (

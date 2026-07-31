@@ -1047,7 +1047,7 @@ export default function Pipeline() {
                         width: col.w, minWidth: col.w,
                         padding: '10px 12px',
                         textAlign: col.center ? 'center' : 'right',
-                        fontSize: 11, fontWeight: 600,
+                        fontSize: '0.6875rem', fontWeight: 600,
                         color: isActive ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.35)',
                         whiteSpace: 'pre-line', lineHeight: 1.3,
                         letterSpacing: '0.02em',
@@ -1077,7 +1077,7 @@ export default function Pipeline() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={COLS.length}
-                    style={{ padding: '56px 16px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>
+                    style={{ padding: '56px 16px', textAlign: 'center', color: 'rgba(255,255,255,0.25)', fontSize: '0.8125rem' }}>
                     אין לידים — לחץ "+ ליד חדש" כדי להתחיל
                   </td>
                 </tr>

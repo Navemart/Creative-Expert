@@ -306,7 +306,7 @@ function InstallmentBuilder({ plan, dealAmount, onChange }) {
           </div>
           <input type="date" value={inst.date || ''} onChange={e => onChange(plan.map(i => i.id === inst.id ? { ...i, date: e.target.value } : i))}
             className="flex-none w-14 rounded-lg py-1.5 text-xs outline-none"
-            style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: inst.date ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)', paddingLeft: 2, paddingRight: 2, fontSize: 11 }} />
+            style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: inst.date ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)', paddingLeft: 2, paddingRight: 2, fontSize: '0.6875rem' }} />
           <button type="button" onClick={() => remove(inst.id)} className="rounded-md p-1 hover:bg-red-500/20 transition flex-none" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <X size={13} />
           </button>
@@ -375,7 +375,7 @@ function saveWf(uid, tpl) { localStorage.setItem(`wf_${uid}`, JSON.stringify(tpl
 function StepListInput({ steps, onChange }) {
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);
-  const inp = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '7px 11px', fontSize: 13, color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', flex: 1 };
+  const inp = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '7px 11px', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', flex: 1 };
   function addStep() {
     const t = draft.trim();
     if (!t) return;
@@ -387,8 +387,8 @@ function StepListInput({ steps, onChange }) {
     <div>
       {steps.map((s, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
-          <span style={{ flex: 1, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{s}</span>
+          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
+          <span style={{ flex: 1, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.85)' }}>{s}</span>
           <button type="button" onClick={() => onChange(steps.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(252,165,165,0.5)', padding: 2, display: 'flex' }}><X size={12} /></button>
         </div>
       ))}
@@ -411,26 +411,26 @@ function WfTemplateEditor({ template, onSave, onClose }) {
   const initSteps = template?.steps ? template.steps.split('\n').filter(Boolean) : [];
   const [name,  setName]  = useState(template?.name || '');
   const [steps, setSteps] = useState(initSteps);
-  const base = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 12px', fontSize: 14, color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' };
+  const base = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', width: '100%', boxSizing: 'border-box' };
   return (
     <div onClick={e => { e.stopPropagation(); if (e.target === e.currentTarget) onClose(); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{template ? 'עריכת תבנית' : 'תבנית חדשה'}</span>
+          <span style={{ fontSize: '1rem', fontWeight: 700, color: 'white' }}>{template ? 'עריכת תבנית' : 'תבנית חדשה'}</span>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }}><X size={16} /></button>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>שם התבנית</div>
+          <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>שם התבנית</div>
           <input style={base} value={name} onChange={e => setName(e.target.value)} placeholder='למשל: "מיתוג" או "בניית אתר"' autoFocus />
         </div>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>שלבי התהליך</div>
+          <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>שלבי התהליך</div>
           <StepListInput steps={steps} onChange={setSteps} />
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14 }}>ביטול</button>
+          <button onClick={onClose} style={{ padding: '9px 18px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem' }}>ביטול</button>
           <button onClick={() => name.trim() && steps.length && onSave({ name: name.trim(), steps: steps.join('\n') })}
-            style={{ padding: '9px 18px', borderRadius: 8, background: '#f5c518', color: '#000', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 14, opacity: name.trim() && steps.length ? 1 : 0.4 }}>
+            style={{ padding: '9px 18px', borderRadius: 8, background: '#f5c518', color: '#000', fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.875rem', opacity: name.trim() && steps.length ? 1 : 0.4 }}>
             שמור תבנית
           </button>
         </div>
@@ -482,7 +482,7 @@ function WfPanel({ userId, onApplyTemplate }) {
                 {isSel && <Check size={11} color="#000" strokeWidth={3} />}
               </button>
               <span
-                style={{ flex: 1, fontSize: 13, fontWeight: 600, color: isSel ? '#f5c518' : 'rgba(255,255,255,0.85)', cursor: 'pointer' }}
+                style={{ flex: 1, fontSize: '0.8125rem', fontWeight: 600, color: isSel ? '#f5c518' : 'rgba(255,255,255,0.85)', cursor: 'pointer' }}
                 onClick={() => {
                   const next = isSel ? null : tpl.id;
                   setSelectedId(next);
@@ -491,7 +491,7 @@ function WfPanel({ userId, onApplyTemplate }) {
               >
                 {tpl.name}
               </span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{lines.length} שלבים</span>
+              <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)' }}>{lines.length} שלבים</span>
               <button onClick={() => { setEditorTpl(tpl); setEditingIdx(idx); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', padding: 3, display: 'flex' }}><Edit2 size={11} /></button>
               <button onClick={() => del(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(252,165,165,0.5)', padding: 3, display: 'flex' }}><Trash2 size={11} /></button>
             </div>
@@ -500,8 +500,8 @@ function WfPanel({ userId, onApplyTemplate }) {
               <div style={{ borderTop: '1px solid rgba(245,193,24,0.15)', padding: '10px 14px 12px' }}>
                 {lines.map((s, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
-                    <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.78)' }}>{s}</span>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
+                    <span style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.78)' }}>{s}</span>
                   </div>
                 ))}
               </div>
@@ -512,15 +512,15 @@ function WfPanel({ userId, onApplyTemplate }) {
 
       {/* Add template button */}
       {templates.length < MAX_WF
-        ? <button onClick={() => { setEditorTpl({}); setEditingIdx(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: '1px dashed rgba(245,193,24,0.35)', borderRadius: 8, padding: '7px 13px', color: '#f5c518', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit', marginTop: templates.length ? 4 : 0 }}>
+        ? <button onClick={() => { setEditorTpl({}); setEditingIdx(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: '1px dashed rgba(245,193,24,0.35)', borderRadius: 8, padding: '7px 13px', color: '#f5c518', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit', marginTop: templates.length ? 4 : 0 }}>
             <Plus size={12} /> {templates.length === 0 ? 'הוסף תבנית לתהליך עבודה' : `הוסף תבנית (${templates.length}/${MAX_WF})`}
           </button>
-        : <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>מקסימום 3 תבניות — מחק אחת כדי להוסיף חדשה.</div>
+        : <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>מקסימום 3 תבניות — מחק אחת כדי להוסיף חדשה.</div>
       }
 
       {/* ── One-time workflow ──────────────────────────────── */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 14, paddingTop: 14 }}>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>תהליך חד-פעמי לפרויקט זה</div>
+        <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>תהליך חד-פעמי לפרויקט זה</div>
         <StepListInput steps={oneOff} onChange={setOneOff} />
       </div>
 
@@ -2207,7 +2207,7 @@ export default function Clients() {
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 16, marginTop: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
                 <LayoutTemplate size={13} style={{ color: '#f5c518' }} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#f5c518', textTransform: 'uppercase', letterSpacing: '0.07em' }}>תבניות תהליך עבודה</span>
+                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#f5c518', textTransform: 'uppercase', letterSpacing: '0.07em' }}>תבניות תהליך עבודה</span>
               </div>
               <WfPanel
                 userId={userId}
@@ -2221,11 +2221,11 @@ export default function Clients() {
               {(projectForm.stages || []).length > 0 && (
                 <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="flex items-center justify-between mb-2">
-                    <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
                       שלבי הפרויקט · {(projectForm.stages || []).filter(s=>s.done).length}/{(projectForm.stages || []).length}
                     </span>
                     <button onClick={() => setProjectForm(f => ({ ...f, stages: [] }))}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: '0.6875rem' }}>
                       נקה
                     </button>
                   </div>
@@ -2244,7 +2244,7 @@ export default function Clients() {
                         }}>
                         {s.done && <Check size={10} color="#fff" strokeWidth={3} />}
                       </button>
-                      <span style={{ fontSize: 13, color: s.done ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', textDecoration: s.done ? 'line-through' : 'none' }}>
+                      <span style={{ fontSize: '0.8125rem', color: s.done ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', textDecoration: s.done ? 'line-through' : 'none' }}>
                         {s.label}
                       </span>
                     </div>

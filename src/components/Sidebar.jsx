@@ -82,7 +82,7 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
       <button
         onClick={() => setOpen(o => !o)}
         className={[
-          'w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10',
+          'w-full flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors hover:bg-white/10',
           collapsed ? 'md:justify-center md:px-2' : '',
         ].join(' ')}
         style={{ color: anyActive ? 'white' : 'rgba(255,255,255,0.75)' }}
@@ -109,11 +109,11 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
             <li key={child.to}>
               {(child.disabled || child.soon) ? (
                 <span
-                  className="flex items-center justify-between rounded-md px-3 py-1.5 text-sm cursor-not-allowed select-none"
+                  className="flex items-center justify-between rounded-md px-3 py-1.5 text-[13.5px] cursor-not-allowed select-none"
                   style={{ color: 'rgba(255,255,255,0.25)' }}
                 >
                   {child.label}
-                  {child.soon && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>בקרוב</span>}
+                  {child.soon && <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>בקרוב</span>}
                 </span>
               ) : (
                 <NavLink
@@ -121,7 +121,7 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
                   end={child.end}
                   onClick={onCloseMobile}
                   className={({ isActive }) =>
-                    ['block rounded-md px-3 py-1.5 text-sm transition-colors', isActive ? 'font-semibold' : 'hover:bg-white/10'].join(' ')
+                    ['block rounded-md px-3 py-1.5 text-[13.5px] transition-colors', isActive ? 'font-semibold' : 'hover:bg-white/10'].join(' ')
                   }
                   style={({ isActive }) => ({
                     color: isActive ? '#F5C118' : 'rgba(255,255,255,0.55)',
@@ -144,14 +144,14 @@ function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon })
     return (
       <li>
         <div
-          className={['flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium cursor-not-allowed select-none', collapsed ? 'md:justify-center md:px-2' : ''].join(' ')}
+          className={['flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium cursor-not-allowed select-none', collapsed ? 'md:justify-center md:px-2' : ''].join(' ')}
           style={{ color: 'rgba(255,255,255,0.28)' }}
         >
           <Icon size={18} className="flex-none" />
           {!collapsed && (
             <>
               <span className="flex-1 text-right">{label}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.04em' }}>בקרוב</span>
+              <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.04em' }}>בקרוב</span>
             </>
           )}
         </div>
@@ -166,7 +166,7 @@ function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon })
         onClick={onCloseMobile}
         className={({ isActive }) =>
           [
-            'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+            'flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors',
             isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-white/10',
             collapsed ? 'md:justify-center md:px-2' : '',
           ].join(' ')

@@ -37,7 +37,7 @@ const inp = {
   background:'rgb(var(--bg-elevated))',
   border:'1px solid rgba(255,255,255,0.1)',
   borderRadius:10, padding:'10px 14px',
-  fontSize:14, color:'rgba(255,255,255,0.9)',
+  fontSize:'0.875rem', color:'rgba(255,255,255,0.9)',
   outline:'none', fontFamily:'inherit',
 };
 
