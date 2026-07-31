@@ -263,26 +263,144 @@ function MonthlyTab({ student }) {
 
 // ── Tab: נצחונות ───────────────────────────────────────────────
 function WinsTab({ student }) {
-  const wins = [...(student.wins || [])].sort((a, b) => (b.week_date || '').localeCompare(a.week_date || ''));
-  if (!wins.length) return <Empty text="אין נצחונות שבועיים עדיין" />;
+  const [expandedIdx, setExpandedIdx] = useState(null);
+
+  // Build all Sundays since enrolled_at up to this week
+  const enrolledAt = student.enrolled_at || student.created_at;
+  const weeks = useMemo(() => {
+    if (!enrolledAt) return [];
+    const result = [];
+    const start = new Date(enrolledAt);
+    // Rewind to the nearest past Sunday
+    const day = start.getDay();
+    start.setDate(start.getDate() - day);
+    start.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const thisWeekSunday = new Date(now);
+    thisWeekSunday.setDate(now.getDate() - now.getDay());
+    thisWeekSunday.setHours(0, 0, 0, 0);
+    let cur = new Date(start);
+    while (cur <= thisWeekSunday) {
+      result.push(cur.toISOString().slice(0, 10));
+      cur = new Date(cur);
+      cur.setDate(cur.getDate() + 7);
+    }
+    return result.reverse(); // newest first
+  }, [enrolledAt]);
+
+  const winsByDate = useMemo(() => {
+    const map = {};
+    for (const w of student.wins || []) {
+      const key = (w.week_date || w.submitted_at || '').slice(0, 10);
+      if (key) map[key] = w;
+    }
+    return map;
+  }, [student.wins]);
+
+  // Find closest win for a given Sunday key
+  function findWin(sundayKey) {
+    if (winsByDate[sundayKey]) return winsByDate[sundayKey];
+    // Also check ±1 day tolerance
+    const d = new Date(sundayKey);
+    for (let delta = -1; delta <= 1; delta++) {
+      const t = new Date(d); t.setDate(t.getDate() + delta);
+      const k = t.toISOString().slice(0, 10);
+      if (winsByDate[k]) return winsByDate[k];
+    }
+    return null;
+  }
+
+  const submitted = (student.wins || []).length;
+  const total = weeks.length;
+
+  const thStyle = {
+    padding: '10px 14px', fontSize: 11, fontWeight: 700, color: muted,
+    textTransform: 'uppercase', letterSpacing: '0.07em',
+    textAlign: 'right', background: 'rgba(255,255,255,0.02)',
+    borderBottom: border, whiteSpace: 'nowrap',
+  };
+  const tdStyle = { padding: '11px 14px', fontSize: 13, verticalAlign: 'top', textAlign: 'right' };
+  const truncate = (s, n = 55) => s && s.length > n ? s.slice(0, n) + '…' : s;
+
   return (
     <div style={{ borderRadius: 12, border, overflow: 'hidden' }}>
-      <div style={{ padding: '12px 18px', borderBottom: border, background: 'rgba(255,255,255,0.02)' }}>
-        <p style={{ fontSize: 12, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>נצחונות שבועיים — {wins.length} דיווחים</p>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderBottom: border, background: 'rgba(255,255,255,0.02)' }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>
+          נצחונות שבועיים
+        </p>
+        <span style={{ fontSize: 12, fontWeight: 700, color: muted }}>{submitted} / {total}</span>
       </div>
-      {wins.map((w, i) => (
-        <div key={i} style={{ padding: '16px 18px', borderBottom: i < wins.length - 1 ? border : 'none' }}>
-          <p style={{ fontSize: 11, color: muted, margin: '0 0 10px', fontWeight: 600 }}>{fmtDate(w.week_date)}</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {[['נצחון 1', w.win_1], ['נצחון 2', w.win_2], ['נצחון 3', w.win_3], ['פוקוס שבוע הבא', w.focus_next_week], ['חוסם', w.blocker]].filter(([, v]) => v).map(([l, v]) => (
-              <div key={l} style={{ display: 'flex', gap: 12 }}>
-                <span style={{ fontSize: 11, color: muted, flexShrink: 0, minWidth: 100, fontWeight: 600, paddingTop: 1 }}>{l}</span>
-                <span style={{ fontSize: 13, color: dim, lineHeight: 1.5 }}>{v}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
+
+      <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr>
+              <th style={{ ...thStyle, width: 120 }}>שבוע</th>
+              <th style={thStyle}>נצחון ראשי</th>
+              <th style={{ ...thStyle, width: 220 }}>פוקוס שבוע הבא</th>
+              <th style={{ ...thStyle, width: 200 }}>חוסם</th>
+            </tr>
+          </thead>
+          <tbody>
+            {weeks.map((weekKey, i) => {
+              const win = findWin(weekKey);
+              const missed = !win;
+              const isExp = expandedIdx === i;
+              const rowBg = missed
+                ? 'rgba(239,68,68,0.07)'
+                : isExp ? 'rgba(245,193,24,0.06)' : 'transparent';
+              const textColor = missed ? 'rgba(239,68,68,0.55)' : white;
+
+              return (
+                <>
+                  <tr
+                    key={weekKey}
+                    onClick={() => !missed && setExpandedIdx(isExp ? null : i)}
+                    style={{
+                      background: rowBg, cursor: missed ? 'default' : 'pointer',
+                      borderBottom: (isExp && !missed) ? 'none' : border,
+                      borderRight: missed ? '3px solid rgba(239,68,68,0.5)' : isExp ? '3px solid rgba(245,193,24,0.5)' : '3px solid transparent',
+                      transition: 'background 0.12s',
+                    }}
+                    onMouseEnter={e => { if (!missed) e.currentTarget.style.background = isExp ? 'rgba(245,193,24,0.08)' : 'rgba(255,255,255,0.03)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = rowBg; }}
+                  >
+                    <td style={{ ...tdStyle, color: missed ? 'rgba(239,68,68,0.7)' : muted, fontWeight: 600, fontSize: 12, whiteSpace: 'nowrap' }}>
+                      {new Date(weekKey).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </td>
+                    <td style={{ ...tdStyle, color: textColor }}>
+                      {missed ? 'No submission' : truncate(win.win_1)}
+                    </td>
+                    <td style={{ ...tdStyle, color: dim, fontSize: 12 }}>
+                      {!missed && truncate(win.focus_next_week, 50)}
+                    </td>
+                    <td style={{ ...tdStyle, color: dim, fontSize: 12 }}>
+                      {!missed && truncate(win.blocker, 45)}
+                    </td>
+                  </tr>
+                  {isExp && win && (
+                    <tr key={weekKey + '_exp'} style={{ background: 'rgba(245,193,24,0.04)', borderBottom: border }}>
+                      <td colSpan={4} style={{ padding: '14px 18px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {[['נצחון 1', win.win_1], ['נצחון 2', win.win_2], ['נצחון 3', win.win_3], ['פוקוס שבוע הבא', win.focus_next_week], ['חוסם', win.blocker]]
+                            .filter(([, v]) => v)
+                            .map(([l, v]) => (
+                              <div key={l} style={{ display: 'flex', gap: 14 }}>
+                                <span style={{ fontSize: 11, color: muted, flexShrink: 0, minWidth: 120, fontWeight: 700, paddingTop: 2 }}>{l}</span>
+                                <span style={{ fontSize: 13, color: white, lineHeight: 1.6 }}>{v}</span>
+                              </div>
+                            ))}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
