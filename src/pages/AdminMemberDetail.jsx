@@ -271,10 +271,10 @@ function WinsTab({ student }) {
     if (!enrolledAt) return [];
     const result = [];
     const start = new Date(enrolledAt);
-    // Rewind to the nearest past Sunday
-    const day = start.getDay();
-    start.setDate(start.getDate() - day);
     start.setHours(0, 0, 0, 0);
+    // Advance to the next Sunday on or after enrolled_at
+    const day = start.getDay();
+    if (day !== 0) start.setDate(start.getDate() + (7 - day));
     const now = new Date();
     const thisWeekSunday = new Date(now);
     thisWeekSunday.setDate(now.getDate() - now.getDay());
