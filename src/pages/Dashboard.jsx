@@ -295,32 +295,19 @@ if (typeof document !== 'undefined' && !document.getElementById('mslider-style')
 
 function MSlider({ value, onChange, min = 1, max = 10 }) {
   const v = Number(value) || 0;
-  // RTL: right=1(low), left=10(high). pct=0 at right, pct=100 at left.
   const pct = v > 0 ? ((v - min) / (max - min)) * 100 : 0;
   const trackRef = useRef(null);
+  const ACCENT = '#F5C118';
 
-  // Color: t=0 (right/low/1)=red → t=1 (left/high/10)=green
-  function posColor(t) {
-    const r = Math.round(239 - 205 * t);
-    const g = Math.round(68  + 129 * t);
-    const b = Math.round(0   + 94  * t);
-    return `rgb(${r},${g},${b})`;
-  }
-  const currentColor = v > 0 ? posColor((v - min) / (max - min)) : 'rgba(255,255,255,0.2)';
-
-  // RTL position calculation: right=low, left=high
   function calcValue(clientX) {
     const rect = trackRef.current?.getBoundingClientRect();
     if (!rect) return v;
-    // Distance from RIGHT (where min=1 is)
     const fromRight = rect.right - clientX;
     const ratio = Math.max(0, Math.min(1, fromRight / rect.width));
     return Math.round(ratio * (max - min) + min);
   }
 
-  function handleInteract(clientX) {
-    onChange(String(calcValue(clientX)));
-  }
+  function handleInteract(clientX) { onChange(String(calcValue(clientX))); }
 
   function onMouseDown(e) {
     e.preventDefault();
@@ -343,45 +330,37 @@ function MSlider({ value, onChange, min = 1, max = 10 }) {
     <div>
       {/* Value */}
       <div style={{ display:'flex', alignItems:'baseline', justifyContent:'center', gap:4, marginBottom:14 }}>
-        <span style={{ fontSize:40, fontWeight:900, lineHeight:1, color: currentColor,
-          textShadow: v > 0 ? `0 0 24px ${currentColor}88` : 'none', transition:'color 0.2s, text-shadow 0.2s' }}>
+        <span style={{ fontSize:40, fontWeight:900, lineHeight:1,
+          color: v > 0 ? ACCENT : 'rgba(255,255,255,0.2)',
+          textShadow: v > 0 ? `0 0 24px ${ACCENT}66` : 'none', transition:'color 0.2s' }}>
           {v > 0 ? v : '—'}
         </span>
-        <span style={{ fontSize:13, color:'rgba(255,255,255,0.2)' }}>/{max}</span>
+        <span style={{ fontSize:13, color:'rgba(255,255,255,0.25)' }}>/{max}</span>
       </div>
 
       {/* Track */}
-      <div ref={trackRef}
-        onMouseDown={onMouseDown}
-        onTouchStart={onTouchStart}
-        style={{ position:'relative', height:10, borderRadius:99, cursor:'pointer', margin:'0 6px', userSelect:'none' }}>
-
+      <div ref={trackRef} onMouseDown={onMouseDown} onTouchStart={onTouchStart}
+        style={{ position:'relative', height:8, borderRadius:99, cursor:'pointer', margin:'0 6px', userSelect:'none' }}>
         {/* Gray base */}
         <div style={{ position:'absolute', inset:0, borderRadius:99, background:'rgba(255,255,255,0.08)' }} />
-
-        {/* Dim full gradient backdrop */}
-        <div style={{ position:'absolute', inset:0, borderRadius:99, opacity:0.18,
-          background:'linear-gradient(to left, #ef4444, #eab308 50%, #22c55e)' }} />
-
-        {/* Fill: grows from RIGHT (red/1) toward LEFT (green/10) */}
+        {/* Yellow fill — grows from RIGHT toward LEFT (RTL: right=low) */}
         {v > 0 && (
           <div style={{ position:'absolute', inset:0, borderRadius:99,
-            background:'linear-gradient(to left, #ef4444, #eab308 50%, #22c55e)',
-            clipPath:`inset(0 0 0 ${100 - pct}%)`,   /* clip from LEFT, reveal from RIGHT */
+            background: ACCENT,
+            clipPath:`inset(0 0 0 ${100 - pct}%)`,
             transition:'clip-path 0.15s ease',
-            boxShadow:`0 0 12px ${currentColor}77`,
+            boxShadow:`0 0 10px ${ACCENT}55`,
           }} />
         )}
-
-        {/* Thumb: right=0% when v=min, moves left as v increases */}
+        {/* Thumb */}
         <div style={{
           position:'absolute', top:'50%',
           right:`calc(${pct}% - 10px)`,
           transform:'translateY(-50%)',
           width:20, height:20, borderRadius:'50%',
-          background: v > 0 ? currentColor : 'rgba(255,255,255,0.2)',
-          border:'2.5px solid rgba(255,255,255,0.9)',
-          boxShadow: v > 0 ? `0 0 0 4px ${currentColor}33, 0 3px 10px rgba(0,0,0,0.4)` : 'none',
+          background: v > 0 ? ACCENT : 'rgba(255,255,255,0.15)',
+          border:`2.5px solid rgba(255,255,255,${v > 0 ? 0.9 : 0.3})`,
+          boxShadow: v > 0 ? `0 0 0 4px ${ACCENT}33, 0 3px 10px rgba(0,0,0,0.4)` : 'none',
           transition:'right 0.15s ease, background 0.2s',
           pointerEvents:'none', zIndex:2,
         }} />
@@ -389,17 +368,14 @@ function MSlider({ value, onChange, min = 1, max = 10 }) {
 
       {/* Labels: 1 on right, 10 on left */}
       <div style={{ display:'flex', justifyContent:'space-between', direction:'rtl', marginTop:10, padding:'0 6px' }}>
-        {Array.from({length: max-min+1}, (_,i) => i+min).map(n => {
-          const col = posColor((n-min)/(max-min));
-          return (
-            <span key={n} onClick={() => onChange(String(n))}
-              style={{ fontSize:11, cursor:'pointer', userSelect:'none', transition:'all 0.1s',
-                color: v===n ? col : n<=(v||0) ? `${col}55` : 'rgba(255,255,255,0.18)',
-                fontWeight: v===n ? 900 : 400,
-                transform: v===n ? 'scale(1.25)' : 'scale(1)', display:'inline-block',
-              }}>{n}</span>
-          );
-        })}
+        {Array.from({length: max-min+1}, (_,i) => i+min).map(n => (
+          <span key={n} onClick={() => onChange(String(n))}
+            style={{ fontSize:11, cursor:'pointer', userSelect:'none', transition:'all 0.1s',
+              color: v === n ? ACCENT : n <= (v || 0) ? `${ACCENT}66` : 'rgba(255,255,255,0.18)',
+              fontWeight: v === n ? 900 : 400,
+              transform: v === n ? 'scale(1.25)' : 'scale(1)', display:'inline-block',
+            }}>{n}</span>
+        ))}
       </div>
     </div>
   );
@@ -882,6 +858,7 @@ export default function Dashboard() {
   const [modal, setModal]               = useState(null);
   const [winStep, setWinStep]           = useState(1);
   const [monthlyStep, setMonthlyStep]   = useState(1);
+  const [monthlySubmitting, setMonthlySubmitting] = useState(false);
   const [showFormEditor,  setShowFormEditor]  = useState(false);
   const [formConfig,      setFormConfig]      = useState(loadFormConfig);
   // Helper: get field config by key
@@ -1368,7 +1345,11 @@ export default function Dashboard() {
   }
 
   async function submitMonthly() {
-    if (!monthlyForm.report_month) return;
+    if (monthlySubmitting) return;
+    if (!monthlyForm.report_month) { alert('חסר תאריך הדיווח'); return; }
+    setMonthlySubmitting(true);
+    try {
+    // ── inner body wrapped in try/catch ──────────────────────
     const n = v => v ? parseFloat(v) : null;
     const i = v => v ? parseInt(v) : null;
     // type="month" נותן "2026-04" — Supabase צריך תאריך מלא
@@ -1534,8 +1515,13 @@ export default function Dashboard() {
       nps: '', program_feedback: '',
     });
     setModal(null);
-
     fetchAll();
+    } catch (err) {
+      console.error('submitMonthly error:', err);
+      alert('שגיאה בשמירה: ' + (err?.message || String(err)));
+    } finally {
+      setMonthlySubmitting(false);
+    }
   }
 
   const btnClass = "flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium text-white/80 hover:bg-white/10 transition";
@@ -2366,7 +2352,8 @@ export default function Dashboard() {
       )}
 
       {modal === 'monthly' && (() => {
-        const MSTEP_COLORS = { 1: '#f97316', 2: '#8b5cf6', 3: '#22c55e', 4: '#3b82f6', 5: '#ec4899' };
+        // Progress bar keeps a gradient for visual progress; all UI uses accent yellow
+        const MSTEP_COLORS = { 1: '#f97316', 2: '#eab308', 3: '#22c55e', 4: '#3b82f6', 5: '#F5C118' };
         const MSTEP_META = [
           { n: 1, label: 'לבלוט',   desc: 'נתוני תוכן — עוקבים, חשיפה וביצועי פוסטים' },
           { n: 2, label: 'להוביל',  desc: 'נתוני מכירות — לידים, שיחות ועסקאות' },
@@ -2374,11 +2361,12 @@ export default function Dashboard() {
           { n: 4, label: 'לספק',    desc: 'נתונים עסקיים — הכנסות, הוצאות ודרגה' },
           { n: 5, label: 'רפלקשן',  desc: 'סיכום החודש — נצחונות, פוקוס ופידבק' },
         ];
-        const mAccent = MSTEP_COLORS[monthlyStep];
-        const fBg     = 'rgb(var(--bg-elevated))';
-        const fBorder = '1px solid rgba(255,255,255,0.1)';
-        const mTotal  = MSTEP_META.length;
-        const canNext = monthlyStep < mTotal;
+        const ACCENT   = '#F5C118';
+        const BTN_TEXT = '#0f172a';
+        const fBg      = 'rgb(var(--bg-elevated))';
+        const fBorder  = '1px solid rgba(255,255,255,0.1)';
+        const mTotal   = MSTEP_META.length;
+        const canNext  = monthlyStep < mTotal;
 
         // Month/year picker from report_month "YYYY-MM"
         const rmParts  = (monthlyForm.report_month || '').split('-');
@@ -2414,7 +2402,7 @@ export default function Dashboard() {
           const label = lastSub?.current_rank;
           const seg = SEGMENTS.find(s => s.label === label);
           return (
-            <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: 'rgba(59,130,246,0.07)', border: '1px solid rgba(59,130,246,0.2)' }}>
+            <div className="rounded-xl p-4 flex items-center gap-3" style={{ background: 'rgba(245,193,24,0.06)', border: '1px solid rgba(245,193,24,0.15)' }}>
               <span className="text-2xl">🏅</span>
               <div>
                 <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>הדרגה תחושב אוטומטית</p>
@@ -2526,12 +2514,13 @@ export default function Dashboard() {
           </div>,
         ];
 
-        // gradient bar for 5 steps
+        // gradient progress bar — fills left (RTL: right is start, left is end)
         const gradBar = (() => {
           const stops = Object.values(MSTEP_COLORS).slice(0, monthlyStep);
           if (stops.length === 1) return stops[0];
           return `linear-gradient(to left, ${stops[0]}, ${stops[stops.length - 1]})`;
         })();
+        const mAccent = ACCENT;
 
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
@@ -2600,8 +2589,8 @@ export default function Dashboard() {
                   <button key={n} onClick={() => setMonthlyStep(n)}
                     className="flex-1 py-2.5 text-xs font-medium transition"
                     style={{
-                      color: monthlyStep === n ? MSTEP_COLORS[n] : 'rgba(255,255,255,0.3)',
-                      borderBottom: monthlyStep === n ? `2px solid ${MSTEP_COLORS[n]}` : '2px solid transparent',
+                      color: monthlyStep === n ? ACCENT : 'rgba(255,255,255,0.35)',
+                      borderBottom: monthlyStep === n ? `2px solid ${ACCENT}` : '2px solid transparent',
                       background: 'transparent',
                     }}>
                     {label}
@@ -2613,16 +2602,16 @@ export default function Dashboard() {
               <div className="flex overflow-hidden flex-1">
                 {/* Left — context panel */}
                 <div className="flex-none w-44 p-5 space-y-3 flex-shrink-0" style={{ borderLeft: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.015)' }}>
-                  <p className="text-xs font-bold tabular-nums" style={{ color: mAccent }}>
+                  <p className="text-xs font-bold tabular-nums" style={{ color: 'rgba(255,255,255,0.3)' }}>
                     {String(monthlyStep).padStart(2,'0')} / {String(mTotal).padStart(2,'0')}
                   </p>
                   <p className="text-sm font-bold text-white">{MSTEP_META[monthlyStep-1].label}</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
                     {MSTEP_META[monthlyStep-1].desc}
                   </p>
                   <div className="pt-2 space-y-1">
-                    <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.2)' }}>החודש המדווח</p>
-                    <p className="text-sm font-bold" style={{ color: mAccent }}>{monthLabel} {rmYear}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.25)' }}>החודש המדווח</p>
+                    <p className="text-sm font-bold" style={{ color: ACCENT }}>{monthLabel} {rmYear}</p>
                   </div>
                 </div>
 
@@ -2636,22 +2625,22 @@ export default function Dashboard() {
               <div className="flex items-center justify-between px-5 py-4 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 <button
                   onClick={() => monthlyStep === 1 ? (setModal(null), setEditingSubmission(null), setMonthlyStep(1)) : setMonthlyStep(s => s - 1)}
-                  className="rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
-                  style={{ color: 'rgba(255,255,255,0.55)' }}>
-                  {monthlyStep === 1 ? '← ביטול' : '← חזרה'}
+                  className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition hover:bg-white/10"
+                  style={{ color: 'rgba(255,255,255,0.6)' }}>
+                  {monthlyStep === 1 ? <><ChevronLeft size={15} /> ביטול</> : <><ChevronLeft size={15} /> חזרה</>}
                 </button>
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>שלב {monthlyStep} מתוך {mTotal}</span>
                 {canNext ? (
                   <button onClick={() => setMonthlyStep(s => s + 1)}
                     className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90"
-                    style={{ background: MSTEP_COLORS[monthlyStep + 1], color: '#1e3a8a' }}>
-                    הבא: {MSTEP_META[monthlyStep].label} →
+                    style={{ background: ACCENT, color: BTN_TEXT }}>
+                    {MSTEP_META[monthlyStep].label} <ChevronRight size={15} />
                   </button>
                 ) : (
-                  <button onClick={submitMonthly}
-                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90"
-                    style={{ background: mAccent, color: '#fff' }}>
-                    שלח סיכום {monthLabel} ✓
+                  <button onClick={submitMonthly} disabled={monthlySubmitting}
+                    className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-bold transition hover:opacity-90 disabled:opacity-60"
+                    style={{ background: ACCENT, color: BTN_TEXT }}>
+                    {monthlySubmitting ? 'שולח...' : `שלח סיכום ${monthLabel} ✓`}
                   </button>
                 )}
               </div>
