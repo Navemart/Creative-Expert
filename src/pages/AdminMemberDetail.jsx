@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, ChevronRight, CheckSquare, Square } from 'lucide-react';
+import { useDialog } from '../components/Dialog.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -588,6 +589,7 @@ function StatusPicker({ value, onChange, saving }) {
 // ── MAIN ───────────────────────────────────────────────────────
 export default function AdminMemberDetail() {
   const navigate    = useNavigate();
+  const dialog      = useDialog();
   const { state }   = useLocation();
   const student     = state?.student     || null;
   const roadmap     = state?.roadmap     || null;
@@ -669,12 +671,12 @@ export default function AdminMemberDetail() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        alert(`שגיאה בשמירה: ${err.error || res.status}`);
+        await dialog.alert(`שגיאה בשמירה: ${err.error || res.status}`);
         return;
       }
       setMemberStatus(newStatus);
     } catch (e) {
-      alert(`שגיאה: ${e.message}`);
+      await dialog.alert(`שגיאה: ${e.message}`);
     } finally {
       setSaving(false);
     }

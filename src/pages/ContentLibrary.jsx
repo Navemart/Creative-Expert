@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useIsAdmin } from '../hooks/useIsAdmin.js';
+import { useDialog } from '../components/Dialog.jsx';
 import { supabase } from '../lib/supabase.js';
 import { ExternalLink, Camera, X, Move, Pencil, Check, Link, Loader } from 'lucide-react';
 
@@ -445,6 +446,7 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
 // ── Page ──────────────────────────────────────────────────────
 export default function ContentLibrary() {
   const isAdmin = useIsAdmin();
+  const dialog  = useDialog();
   const [serverData, setServerData] = useState({});
   const [loading,    setLoading]    = useState(true);
 
@@ -481,7 +483,7 @@ export default function ContentLibrary() {
 
       if (upErr) {
         console.error('Storage upload error:', upErr);
-        alert(`שגיאה בהעלאת תמונה:\n${upErr.message}\n\nוודא שהרצת את ה-SQL של הרשאות Storage ב-Supabase.`);
+        await dialog.alert(`שגיאה בהעלאת תמונה: ${upErr.message}\n\nוודא שהרצת את ה-SQL של הרשאות Storage ב-Supabase.`);
         return;
       }
 
@@ -497,7 +499,7 @@ export default function ContentLibrary() {
       setServerData(prev => ({ ...prev, [key]: { ...prev[key], key, image_url: imageUrl, image_pos_x: 50, image_pos_y: 50 } }));
     } catch (err) {
       console.error('uploadImage failed:', err);
-      alert(`שגיאה לא צפויה: ${err.message}`);
+      await dialog.alert(`שגיאה לא צפויה: ${err.message}`);
     }
   }
 

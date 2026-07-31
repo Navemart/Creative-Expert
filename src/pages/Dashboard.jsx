@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTrackPage } from '../hooks/useTrack.js';
+import { useDialog } from '../components/Dialog.jsx';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
@@ -867,6 +868,7 @@ export default function Dashboard() {
   const userId    = user?.id;
   const firstName = user?.firstName || 'there';
   const isAdmin   = useIsAdmin();
+  const dialog    = useDialog();
 
   const [labelEditMode, setLabelEditMode] = useState(false);
   const [labels,        setLabels]        = useState(DEFAULT_LABELS);
@@ -1362,7 +1364,7 @@ export default function Dashboard() {
 
   async function submitMonthly() {
     if (monthlySubmitting) return;
-    if (!monthlyForm.report_month) { alert('חסר תאריך הדיווח'); return; }
+    if (!monthlyForm.report_month) { await dialog.alert('חסר תאריך הדיווח', { title: 'שדה חסר' }); return; }
     setMonthlySubmitting(true);
     try {
     // ── inner body wrapped in try/catch ──────────────────────
@@ -1496,20 +1498,20 @@ export default function Dashboard() {
 
     if (editingSubmission) {
       const { error } = await supabase.from('monthly_submissions').update(payload).eq('id', editingSubmission.id);
-      if (error) { alert('שגיאה בשמירה: ' + error.message); return; }
+      if (error) { await dialog.alert('שגיאה בשמירה: ' + error.message); return; }
       setEditingSubmission(null);
     } else {
       // Check for duplicate month
       const exists = monthlyData.some(m => m.month?.slice(0, 7) === fullDate.slice(0, 7));
       if (exists) {
-        const ok = window.confirm(`כבר קיים דיווח לחודש ${monthlyForm.report_month}. האם לעדכן אותו?`);
+        const ok = await dialog.confirm(`כבר קיים דיווח לחודש ${monthlyForm.report_month}. האם לעדכן אותו?`, { title: 'דיווח קיים', confirmText: 'עדכן', cancelText: 'ביטול', danger: false });
         if (!ok) return;
         const existing = monthlyData.find(m => m.month?.slice(0, 7) === fullDate.slice(0, 7));
         const { error } = await supabase.from('monthly_submissions').update(payload).eq('id', existing.id);
-        if (error) { alert('שגיאה בעדכון: ' + error.message); return; }
+        if (error) { await dialog.alert('שגיאה בעדכון: ' + error.message); return; }
       } else {
         const { error } = await supabase.from('monthly_submissions').insert(payload);
-        if (error) { alert('שגיאה בשמירה: ' + error.message); return; }
+        if (error) { await dialog.alert('שגיאה בשמירה: ' + error.message); return; }
       }
     }
 
@@ -1534,7 +1536,7 @@ export default function Dashboard() {
     fetchAll();
     } catch (err) {
       console.error('submitMonthly error:', err);
-      alert('שגיאה בשמירה: ' + (err?.message || String(err)));
+      await dialog.alert('שגיאה בשמירה: ' + (err?.message || String(err)));
     } finally {
       setMonthlySubmitting(false);
     }
