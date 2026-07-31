@@ -2352,6 +2352,7 @@ export default function Dashboard() {
       )}
 
       {modal === 'monthly' && (() => {
+        try {
         // Progress bar keeps a gradient for visual progress; all UI uses accent yellow
         const MSTEP_COLORS = { 1: '#f97316', 2: '#eab308', 3: '#22c55e', 4: '#3b82f6', 5: '#F5C118' };
         const MSTEP_META = [
@@ -2647,6 +2648,16 @@ export default function Dashboard() {
             </div>
           </div>
         );
+        } catch(e) {
+          console.error('Monthly modal render error:', e);
+          return <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
+            <div dir="rtl" className="rounded-2xl p-6 max-w-sm w-full" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <p className="text-white font-bold mb-2">שגיאה בטעינת הטופס</p>
+              <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>{e?.message}</p>
+              <button onClick={() => setModal(null)} className="rounded-lg px-4 py-2 text-sm" style={{ background: '#F5C118', color: '#0f172a', fontWeight: 700 }}>סגור</button>
+            </div>
+          </div>;
+        }
       })()}
 
       {modal === 'edit' && (
