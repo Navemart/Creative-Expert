@@ -845,6 +845,22 @@ function EditableText({ labelKey, labels, onSave, editMode, className, style, as
 }
 
 // ── Dashboard ─────────────────────────────────────────────────
+function nextReportMonth(submissions) {
+  if (!submissions?.length) {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+  const last = submissions
+    .map(s => s.month || s.report_month || '')
+    .filter(Boolean)
+    .sort()
+    .at(-1)
+    .slice(0, 7); // "YYYY-MM"
+  const [y, m] = last.split('-').map(Number);
+  const next = new Date(y, m, 1); // m is already 0-based after +1 month
+  return `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}`;
+}
+
 export default function Dashboard() {
   useTrackPage('דשבורד');
   const { user } = useUser();
@@ -1573,9 +1589,7 @@ export default function Dashboard() {
             onDeal={() => setModal('deal')}
             onWin={() => { setWinStep(1); setModal('win'); }}
             onMonthly={() => {
-              const _prev = new Date(); _prev.setDate(1); _prev.setMonth(_prev.getMonth() - 1);
-              const _prevStr = `${_prev.getFullYear()}-${String(_prev.getMonth()+1).padStart(2,'0')}`;
-              setMonthlyForm({ report_month: _prevStr, total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '', new_clients: '', client_satisfaction: '', on_time_delivery: '', biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '', nps: '', program_feedback: '' });
+              setMonthlyForm({ report_month: nextReportMonth(monthlyData), total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '', new_clients: '', client_satisfaction: '', on_time_delivery: '', biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '', nps: '', program_feedback: '' });
               setEditingSubmission(null); setModal('monthly');
             }}
           />
@@ -1621,7 +1635,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Calendar size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
                   <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-white leading-tight">מלא נתונים חודשיים</p><p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>סיכום חודשי לחודש הנוכחי</p></div>
-                  <button onClick={() => setModal('monthly')} className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
+                  <button onClick={() => { setMonthlyForm(f => ({ ...f, report_month: nextReportMonth(monthlyData) })); setEditingSubmission(null); setModal('monthly'); }} className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
                 </div>
               )}
               {showRoadmapTask && (
