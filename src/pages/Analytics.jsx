@@ -23,7 +23,6 @@ function num(v)       { const n = Number(v); return isNaN(n) ? 0 : n; }
 function fmtDate(d)   { if (!d) return '—'; return new Date(d).toLocaleDateString('he-IL', { day:'numeric', month:'short', year:'2-digit' }); }
 
 function computeClientPaid(c) {
-  useTrackPage('נתונים עסקיים');
   const plan = c.installment_plan;
   if (plan?.length) return plan.filter(i => i.paid).reduce((s,i) => s + Math.round((parseFloat(i.percentage)||0)/100*(c.deal_amount||0)), 0);
   return c.paid_amount || 0;
@@ -152,6 +151,7 @@ function FunnelRow({ label, value, total, color, sub }) {
 // MAIN
 // ══════════════════════════════════════════════════════════════
 export default function Analytics() {
+  useTrackPage('נתונים עסקיים');
   const { user }   = useUser();
   const userId     = user?.id;
 

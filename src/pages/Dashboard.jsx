@@ -50,7 +50,6 @@ const FLYWHEEL_STAGES = [
 ];
 
 function getRank(amount) {
-  useTrackPage('דשבורד');
   return [...SEGMENTS].reverse().find(s => amount >= s.min) || SEGMENTS[0];
 }
 
@@ -847,6 +846,7 @@ function EditableText({ labelKey, labels, onSave, editMode, className, style, as
 
 // ── Dashboard ─────────────────────────────────────────────────
 export default function Dashboard() {
+  useTrackPage('דשבורד');
   const { user } = useUser();
   const userId    = user?.id;
   const firstName = user?.firstName || 'there';

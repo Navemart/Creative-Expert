@@ -16,7 +16,6 @@ const MONTH_HE = [
 const DAY_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 
 function fmtTime(dateStr) {
-  useTrackPage('פגישות');
   return new Date(dateStr).toLocaleTimeString('he-IL', {
     hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem',
   });
@@ -394,6 +393,7 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin,
 
 // ── Main page ──────────────────────────────────────────────────
 export default function ZoomRecordings() {
+  useTrackPage('פגישות');
   const { user }    = useUser();
   const isAdmin     = user?.id === ADMIN_ID;
 

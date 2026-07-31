@@ -30,7 +30,6 @@ function toDateStr(d)  { return d.toISOString().split('T')[0]; }
 function fmtHebDate(d) { return d.toLocaleDateString('he-IL', { weekday:'long', day:'numeric', month:'long' }); }
 function fmtMin(m)     { return m >= 60 ? `${Math.floor(m/60)}ש'${m%60>0?` ${m%60}ד'`:''}` : `${m} דק'`; }
 function fmtSecs(s) {
-  useTrackPage('מארגן משימות');
   return s >= 3600
     ? `${Math.floor(s/3600)}:${String(Math.floor((s%3600)/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`
     : `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
@@ -58,6 +57,7 @@ const S = {
 
 // ══════════════════════════════════════════════════════════════
 export default function TaskManager() {
+  useTrackPage('מארגן משימות');
   const { user }    = useUser();
   const userId      = user?.id;
   const { confirm } = useDialog();

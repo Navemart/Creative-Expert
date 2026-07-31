@@ -258,9 +258,7 @@ export default function AdminCheckins() {
   const [expandedId, setExpandedId] = useState(null);
   const dragId = useRef(null);
 
-  if (user && user.id !== ADMIN_ID) {
-    return <div style={{ display: 'flex', height: 240, alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>אין גישה</div>;
-  }
+  const isUnauthorized = user && user.id !== ADMIN_ID;
 
   async function fetchAll() {
     setLoading(true);
@@ -326,6 +324,10 @@ export default function AdminCheckins() {
     } else {
       setStudents(prev => prev.map(s => s.id === id ? { ...s, column: colKey } : s));
     }
+  }
+
+  if (isUnauthorized) {
+    return <div style={{ display: 'flex', height: 240, alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>אין גישה</div>;
   }
 
   const counts = Object.fromEntries(COLUMNS.map(c => [c.key, students.filter(s => s.column === c.key).length]));

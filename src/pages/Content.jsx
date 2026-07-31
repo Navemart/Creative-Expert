@@ -4,7 +4,7 @@ import { useUser } from '@clerk/clerk-react';
 import {
   Instagram, Users, Heart, TrendingUp,
   RefreshCw, LogOut, ExternalLink, MessageCircle, AlertCircle,
-  Video, Image, Layers,
+  Video, Image, Layers, Eye,
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,

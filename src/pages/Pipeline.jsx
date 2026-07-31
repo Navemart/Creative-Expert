@@ -37,7 +37,6 @@ const EMPTY_LEAD = {
 };
 
 function fmtDate(d) {
-  useTrackPage('לידים ומכירות');
   if (!d) return null;
   return new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'short', year: '2-digit' });
 }
@@ -305,6 +304,7 @@ const COLS = [
 
 // ── Main ──────────────────────────────────────────────────────
 export default function Pipeline() {
+  useTrackPage('לידים ומכירות');
   const { user } = useUser();
   const userId   = user?.id;
   const navigate = useNavigate();

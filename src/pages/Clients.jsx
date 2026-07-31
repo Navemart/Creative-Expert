@@ -19,7 +19,6 @@ const STATUS = {
   inactive: { label: 'לא פעיל',       color: '#64748b', bg: 'rgba(100,116,139,0.08)', border: 'rgba(100,116,139,0.20)' },
 };
 function normStatus(s) {
-  useTrackPage('לקוחות ופרויקטים');
   if (STATUS[s]) return s;
   return { '#22c55e': 'green', '#f97316': 'orange', '#ef4444': 'red' }[s] || 'green';
 }
@@ -1294,6 +1293,7 @@ function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onTogg
 
 // ── Main ──────────────────────────────────────────────────────
 export default function Clients() {
+  useTrackPage('לקוחות ופרויקטים');
   const { user } = useUser();
   const userId   = user?.id;
   const location = useLocation();

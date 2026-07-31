@@ -431,9 +431,7 @@ export default function AdminMembersGrid() {
   const [refreshing,    setRefreshing]    = useState(false);
   const [unposted,      setUnposted]      = useState({ wins: 0, deals: 0 });
 
-  if (user && user.id !== ADMIN_ID) {
-    return <div style={{ display: 'flex', height: 240, alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>אין גישה</div>;
-  }
+  const isUnauthorized = user && user.id !== ADMIN_ID;
 
   async function fetchAll() {
     setLoading(true);
@@ -491,6 +489,10 @@ export default function AdminMembersGrid() {
     });
     return list;
   }, [students, filter, search, sortKey, sortDir]);
+
+  if (isUnauthorized) {
+    return <div style={{ display: 'flex', height: 240, alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>אין גישה</div>;
+  }
 
   const bgPage = 'transparent';
   const borderClr = 'rgba(255,255,255,0.1)';

@@ -22,7 +22,6 @@ const CATEGORY_COLORS = {
   'AI & Systems': { bg: 'rgba(20,184,166,0.18)',  color: '#5eead4' },
 };
 function categoryStyle(label) {
-  useTrackPage('מפת דרכים');
   return CATEGORY_COLORS[label] || { bg: 'rgba(245,193,24,0.15)', color: '#F5C118' };
 }
 
@@ -143,6 +142,7 @@ function Modal({ title, onClose, children }) {
 
 // ── Roadmap ───────────────────────────────────────────────────
 export default function Roadmap() {
+  useTrackPage('מפת דרכים');
   const { user }  = useUser();
   const userId    = user?.id;
   const isAdmin   = useIsAdmin();

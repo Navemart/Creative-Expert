@@ -1294,13 +1294,7 @@ export default function AdminStudents() {
     setOpenStudentId(prev => prev === id ? null : id);
   }
 
-  if (user && user.id !== ADMIN_ID) {
-    return (
-      <div className="flex h-64 items-center justify-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
-        אין גישה
-      </div>
-    );
-  }
+  const isUnauthorized = user && user.id !== ADMIN_ID;
 
   async function fetchStudents() {
     setLoading(true); setError(null);
@@ -1379,6 +1373,14 @@ export default function AdminStudents() {
             onUpdateProfile={updateProfile}
           />
         ))}
+      </div>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <div className="flex h-64 items-center justify-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
+        אין גישה
       </div>
     );
   }
