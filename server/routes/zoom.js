@@ -67,6 +67,52 @@ async function getZoomToken() {
   return data.access_token;
 }
 
+// ── Phonetic name matching ────────────────────────────────────
+const HEBREW_LATIN = {
+  'א':'', 'ב':'b', 'ג':'g', 'ד':'d', 'ה':'h', 'ו':'o',
+  'ז':'z', 'ח':'h', 'ט':'t', 'י':'i', 'כ':'k', 'ך':'k',
+  'ל':'l', 'מ':'m', 'ם':'m', 'נ':'n', 'ן':'n', 'ס':'s',
+  'ע':'', 'פ':'p', 'ף':'f', 'צ':'ts','ץ':'ts','ק':'k',
+  'ר':'r', 'ש':'sh','ת':'t',
+};
+function translitHebrew(w) {
+  return w.split('').map(c => HEBREW_LATIN[c] !== undefined ? HEBREW_LATIN[c] : c).join('').toLowerCase();
+}
+function soundex(w) {
+  const CODES = { b:1,f:1,p:1,v:1, c:2,g:2,j:2,k:2,q:2,s:2,x:2,z:2, d:3,t:3, l:4, m:5,n:5, r:6 };
+  const s = w.toLowerCase().replace(/[^a-z]/g, '');
+  if (!s) return '';
+  let code = s[0].toUpperCase(), prev = CODES[s[0]] || 0;
+  for (let i = 1; i < s.length && code.length < 4; i++) {
+    const c = CODES[s[i]];
+    if (c && c !== prev) code += c;
+    prev = c || 0;
+  }
+  return code.padEnd(4, '0');
+}
+// Returns a match function for a student given their name and email
+function buildParticipantMatcher(name, email) {
+  const emailLow   = (email || '').toLowerCase();
+  const nameParts  = (name || '').toLowerCase().split(/\s+/).filter(w => w.length > 1);
+  // Soundex codes: try original word + transliterated (for Hebrew→English)
+  const studentSx  = [...new Set(nameParts.flatMap(p => [soundex(p), soundex(translitHebrew(p))]).filter(Boolean))];
+
+  return function match(p) {
+    const pEmail = (p.user_email || '').toLowerCase();
+    const pName  = (p.name || '').toLowerCase();
+
+    if (emailLow && pEmail === emailLow) return true;
+    for (const part of nameParts) if (pName.includes(part)) return true;
+
+    // Phonetic: compare Soundex of each participant word against student codes
+    const pWords = pName.split(/\s+/).filter(w => w.length > 1);
+    for (const pw of pWords) {
+      if (studentSx.includes(soundex(pw))) return true;
+    }
+    return false;
+  };
+}
+
 // ── Resolve which user to query ───────────────────────────────
 function getZoomUser() {
   return process.env.ZOOM_USER_EMAIL || 'me';
@@ -709,6 +755,255 @@ router.get('/debug', async (req, res) => {
 
     res.json({ userId, total: allMeetings.length, topics, fileTypes });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/zoom/attendance ─────────────────────────────────────
+// Returns all meetings from Jan 2026 with whether a given student attended.
+// Query params: email (primary match), name (fallback)
+router.get('/attendance', async (req, res) => {
+  const { email, name, enrolled_at } = req.query;
+  if (!email && !name) return res.status(400).json({ error: 'email or name required' });
+  const enrolledDate = enrolled_at ? new Date(enrolled_at) : new Date('2026-01-01');
+
+  try {
+    const token  = await getZoomToken();
+    const userId = getZoomUser();
+
+    // Fetch from enrolled_at (or Jan 2026 minimum) → today
+    const now   = new Date();
+    const start = enrolledDate > new Date(2026, 0, 1) ? enrolledDate : new Date(2026, 0, 1);
+    const months = [];
+    const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+    while (cur <= now) {
+      months.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+
+    // Collect all meetings
+    const allMeetings = [];
+    for (const month of months) {
+      const [y, m] = month.split('-').map(Number);
+      const from   = `${month}-01`;
+      const to     = `${month}-${new Date(y, m, 0).getDate()}`;
+      const data   = await fetchMonthRecordings(token, userId, from, to);
+      allMeetings.push(...(data || []));
+    }
+
+    // Filter to only relevant meeting types (same logic as Recordings page)
+    function isRelevantMeeting(topic) {
+      const t = (topic || '').toLowerCase();
+      return t.includes('מעבדת') || t.includes('שבועי') || t.includes('masterclass') || t.includes('מאסטר');
+    }
+
+    // Sort newest first, deduplicate by uuid, keep only relevant meetings on/after enrolled_at
+    const seen = new Set();
+    const meetings = allMeetings
+      .filter(m => isRelevantMeeting(m.topic))
+      .filter(m => !m.start_time || new Date(m.start_time) >= enrolledDate)
+      .filter(m => { if (seen.has(m.uuid)) return false; seen.add(m.uuid); return true; })
+      .sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+
+    // Fetch participants in parallel (batches of 8 to avoid rate limiting)
+    const isMatch = buildParticipantMatcher(name, email);
+
+    async function fetchParticipants(meeting) {
+      try {
+        const uuid = meeting.uuid.includes('/') || meeting.uuid.includes('+')
+          ? encodeURIComponent(encodeURIComponent(meeting.uuid))
+          : encodeURIComponent(meeting.uuid);
+        const partRes = await fetch(
+          `https://api.zoom.us/v2/report/meetings/${uuid}/participants?page_size=300`,
+          { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(8000) }
+        );
+        if (!partRes.ok) return { ...meeting, attended: null, participant_count: null };
+        const partData = await partRes.json();
+        const participants = partData.participants || [];
+        const attended = participants.some(isMatch);
+        return { ...meeting, attended, participant_count: participants.length };
+      } catch (_) {
+        return { ...meeting, attended: null, participant_count: null };
+      }
+    }
+
+    // Batch into groups of 8
+    const result = [];
+    for (let i = 0; i < meetings.length; i += 8) {
+      const batch = meetings.slice(i, i + 8);
+      const settled = await Promise.all(batch.map(fetchParticipants));
+      result.push(...settled);
+    }
+
+    res.json({ meetings: result });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /api/zoom/attendance-debug ──────────────────────────────
+// Returns raw participant names/emails for the last N meetings (admin only).
+router.get('/attendance-debug', async (req, res) => {
+  const adminId = process.env.VITE_ADMIN_USER_ID;
+  if (!adminId || req.headers['x-admin-id'] !== adminId) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    const token  = await getZoomToken();
+    const userId = getZoomUser();
+    const now    = new Date();
+    const from   = new Date(now); from.setMonth(from.getMonth() - 2);
+    const meetings = await fetchMonthRecordings(token, userId, from.toISOString().slice(0,10), now.toISOString().slice(0,10));
+
+    function isRelevantMeeting(topic) {
+      const t = (topic || '').toLowerCase();
+      return t.includes('מעבדת') || t.includes('שבועי');
+    }
+    const seen = new Set();
+    const relevant = meetings
+      .filter(m => isRelevantMeeting(m.topic) && m.start_time && new Date(m.start_time) < now)
+      .filter(m => { if (seen.has(m.uuid)) return false; seen.add(m.uuid); return true; })
+      .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
+      .slice(0, 3);
+
+    const result = [];
+    for (const meeting of relevant) {
+      const uuid = meeting.uuid.includes('/') || meeting.uuid.includes('+')
+        ? encodeURIComponent(encodeURIComponent(meeting.uuid))
+        : encodeURIComponent(meeting.uuid);
+      const r = await fetch(
+        `https://api.zoom.us/v2/report/meetings/${uuid}/participants?page_size=300`,
+        { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000) }
+      );
+      const d = await r.json();
+      result.push({
+        topic: meeting.topic,
+        date: meeting.start_time?.slice(0,10),
+        participants: (d.participants || []).map(p => ({ name: p.name, email: p.user_email })),
+      });
+    }
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── In-memory cache for attendance alerts (refreshed every hour) ──
+let _alertsCache = null;
+let _alertsCacheAt = 0;
+const ALERTS_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+// ── GET /api/zoom/attendance-alerts ─────────────────────────────
+// Returns students who missed 3+ consecutive meetings (newest first).
+// Uses a 1-hour in-memory cache to avoid hammering Zoom API.
+router.get('/attendance-alerts', async (req, res) => {
+  const adminId = process.env.VITE_ADMIN_USER_ID;
+  if (!adminId || req.headers['x-admin-id'] !== adminId) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
+  // Serve cache if fresh
+  if (_alertsCache && Date.now() - _alertsCacheAt < ALERTS_TTL_MS) {
+    return res.json({ alerts: _alertsCache, cached: true });
+  }
+
+  try {
+    const token  = await getZoomToken();
+    const userId = getZoomUser();
+    const now    = new Date();
+
+    // 1. Fetch last 3 months of recordings
+    const allMeetings = [];
+    for (let i = 0; i < 3; i++) {
+      const to   = new Date(now); to.setMonth(to.getMonth() - i);
+      const from = new Date(to);  from.setMonth(from.getMonth() - 1);
+      const data = await fetchMonthRecordings(
+        token, userId,
+        from.toISOString().slice(0, 10),
+        to.toISOString().slice(0, 10)
+      );
+      allMeetings.push(...(data || []));
+    }
+
+    function isRelevantMeeting(topic) {
+      const t = (topic || '').toLowerCase();
+      return t.includes('מעבדת') || t.includes('שבועי') || t.includes('masterclass') || t.includes('מאסטר');
+    }
+
+    // Deduplicate + filter + sort newest first + keep only past meetings
+    const seen = new Set();
+    const meetings = allMeetings
+      .filter(m => isRelevantMeeting(m.topic) && m.start_time && new Date(m.start_time) < now)
+      .filter(m => { if (seen.has(m.uuid)) return false; seen.add(m.uuid); return true; })
+      .sort((a, b) => new Date(b.start_time) - new Date(a.start_time))
+      .slice(0, 15); // last 15 meetings is enough
+
+    // 2. Fetch participants for each meeting (batches of 8)
+    async function getMeetingParticipants(meeting) {
+      try {
+        const uuid = meeting.uuid.includes('/') || meeting.uuid.includes('+')
+          ? encodeURIComponent(encodeURIComponent(meeting.uuid))
+          : encodeURIComponent(meeting.uuid);
+        const r = await fetch(
+          `https://api.zoom.us/v2/report/meetings/${uuid}/participants?page_size=300`,
+          { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(8000) }
+        );
+        if (!r.ok) return { uuid: meeting.uuid, start_time: meeting.start_time, topic: meeting.topic, participants: [] };
+        const d = await r.json();
+        return { uuid: meeting.uuid, start_time: meeting.start_time, topic: meeting.topic, participants: d.participants || [] };
+      } catch {
+        return { uuid: meeting.uuid, start_time: meeting.start_time, topic: meeting.topic, participants: [] };
+      }
+    }
+
+    const meetingData = [];
+    for (let i = 0; i < meetings.length; i += 8) {
+      const batch = await Promise.all(meetings.slice(i, i + 8).map(getMeetingParticipants));
+      meetingData.push(...batch);
+    }
+
+    // 3. Get all active students
+    const { data: students } = await supabase
+      .from('members')
+      .select('id, first_name, email, enrolled_at, image_url')
+      .eq('status', 'active');
+
+    if (!students?.length) {
+      _alertsCache = [];
+      _alertsCacheAt = Date.now();
+      return res.json({ alerts: [] });
+    }
+
+    // 4. For each student, find their last 3 relevant meetings and check attendance
+    const alerts = [];
+    for (const student of students) {
+      const enrolledDate = student.enrolled_at ? new Date(student.enrolled_at) : new Date('2026-01-01');
+      const isMatch = buildParticipantMatcher(student.first_name, student.email);
+
+      // Only meetings on/after enrollment date
+      const studentMeetings = meetingData.filter(m => new Date(m.start_time) >= enrolledDate);
+      if (studentMeetings.length < 3) continue; // not enough data yet
+
+      // Last 3 meetings
+      const last3 = studentMeetings.slice(0, 3);
+      const missedAll = last3.every(m => !m.participants.some(isMatch));
+
+      if (missedAll) {
+        alerts.push({
+          id: student.id,
+          name: student.first_name,
+          email: student.email,
+          image_url: student.image_url,
+          missed_since: last3[last3.length - 1].start_time, // oldest of the 3
+        });
+      }
+    }
+
+    _alertsCache = alerts;
+    _alertsCacheAt = Date.now();
+    res.json({ alerts });
+  } catch (err) {
+    console.error('[attendance-alerts]', err.message);
     res.status(500).json({ error: err.message });
   }
 });

@@ -3,9 +3,10 @@ import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, Extern
 import { NavLink } from 'react-router-dom';
 import { useUser, SignedIn, SignedOut, SignInButton, useClerk } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
-import { usePaymentAlerts }  from '../hooks/usePaymentAlerts.js';
-import { useNpsAlerts }      from '../hooks/useNpsAlerts.js';
-import { useCheckinAlerts }  from '../hooks/useCheckinAlerts.js';
+import { usePaymentAlerts }      from '../hooks/usePaymentAlerts.js';
+import { useNpsAlerts }          from '../hooks/useNpsAlerts.js';
+import { useCheckinAlerts }      from '../hooks/useCheckinAlerts.js';
+import { useAttendanceAlerts }   from '../hooks/useAttendanceAlerts.js';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -87,11 +88,11 @@ function RankUpgradeRow({ item, onApprove, onReject }) {
   return (
     <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+        <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
           {item.image_url ? <img src={item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (item.first_name || '?')[0].toUpperCase()}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(255,255,255,0.88)' }}>{item.first_name}</p>
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.88)' }}>{item.first_name}</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
             <span style={{ fontSize: '0.625rem', fontWeight: 700, color: fromColor }}>{item.current_rank}</span>
             <span style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.3)' }}>→</span>
@@ -99,7 +100,7 @@ function RankUpgradeRow({ item, onApprove, onReject }) {
           </div>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 8, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
+      <div style={{ display: 'flex', gap: 8, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: 10 }}>
         <span>{fmtK(item.month_1_income)}</span>
         <span>·</span>
         <span>{fmtK(item.month_2_income)}</span>
@@ -119,6 +120,32 @@ function RankUpgradeRow({ item, onApprove, onReject }) {
   );
 }
 
+// ── Attendance alert row ──────────────────────────────────────
+function AttendanceAlertRow({ item }) {
+  const navigate = useNavigate();
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) : '';
+  return (
+    <button
+      onClick={() => navigate(`/admin/students/${item.id}`)}
+      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+    >
+      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+        {item.image_url
+          ? <img src={item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : (item.name || '?')[0].toUpperCase()}
+      </div>
+      <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#ef4444' }}>
+          לא הגיע ל-3 פגישות ברצף {item.missed_since ? `· מ-${fmtDate(item.missed_since)}` : ''}
+        </p>
+      </div>
+    </button>
+  );
+}
+
 // ── Notification panel ─────────────────────────────────────────
 function CheckinAlertRow({ student }) {
   const navigate = useNavigate();
@@ -129,14 +156,14 @@ function CheckinAlertRow({ student }) {
       onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
       onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
     >
-      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
         {student.image_url
           ? <img src={student.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           : (student.name || '?')[0].toUpperCase()}
       </div>
       <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
-        <p style={{ margin: '2px 0 0', fontSize: '0.6875rem', color: isOverdue ? '#ef4444' : '#f59e0b' }}>
+        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
+        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: isOverdue ? '#ef4444' : '#f59e0b' }}>
           {isOverdue
             ? student.days_since ? `פנייה לפני ${student.days_since} ימים` : 'מעולם לא נפנה'
             : 'צ׳קאין בקרוב'}
@@ -149,23 +176,33 @@ function CheckinAlertRow({ student }) {
   );
 }
 
-function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming, rankUpgrades, onApproveRank, onRejectRank }) {
+function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming, rankUpgrades, onApproveRank, onRejectRank, attendanceAlerts }) {
   const payTotal = upcoming.length + overdue.length;
-  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length;
+  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length + (attendanceAlerts?.length || 0);
   return (
     <div className="absolute left-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
       style={{ width: 340, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <span className="text-sm font-bold text-white">התראות</span>
+        <span className="text-base font-bold text-white">התראות</span>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{total === 0 ? 'הכל תקין ✓' : `${total} התראות`}</span>
       </div>
       {total === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10">
-          <span style={{ fontSize: '1.75rem' }}>🎉</span>
-          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.32)' }}>אין התראות פתוחות</span>
+          <span style={{ fontSize: '2.5rem' }}>🎉</span>
+          <span className="text-base" style={{ color: 'rgba(255,255,255,0.32)' }}>אין התראות פתוחות</span>
         </div>
       ) : (
         <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+          {/* היעדרויות ברצף */}
+          {attendanceAlerts?.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
+                style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
+                <AlertCircle size={11} /> היעדרויות ברצף — {attendanceAlerts.length}
+              </div>
+              {attendanceAlerts.map(item => <AttendanceAlertRow key={item.id} item={item} />)}
+            </>
+          )}
           {/* עליות דרגה ממתינות */}
           {rankUpgrades.length > 0 && (
             <>
@@ -337,7 +374,7 @@ function DailyPanel({ onClose }) {
           const v = scores[item.id] || 0;
           return (
             <div key={item.id} className="flex items-center gap-2 px-4 py-2">
-              <span className="flex-1 text-sm" style={{ color: v > 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)' }}>
+              <span className="flex-1 text-base" style={{ color: v > 0 ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.45)' }}>
                 {item.emoji} {item.label}
               </span>
               <div className="flex gap-1.5 flex-none">
@@ -442,7 +479,7 @@ function ToolsPanel({ onClose, isAdmin }) {
               <>
                 {t.internal ? (
                   <NavLink to={t.href} onClick={onClose}
-                    className="flex items-center gap-2.5 flex-1 text-sm"
+                    className="flex items-center gap-2.5 flex-1 text-base"
                     style={{ color: t.enabled?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.3)', textDecoration:'none' }}>
                     <span style={{fontSize:'0.9375rem'}}>{t.icon}</span>
                     <span>{t.label}</span>
@@ -450,7 +487,7 @@ function ToolsPanel({ onClose, isAdmin }) {
                   </NavLink>
                 ) : (
                   <a href={t.href} target="_blank" rel="noopener noreferrer" onClick={onClose}
-                    className="flex items-center gap-2.5 flex-1 text-sm"
+                    className="flex items-center gap-2.5 flex-1 text-base"
                     style={{ color: t.enabled?'rgba(255,255,255,0.85)':'rgba(255,255,255,0.3)', textDecoration:'none' }}>
                     <span style={{fontSize:'0.9375rem'}}>{t.icon}</span>
                     <span>{t.label}</span>
@@ -518,7 +555,7 @@ function ProfileAvatar() {
               style={{ background: 'rgba(245,193,24,0.2)', color: '#F5C118' }}>{initial}</div>
         }
       </div>
-      {firstName && <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>{firstName}</span>}
+      {firstName && <span className="text-base font-medium" style={{ color: 'rgba(255,255,255,0.75)' }}>{firstName}</span>}
     </button>
   );
 }
@@ -537,6 +574,7 @@ export default function Header({ onOpenMobile }) {
   const { upcoming, overdue, total: payTotal, dismiss, reload } = usePaymentAlerts();
   const { npsAlerts, dismissNps, npsTotal } = useNpsAlerts();
   const { checkinOverdue, checkinUpcoming, checkinTotal, reloadCheckins } = useCheckinAlerts();
+  const { alerts: attendanceAlerts, reload: reloadAttendance } = useAttendanceAlerts();
   const [rankUpgrades, setRankUpgrades] = useState([]);
 
   const reloadRankUpgrades = useCallback(async () => {
@@ -557,11 +595,11 @@ export default function Header({ onOpenMobile }) {
   }
 
   const rankUpgradeTotal = rankUpgrades.length;
-  const total      = payTotal + npsTotal + checkinTotal + rankUpgradeTotal;
+  const total      = payTotal + npsTotal + checkinTotal + rankUpgradeTotal + attendanceAlerts.length;
   const hasOverdue = overdue.length > 0 || npsTotal > 0 || checkinOverdue.length > 0;
   const badgeColor = hasOverdue ? '#ef4444' : rankUpgradeTotal > 0 ? '#a855f7' : '#f97316';
 
-  useEffect(() => { if (bellOpen) { reload(); reloadCheckins(); reloadRankUpgrades(); } }, [bellOpen]);
+  useEffect(() => { if (bellOpen) { reload(); reloadCheckins(); reloadRankUpgrades(); reloadAttendance(); } }, [bellOpen]);
 
   useEffect(() => {
     function handle(e) {
@@ -603,7 +641,7 @@ export default function Header({ onOpenMobile }) {
               </span>
             )}
           </button>
-          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} checkinOverdue={checkinOverdue} checkinUpcoming={checkinUpcoming} rankUpgrades={rankUpgrades} onApproveRank={approveRank} onRejectRank={rejectRank} />}
+          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} checkinOverdue={checkinOverdue} checkinUpcoming={checkinUpcoming} rankUpgrades={rankUpgrades} onApproveRank={approveRank} onRejectRank={rejectRank} attendanceAlerts={attendanceAlerts} />}
         </div>
 
         {/* ── Daily Standard (flame) ── */}
