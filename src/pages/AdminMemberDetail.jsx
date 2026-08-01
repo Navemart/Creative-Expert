@@ -99,7 +99,7 @@ function Section({ title, children, action }) {
 }
 
 // ── Tab: סקירה ─────────────────────────────────────────────────
-function OverviewTab({ student }) {
+function OverviewTab({ student, adminNotes, setAdminNotes, saveAdminNotes, savingNotes }) {
   const sorted = [...(student.monthly || [])].sort((a, b) => (b.month || '').localeCompare(a.month || ''));
   const latest = sorted[0] || null;
   const prev   = sorted[1] || null;
@@ -181,8 +181,12 @@ function OverviewTab({ student }) {
 
       {/* Right column: admin notes */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <Section title="הערות אדמין" action={<span style={{ fontSize: '0.625rem', color: muted }}>פרטי — התלמיד לא רואה</span>}>
-          <textarea placeholder="הוסף הערות על התלמיד — הקשר משיחות, דברים למעקב, דגלים פנימיים..."
+        <Section title="הערות אדמין" action={<span style={{ fontSize: '0.625rem', color: savingNotes ? '#F5C118' : muted }}>{savingNotes ? 'שומר...' : 'פרטי — התלמיד לא רואה'}</span>}>
+          <textarea
+            value={adminNotes}
+            onChange={e => setAdminNotes(e.target.value)}
+            onBlur={e => saveAdminNotes(e.target.value)}
+            placeholder="הוסף הערות על התלמיד — הקשר משיחות, דברים למעקב, דגלים פנימיים..."
             style={{ width: '100%', minHeight: 180, background: 'transparent', border: 'none', outline: 'none', color: dim, fontSize: '0.875rem', lineHeight: 1.6, resize: 'vertical', fontFamily: 'inherit' }} />
         </Section>
 
@@ -918,6 +922,8 @@ export default function AdminMemberDetail() {
   const [cadence, setCadence]         = useState(student?.checkin_cadence_days ?? 14);
   const [enrolledAt, setEnrolledAt]   = useState(student?.enrolled_at ? student.enrolled_at.slice(0, 10) : '');
   const [adminRank, setAdminRank]     = useState(student?.admin_rank || null);
+  const [adminNotes, setAdminNotes]   = useState(student?.admin_notes || '');
+  const [savingNotes, setSavingNotes] = useState(false);
   const [savingCadence, setSavingCadence]     = useState(false);
   const [savingEnrolled, setSavingEnrolled]   = useState(false);
   const [savingRank, setSavingRank]           = useState(false);
@@ -937,6 +943,7 @@ export default function AdminMemberDetail() {
           setCadence(found.checkin_cadence_days ?? 14);
           setEnrolledAt(found.enrolled_at ? found.enrolled_at.slice(0, 10) : '');
           setAdminRank(found.admin_rank || null);
+          setAdminNotes(found.admin_notes || '');
         }
       })
       .catch(() => {});
@@ -956,6 +963,19 @@ export default function AdminMemberDetail() {
   const sm            = STATUS_META[memberStatus] || STATUS_META.active;
   const effectiveRank = adminRank || student.auto_rank || student.latest_rank || null;
   const rankColor     = RANK_COLORS[effectiveRank] || '#9ca3af';
+
+  async function saveAdminNotes(notes) {
+    setSavingNotes(true);
+    try {
+      await fetch(`/api/admin/students/${student.id}/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-id': ADMIN_ID || '' },
+        body: JSON.stringify({ admin_notes: notes }),
+      });
+    } finally {
+      setSavingNotes(false);
+    }
+  }
 
   async function saveAdminRank(rank) {
     setSavingRank(true);
@@ -1090,7 +1110,7 @@ export default function AdminMemberDetail() {
       </div>
 
       {/* Content */}
-      {tab === 'overview' && <OverviewTab student={student} />}
+      {tab === 'overview' && <OverviewTab student={student} adminNotes={adminNotes} setAdminNotes={setAdminNotes} saveAdminNotes={saveAdminNotes} savingNotes={savingNotes} />}
       {tab === 'monthly'  && <MonthlyTab  student={student} />}
       {tab === 'wins'       && <WinsTab       student={student} />}
       {tab === 'deals'      && <DealsTab      student={student} />}

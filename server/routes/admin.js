@@ -50,7 +50,7 @@ router.get('/students', async (req, res) => {
       { data: completions },
     ] = await Promise.all([
       supabase.from('monthly_submissions').select('*').order('month'),
-      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active, member_status, checkin_cadence_days, admin_rank'),
+      supabase.from('student_profiles').select('user_id, health_status, enrolled_at, total_paid, is_active, member_status, checkin_cadence_days, admin_rank, admin_notes'),
       supabase.from('rank_upgrade_requests').select('*').eq('status', 'pending'),
       supabase.from('sunday_wins').select('*').order('week_date', { ascending: false }),
       supabase.from('deals').select('*').order('created_at', { ascending: false }),
@@ -112,6 +112,7 @@ router.get('/students', async (req, res) => {
           latest_rank:   latest?.current_rank || null,
           auto_rank:     calcAutoRank(userSubs),
           admin_rank:    profile?.admin_rank   || null,
+          admin_notes:   profile?.admin_notes  || null,
           effective_rank: profile?.admin_rank || calcAutoRank(userSubs),
           latest_month:  latest?.month || null,
           rank_request:  rankReq || null,
@@ -152,7 +153,7 @@ router.patch('/students/:userId/profile', async (req, res) => {
     } catch { body = {}; }
   }
 
-  const allowed = ['health_status', 'enrolled_at', 'total_paid', 'member_status', 'checkin_cadence_days', 'admin_rank'];
+  const allowed = ['health_status', 'enrolled_at', 'total_paid', 'member_status', 'checkin_cadence_days', 'admin_rank', 'admin_notes'];
   const updates = {};
   allowed.forEach(k => { if (body[k] !== undefined) updates[k] = body[k]; });
   if (!Object.keys(updates).length) return res.status(400).json({ error: 'Nothing to update' });
