@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, ChevronRight, CheckSquare, Square } from 'lucide-react';
 import { useDialog } from '../components/Dialog.jsx';
@@ -35,7 +35,6 @@ function fmt(n) {
   if (n == null || n === '') return '—';
   const v = num(n);
   if (v === 0) return '₪0';
-  if (v >= 1000) return `₪${Math.round(v / 1000)}K`;
   return '₪' + Math.round(v).toLocaleString('he-IL');
 }
 function fmtDate(d) {
@@ -200,24 +199,51 @@ function OverviewTab({ student }) {
 function MonthlyTab({ student }) {
   const sorted = [...(student.monthly || [])].sort((a, b) => (b.month || '').localeCompare(a.month || ''));
 
-  const allMonths = useMemo(() => {
-    if (!student.enrolled_at) return sorted.map(s => s.month?.slice(0, 7)).filter(Boolean);
-    const start = new Date(student.enrolled_at);
-    const end   = new Date();
-    const months = [];
-    const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-    while (cur <= end) {
-      months.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
-      cur.setMonth(cur.getMonth() + 1);
-    }
-    return months.reverse();
-  }, [student.enrolled_at]);
-
   const subMap = useMemo(() => {
     const m = {};
     (student.monthly || []).forEach(s => { if (s.month) m[s.month.slice(0, 7)] = s; });
     return m;
   }, [student.monthly]);
+
+  // Build month list: max(Dec 2025, month before enrolled_at) → current month
+  // Show row only if: has submission OR (overdue = past 10th of following month)
+  const rows = useMemo(() => {
+    const today  = new Date();
+    const result = [];
+
+    // Earliest possible start: December 2025
+    const programStart = new Date(2025, 11, 1);
+
+    // Student's start: one month before enrolled_at (or program start if no enrolled_at)
+    let studentStart = programStart;
+    if (student.enrolled_at) {
+      const e = new Date(student.enrolled_at);
+      const oneMonthBefore = new Date(e.getFullYear(), e.getMonth() - 1, 1);
+      studentStart = oneMonthBefore > programStart ? oneMonthBefore : programStart;
+    }
+
+    // Add any submissions that exist before studentStart (student reported voluntarily)
+    const keysInRange = new Set();
+    const cur = new Date(studentStart);
+    while (cur.getFullYear() < today.getFullYear() ||
+           (cur.getFullYear() === today.getFullYear() && cur.getMonth() <= today.getMonth())) {
+      const key      = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`;
+      keysInRange.add(key);
+      const hasSub   = !!subMap[key];
+      const deadline = new Date(cur.getFullYear(), cur.getMonth() + 1, 10);
+      const isOverdue = today >= deadline;
+      if (hasSub || isOverdue) result.push({ key, hasSub, isOverdue });
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    // Submissions outside the expected range — show them, never mark missing
+    Object.keys(subMap).forEach(key => {
+      if (!keysInRange.has(key)) result.push({ key, hasSub: true, isOverdue: false });
+    });
+    return result.sort((a, b) => b.key.localeCompare(a.key));
+  }, [subMap, student.enrolled_at]);
+
+  const submittedCount = rows.filter(r => r.hasSub).length;
+  const expectedCount  = rows.filter(r => r.hasSub || r.isOverdue).length;
 
   const COLS = ['חודש', 'הכנסה', 'הוצאות', 'רווח נטו', 'לידים', 'הגיעו', 'נסגרו', 'עוקבים', 'דרגה'];
 
@@ -225,22 +251,22 @@ function MonthlyTab({ student }) {
     <div style={{ borderRadius: 12, border, overflow: 'hidden' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 18px', borderBottom: border, background: 'rgba(255,255,255,0.02)' }}>
         <p style={{ fontSize: '0.75rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em', margin: 0 }}>נתונים חודשיים</p>
-        <span style={{ fontSize: '0.6875rem', color: muted }}>{sorted.length} / {allMonths.length} הוגשו</span>
+        <span style={{ fontSize: '0.6875rem', color: muted }}>{submittedCount} / {expectedCount} הוגשו</span>
       </div>
       {/* Header */}
       <div style={{ display: 'grid', gridTemplateColumns: '150px repeat(8, 1fr)', padding: '9px 18px', borderBottom: border, background: 'rgba(255,255,255,0.015)' }}>
         {COLS.map(c => <span key={c} style={{ fontSize: '0.625rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c}</span>)}
       </div>
-      {allMonths.map((m, i) => {
-        const sub     = subMap[m];
-        const missing = !sub;
-        const income  = sub ? num(sub.total_income || sub.amount) : 0;
-        const exp     = sub ? num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads) : 0;
-        const net     = income - exp;
-        const rc      = RANK_COLORS[sub?.current_rank] || muted;
+      {rows.map(({ key: m, hasSub, isOverdue }, i) => {
+        const sub    = subMap[m];
+        const missing = !hasSub && isOverdue;
+        const income = sub ? num(sub.total_income || sub.amount) : 0;
+        const exp    = sub ? num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads) : 0;
+        const net    = income - exp;
+        const rc     = RANK_COLORS[sub?.current_rank] || muted;
 
         return (
-          <div key={m} style={{ display: 'grid', gridTemplateColumns: '150px repeat(8, 1fr)', padding: '12px 18px', borderBottom: i < allMonths.length - 1 ? border : 'none', background: missing ? 'rgba(239,68,68,0.03)' : 'transparent', alignItems: 'center' }}>
+          <div key={m} style={{ display: 'grid', gridTemplateColumns: '150px repeat(8, 1fr)', padding: '12px 18px', borderBottom: i < rows.length - 1 ? border : 'none', background: missing ? 'rgba(239,68,68,0.03)' : 'transparent', alignItems: 'center' }}>
             <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: missing ? 'rgba(239,68,68,0.55)' : white }}>{fmtMonth(m)}</span>
             {missing
               ? <span style={{ fontSize: '0.75rem', color: 'rgba(239,68,68,0.4)', gridColumn: '2 / -1' }}>לא הוגש</span>
@@ -591,8 +617,10 @@ export default function AdminMemberDetail() {
   const navigate    = useNavigate();
   const dialog      = useDialog();
   const { state }   = useLocation();
-  const student     = state?.student     || null;
-  const roadmap     = state?.roadmap     || null;
+  const { userId: studentId } = useParams();
+  const [freshStudent, setFreshStudent] = useState(null);
+  const student     = freshStudent || state?.student || null;
+  const roadmap     = state?.roadmap     || {};
   const slackPhotos = state?.slackPhotos || {};
   const [tab, setTab]           = useState('overview');
   const [memberStatus, setMemberStatus] = useState(student?.member_status || 'active');
@@ -603,6 +631,25 @@ export default function AdminMemberDetail() {
   const [savingEnrolled, setSavingEnrolled]   = useState(false);
   const [savingRank, setSavingRank]           = useState(false);
   const [saving, setSaving]     = useState(false);
+
+  // Always re-fetch fresh data so new submissions appear without needing to reload the grid
+  useEffect(() => {
+    if (!studentId) return;
+    fetch('/api/admin/students', { headers: { 'x-admin-id': ADMIN_ID || '' } })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.students) return;
+        const found = data.students.find(s => s.id === studentId);
+        if (found) {
+          setFreshStudent(found);
+          setMemberStatus(found.member_status || 'active');
+          setCadence(found.checkin_cadence_days ?? 14);
+          setEnrolledAt(found.enrolled_at ? found.enrolled_at.slice(0, 10) : '');
+          setAdminRank(found.admin_rank || null);
+        }
+      })
+      .catch(() => {});
+  }, [studentId]);
 
   if (!student) {
     return (
