@@ -503,7 +503,7 @@ export default function Roadmap() {
         {isAdmin && (
           <button
             onClick={() => setEditMode(m => !m)}
-            className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-white/10"
+            className="flex items-center gap-2 rounded-lg border px-4 py-2 text-base font-medium transition hover:bg-white/10"
             style={editMode
               ? { borderColor: 'rgba(245,193,24,0.6)', color: '#F5C118' }
               : { borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }
@@ -553,7 +553,7 @@ export default function Roadmap() {
                 >
                   <div className="h-2 w-2 rounded-full flex-none" style={{ background: '#F5C118' }} />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{currentMilestone.title}</p>
+                    <p className="text-base font-semibold text-white truncate">{currentMilestone.title}</p>
                     {milestonePhase && (
                       <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
                         חודש {milestonePhase.month_number} · {milestonePhase.title}
@@ -575,7 +575,7 @@ export default function Roadmap() {
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
         >
           <MapIcon size={44} style={{ color: 'rgba(255,255,255,0.12)', marginBottom: 16 }} />
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.9rem' }}>מפת הדרכים טרם הוגדרה</p>
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '1rem' }}>מפת הדרכים טרם הוגדרה</p>
           {isAdmin && (
             <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', marginTop: 6 }}>
               לחץ על "עריכה" כדי להתחיל לבנות
@@ -633,7 +633,7 @@ export default function Roadmap() {
                       className="text-lg font-bold"
                       style={{ color: 'rgba(255,255,255,0.92)' }}
                     />
-                    <div className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                    <div className="text-base mt-1" style={{ color: 'rgba(255,255,255,0.38)' }}>
                       {phaseCompleted} of {phaseTotal} tasks complete: {phasePct}%
                     </div>
                   </div>
@@ -736,14 +736,14 @@ export default function Roadmap() {
                               value={week.title}
                               onSave={t => updateWeekTitle(week.id, t)}
                               active={editMode}
-                              className="text-sm font-bold"
+                              className="text-base font-bold"
                               style={{ color: weekActive ? 'rgba(245,193,24,0.9)' : 'rgba(255,255,255,0.8)' }}
                             />
                           </div>
                         </div>
                         <div className="flex items-center gap-3 flex-none">
                           {/* X/Y count */}
-                          <span className="text-sm font-semibold tabular-nums"
+                          <span className="text-base font-semibold tabular-nums"
                             style={{ color: weekPct === 100 ? '#86efac' : 'rgba(255,255,255,0.35)' }}>
                             {weekDone}/{weekTotal}
                           </span>
@@ -827,7 +827,7 @@ export default function Roadmap() {
                             {/* Title */}
                             <div style={{ overflow: 'hidden', paddingLeft: 8, paddingRight: 8 }}>
                               <span
-                                className="text-sm"
+                                className="text-base"
                                 style={{
                                   color: done ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)',
                                   textDecoration: done ? 'line-through' : 'none',
@@ -845,7 +845,7 @@ export default function Roadmap() {
                             <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
                               {task.level_label ? (
                                 <span style={{
-                                  fontSize: '0.6875rem', lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  fontSize: '0.75rem', lineHeight: '20px', height: 22, padding: '1px 8px',
                                   borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
                                   maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
                                   background: levelStyle(task.level_label).bg,
@@ -861,7 +861,7 @@ export default function Roadmap() {
                             <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
                               {task.category_label ? (
                                 <span style={{
-                                  fontSize: '0.6875rem', lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  fontSize: '0.75rem', lineHeight: '20px', height: 22, padding: '1px 8px',
                                   borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
                                   maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
                                   background: categoryStyle(task.category_label).bg,
@@ -877,7 +877,7 @@ export default function Roadmap() {
                             <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
                               {task.tag ? (
                                 <span style={{
-                                  fontSize: '0.6875rem', lineHeight: '20px', height: 22, padding: '1px 8px',
+                                  fontSize: '0.75rem', lineHeight: '20px', height: 22, padding: '1px 8px',
                                   borderRadius: 6, fontWeight: 700, fontFamily: 'monospace', display: 'inline-block',
                                   background: 'rgba(245,193,24,0.12)',
                                   color: '#F5C118',
@@ -941,7 +941,7 @@ export default function Roadmap() {
                             placeholder="שבוע #"
                             value={weekForm.week_number}
                             onChange={e => setWeekForm(f => ({ ...f, week_number: e.target.value }))}
-                            className="w-20 rounded-lg px-3 py-1.5 text-sm outline-none"
+                            className="w-20 rounded-lg px-3 py-1.5 text-base outline-none"
                             style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                           />
                           <input
@@ -949,7 +949,7 @@ export default function Roadmap() {
                             value={weekForm.title}
                             onChange={e => setWeekForm(f => ({ ...f, title: e.target.value }))}
                             onKeyDown={e => { if (e.key === 'Enter') addWeek(phase.id); if (e.key === 'Escape') setAddWeekForPhase(null); }}
-                            className="flex-1 rounded-lg px-3 py-1.5 text-sm outline-none"
+                            className="flex-1 rounded-lg px-3 py-1.5 text-base outline-none"
                             style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                             autoFocus
                           />
@@ -985,7 +985,7 @@ export default function Roadmap() {
                   placeholder="חודש #"
                   value={phaseForm.month_number}
                   onChange={e => setPhaseForm(f => ({ ...f, month_number: e.target.value }))}
-                  className="w-20 rounded-lg px-3 py-2 text-sm outline-none"
+                  className="w-20 rounded-lg px-3 py-2 text-base outline-none"
                   style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 />
                 <input
@@ -993,17 +993,17 @@ export default function Roadmap() {
                   value={phaseForm.title}
                   onChange={e => setPhaseForm(f => ({ ...f, title: e.target.value }))}
                   onKeyDown={e => { if (e.key === 'Enter') addPhase(); if (e.key === 'Escape') setShowAddPhase(false); }}
-                  className="flex-1 rounded-lg px-3 py-2 text-sm outline-none"
+                  className="flex-1 rounded-lg px-3 py-2 text-base outline-none"
                   style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                   autoFocus
                 />
-                <button onClick={addPhase} className="rounded-lg px-4 py-2 text-sm font-semibold bg-accent text-accent-foreground">הוסף שלב</button>
-                <button onClick={() => setShowAddPhase(false)} className="rounded-lg px-3 py-2 text-sm hover:text-white/70" style={{ color: 'rgba(255,255,255,0.4)' }}>ביטול</button>
+                <button onClick={addPhase} className="rounded-lg px-4 py-2 text-base font-semibold bg-accent text-accent-foreground">הוסף שלב</button>
+                <button onClick={() => setShowAddPhase(false)} className="rounded-lg px-3 py-2 text-base hover:text-white/70" style={{ color: 'rgba(255,255,255,0.4)' }}>ביטול</button>
               </div>
             ) : (
               <button
                 onClick={() => setShowAddPhase(true)}
-                className="w-full flex items-center justify-center gap-2 text-sm py-1 hover:text-white/60 transition"
+                className="w-full flex items-center justify-center gap-2 text-base py-1 hover:text-white/60 transition"
                 style={{ color: 'rgba(255,255,255,0.3)' }}
               >
                 <Plus size={15} /> הוסף שלב חדש
@@ -1028,7 +1028,7 @@ export default function Roadmap() {
                 value={taskForm.title}
                 onChange={e => setTaskForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="תיאור המשימה..."
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
               />
             </div>
@@ -1039,7 +1039,7 @@ export default function Roadmap() {
               <select
                 value={taskForm.level_label}
                 onChange={e => setTaskForm(f => ({ ...f, level_label: e.target.value }))}
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
               >
                 <option value="">ללא רמה</option>
@@ -1057,7 +1057,7 @@ export default function Roadmap() {
                 value={taskForm.category_label}
                 onChange={e => setTaskForm(f => ({ ...f, category_label: e.target.value }))}
                 placeholder="לדוגמה: Grow Audience, מכירות..."
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 dir="rtl"
               />
@@ -1075,7 +1075,7 @@ export default function Roadmap() {
                 value={taskForm.tag}
                 onChange={e => setTaskForm(f => ({ ...f, tag: e.target.value }))}
                 placeholder="לדוגמה: S3, F1, I2"
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontFamily: 'monospace' }}
                 dir="ltr"
               />
@@ -1088,7 +1088,7 @@ export default function Roadmap() {
                 value={taskForm.link}
                 onChange={e => setTaskForm(f => ({ ...f, link: e.target.value }))}
                 placeholder="https://..."
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 onKeyDown={e => { if (e.key === 'Enter') saveTask(); }}
                 dir="ltr"
@@ -1098,7 +1098,7 @@ export default function Roadmap() {
             <button
               onClick={saveTask}
               disabled={!taskForm.title.trim()}
-              className="w-full rounded-lg py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground"
+              className="w-full rounded-lg py-2.5 text-base font-semibold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground"
             >
               {taskModal.mode === 'add' ? 'הוסף משימה' : 'שמור שינויים'}
             </button>

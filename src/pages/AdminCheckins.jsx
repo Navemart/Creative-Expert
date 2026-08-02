@@ -96,8 +96,8 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
           <Photo name={student.name} src={student.image_url} />
         </div>
         <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-          <p style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'white', margin: 0 }}>{student.name}</p>
-          <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
+          <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'white', margin: 0 }}>{student.name}</p>
+          <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
             {student.last_checkin ? fmtDays(student.days_since) : 'אין צ׳קאין'}
           </p>
         </div>
@@ -142,7 +142,7 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
           disabled={saving}
           style={{
             width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: saving ? 'default' : 'pointer',
-            background: saving ? 'rgba(245,193,24,0.3)' : 'rgba(245,193,24,0.85)', color: '#000', fontWeight: 700, fontSize: '0.8125rem',
+            background: saving ? 'rgba(245,193,24,0.3)' : 'rgba(245,193,24,0.85)', color: '#000', fontWeight: 700, fontSize: '0.875rem',
             transition: 'background 0.12s', marginBottom: 14,
           }}
         >
@@ -153,18 +153,18 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 12, marginBottom: 14 }}>
           <p style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px', textAlign: 'right' }}>היסטוריה</p>
           {loadingH ? (
-            <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>טוען...</p>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>טוען...</p>
           ) : !history || history.length === 0 ? (
-            <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>אין היסטוריה</p>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.2)', textAlign: 'center', padding: '12px 0' }}>אין היסטוריה</p>
           ) : (
             history.map((h, i) => (
               <div key={i} style={{ borderBottom: i < history.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none', paddingBottom: 10, marginBottom: 10 }}>
-                <p style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'rgba(245,193,24,0.8)', margin: '0 0 4px', textAlign: 'right' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(245,193,24,0.8)', margin: '0 0 4px', textAlign: 'right' }}>
                   {fmtDate(h.checked_date || h.checked_at)}
                 </p>
-                {h.focus     && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>פוקוס: </span>{h.focus}</p>}
-                {h.bottleneck && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>חסמים: </span>{h.bottleneck}</p>}
-                {h.notes     && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>הערות: </span>{h.notes}</p>}
+                {h.focus     && <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>פוקוס: </span>{h.focus}</p>}
+                {h.bottleneck && <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>חסמים: </span>{h.bottleneck}</p>}
+                {h.notes     && <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', margin: '2px 0', textAlign: 'right' }}><span style={{ color: 'rgba(255,255,255,0.25)' }}>הערות: </span>{h.notes}</p>}
               </div>
             ))
           )}
@@ -207,8 +207,8 @@ function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onTo
       </div>
 
       <div style={{ flex: 1, minWidth: 0, textAlign: 'right', cursor: 'pointer' }} onClick={onToggle}>
-        <p style={{ fontWeight: 700, fontSize: '0.8125rem', color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
-        <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
+        <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'white', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
+        <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>
           {student.last_checkin ? fmtDays(student.days_since) : 'אין צ׳קאין'}
         </p>
       </div>
@@ -340,13 +340,13 @@ export default function AdminCheckins() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: 900, color: 'white', margin: 0 }}>צ׳קאינס</h1>
-            <p style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>מעקב אחר פנייה לתלמידים פעילים</p>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', margin: 0 }}>צ׳קאינס</h1>
+            <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>מעקב אחר פנייה לתלמידים פעילים</p>
           </div>
           <button
             onClick={() => { setRefreshing(true); fetchAll().then(() => setRefreshing(false)); }}
             disabled={refreshing}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border, cursor: 'pointer', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border, cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}
           >
             <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none', color: 'rgba(255,255,255,0.3)' }} />
             רענן
@@ -354,7 +354,7 @@ export default function AdminCheckins() {
         </div>
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.3)', fontSize: '0.8125rem' }}>טוען...</div>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0', color: 'rgba(255,255,255,0.3)', fontSize: '0.875rem' }}>טוען...</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'start' }}>
             {COLUMNS.map(col => {
@@ -376,7 +376,7 @@ export default function AdminCheckins() {
                   {/* Column header */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '14px 16px', borderBottom: border }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: col.dot, flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>{col.label}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.08em', flex: 1 }}>{col.label}</span>
                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: col.dot, background: col.dot + '18', border: `1px solid ${col.dot}30`, padding: '2px 8px', borderRadius: 20 }}>
                       {counts[col.key]}
                     </span>

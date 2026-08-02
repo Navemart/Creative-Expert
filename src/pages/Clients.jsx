@@ -288,7 +288,7 @@ function InstallmentBuilder({ plan, dealAmount, onChange }) {
           </button>
           <input placeholder={idx === 0 ? 'מקדמה' : 'תיאור'} value={inst.label}
             onChange={e => onChange(plan.map(i => i.id === inst.id ? { ...i, label: e.target.value } : i))}
-            className="flex-1 min-w-0 rounded-lg px-2 py-2 text-sm outline-none"
+            className="flex-1 min-w-0 rounded-lg px-2 py-2 text-base outline-none"
             style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} />
           <div className="relative flex-none w-16">
             <input type="number" min="0" value={inst.amount} onChange={e => updateAmt(inst.id, e.target.value)}
@@ -306,7 +306,7 @@ function InstallmentBuilder({ plan, dealAmount, onChange }) {
           </div>
           <input type="date" value={inst.date || ''} onChange={e => onChange(plan.map(i => i.id === inst.id ? { ...i, date: e.target.value } : i))}
             className="flex-none w-14 rounded-lg py-1.5 text-xs outline-none"
-            style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: inst.date ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)', paddingLeft: 2, paddingRight: 2, fontSize: '0.6875rem' }} />
+            style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: inst.date ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.25)', paddingLeft: 2, paddingRight: 2, fontSize: '0.75rem' }} />
           <button type="button" onClick={() => remove(inst.id)} className="rounded-md p-1 hover:bg-red-500/20 transition flex-none" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <X size={13} />
           </button>
@@ -375,7 +375,7 @@ function saveWf(uid, tpl) { localStorage.setItem(`wf_${uid}`, JSON.stringify(tpl
 function StepListInput({ steps, onChange }) {
   const [draft, setDraft] = useState('');
   const inputRef = useRef(null);
-  const inp = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '7px 11px', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', flex: 1 };
+  const inp = { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '7px 11px', fontSize: '0.875rem', color: 'rgba(255,255,255,0.9)', outline: 'none', fontFamily: 'inherit', flex: 1 };
   function addStep() {
     const t = draft.trim();
     if (!t) return;
@@ -387,8 +387,8 @@ function StepListInput({ steps, onChange }) {
     <div>
       {steps.map((s, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
-          <span style={{ flex: 1, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.85)' }}>{s}</span>
+          <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
+          <span style={{ flex: 1, fontSize: '0.875rem', color: 'rgba(255,255,255,0.85)' }}>{s}</span>
           <button type="button" onClick={() => onChange(steps.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(252,165,165,0.5)', padding: 2, display: 'flex' }}><X size={12} /></button>
         </div>
       ))}
@@ -420,11 +420,11 @@ function WfTemplateEditor({ template, onSave, onClose }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }}><X size={16} /></button>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>שם התבנית</div>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 5 }}>שם התבנית</div>
           <input style={base} value={name} onChange={e => setName(e.target.value)} placeholder='למשל: "מיתוג" או "בניית אתר"' autoFocus />
         </div>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>שלבי התהליך</div>
+          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.45)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>שלבי התהליך</div>
           <StepListInput steps={steps} onChange={setSteps} />
         </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -482,7 +482,7 @@ function WfPanel({ userId, onApplyTemplate }) {
                 {isSel && <Check size={11} color="#000" strokeWidth={3} />}
               </button>
               <span
-                style={{ flex: 1, fontSize: '0.8125rem', fontWeight: 600, color: isSel ? '#f5c518' : 'rgba(255,255,255,0.85)', cursor: 'pointer' }}
+                style={{ flex: 1, fontSize: '0.875rem', fontWeight: 600, color: isSel ? '#f5c518' : 'rgba(255,255,255,0.85)', cursor: 'pointer' }}
                 onClick={() => {
                   const next = isSel ? null : tpl.id;
                   setSelectedId(next);
@@ -491,7 +491,7 @@ function WfPanel({ userId, onApplyTemplate }) {
               >
                 {tpl.name}
               </span>
-              <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)' }}>{lines.length} שלבים</span>
+              <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>{lines.length} שלבים</span>
               <button onClick={() => { setEditorTpl(tpl); setEditingIdx(idx); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', padding: 3, display: 'flex' }}><Edit2 size={11} /></button>
               <button onClick={() => del(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(252,165,165,0.5)', padding: 3, display: 'flex' }}><Trash2 size={11} /></button>
             </div>
@@ -500,8 +500,8 @@ function WfPanel({ userId, onApplyTemplate }) {
               <div style={{ borderTop: '1px solid rgba(245,193,24,0.15)', padding: '10px 14px 12px' }}>
                 {lines.map((s, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
-                    <span style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.78)' }}>{s}</span>
+                    <div style={{ width: 18, height: 18, borderRadius: '50%', border: '1.5px solid rgba(245,193,24,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#f5c518', flexShrink: 0 }}>{i + 1}</div>
+                    <span style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.78)' }}>{s}</span>
                   </div>
                 ))}
               </div>
@@ -515,12 +515,12 @@ function WfPanel({ userId, onApplyTemplate }) {
         ? <button onClick={() => { setEditorTpl({}); setEditingIdx(null); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: '1px dashed rgba(245,193,24,0.35)', borderRadius: 8, padding: '7px 13px', color: '#f5c518', fontSize: '0.75rem', cursor: 'pointer', fontFamily: 'inherit', marginTop: templates.length ? 4 : 0 }}>
             <Plus size={12} /> {templates.length === 0 ? 'הוסף תבנית לתהליך עבודה' : `הוסף תבנית (${templates.length}/${MAX_WF})`}
           </button>
-        : <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>מקסימום 3 תבניות — מחק אחת כדי להוסיף חדשה.</div>
+        : <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>מקסימום 3 תבניות — מחק אחת כדי להוסיף חדשה.</div>
       }
 
       {/* ── One-time workflow ──────────────────────────────── */}
       <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 14, paddingTop: 14 }}>
-        <div style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.35)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>תהליך חד-פעמי לפרויקט זה</div>
+        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>תהליך חד-פעמי לפרויקט זה</div>
         <StepListInput steps={oneOff} onChange={setOneOff} />
       </div>
 
@@ -871,7 +871,7 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
                               style={{ color: fullPaid ? '#86efac' : 'rgba(255,255,255,0.8)' }}>
                               {fullPaid ? 'שולם במלואו ✓' : 'סמן כשולם'}
                             </span>
-                            <span className="text-sm font-bold flex-none"
+                            <span className="text-base font-bold flex-none"
                               style={{ color: fullPaid ? '#86efac' : '#fcd34d' }}>
                               {fmt(proj.total_amount)}
                             </span>
@@ -976,7 +976,7 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
                 value={newLink.label}
                 onChange={e => setNewLink(n => ({ ...n, label: e.target.value }))}
                 placeholder="לדוגמה: אתר, דרייב, תיק לקוח..."
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none"
                 style={inputStyle} />
             </Field>
             <Field label="כתובת URL">
@@ -985,13 +985,13 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
                 onChange={e => setNewLink(n => ({ ...n, url: e.target.value }))}
                 placeholder="https://..."
                 onKeyDown={e => { if (e.key === 'Enter') addLink(); }}
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none"
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none"
                 style={inputStyle} />
             </Field>
             <button
               onClick={addLink}
               disabled={!newLink.url.trim() || savingLink}
-              className="w-full rounded-lg py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground">
+              className="w-full rounded-lg py-2.5 text-base font-semibold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground">
               {savingLink ? 'שומר...' : 'הוסף קישור'}
             </button>
           </div>
@@ -1008,7 +1008,7 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
             onClick={e => e.stopPropagation()}>
             <div className="flex items-center gap-2 mb-4">
               <AlertCircle size={18} style={{ color: '#f97316', flexShrink: 0 }} />
-              <h3 className="text-sm font-semibold text-white">להעביר ללא פעיל?</h3>
+              <h3 className="text-base font-semibold text-white">להעביר ללא פעיל?</h3>
             </div>
             <div className="mb-5 space-y-2">
               {linkedProjects.some(p => p.status !== 'completed') && (
@@ -1027,12 +1027,12 @@ function ClientCard({ client, linkedProjects, onEdit, onDelete, onStatusChange, 
             </div>
             <div className="flex gap-2">
               <button onClick={() => setShowInactiveConfirm(false)}
-                className="flex-1 rounded-lg py-2 text-sm font-semibold transition hover:bg-white/10"
+                className="flex-1 rounded-lg py-2 text-base font-semibold transition hover:bg-white/10"
                 style={{ color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
                 ביטול
               </button>
               <button onClick={() => { setShowInactiveConfirm(false); onStatusChange(client.id, 'inactive'); }}
-                className="flex-1 rounded-lg py-2 text-sm font-semibold transition hover:opacity-90"
+                className="flex-1 rounded-lg py-2 text-base font-semibold transition hover:opacity-90"
                 style={{ background: 'rgba(100,116,139,0.2)', color: '#94a3b8', border: '1px solid rgba(100,116,139,0.35)' }}>
                 הפוך ללא פעיל
               </button>
@@ -1126,7 +1126,7 @@ function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onTogg
               <div className="hidden sm:flex flex-col justify-center items-center w-16 flex-none px-3 py-3"
                 style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                 <span className="text-[11px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.28)' }}>שעות</span>
-                <span className="flex items-center gap-0.5 text-sm font-bold leading-none" style={{ color: '#c4b5fd' }}>
+                <span className="flex items-center gap-0.5 text-base font-bold leading-none" style={{ color: '#c4b5fd' }}>
                   <Clock size={10} className="flex-none" />{project.estimated_hours}
                 </span>
               </div>
@@ -1137,7 +1137,7 @@ function ProjectCard({ project, client, onEdit, onDelete, onStatusChange, onTogg
               <div className="hidden sm:flex flex-col justify-center items-center w-14 flex-none px-2 py-3"
                 style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                 <span className="text-[11px] leading-none mb-1" style={{ color: 'rgba(255,255,255,0.28)' }}>הושלם</span>
-                <span className="text-sm font-bold tabular-nums leading-none"
+                <span className="text-base font-bold tabular-nums leading-none"
                   style={{ color: stagePct === 100 ? '#86efac' : '#34d399' }}>
                   {stagePct === 100 ? '✓' : `${stagePct}%`}
                 </span>
@@ -1709,7 +1709,7 @@ export default function Clients() {
         <h1 className="text-2xl font-bold text-white">לקוחות ופרויקטים</h1>
         <button
           onClick={() => tab === 'clients' ? openAdd() : tryOpenAddProject()}
-          className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-90 bg-accent text-accent-foreground">
+          className="flex items-center gap-2 rounded-lg px-4 py-2 text-base font-semibold transition hover:opacity-90 bg-accent text-accent-foreground">
           <Plus size={16} /> {tab === 'clients' ? 'הוסף לקוח' : 'הוסף פרויקט'}
         </button>
       </div>
@@ -1722,7 +1722,7 @@ export default function Clients() {
           { key: 'projects', label: `פרויקטים (${projects.length})` },
         ].map(t => (
           <button key={t.key} onClick={() => { setTab(t.key); setNoClientWarn(false); }}
-            className="rounded-lg px-4 py-1.5 text-sm font-semibold transition"
+            className="rounded-lg px-4 py-1.5 text-base font-semibold transition"
             style={tab === t.key
               ? { background: 'rgba(255,255,255,0.1)', color: 'white' }
               : { color: 'rgba(255,255,255,0.4)' }
@@ -1762,7 +1762,7 @@ export default function Clients() {
           {noClientWarn && (
             <div className="flex items-center gap-3 rounded-xl px-4 py-3"
               style={{ background: 'rgba(245,193,24,0.08)', border: '1px solid rgba(245,193,24,0.25)' }}>
-              <span className="text-sm flex-1" style={{ color: 'rgba(245,193,24,0.9)' }}>
+              <span className="text-base flex-1" style={{ color: 'rgba(245,193,24,0.9)' }}>
                 כדי ליצור פרויקט, יש ליצור לקוח קודם — הוסף לקוח ואחר כך תוכל לפתוח פרויקט
               </span>
               <button
@@ -1818,11 +1818,11 @@ export default function Clients() {
             <div className="rounded-2xl p-8 sm:p-16 flex flex-col items-center text-center"
               style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
               <Briefcase size={44} style={{ color: 'rgba(255,255,255,0.12)', marginBottom: 16 }} />
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.9rem' }}>
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '1rem' }}>
                 {filterStatus === 'all' ? 'טרם נוספו לקוחות' : filterStatus === 'inactive' ? 'אין לקוחות לא פעילים' : 'אין לקוחות בסטטוס זה'}
               </p>
               {filterStatus === 'all' && clients.length === 0 && (
-                <button onClick={openAdd} className="mt-5 flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold bg-accent text-accent-foreground">
+                <button onClick={openAdd} className="mt-5 flex items-center gap-1.5 rounded-lg px-4 py-2 text-base font-semibold bg-accent text-accent-foreground">
                   <Plus size={14} /> הוסף לקוח ראשון
                 </button>
               )}
@@ -1923,8 +1923,8 @@ export default function Clients() {
             <div className="rounded-2xl p-8 sm:p-16 flex flex-col items-center text-center"
               style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
               <FolderOpen size={44} style={{ color: 'rgba(255,255,255,0.12)', marginBottom: 16 }} />
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.9rem' }}>אין פרויקטים להצגה</p>
-              <button onClick={() => tryOpenAddProject()} className="mt-5 flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold bg-accent text-accent-foreground">
+              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '1rem' }}>אין פרויקטים להצגה</p>
+              <button onClick={() => tryOpenAddProject()} className="mt-5 flex items-center gap-1.5 rounded-lg px-4 py-2 text-base font-semibold bg-accent text-accent-foreground">
                 <Plus size={14} /> הוסף פרויקט ראשון
               </button>
             </div>
@@ -1944,7 +1944,7 @@ export default function Clients() {
                       style={isGroupOver ? { background: `${group.color}12` } : {}}>
                       <span className="h-2.5 w-2.5 rounded-full flex-none"
                         style={{ background: group.color, boxShadow: `0 0 6px ${group.color}88` }} />
-                      <span className="text-sm font-bold" style={{ color: group.color }}>{group.label}</span>
+                      <span className="text-base font-bold" style={{ color: group.color }}>{group.label}</span>
                       <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{group.desc}</span>
                       <span className="text-xs font-semibold rounded-full px-2 py-0.5 ml-auto"
                         style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.38)' }}>
@@ -2016,22 +2016,22 @@ export default function Clients() {
               <Field label="שם הלקוח *">
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="ישראל ישראלי" autoFocus
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
               <Field label="טלפון">
                 <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                   placeholder="050-0000000"
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
             </div>
             <Field label="אימייל">
               <input value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 placeholder="email@example.com" type="email"
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
             </Field>
             <Field label="מצב לקוח">
               <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle}>
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle}>
                 <option value="green">🟢  בריא</option>
                 <option value="orange">🟠  דרוש תשומת לב</option>
                 <option value="red">🔴  לטפל דחוף</option>
@@ -2040,13 +2040,13 @@ export default function Clients() {
             <Field label="הערות">
               <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="פרטים נוספים..." rows={2}
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none" style={inputStyle} />
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none resize-none" style={inputStyle} />
             </Field>
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
               💡 מחיר, תשלומים ושלבים מנוהלים בכרטיסיית הפרויקט המשויך ללקוח
             </p>
             <button onClick={saveClient} disabled={!form.name.trim() || saving}
-              className="w-full rounded-lg py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground">
+              className="w-full rounded-lg py-2.5 text-base font-semibold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground">
               {saving ? 'שומר...' : modal.mode === 'add' ? 'הוסף לקוח' : 'שמור שינויים'}
             </button>
           </div>
@@ -2064,7 +2064,7 @@ export default function Clients() {
           footer={
             <div className="space-y-2">
               <button onClick={saveProject} disabled={!projectForm.name.trim() || projSaving}
-                className="w-full rounded-lg py-3 text-sm font-bold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground">
+                className="w-full rounded-lg py-3 text-base font-bold transition hover:opacity-90 disabled:opacity-30 bg-accent text-accent-foreground">
                 {projSaving ? 'שומר...' : projModal.mode === 'add' ? '💾 שמור פרויקט' : '💾 שמור שינויים'}
               </button>
               <p className="text-center text-[11px]" style={{ color:'rgba(255,255,255,0.25)' }}>
@@ -2091,7 +2091,7 @@ export default function Clients() {
                       setProjectForm(f => ({ ...f, client_id: e.target.value }));
                     }
                   }}
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle}>
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle}>
                   <option value="">ללא לקוח</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   <option value="__new__">＋ לקוח חדש…</option>
@@ -2100,7 +2100,7 @@ export default function Clients() {
               <Field label="שם הפרויקט *">
                 <input value={projectForm.name} onChange={e => setProjectForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="עיצוב אתר לקוח X" autoFocus
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
             </div>
 
@@ -2149,13 +2149,13 @@ export default function Clients() {
                   onChange={e => setProjectForm(f => ({ ...f, total_amount: e.target.value }))}
                   onKeyDown={e => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }}
                   onWheel={e => e.currentTarget.blur()} placeholder="0"
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
               <Field label="שעות מוערכות">
                 <input type="number" min="0" value={projectForm.estimated_hours}
                   onChange={e => setProjectForm(f => ({ ...f, estimated_hours: e.target.value }))}
                   onWheel={e => e.currentTarget.blur()} placeholder="0"
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
             </div>
 
@@ -2177,12 +2177,12 @@ export default function Clients() {
                   onChange={e => setProjectForm(f => ({ ...f, received_amount: e.target.value }))}
                   onKeyDown={e => { if (e.key === '-' || e.key === 'e') e.preventDefault(); }}
                   onWheel={e => e.currentTarget.blur()} placeholder="0"
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
             )}
 
             {projDeal > 0 && (
-              <div className="rounded-xl px-4 py-3 flex items-center justify-between text-sm"
+              <div className="rounded-xl px-4 py-3 flex items-center justify-between text-base"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <span style={{ color: 'rgba(255,255,255,0.4)' }}>שולם <span className="font-bold" style={{ color: '#86efac' }}>{fmt(projPaid)}</span></span>
                 <span style={{ color: 'rgba(255,255,255,0.4)' }}>נשאר <span className="font-bold" style={{ color: projDeal - projPaid > 0 ? '#fcd34d' : '#86efac' }}>{fmt(projDeal - projPaid)}</span></span>
@@ -2194,12 +2194,12 @@ export default function Clients() {
               <Field label="תאריך התחלה">
                 <input type="date" value={projectForm.start_date}
                   onChange={e => setProjectForm(f => ({ ...f, start_date: e.target.value }))}
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
               <Field label="דדליין">
                 <input type="date" value={projectForm.deadline}
                   onChange={e => setProjectForm(f => ({ ...f, deadline: e.target.value }))}
-                  className="w-full rounded-lg px-3 py-2.5 text-sm outline-none" style={inputStyle} />
+                  className="w-full rounded-lg px-3 py-2.5 text-base outline-none" style={inputStyle} />
               </Field>
             </div>
 
@@ -2207,7 +2207,7 @@ export default function Clients() {
             <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 16, marginTop: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12 }}>
                 <LayoutTemplate size={13} style={{ color: '#f5c518' }} />
-                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#f5c518', textTransform: 'uppercase', letterSpacing: '0.07em' }}>תבניות תהליך עבודה</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f5c518', textTransform: 'uppercase', letterSpacing: '0.07em' }}>תבניות תהליך עבודה</span>
               </div>
               <WfPanel
                 userId={userId}
@@ -2221,11 +2221,11 @@ export default function Clients() {
               {(projectForm.stages || []).length > 0 && (
                 <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div className="flex items-center justify-between mb-2">
-                    <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
                       שלבי הפרויקט · {(projectForm.stages || []).filter(s=>s.done).length}/{(projectForm.stages || []).length}
                     </span>
                     <button onClick={() => setProjectForm(f => ({ ...f, stages: [] }))}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: '0.6875rem' }}>
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.25)', fontSize: '0.75rem' }}>
                       נקה
                     </button>
                   </div>
@@ -2244,7 +2244,7 @@ export default function Clients() {
                         }}>
                         {s.done && <Check size={10} color="#fff" strokeWidth={3} />}
                       </button>
-                      <span style={{ fontSize: '0.8125rem', color: s.done ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', textDecoration: s.done ? 'line-through' : 'none' }}>
+                      <span style={{ fontSize: '0.875rem', color: s.done ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.8)', textDecoration: s.done ? 'line-through' : 'none' }}>
                         {s.label}
                       </span>
                     </div>
@@ -2257,7 +2257,7 @@ export default function Clients() {
             <Field label="הערות">
               <textarea value={projectForm.notes} onChange={e => setProjectForm(f => ({ ...f, notes: e.target.value }))}
                 placeholder="פרטים נוספים..." rows={2}
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none resize-none" style={inputStyle} />
+                className="w-full rounded-lg px-3 py-2.5 text-base outline-none resize-none" style={inputStyle} />
             </Field>
 
           </div>

@@ -17,7 +17,7 @@ function SectionHeader({ icon: Icon, label, color = '#F5C118' }) {
       <div className="h-8 w-8 rounded-xl flex items-center justify-center flex-none" style={{ background:`${color}18` }}>
         <Icon size={16} style={{ color }} />
       </div>
-      <span className="text-sm font-bold text-white uppercase tracking-wider">{label}</span>
+      <span className="text-base font-bold text-white uppercase tracking-wider">{label}</span>
     </div>
   );
 }
@@ -25,7 +25,7 @@ function SectionHeader({ icon: Icon, label, color = '#F5C118' }) {
 function Field({ label, hint, children }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-medium" style={{ color:'rgba(255,255,255,0.82)' }}>{label}</label>
+      <label className="text-base font-medium" style={{ color:'rgba(255,255,255,0.82)' }}>{label}</label>
       {hint && <p className="text-[11px]" style={{ color:'rgba(255,255,255,0.3)' }}>{hint}</p>}
       {children}
     </div>
@@ -118,10 +118,10 @@ export default function Settings() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white">פרופיל</h1>
-          <p className="text-sm mt-1" style={{ color:'rgba(255,255,255,0.4)' }}>פרטים אישיים ועסקיים</p>
+          <p className="text-base mt-1" style={{ color:'rgba(255,255,255,0.4)' }}>פרטים אישיים ועסקיים</p>
         </div>
         <button onClick={() => signOut({ redirectUrl: '/' })}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-white/[0.06]"
+          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-base font-medium transition hover:bg-white/[0.06]"
           style={{ color: '#f87171', border: '1px solid rgba(248,113,113,0.25)' }}>
           <LogOut size={14} /> התנתקות
         </button>
@@ -136,7 +136,7 @@ export default function Settings() {
         </div>
         <div>
           <p className="font-bold text-white">{displayName}</p>
-          <p className="text-sm mt-0.5" style={{ color:'rgba(255,255,255,0.4)' }}>
+          <p className="text-base mt-0.5" style={{ color:'rgba(255,255,255,0.4)' }}>
             {[form.business_type, form.business_name].filter(Boolean).join(' · ') || 'פרטי העסק'}
           </p>
           <p className="text-xs mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>
@@ -206,7 +206,7 @@ export default function Settings() {
 
       {/* Save */}
       <button onClick={save} disabled={saving}
-        className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold transition hover:opacity-90 disabled:opacity-50"
+        className="w-full flex items-center justify-center gap-2 rounded-xl py-3.5 text-base font-bold transition hover:opacity-90 disabled:opacity-50"
         style={{ background:'#F5C118', color:'#13152A' }}>
         {saving  ? <><Loader2 size={16} className="animate-spin" /> שומר...</>
         : saved   ? <><Check size={16} /> נשמר בהצלחה! ✓</>

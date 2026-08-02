@@ -560,7 +560,7 @@ export default function LandingPage() {
             <div className="lp-stats-big" style={{ marginTop: 48 }}>
               <div className="lp-stats-big-label">תשואה ממוצעת על השקעה</div>
               <div className="lp-stats-big-num"><Counter target={33.8} decimal /><span className="accent">x</span></div>
-              <p style={{ fontSize: '.9rem', color: 'rgba(255,255,255,.5)', lineHeight: 1.7, maxWidth: 480, marginBottom: 32 }}>
+              <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,.5)', lineHeight: 1.7, maxWidth: 480, marginBottom: 32 }}>
                 כל ₪1 שהשקעת בתוכנית החזיר ₪33.8 בעסק חדש. סה"כ הכנסות כלל הבוגרים — מדווח על ידם.
               </p>
             </div>
@@ -869,7 +869,7 @@ export default function LandingPage() {
                   <div key={f} className="lp-pf">{f}</div>
                 ))}
               </div>
-              <a href="#" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center', borderRadius: 50, fontSize: '1.05rem', padding: '18px' }}>
+              <a href="#" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center', borderRadius: 50, fontSize: '1rem', padding: '18px' }}>
                 אני רוצה להצטרף ←
               </a>
             </div>
@@ -896,7 +896,7 @@ export default function LandingPage() {
             </div>
           </SR>
           <SR delay={0.2} style={{ marginTop: 48 }}>
-            <a href="#pricing" className="lp-btn-primary" style={{ fontSize: '1.1rem', padding: '20px 52px' }}>הגש מועמדות עכשיו ←</a>
+            <a href="#pricing" className="lp-btn-primary" style={{ fontSize: '1rem', padding: '20px 52px' }}>הגש מועמדות עכשיו ←</a>
             <div className="lp-apply-steps">
               <div className="lp-apply-step">
                 <div className="lp-apply-step-num">1</div>

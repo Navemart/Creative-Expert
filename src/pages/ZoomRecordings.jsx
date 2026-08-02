@@ -220,7 +220,7 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin,
             <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <input autoFocus value={inputVal} onChange={e => setInputVal(e.target.value)}
                 onKeyDown={e => onKey(e, 'title')}
-                className="flex-1 min-w-0 rounded-md px-2 py-0.5 text-sm font-semibold text-white"
+                className="flex-1 min-w-0 rounded-md px-2 py-0.5 text-base font-semibold text-white"
                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(245,193,24,0.4)', outline: 'none' }}
                 dir="rtl" />
               <button onClick={() => save('title')} disabled={saving} className="hover:opacity-80 transition-opacity">
@@ -232,7 +232,7 @@ function RecordingRow({ meeting, metaData = {}, onMetaUpdate, onDelete, isAdmin,
             </div>
           ) : (
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-sm font-semibold text-white leading-snug truncate">{displayTitle}</span>
+              <span className="text-base font-semibold text-white leading-snug truncate">{displayTitle}</span>
               {isAdmin && (
                 <button onClick={() => startEdit('title')}
                   className="flex-none opacity-25 hover:opacity-60 transition-opacity"
@@ -480,7 +480,7 @@ export default function ZoomRecordings() {
       <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות</h1>
       <div className="rounded-2xl p-6"
         style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-        <p className="text-sm font-semibold" style={{ color: '#fca5a5' }}>שגיאה בטעינת הקלטות</p>
+        <p className="text-base font-semibold" style={{ color: '#fca5a5' }}>שגיאה בטעינת הקלטות</p>
         <p className="text-xs mt-1" style={{ color: 'rgba(252,165,165,0.6)' }}>{error}</p>
         <p className="text-xs mt-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
           וודא שהוספת את פרטי ה-Zoom בקובץ ה-.env:
@@ -531,7 +531,7 @@ export default function ZoomRecordings() {
         ) : nextTwo.length === 0 ? (
           <div className="col-span-2 rounded-2xl p-8 flex items-center justify-center"
             style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פגישות קרובות</p>
+            <p className="text-base" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פגישות קרובות</p>
           </div>
         ) : nextTwo.map(m => {
           const start   = m.start_time ? new Date(m.start_time) : null;
@@ -544,18 +544,18 @@ export default function ZoomRecordings() {
               style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.09)' }}>
               <div className="flex-1 space-y-1">
                 <p className="text-base font-bold text-white leading-snug">{title}</p>
-                {dateStr && <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                {dateStr && <p className="text-base" style={{ color: 'rgba(255,255,255,0.45)' }}>
                   {dateStr}{timeStr ? ` · ${timeStr}${endTime ? ` - ${endTime}` : ''}` : ''}
                 </p>}
               </div>
               {m.join_url ? (
                 <a href={m.join_url} target="_blank" rel="noopener noreferrer"
-                  className="btn-yellow inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-85 self-start"
+                  className="btn-yellow inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-base font-semibold transition hover:opacity-85 self-start"
                   style={{ background: '#F5C118' }}>
                   הצטרף לפגישה <ExternalLink size={13} color="#13152A" />
                 </a>
               ) : (
-                <div className="rounded-lg px-4 py-2 text-sm self-start"
+                <div className="rounded-lg px-4 py-2 text-base self-start"
                   style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.25)' }}>
                   אין קישור עדיין
                 </div>
@@ -576,7 +576,7 @@ export default function ZoomRecordings() {
             const active = activeTab === t.k;
             return (
               <button key={t.k} onClick={() => setActiveTab(t.k)}
-                className="pb-3 px-4 text-sm font-semibold transition-all relative flex items-center gap-2"
+                className="pb-3 px-4 text-base font-semibold transition-all relative flex items-center gap-2"
                 style={{ color: active ? 'white' : 'rgba(255,255,255,0.38)' }}>
                 {t.icon && <Star size={12} fill={active ? '#F5C118' : 'none'} style={{ color: active ? '#F5C118' : 'rgba(255,255,255,0.35)' }} />}
                 {t.l}
@@ -594,7 +594,7 @@ export default function ZoomRecordings() {
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="חיפוש..."
           dir="rtl"
-          className="rounded-xl px-4 py-1.5 text-sm outline-none mb-2 flex-none"
+          className="rounded-xl px-4 py-1.5 text-base outline-none mb-2 flex-none"
           style={{ width: 200, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)' }}
         />
       </div>
@@ -645,14 +645,14 @@ export default function ZoomRecordings() {
                               <span className="h-2 w-2 rounded-full flex-none" style={{ background: ts.rowBorder }} />
                               <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: ts.color }}>{getBadge(m.topic || '')}</span>
                             </div>
-                            <p className="text-sm font-semibold text-white leading-snug">{title}</p>
+                            <p className="text-base font-semibold text-white leading-snug">{title}</p>
                             {timeStr && <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>
                               {timeStr}{endTime ? ` - ${endTime}` : ''}{m.duration ? ` · ${m.duration} דק׳` : ''}
                             </p>}
                           </div>
                           {m.join_url && (
                             <a href={m.join_url} target="_blank" rel="noopener noreferrer"
-                              className="btn-yellow flex-none inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold transition hover:opacity-85"
+                              className="btn-yellow flex-none inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-base font-semibold transition hover:opacity-85"
                               style={{ background: '#F5C118' }}>
                               הצטרף <ExternalLink size={13} color="#13152A" />
                             </a>
@@ -676,7 +676,7 @@ export default function ZoomRecordings() {
         <div className="rounded-2xl p-10 flex flex-col items-center gap-3"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
           <Star size={36} style={{ color: 'rgba(255,255,255,0.1)' }} />
-          <p className="text-sm font-semibold text-white">אין הקלטות שמורות</p>
+          <p className="text-base font-semibold text-white">אין הקלטות שמורות</p>
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>לחץ על הכוכב ליד הקלטה כדי לשמור אותה כאן</p>
         </div>
       )}

@@ -59,7 +59,7 @@ function ToolModal({ initial, onSave, onClose }) {
     setSaving(false);
   }
 
-  const inputCls   = 'w-full rounded-xl px-3 py-2.5 text-sm outline-none text-white';
+  const inputCls   = 'w-full rounded-xl px-3 py-2.5 text-base outline-none text-white';
   const inputStyle = { background: S.elevated, border: S.border2 };
 
   return (
@@ -97,17 +97,17 @@ function ToolModal({ initial, onSave, onClose }) {
           <label className="flex items-center gap-2.5 cursor-pointer select-none">
             <input type="checkbox" checked={form.tm} onChange={e => set('tm', e.target.checked)}
               className="h-4 w-4 rounded accent-yellow-400" />
-            <span className="text-sm text-white/60">הצג סימן ™ ליד השם</span>
+            <span className="text-base text-white/60">הצג סימן ™ ליד השם</span>
           </label>
         </div>
 
         <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className="flex-1 rounded-xl py-2.5 text-sm font-semibold"
+          <button onClick={onClose} className="flex-1 rounded-xl py-2.5 text-base font-semibold"
             style={{ background: S.elevated, color: S.muted, border: S.border2 }}>
             ביטול
           </button>
           <button onClick={handleSave} disabled={saving || !form.name.trim()}
-            className="flex-1 rounded-xl py-2.5 text-sm font-bold disabled:opacity-40 transition bg-accent">
+            className="flex-1 rounded-xl py-2.5 text-base font-bold disabled:opacity-40 transition bg-accent">
             {saving ? 'שומר...' : initial ? 'שמור שינויים' : 'הוסף כלי'}
           </button>
         </div>
@@ -141,7 +141,7 @@ function GPTCard({ tool, editMode, onEdit, onDelete }) {
       <div className="flex items-start gap-3 mb-3">
         <div className="flex-none h-8 w-8 rounded-lg flex items-center justify-center text-base"
           style={{ background: 'rgba(245,193,24,0.12)' }}>⚙️</div>
-        <h3 className="text-sm font-semibold text-white leading-snug mt-0.5">
+        <h3 className="text-base font-semibold text-white leading-snug mt-0.5">
           {tool.name}
           {tool.tm && <sup className="ml-0.5 text-[11px] text-white/35 font-normal">TM</sup>}
         </h3>
@@ -156,7 +156,7 @@ function GPTCard({ tool, editMode, onEdit, onDelete }) {
         target="_blank"
         rel="noopener noreferrer"
         onClick={!hasUrl ? e => e.preventDefault() : undefined}
-        className={`flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-sm font-bold transition ${hasUrl ? 'bg-accent' : ''}`}
+        className={`flex items-center justify-center gap-2 w-full rounded-xl py-2.5 text-base font-bold transition ${hasUrl ? 'bg-accent' : ''}`}
         style={!hasUrl ? { background: 'rgba(245,193,24,0.15)', color: 'rgba(245,193,24,0.4)', cursor: 'default' } : {}}>
         {hasUrl ? 'פתח GPT' : 'בקרוב'}
         {hasUrl && <ExternalLink size={13} />}
@@ -353,7 +353,7 @@ export default function Agents() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl sm:text-4xl font-bold text-white">AI ScaleKit</h1>
-          <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <p className="mt-1 text-base" style={{ color: 'rgba(255,255,255,0.35)' }}>
             {loading ? 'טוען...' : `${tools.length} כלים · לחץ על ״פתח GPT״ כדי להשתמש`}
           </p>
         </div>
@@ -363,13 +363,13 @@ export default function Agents() {
             {editMode && (
               <button
                 onClick={() => setModal({ mode: 'add' })}
-                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition bg-accent">
+                className="flex items-center gap-2 rounded-xl px-4 py-2 text-base font-bold transition bg-accent">
                 <Plus size={15} /> כלי חדש
               </button>
             )}
             <button
               onClick={() => setEditMode(v => !v)}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition"
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-base font-semibold transition"
               style={{
                 background: editMode ? 'rgba(255,255,255,0.12)' : S.surface,
                 color:      editMode ? 'white' : 'rgba(255,255,255,0.5)',
@@ -384,7 +384,7 @@ export default function Agents() {
 
       {/* Edit mode banner */}
       {editMode && (
-        <div className="rounded-xl px-4 py-3 text-sm flex items-center gap-2"
+        <div className="rounded-xl px-4 py-3 text-base flex items-center gap-2"
           style={{ background: 'rgba(245,193,24,0.1)', border: '1px solid rgba(245,193,24,0.2)', color: 'rgba(245,193,24,0.85)' }}>
           <Settings2 size={14} />
           מצב עריכה פעיל — העבר עכבר על כרטיס כדי לערוך או למחוק
@@ -398,7 +398,7 @@ export default function Agents() {
         <input
           type="text" placeholder="חפש GPT..."
           value={query} onChange={e => setQuery(e.target.value)}
-          className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-white/25" />
+          className="flex-1 bg-transparent text-base text-white outline-none placeholder:text-white/25" />
       </div>
 
       {/* Categories */}
@@ -436,18 +436,18 @@ export default function Agents() {
           <div className="w-full max-w-sm rounded-2xl p-6 space-y-5"
             style={{ background: S.surface, border: S.border }}>
             <h3 className="text-base font-semibold text-white">מחיקת כלי</h3>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <p className="text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>
               בטוח שרוצה למחוק את <strong className="text-white">{delTarget.name}</strong>?<br />
               לא ניתן לשחזר.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setDelTarget(null)}
-                className="flex-1 rounded-xl py-2.5 text-sm font-semibold"
+                className="flex-1 rounded-xl py-2.5 text-base font-semibold"
                 style={{ background: S.elevated, color: S.muted, border: S.border2 }}>
                 ביטול
               </button>
               <button onClick={() => handleDelete(delTarget)}
-                className="flex-1 rounded-xl py-2.5 text-sm font-bold transition hover:opacity-90"
+                className="flex-1 rounded-xl py-2.5 text-base font-bold transition hover:opacity-90"
                 style={{ background: '#ef4444', color: 'white' }}>
                 מחק
               </button>

@@ -121,7 +121,7 @@ function AnalysisModal({ row, onClose }) {
           style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           <div className="flex items-center gap-2">
             <Sparkles size={15} style={{ color: '#fcd34d' }} />
-            <span className="text-sm font-bold text-white">ניתוח תוכן</span>
+            <span className="text-base font-bold text-white">ניתוח תוכן</span>
           </div>
           <div className="flex items-center gap-3">
             <a href={row.source_url} target="_blank" rel="noopener noreferrer"
@@ -140,7 +140,7 @@ function AnalysisModal({ row, onClose }) {
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {sections.length === 0 && (
-            <p className="text-sm text-center py-8" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <p className="text-base text-center py-8" style={{ color: 'rgba(255,255,255,0.3)' }}>
               אין ניתוח זמין
             </p>
           )}
@@ -148,7 +148,7 @@ function AnalysisModal({ row, onClose }) {
             <div key={i}>
               <div className="flex items-center gap-2 mb-2.5">
                 <span className="text-base leading-none">{SECTION_ICONS[i] ?? '▸'}</span>
-                <h3 className="text-sm font-bold text-white">{sec.title}</h3>
+                <h3 className="text-base font-bold text-white">{sec.title}</h3>
               </div>
               <div className="space-y-1.5 pr-6">
                 {sec.body.split('\n').map((line, j) => {
@@ -279,7 +279,7 @@ export default function Transcriptions() {
 
         <div className="flex items-center gap-2 mb-5">
           <FileText size={15} style={{ color: '#fcd34d' }} />
-          <h2 className="text-sm font-bold text-white">תמלול חדש</h2>
+          <h2 className="text-base font-bold text-white">תמלול חדש</h2>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
@@ -293,7 +293,7 @@ export default function Transcriptions() {
                   key={key}
                   type="button"
                   onClick={() => { setPlatform(key); setUrl(''); setFormError(''); }}
-                  className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm transition-all"
+                  className="flex items-center gap-2 rounded-xl px-4 py-3 text-base transition-all"
                   style={{
                     background: platform === key ? 'rgba(255,255,255,0.07)' : 'rgb(var(--bg-elevated))',
                     border: platform === key
@@ -323,7 +323,7 @@ export default function Transcriptions() {
                 value={url}
                 onChange={e => { setUrl(e.target.value); setFormError(''); }}
                 placeholder={PLATFORMS[platform].placeholder}
-                className="w-full rounded-xl py-3 pr-11 pl-4 text-sm outline-none"
+                className="w-full rounded-xl py-3 pr-11 pl-4 text-base outline-none"
                 style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 disabled={submitting}
               />
@@ -332,7 +332,7 @@ export default function Transcriptions() {
 
           {/* Error */}
           {formError && (
-            <div className="rounded-xl px-4 py-3 text-sm"
+            <div className="rounded-xl px-4 py-3 text-base"
               style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}>
               {formError}
             </div>
@@ -340,7 +340,7 @@ export default function Transcriptions() {
 
           {/* Submit */}
           <button type="submit" disabled={!url.trim() || submitting}
-            className="flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition hover:opacity-90 disabled:opacity-40 bg-accent text-accent-foreground">
+            className="flex items-center gap-2 rounded-xl px-6 py-3 text-base font-semibold transition hover:opacity-90 disabled:opacity-40 bg-accent text-accent-foreground">
             {submitting
               ? <><Loader2 size={15} className="animate-spin" />
                   {platform === 'instagram' ? 'מוריד ומתמלל — עד 30 שניות…' : 'מתמלל…'}
@@ -356,7 +356,7 @@ export default function Transcriptions() {
 
         <div className="px-6 py-4 flex items-center justify-between"
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <h2 className="text-sm font-bold text-white">התמלולים שלך</h2>
+          <h2 className="text-base font-bold text-white">התמלולים שלך</h2>
           {rows.length > 0 && (
             <span className="text-xs" style={{ color: 'rgba(255,255,255,0.28)' }}>
               {rows.length} תמלולים
@@ -371,7 +371,7 @@ export default function Transcriptions() {
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16">
             <Youtube size={40} style={{ color: 'rgba(255,255,255,0.08)' }} />
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.26)' }}>
+            <p className="text-base" style={{ color: 'rgba(255,255,255,0.26)' }}>
               טרם בוצעו תמלולים. הדבק קישור ולחץ "התחל תמלול"
             </p>
           </div>

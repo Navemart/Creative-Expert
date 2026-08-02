@@ -117,7 +117,7 @@ function ProgressCard({ title, percent, subtitle }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
       <div className="flex items-baseline justify-between">
-        <h3 className="text-sm font-medium text-slate-900">{title}</h3>
+        <h3 className="text-base font-medium text-slate-900">{title}</h3>
         <span className="text-2xl font-semibold tracking-tight text-slate-900">
           {percent}%
         </span>
@@ -135,7 +135,7 @@ function ProgressCard({ title, percent, subtitle }) {
 
 function InfoItem({ icon: Icon, children }) {
   return (
-    <div className="flex items-center gap-2 text-sm text-slate-600">
+    <div className="flex items-center gap-2 text-base text-slate-600">
       <Icon size={14} className="flex-none text-slate-400" />
       <span className="truncate">{children}</span>
     </div>
@@ -150,8 +150,8 @@ export default function MemberDetail() {
   if (!base) {
     return (
       <div className="mx-auto max-w-3xl space-y-4 py-12 text-center">
-        <p className="text-sm text-slate-500">Member not found.</p>
-        <Link to="/members" className="text-sm text-slate-900 underline">
+        <p className="text-base text-slate-500">Member not found.</p>
+        <Link to="/members" className="text-base text-slate-900 underline">
           Back to Members
         </Link>
       </div>
@@ -171,7 +171,7 @@ export default function MemberDetail() {
     <div className="w-full space-y-8">
       <Link
         to="/members"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900"
+        className="inline-flex items-center gap-1.5 text-base text-slate-500 hover:text-slate-900"
       >
         <ArrowLeft size={14} />
         Back to Members
@@ -200,7 +200,7 @@ export default function MemberDetail() {
                 {status.label}
               </span>
               {member.monthlyValue && (
-                <span className="text-sm text-slate-600">
+                <span className="text-base text-slate-600">
                   · ${member.monthlyValue.toLocaleString()}/mo
                 </span>
               )}
@@ -234,14 +234,14 @@ export default function MemberDetail() {
 
         <div className="max-w-sm lg:text-right">
           <div className="text-xs text-slate-500">Started: {member.startedAt}</div>
-          <p className="mt-1 text-sm text-slate-600">{member.bio}</p>
+          <p className="mt-1 text-base text-slate-600">{member.bio}</p>
         </div>
       </div>
 
       {/* Progress bar */}
       <section>
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold tracking-tight text-slate-900">
+          <h2 className="text-base font-semibold tracking-tight text-slate-900">
             Revenue Progress
           </h2>
           <span className="text-xs text-slate-400">MRR journey</span>
@@ -275,8 +275,8 @@ export default function MemberDetail() {
                   onClick={() => setActiveTab(tab)}
                   className={
                     selected
-                      ? 'whitespace-nowrap border-b-2 border-slate-900 px-3 py-2 text-sm font-medium text-slate-900'
-                      : 'whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm text-slate-500 hover:text-slate-700'
+                      ? 'whitespace-nowrap border-b-2 border-slate-900 px-3 py-2 text-base font-medium text-slate-900'
+                      : 'whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-base text-slate-500 hover:text-slate-700'
                   }
                 >
                   {tab}
@@ -286,7 +286,7 @@ export default function MemberDetail() {
           </div>
         </div>
         <div className="mt-4 rounded-lg border border-dashed border-slate-200 bg-white p-10 text-center">
-          <p className="text-sm text-slate-500">
+          <p className="text-base text-slate-500">
             [Data for <span className="font-medium text-slate-700">{activeTab}</span> will display here]
           </p>
         </div>
@@ -305,12 +305,12 @@ export default function MemberDetail() {
           subtitle={`${member.training.done}/${member.training.total}`}
         />
         <div className="rounded-lg border border-slate-200 bg-white p-5">
-          <h3 className="text-sm font-medium text-slate-900">Last Submissions</h3>
+          <h3 className="text-base font-medium text-slate-900">Last Submissions</h3>
           <ul className="mt-3 divide-y divide-slate-100">
             {member.submissions.map((sub) => (
               <li
                 key={sub.label}
-                className="flex items-center justify-between py-2 text-sm"
+                className="flex items-center justify-between py-2 text-base"
               >
                 <span className="text-slate-700">{sub.label}</span>
                 <span className="text-slate-500">{sub.when}</span>
@@ -323,7 +323,7 @@ export default function MemberDetail() {
       {/* Recent activity */}
       <section>
         <div className="mb-3 flex items-baseline justify-between border-b border-slate-200 pb-2">
-          <h2 className="text-sm font-semibold tracking-tight text-slate-900">
+          <h2 className="text-base font-semibold tracking-tight text-slate-900">
             Recent Activity
           </h2>
         </div>
@@ -335,7 +335,7 @@ export default function MemberDetail() {
             >
               <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full bg-slate-400" />
               <div className="min-w-0 flex-1">
-                <div className="text-sm text-slate-900">{item.text}</div>
+                <div className="text-base text-slate-900">{item.text}</div>
                 <div className="text-xs text-slate-500">{item.meta}</div>
               </div>
               <div className="text-xs text-slate-500">{item.when}</div>

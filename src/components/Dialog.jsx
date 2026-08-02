@@ -113,7 +113,7 @@ function DialogModal({ dialog, onClose }) {
         </h3>
 
         {/* Message */}
-        <p className="text-white/55 text-sm leading-relaxed mb-6">
+        <p className="text-white/55 text-base leading-relaxed mb-6">
           {dialog.message}
         </p>
 
@@ -124,7 +124,7 @@ function DialogModal({ dialog, onClose }) {
               {/* Destructive / confirm */}
               <button
                 onClick={() => onClose(true)}
-                className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all
+                className={`flex-1 py-2 rounded-xl text-base font-medium transition-all
                   ${dialog.danger
                     ? 'bg-red-500 hover:bg-red-600 text-white'
                     : 'bg-accent hover:opacity-90 text-white'
@@ -135,7 +135,7 @@ function DialogModal({ dialog, onClose }) {
               {/* Cancel */}
               <button
                 onClick={() => onClose(false)}
-                className="flex-1 py-2 rounded-xl text-sm font-medium bg-white/8 hover:bg-white/14 text-white/75 transition-all border border-white/8"
+                className="flex-1 py-2 rounded-xl text-base font-medium bg-white/8 hover:bg-white/14 text-white/75 transition-all border border-white/8"
               >
                 {dialog.cancelText}
               </button>
@@ -143,7 +143,7 @@ function DialogModal({ dialog, onClose }) {
           ) : (
             <button
               onClick={() => onClose(true)}
-              className="w-full py-2 rounded-xl text-sm font-medium bg-white/8 hover:bg-white/14 text-white/75 transition-all border border-white/8"
+              className="w-full py-2 rounded-xl text-base font-medium bg-white/8 hover:bg-white/14 text-white/75 transition-all border border-white/8"
             >
               {dialog.buttonText}
             </button>

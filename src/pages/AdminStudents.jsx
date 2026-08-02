@@ -131,7 +131,7 @@ function Chip({ label, value, prev, color = 'rgba(255,255,255,0.85)', fmt = v =>
   return (
     <div className="rounded-xl p-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
       <p className="text-[11px] mb-1 leading-tight" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
-      <p className="text-sm font-black leading-none" style={{ color }}>{display}</p>
+      <p className="text-base font-black leading-none" style={{ color }}>{display}</p>
       {prev != null && prev !== '' && value != null && <Delta value={num(value)} prev={num(prev)} />}
     </div>
   );
@@ -340,7 +340,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
             {cur.main_project && (
               <div className="rounded-xl px-3 py-2 mb-3" style={{ background: 'rgba(255,255,255,0.05)' }}>
                 <p className="text-[11px] mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>פרויקט מרכזי</p>
-                <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{cur.main_project}</p>
+                <p className="text-base font-semibold" style={{ color: 'rgba(255,255,255,0.85)' }}>{cur.main_project}</p>
               </div>
             )}
             <div>
@@ -395,7 +395,7 @@ function MonthlyPanel({ monthly, onUpdateProfile, studentId, enrolled_at, total_
               <div key={label} className="rounded-xl px-3 py-3"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
                 <p className="text-[11px] mb-1.5" style={{ color: 'rgba(255,255,255,0.35)' }}>{label}</p>
-                <p className="text-sm leading-relaxed font-medium" style={{ color }}>{value}</p>
+                <p className="text-base leading-relaxed font-medium" style={{ color }}>{value}</p>
               </div>
             ))}
           </div>
@@ -434,14 +434,14 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
       <div className="flex items-center gap-3 px-4 py-3">
 
         {/* Avatar */}
-        <div className="h-9 w-9 rounded-full flex-none flex items-center justify-center text-sm font-black"
+        <div className="h-9 w-9 rounded-full flex-none flex items-center justify-center text-base font-black"
           style={{ background: h?.bg || 'rgba(255,255,255,0.08)', color: h?.color || 'rgba(255,255,255,0.5)' }}>
           {(name || '?').slice(0, 1).toUpperCase()}
         </div>
 
         {/* Name */}
         <div className="flex-1 min-w-0 text-right">
-          <p className="text-sm font-semibold text-white truncate">{name}</p>
+          <p className="text-base font-semibold text-white truncate">{name}</p>
         </div>
 
         {/* 4 fields */}
@@ -465,7 +465,7 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
           </span>
 
           {/* סכום ששילם */}
-          <span className="text-sm font-bold whitespace-nowrap" style={{ color: total_paid ? '#4fc38a' : 'rgba(255,255,255,0.2)' }}>
+          <span className="text-base font-bold whitespace-nowrap" style={{ color: total_paid ? '#4fc38a' : 'rgba(255,255,255,0.2)' }}>
             {total_paid ? fmtFull(total_paid) : '—'}
           </span>
         </div>
@@ -493,7 +493,7 @@ function StudentCard({ student, onHealthChange, onApproveRank, onUpdateProfile }
         <HealthPicker current={health_status} onChange={v => onHealthChange(student.id, v)} />
         {latest_rank && <span className="text-[11px] rounded px-2 py-0.5 font-bold" style={{ background: rankColor + '22', color: rankColor }}>{latest_rank}</span>}
         {enrolled_at && <span className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{fmtDate(enrolled_at)}</span>}
-        {total_paid && <span className="text-sm font-bold" style={{ color: '#4fc38a' }}>{fmtFull(total_paid)}</span>}
+        {total_paid && <span className="text-base font-bold" style={{ color: '#4fc38a' }}>{fmtFull(total_paid)}</span>}
       </div>
 
       {false && ( // keep MonthlyPanel import alive
@@ -569,7 +569,7 @@ function WeeklyWinsTable({ students }) {
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
-            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+            className="bg-transparent outline-none text-base w-full text-white placeholder:text-white/30" />
         </div>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
           {rows.length} ניצחונות · {students.length} תלמידים · {students.filter(s=>s.wins?.length>0).length} עם נצחונות
@@ -577,13 +577,13 @@ function WeeklyWinsTable({ students }) {
       </div>
 
       <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-        <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
+        <table className="w-full text-base" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
               {COLS.map(c => (
                 <th key={c.k} onClick={() => toggleSort(c.k)}
                   className="px-4 py-3 text-right cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
-                  style={{ color: sortKey === c.k ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                  style={{ color: sortKey === c.k ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em' }}>
                   {c.l}{sortKey === c.k && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
                 </th>
               ))}
@@ -591,7 +591,7 @@ function WeeklyWinsTable({ students }) {
           </thead>
           <tbody>
             {rows.length === 0
-              ? <tr><td colSpan={COLS.length} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
+              ? <tr><td colSpan={COLS.length} className="py-10 text-center text-base" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
               : rows.map((r, i) => (
                   <tr key={`${r.user_id}-${r.week_date}-${i}`}
                     style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
@@ -760,7 +760,7 @@ function DealsTable({ students, onRefresh }) {
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
-            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+            className="bg-transparent outline-none text-base w-full text-white placeholder:text-white/30" />
         </div>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
           {allRows.length} עסקאות · סה״כ: <span style={{ color: '#F5C118', fontWeight: 700 }}>₪{totalAmount.toLocaleString('he-IL')}</span>
@@ -770,15 +770,15 @@ function DealsTable({ students, onRefresh }) {
 
       <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
         {grouped.length === 0 ? (
-          <div className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</div>
+          <div className="py-10 text-center text-base" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</div>
         ) : (
-          <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
+          <table className="w-full text-base" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
             <thead>
               <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
                 {COLS.map(col => (
                   <th key={col.key} onClick={() => toggleSort(col.key)}
                     className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
-                    style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                    style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em' }}>
                     {col.label}{sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
                   </th>
                 ))}
@@ -845,7 +845,7 @@ function DealsTable({ students, onRefresh }) {
                             const text = val || '';
                             const isLong = text.length > 60;
                             return (
-                              <td key={col.key} className="px-3 py-2.5" style={{ textAlign: 'right', color: text ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.2)', fontSize: '0.8125rem', maxWidth: 280 }}>
+                              <td key={col.key} className="px-3 py-2.5" style={{ textAlign: 'right', color: text ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.2)', fontSize: '0.875rem', maxWidth: 280 }}>
                                 {!text ? '—' : isLong ? (
                                   <span>
                                     {isExpanded ? text : `${text.slice(0, 60)}...`}
@@ -863,7 +863,7 @@ function DealsTable({ students, onRefresh }) {
                           const display = col.fmt ? col.fmt(val) : (val ?? '—');
                           return (
                             <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
-                              style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: '0.8125rem' }}>
+                              style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: '0.875rem' }}>
                               {display}
                             </td>
                           );
@@ -920,7 +920,7 @@ function ChecklistView({ students, roadmap }) {
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
-            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+            className="bg-transparent outline-none text-base w-full text-white placeholder:text-white/30" />
         </div>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{filtered.length} תלמידים · {totalTasks} משימות במפת הדרכים</span>
       </div>
@@ -937,7 +937,7 @@ function ChecklistView({ students, roadmap }) {
               <button className="w-full flex items-center gap-4 px-5 py-4 hover:bg-white/[0.02] transition text-right"
                 onClick={() => setExpanded(isOpen ? null : s.id)}>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white text-sm truncate">{s.name}</p>
+                  <p className="font-semibold text-white text-base truncate">{s.name}</p>
                   {current ? (
                     <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>
                       {current.phase} · {current.week} · <span style={{ color: 'rgba(255,255,255,0.6)' }}>{current.task}</span>
@@ -951,7 +951,7 @@ function ChecklistView({ students, roadmap }) {
                   <div className="w-32 rounded-full overflow-hidden" style={{ height: 6, background: 'rgba(255,255,255,0.08)' }}>
                     <div style={{ width: `${pct}%`, height: '100%', background: pct === 100 ? '#4fc38a' : '#F5C118', borderRadius: 999, transition: 'width 0.4s' }} />
                   </div>
-                  <span className="text-sm font-bold w-10 text-left" style={{ color: pct === 100 ? '#4fc38a' : '#F5C118' }}>{pct}%</span>
+                  <span className="text-base font-bold w-10 text-left" style={{ color: pct === 100 ? '#4fc38a' : '#F5C118' }}>{pct}%</span>
                   <span className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>{(s.completions || []).length}/{totalTasks}</span>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5"
                     style={{ transition: 'transform 0.2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
@@ -1006,13 +1006,13 @@ function ChecklistView({ students, roadmap }) {
 function AdminTable({ cols, rows, rowKey, sortKey, sortDir, onSort }) {
   return (
     <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-      <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
+      <table className="w-full text-base" style={{ borderCollapse: 'collapse', minWidth: 700 }}>
         <thead>
           <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
             {cols.map(col => (
               <th key={col.key} onClick={() => onSort(col.key)}
                 className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
-                style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em' }}>
                 {col.label}{sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
               </th>
             ))}
@@ -1020,7 +1020,7 @@ function AdminTable({ cols, rows, rowKey, sortKey, sortDir, onSort }) {
         </thead>
         <tbody>
           {rows.length === 0
-            ? <tr><td colSpan={cols.length} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
+            ? <tr><td colSpan={cols.length} className="py-10 text-center text-base" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
             : rows.map((r, i) => (
               <tr key={rowKey(r)} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
                 className="hover:bg-white/[0.03] transition">
@@ -1029,7 +1029,7 @@ function AdminTable({ cols, rows, rowKey, sortKey, sortDir, onSort }) {
                   const display = col.fmt ? col.fmt(val) : (val ?? '—');
                   return (
                     <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
-                      style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: '0.8125rem' }}>
+                      style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: '0.875rem' }}>
                       {display}
                     </td>
                   );
@@ -1048,7 +1048,7 @@ function ComingSoon({ label }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-3" style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: 16 }}>
       <p className="text-2xl font-bold text-white/20">{label}</p>
-      <p className="text-sm" style={{ color: 'rgba(255,255,255,0.2)' }}>בקרוב</p>
+      <p className="text-base" style={{ color: 'rgba(255,255,255,0.2)' }}>בקרוב</p>
     </div>
   );
 }
@@ -1142,7 +1142,7 @@ function MonthlyTable({ students, onUpdateProfile }) {
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש לפי שם..."
-            className="bg-transparent outline-none text-sm w-full text-white placeholder:text-white/30" />
+            className="bg-transparent outline-none text-base w-full text-white placeholder:text-white/30" />
         </div>
 
         <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
@@ -1192,13 +1192,13 @@ function MonthlyTable({ students, onUpdateProfile }) {
 
       {/* Table */}
       <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
-        <table className="w-full text-sm" style={{ borderCollapse: 'collapse', minWidth: 900 }}>
+        <table className="w-full text-base" style={{ borderCollapse: 'collapse', minWidth: 900 }}>
           <thead>
             <tr style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
               {MT_COLS.map(col => (
                 <th key={col.key} onClick={() => toggleSort(col.key)}
                   className="px-3 py-3 cursor-pointer select-none hover:bg-white/5 transition whitespace-nowrap"
-                  style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.6875rem', fontWeight: 700, letterSpacing: '0.05em', userSelect: 'none' }}>
+                  style={{ textAlign: col.align || 'right', color: sortKey === col.key ? '#F5C118' : 'rgba(255,255,255,0.35)', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em', userSelect: 'none' }}>
                   {col.label}
                   {sortKey === col.key && <span className="mr-1">{sortDir === -1 ? '↓' : '↑'}</span>}
                 </th>
@@ -1207,7 +1207,7 @@ function MonthlyTable({ students, onUpdateProfile }) {
           </thead>
           <tbody>
             {rows.length === 0 ? (
-              <tr><td colSpan={MT_COLS.length} className="py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
+              <tr><td colSpan={MT_COLS.length} className="py-10 text-center text-base" style={{ color: 'rgba(255,255,255,0.25)' }}>אין נתונים</td></tr>
             ) : rows.map((r, i) => (
               <tr key={`${r.user_id}-${r.month}-${i}`}
                 style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)' }}
@@ -1231,7 +1231,7 @@ function MonthlyTable({ students, onUpdateProfile }) {
                   }
                   return (
                     <td key={col.key} className="px-3 py-2.5 whitespace-nowrap"
-                      style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' || val === '—' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: '0.8125rem' }}>
+                      style={{ textAlign: col.align || 'right', color: col.color || (val == null || val === '' || val === '—' ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.8)'), fontSize: '0.875rem' }}>
                       {col.key === 'current_rank' && val ? (
                         <span className="rounded-md px-2 py-0.5 text-[11px] font-bold"
                           style={{ background: getRankColor(val) + '20', color: getRankColor(val), border: `1px solid ${getRankColor(val)}40` }}>
@@ -1379,7 +1379,7 @@ export default function AdminStudents() {
 
   if (isUnauthorized) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
+      <div className="flex h-64 items-center justify-center text-base" style={{ color: 'rgba(255,255,255,0.3)' }}>
         אין גישה
       </div>
     );
@@ -1394,13 +1394,13 @@ export default function AdminStudents() {
           <h1 className="text-2xl sm:text-3xl font-bold text-white">
             {{ students: 'תלמידים', monthly: 'נתונים חודשיים', wins: 'נצחונות שבועיים', deals: 'עסקאות חדשות', checklist: 'צ׳קליסט' }[view]}
           </h1>
-          <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <p className="text-base mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
             {active.length} פעילים · {archived.length} בארכיון
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={fetchStudents} disabled={loading}
-            className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition hover:opacity-80"
+            className="flex items-center gap-2 rounded-xl px-4 py-2 text-base font-semibold transition hover:opacity-80"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             רענן
@@ -1489,7 +1489,7 @@ export default function AdminStudents() {
       {error && (
         <div className="rounded-2xl px-5 py-4"
           style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-          <p className="text-sm font-semibold" style={{ color: '#fca5a5' }}>שגיאה בטעינה: {error}</p>
+          <p className="text-base font-semibold" style={{ color: '#fca5a5' }}>שגיאה בטעינה: {error}</p>
           {error.includes('CLERK_SECRET_KEY') && (
             <p className="text-xs mt-1" style={{ color: 'rgba(252,165,165,0.6)' }}>הוסף CLERK_SECRET_KEY ל-.env</p>
           )}
@@ -1515,7 +1515,7 @@ export default function AdminStudents() {
       ) : displayed.length === 0 ? (
         <div className="rounded-2xl p-12 text-center" style={{ border: '1px dashed rgba(255,255,255,0.1)' }}>
           <Users size={32} style={{ color: 'rgba(255,255,255,0.1)', margin: '0 auto 12px' }} />
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <p className="text-base" style={{ color: 'rgba(255,255,255,0.3)' }}>
             {filter === 'all' ? 'אין תלמידים' : 'אין תלמידים בקטגוריה זו'}
           </p>
         </div>

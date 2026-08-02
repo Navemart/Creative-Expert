@@ -34,7 +34,7 @@ function Avatar({ name, index, size = 'md' }) {
   useTrackPage('חברים');
   const sizes = {
     md: 'h-16 w-16 text-base',
-    sm: 'h-10 w-10 text-sm',
+    sm: 'h-10 w-10 text-base',
   };
   return (
     <div
@@ -56,11 +56,11 @@ function MemberCard({ member, index }) {
       <Avatar name={member.name} index={index} />
       <div className="mt-3 flex items-center gap-1.5">
         <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-        <h3 className="text-sm font-medium tracking-tight text-slate-900 group-hover:text-slate-950">
+        <h3 className="text-base font-medium tracking-tight text-slate-900 group-hover:text-slate-950">
           {member.name}
         </h3>
       </div>
-      <div className="mt-1 text-sm text-slate-500">{member.role}</div>
+      <div className="mt-1 text-base text-slate-500">{member.role}</div>
     </Link>
   );
 }
@@ -96,7 +96,7 @@ export default function Members() {
 
   const activeCount = members.filter((m) => m.status === 'active').length;
 
-  if (loading) return <div className="p-8 text-sm text-slate-500">טוען חברים…</div>;
+  if (loading) return <div className="p-8 text-base text-slate-500">טוען חברים…</div>;
 
   return (
     <div className="w-full space-y-6">
@@ -104,7 +104,7 @@ export default function Members() {
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
           חברים
         </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-base text-slate-500">
           עיין ונהל את החברים שלך.
         </p>
       </div>
@@ -121,8 +121,8 @@ export default function Members() {
                 onClick={() => setFilter(f.key)}
                 className={
                   selected
-                    ? 'rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground'
-                    : 'rounded-md border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50'
+                    ? 'rounded-md bg-accent px-3 py-1.5 text-base font-medium text-accent-foreground'
+                    : 'rounded-md border border-slate-200 bg-white px-3 py-1.5 text-base text-slate-700 hover:bg-slate-50'
                 }
               >
                 {f.label}
@@ -130,7 +130,7 @@ export default function Members() {
             );
           })}
         </div>
-        <span className="text-sm text-slate-500">
+        <span className="text-base text-slate-500">
           <span className="font-medium text-slate-700">{activeCount}</span> חברים פעילים
         </span>
       </div>
@@ -147,7 +147,7 @@ export default function Members() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="חיפוש חברים..."
-            className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder-slate-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="w-full rounded-md border border-slate-200 bg-white py-2 pl-9 pr-3 text-base text-slate-900 placeholder-slate-400 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export default function Members() {
           </button>
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-base text-slate-700 hover:bg-slate-50"
           >
             שם א–ת
             <ChevronDown size={14} className="text-slate-400" />
@@ -209,13 +209,13 @@ export default function Members() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className={`h-1.5 w-1.5 rounded-full ${status.dot}`} />
-                        <span className="truncate text-sm font-medium text-slate-900">
+                        <span className="truncate text-base font-medium text-slate-900">
                           {member.name}
                         </span>
                       </div>
-                      <div className="text-sm text-slate-500">{status.label}</div>
+                      <div className="text-base text-slate-500">{status.label}</div>
                     </div>
-                    <div className="text-sm text-slate-600">{member.role}</div>
+                    <div className="text-base text-slate-600">{member.role}</div>
                   </Link>
                 </li>
               );
@@ -226,7 +226,7 @@ export default function Members() {
 
       {filtered.length === 0 && (
         <div className="rounded-lg p-12 text-center" style={{ border: '1px dashed rgba(255,255,255,0.15)', background: 'rgb(var(--bg-surface))' }}>
-          <p className="text-sm text-slate-500">אין חברים התואמים לפילטרים אלה.</p>
+          <p className="text-base text-slate-500">אין חברים התואמים לפילטרים אלה.</p>
         </div>
       )}
     </div>

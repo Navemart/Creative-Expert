@@ -33,7 +33,6 @@ function getRankColor(label) {
 function fmtK(n) {
   if (!n) return null;
   const v = Number(n); if (isNaN(v) || v === 0) return null;
-  if (v >= 1000) return `₪${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1)}K`;
   return '₪' + Math.round(v).toLocaleString('he-IL');
 }
 
@@ -72,7 +71,7 @@ function Photo({ name, src, style = {} }) {
     );
   }
   return (
-    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', fontSize: '2.25rem', fontWeight: 900, color: 'rgba(255,255,255,0.2)', ...style }}>
+    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', fontSize: '2.5rem', fontWeight: 900, color: 'rgba(255,255,255,0.2)', ...style }}>
       {initial}
     </div>
   );
@@ -141,20 +140,20 @@ function MemberCard({ student, photoSrc, onClick }) {
       <div style={{ padding: '10px 12px 13px', display: 'flex', flexDirection: 'column', gap: 3 }}>
         {/* Row 1: status dot (right) + rank (left) */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.625rem', fontWeight: 700, color: sm.color }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.875rem', fontWeight: 700, color: sm.color }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: sm.color, flexShrink: 0 }} />
             {sm.label}
           </span>
           {effective_rank && (
-            <span style={{ fontSize: '0.625rem', fontWeight: 700, color: rankColor, padding: '1px 6px', borderRadius: 5, background: rankColor + '18', border: `1px solid ${rankColor}35` }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: rankColor, padding: '2px 8px', borderRadius: 5, background: rankColor + '18', border: `1px solid ${rankColor}35` }}>
               {effective_rank}
             </span>
           )}
         </div>
         {/* Row 2: name */}
-        <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'white', margin: 0, lineHeight: 1.3 }}>{name}</p>
+        <p style={{ fontSize: '1rem', fontWeight: 700, color: 'white', margin: 0, lineHeight: 1.3 }}>{name}</p>
         {/* Row 3: income */}
-        <p style={{ fontSize: '0.75rem', fontWeight: 600, color: income ? '#F5C118' : 'rgba(255,255,255,0.2)', margin: 0 }}>
+        <p style={{ fontSize: '0.875rem', fontWeight: 600, color: income ? '#F5C118' : 'rgba(255,255,255,0.2)', margin: 0 }}>
           {income ? `${income}/חו׳` : 'אין דיווח'}
         </p>
       </div>
@@ -186,11 +185,11 @@ function MemberRow({ student, photoSrc, onClick }) {
       {/* Name + joined */}
       <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
         <p style={{ fontWeight: 700, fontSize: '0.875rem', color: 'white', margin: 0 }}>{name}</p>
-        {enrolled_at && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.3)', margin: '2px 0 0' }}>הצטרף {fmtDate(enrolled_at)}</p>}
+        {enrolled_at && <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', margin: '2px 0 0' }}>הצטרף {fmtDate(enrolled_at)}</p>}
       </div>
 
       {/* Status + rank badges */}
-      <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: sm.color + '18', color: sm.color, border: `1px solid ${sm.color}40`, flexShrink: 0 }}>{sm.label}</span>
+      <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: sm.color + '18', color: sm.color, border: `1px solid ${sm.color}40`, flexShrink: 0 }}>{sm.label}</span>
       {effective_rank && <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: rankColor + '18', color: rankColor, border: `1px solid ${rankColor}40`, flexShrink: 0 }}>{effective_rank}</span>}
 
       {/* Income */}
@@ -234,7 +233,7 @@ function StudentModal({ student, photoSrc, onClose }) {
               <X size={16} />
             </button>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-              <p style={{ fontWeight: 900, fontSize: '1.25rem', color: 'white', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>{student.name}</p>
+              <p style={{ fontWeight: 900, fontSize: '1.5rem', color: 'white', margin: 0, textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>{student.name}</p>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                 {student.effective_rank && <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: getRankColor(student.effective_rank) + '30', color: 'white', border: `1px solid ${getRankColor(student.effective_rank)}60`, backdropFilter: 'blur(4px)' }}>{student.effective_rank}</span>}
                 {h && <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: h.color + '30', color: 'white', border: `1px solid ${h.color}60`, backdropFilter: 'blur(4px)' }}>{h.label}</span>}
@@ -254,7 +253,7 @@ function StudentModal({ student, photoSrc, onClose }) {
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
                 {sorted.map((m, i) => (
                   <button key={m.id || m.month} onClick={() => setIdx(i)}
-                    style={{ padding: '6px 14px', borderRadius: 20, fontSize: '0.6875rem', fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none', transition: 'all 0.15s',
+                    style={{ padding: '6px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, whiteSpace: 'nowrap', cursor: 'pointer', border: 'none', transition: 'all 0.15s',
                       background: i === idx ? 'rgba(245,193,24,0.15)' : 'rgba(255,255,255,0.05)', color: i === idx ? '#F5C118' : 'rgba(255,255,255,0.4)' }}>
                     {fmtMonth(m.month)}
                   </button>
@@ -266,22 +265,22 @@ function StudentModal({ student, photoSrc, onClose }) {
                   {/* Hero row */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
                     <div style={{ borderRadius: 14, padding: '16px 18px', background: 'rgba(245,193,24,0.08)', border: '1px solid rgba(245,193,24,0.25)' }}>
-                      <p style={{ fontSize: '0.6875rem', color: 'rgba(245,193,24,0.7)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>הכנסה חודשית</p>
-                      <p style={{ fontSize: '1.75rem', fontWeight: 900, color: '#F5C118', lineHeight: 1, margin: 0 }}>{fmtFull(curIncome) || '₪0'}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'rgba(245,193,24,0.7)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>הכנסה חודשית</p>
+                      <p style={{ fontSize: '2.5rem', fontWeight: 900, color: '#F5C118', lineHeight: 1, margin: 0 }}>{fmtFull(curIncome) || '₪0'}</p>
                       {prevIncome != null && prevIncome > 0 && (
-                        <p style={{ fontSize: '0.6875rem', margin: '6px 0 0', color: curIncome >= prevIncome ? '#16a34a' : '#dc2626', fontWeight: 700 }}>
+                        <p style={{ fontSize: '0.75rem', margin: '6px 0 0', color: curIncome >= prevIncome ? '#16a34a' : '#dc2626', fontWeight: 700 }}>
                           {curIncome >= prevIncome ? '↑' : '↓'} {Math.abs(Math.round((curIncome - prevIncome) / prevIncome * 100))}%
                         </p>
                       )}
                     </div>
                     <div style={{ borderRadius: 14, padding: '16px 18px', background: curNet >= 0 ? '#f0fdf4' : '#fef2f2', border: `1px solid ${curNet >= 0 ? '#bbf7d0' : '#fecaca'}` }}>
-                      <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>רווח נטו</p>
+                      <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>רווח נטו</p>
                       <p style={{ fontSize: '1.5rem', fontWeight: 900, color: curNet >= 0 ? '#16a34a' : '#dc2626', lineHeight: 1, margin: 0 }}>{fmtFull(curNet) || '₪0'}</p>
                       <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', margin: '6px 0 0' }}>הוצאות: {fmtFull(curExp) || '₪0'}</p>
                     </div>
                     <div style={{ borderRadius: 14, padding: '16px 18px', background: rankColor + '10', border: `1px solid ${rankColor}30` }}>
-                      <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>דרגה</p>
-                      <p style={{ fontSize: '1.125rem', fontWeight: 900, color: rankColor, lineHeight: 1, margin: 0 }}>{cur.current_rank || '—'}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.75)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 8px' }}>דרגה</p>
+                      <p style={{ fontSize: '1rem', fontWeight: 900, color: rankColor, lineHeight: 1, margin: 0 }}>{cur.current_rank || '—'}</p>
                     </div>
                   </div>
 
@@ -292,7 +291,7 @@ function StudentModal({ student, photoSrc, onClose }) {
                       {[['לידים', cur.leads], ['שיחות נקבעו', cur.sales_calls_set], ['הגיעו', cur.sales_calls_showed], ['נסגרו', cur.closings_count]].map(([l, v]) => (
                         <div key={l}>
                           <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', margin: '0 0 4px' }}>{l}</p>
-                          <p style={{ fontSize: '1.375rem', fontWeight: 900, color: '#a78bfa', margin: 0 }}>{v ?? '—'}</p>
+                          <p style={{ fontSize: '1.5rem', fontWeight: 900, color: '#a78bfa', margin: 0 }}>{v ?? '—'}</p>
                         </div>
                       ))}
                     </div>
@@ -305,7 +304,7 @@ function StudentModal({ student, photoSrc, onClose }) {
                       {[['עוקבים', cur.followers != null ? Number(cur.followers).toLocaleString('he-IL') : null], ['פוסטים', cur.posts_count], ['ממומן', cur.paid_ads != null ? fmtFull(cur.paid_ads) : null]].map(([l, v]) => (
                         <div key={l}>
                           <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.35)', margin: '0 0 4px' }}>{l}</p>
-                          <p style={{ fontSize: '1.125rem', fontWeight: 900, color: '#fb923c', margin: 0 }}>{v ?? '—'}</p>
+                          <p style={{ fontSize: '1rem', fontWeight: 900, color: '#fb923c', margin: 0 }}>{v ?? '—'}</p>
                         </div>
                       ))}
                     </div>
@@ -316,13 +315,13 @@ function StudentModal({ student, photoSrc, onClose }) {
                     <div style={{ borderRadius: 12, padding: '14px 16px', background: 'rgba(236,72,153,0.06)', border: '1px solid rgba(236,72,153,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                         <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f472b6', margin: 0 }}>🔮 רפלקשן</p>
-                        {cur.nps != null && <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: num(cur.nps) <= 8 ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.12)', color: num(cur.nps) <= 8 ? '#f87171' : '#4ade80' }}>NPS {cur.nps}</span>}
+                        {cur.nps != null && <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: num(cur.nps) <= 8 ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.12)', color: num(cur.nps) <= 8 ? '#f87171' : '#4ade80' }}>NPS {cur.nps}</span>}
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10 }}>
                         {[['🏆 נצחון גדול', cur.biggest_win], ['🎯 פוקוס הבא', cur.focus_next_month], ['💬 פידבק', cur.program_feedback]].filter(([,v]) => v).map(([l, v]) => (
                           <div key={l} style={{ borderRadius: 8, padding: '10px 12px', background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
                             <p style={{ fontSize: '0.625rem', color: 'rgba(255,255,255,0.3)', margin: '0 0 4px' }}>{l}</p>
-                            <p style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: 0 }}>{v}</p>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, margin: 0 }}>{v}</p>
                           </div>
                         ))}
                       </div>
@@ -354,7 +353,7 @@ function StatusDropdown({ value, onChange, countFor }) {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: value !== 'all' ? 'rgba(245,193,24,0.1)' : 'rgb(var(--bg-surface))', border: `1px solid ${value !== 'all' ? 'rgba(245,193,24,0.4)' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', fontSize: '0.8125rem', color: value !== 'all' ? '#F5C118' : 'rgba(255,255,255,0.75)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: value !== 'all' ? 'rgba(245,193,24,0.1)' : 'rgb(var(--bg-surface))', border: `1px solid ${value !== 'all' ? 'rgba(245,193,24,0.4)' : 'rgba(255,255,255,0.1)'}`, cursor: 'pointer', fontSize: '0.875rem', color: value !== 'all' ? '#F5C118' : 'rgba(255,255,255,0.75)', fontWeight: 600, whiteSpace: 'nowrap' }}>
         {value !== 'all' && STATUS_META[value] && <span style={{ width: 7, height: 7, borderRadius: '50%', background: STATUS_META[value].color, flexShrink: 0 }} />}
         {cur?.l || 'סטטוס תלמיד'}
         <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />
@@ -366,10 +365,10 @@ function StatusDropdown({ value, onChange, countFor }) {
             const count = countFor(f.k);
             return (
               <button key={f.k} onClick={() => { onChange(f.k); setOpen(false); }}
-                style={{ width: '100%', textAlign: 'right', padding: '9px 14px', fontSize: '0.8125rem', color: f.k === value ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: f.k === value ? 700 : 500, background: f.k === value ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                style={{ width: '100%', textAlign: 'right', padding: '9px 14px', fontSize: '0.875rem', color: f.k === value ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: f.k === value ? 700 : 500, background: f.k === value ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
                 {dot ? <span style={{ width: 7, height: 7, borderRadius: '50%', background: dot, flexShrink: 0 }} /> : <span style={{ width: 7 }} />}
                 <span style={{ flex: 1 }}>{f.l}</span>
-                <span style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.3)' }}>{count}</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>{count}</span>
               </button>
             );
           })}
@@ -394,7 +393,7 @@ function SortDropdown({ sortKey, sortDir, onChange }) {
   return (
     <div ref={ref} style={{ position: 'relative' }}>
       <button onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600, whiteSpace: 'nowrap' }}>
         {sortDir === 1 ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         {cur?.l || 'מיון'}
         {sortDir === 1 ? <ChevronUp size={12} style={{ color: 'rgba(255,255,255,0.3)' }} /> : <ChevronDown size={12} style={{ color: 'rgba(255,255,255,0.3)' }} />}
@@ -403,7 +402,7 @@ function SortDropdown({ sortKey, sortDir, onChange }) {
         <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, minWidth: 150, boxShadow: '0 8px 32px rgba(0,0,0,0.6)', zIndex: 100, overflow: 'hidden' }}>
           {SORT_OPTIONS.map(o => (
             <button key={o.k} onClick={() => { onChange(o.k, o.k === sortKey ? -sortDir : -1); setOpen(false); }}
-              style={{ width: '100%', textAlign: 'right', padding: '9px 14px', fontSize: '0.8125rem', color: o.k === sortKey ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: o.k === sortKey ? 700 : 500, background: o.k === sortKey ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              style={{ width: '100%', textAlign: 'right', padding: '9px 14px', fontSize: '0.875rem', color: o.k === sortKey ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: o.k === sortKey ? 700 : 500, background: o.k === sortKey ? 'rgba(255,255,255,0.08)' : 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span>{o.k === sortKey ? (sortDir === 1 ? '↑' : '↓') : ''}</span>
               {o.l}
             </button>
@@ -534,11 +533,11 @@ export default function AdminMembersGrid() {
               {KPIS.map(({ label, value, icon: Icon, iconColor, sub }) => (
                 <div key={label} style={{ borderRadius: 14, padding: '16px 18px', background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                    <p style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.28)', margin: 0 }}>{label}</p>
+                    <p style={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'rgba(255,255,255,0.28)', margin: 0 }}>{label}</p>
                     <Icon size={15} style={{ color: iconColor, flexShrink: 0 }} />
                   </div>
-                  <p style={{ fontSize: '1.375rem', fontWeight: 900, color: 'rgba(255,255,255,0.92)', margin: 0, lineHeight: 1 }}>{value}</p>
-                  {sub && <p style={{ fontSize: '0.6875rem', color: 'rgba(255,255,255,0.28)', margin: '6px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</p>}
+                  <p style={{ fontSize: '1.5rem', fontWeight: 900, color: 'rgba(255,255,255,0.92)', margin: 0, lineHeight: 1 }}>{value}</p>
+                  {sub && <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.28)', margin: '6px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</p>}
                 </div>
               ))}
             </div>
@@ -548,7 +547,7 @@ export default function AdminMembersGrid() {
         {/* ── Slack unposted alert ────────────────────────── */}
         {(unposted.wins > 0 || unposted.deals > 0) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderRadius: 10, marginBottom: 16, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
-            <span style={{ color: '#fca5a5', fontSize: '0.8125rem', fontWeight: 600 }}>
+            <span style={{ color: '#fca5a5', fontSize: '0.875rem', fontWeight: 600 }}>
               ⚠️ לא פורסם לסלאק:
               {unposted.wins > 0 && ` ${unposted.wins} נצחונות`}
               {unposted.wins > 0 && unposted.deals > 0 && ' ·'}
@@ -565,7 +564,7 @@ export default function AdminMembersGrid() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgb(var(--bg-surface))', border: `1px solid ${borderClr}`, borderRadius: 8, padding: '7px 12px', minWidth: 220, flex: '0 0 auto' }}>
             <Search size={14} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש תלמידים..."
-              style={{ background: 'none', border: 'none', outline: 'none', color: 'white', fontSize: '0.8125rem', width: '100%' }} />
+              style={{ background: 'none', border: 'none', outline: 'none', color: 'white', fontSize: '0.875rem', width: '100%' }} />
             {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', padding: 0, display: 'flex' }}><X size={13} /></button>}
           </div>
 
@@ -589,7 +588,7 @@ export default function AdminMembersGrid() {
 
           {/* Refresh */}
           <button onClick={() => { setRefreshing(true); fetchAll().then(() => setRefreshing(false)); }} disabled={refreshing}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border: `1px solid ${borderClr}`, cursor: 'pointer', fontSize: '0.8125rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border: `1px solid ${borderClr}`, cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}>
             <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none', color: 'rgba(255,255,255,0.3)' }} />
             רענן
           </button>

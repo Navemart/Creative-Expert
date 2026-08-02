@@ -11,8 +11,8 @@ export default function EmptyState({
       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full" style={{ background: 'rgb(var(--bg-elevated))', color: 'rgba(255,255,255,0.4)' }}>
         <Icon size={20} />
       </div>
-      <div className="text-sm font-medium text-slate-900">{title}</div>
-      <p className="mt-1 max-w-sm text-sm text-slate-500">{description}</p>
+      <div className="text-base font-medium text-slate-900">{title}</div>
+      <p className="mt-1 max-w-sm text-base text-slate-500">{description}</p>
     </div>
   );
 }

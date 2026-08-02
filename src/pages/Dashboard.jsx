@@ -1257,111 +1257,106 @@ export default function Dashboard() {
   const reminderCount   = (isSunday ? 1 : 0) + (isMonthStart ? 1 : 0);
   const showRoadmapTask = nextTask != null && reminderCount < 2;
 
+  // ── Pending-submission retry on mount ───────────────────────────
+  useEffect(() => {
+    const pending = Object.keys(localStorage).filter(k => k.startsWith('pending_win_') || k.startsWith('pending_deal_') || k.startsWith('pending_monthly_'));
+    if (!pending.length) return;
+    console.log(`[retry] Found ${pending.length} pending submission(s) — retrying…`);
+    pending.forEach(async key => {
+      try {
+        const { type, data } = JSON.parse(localStorage.getItem(key));
+        const res = await fetch(`/api/submit/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (res.ok) {
+          localStorage.removeItem(key);
+          console.log(`[retry] Retried and cleared: ${key}`);
+        }
+      } catch (e) {
+        console.warn(`[retry] Could not retry ${key}:`, e.message);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Submit handlers
   async function submitDeal() {
     if (!dealForm.total_amount) return;
 
-    const date = dealForm.deal_date || new Date().toISOString().slice(0, 10);
-
+    const date     = dealForm.deal_date || new Date().toISOString().slice(0, 10);
     const dealName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
 
-    const { data: dealRow } = await supabase.from('deals').insert({
+    const body = {
       user_id:          userId,
       user_name:        dealName,
-      amount:           parseFloat(dealForm.total_amount),
-      total_amount:     parseFloat(dealForm.total_amount),
-      received_amount:  parseFloat(dealForm.received_amount) || 0,
+      total_amount:     dealForm.total_amount,
+      received_amount:  dealForm.received_amount,
       next_rank:        dealForm.next_rank,
       notes:            dealForm.notes || null,
-      created_at:       date + 'T12:00:00.000Z',
-    }).select('id').single();
+      deal_date:        date,
+    };
 
-    // שלח לסלאק
+    // שמור גיבוי לפני שליחה
+    const lsKey = `pending_deal_${Date.now()}`;
+    localStorage.setItem(lsKey, JSON.stringify({ type: 'deal', data: body }));
+
+    let ok = false;
     try {
-      const slackRes = await fetch('/api/slack/deals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:             dealName,
-          total_amount:     dealForm.total_amount,
-          received_amount:  dealForm.received_amount,
-          next_rank:        dealForm.next_rank,
-          notes:            dealForm.notes || '',
-          date,
-        }),
-      });
-      const slackData = await slackRes.json();
-      if (slackData.ok && dealRow?.id) {
-        await supabase.from('deals').update({ slack_posted_at: new Date().toISOString() }).eq('id', dealRow.id);
-      }
+      const res = await fetch('/api/submit/deal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d   = await res.json();
+      if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+      ok = true;
+      localStorage.removeItem(lsKey);
     } catch (e) {
-      console.error('Slack deal error:', e);
+      console.error('[submitDeal] שגיאה:', e.message);
+      alert('שגיאה בשמירת העסקה. הנתונים נשמרו מקומית וינסו להישלח שוב בפעם הבאה. (' + e.message + ')');
+      return;
     }
 
-    const submittedAmount    = dealForm.total_amount;
-    const submittedReceived  = dealForm.received_amount;
+    const submittedAmount   = dealForm.total_amount;
+    const submittedReceived = dealForm.received_amount;
     setDealForm({ total_amount: '', received_amount: '', next_rank: '', deal_date: new Date().toISOString().slice(0,10) });
     setModal(null);
     fetchAll();
 
-    // 🎉 קונפטי
-    confettiLib({ particleCount: 120, spread: 70, origin: { x: 0.5, y: 0.55 }, colors: ['#F5C118', '#22c55e', '#60a5fa', '#f472b6', '#a78bfa', '#fb923c'], scalar: 1.1 });
-    setTimeout(() => confettiLib({ particleCount: 60, angle: 60,  spread: 55, origin: { x: 0, y: 0.6 }, colors: ['#F5C118', '#22c55e', '#60a5fa'] }), 150);
-    setTimeout(() => confettiLib({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.6 }, colors: ['#f472b6', '#a78bfa', '#fb923c'] }), 300);
-
-    // פופאפ פתיחת פרויקט
-    setTimeout(() => setDealProjectModal({ totalAmount: submittedAmount, receivedAmount: submittedReceived }), 600);
+    if (ok) {
+      // 🎉 קונפטי
+      confettiLib({ particleCount: 120, spread: 70, origin: { x: 0.5, y: 0.55 }, colors: ['#F5C118', '#22c55e', '#60a5fa', '#f472b6', '#a78bfa', '#fb923c'], scalar: 1.1 });
+      setTimeout(() => confettiLib({ particleCount: 60, angle: 60,  spread: 55, origin: { x: 0, y: 0.6 }, colors: ['#F5C118', '#22c55e', '#60a5fa'] }), 150);
+      setTimeout(() => confettiLib({ particleCount: 60, angle: 120, spread: 55, origin: { x: 1, y: 0.6 }, colors: ['#f472b6', '#a78bfa', '#fb923c'] }), 300);
+      setTimeout(() => setDealProjectModal({ totalAmount: submittedAmount, receivedAmount: submittedReceived }), 600);
+    }
   }
 
   async function submitWin() {
     if (!winForm.win_1.trim() || !winForm.win_2.trim() || !winForm.win_3.trim()) return;
 
-    const submittedAt = new Date().toISOString(); // actual submit time — used for streak
-    const weekDate    = winForm.week_date || new Date().toISOString().slice(0, 10);
-
+    const weekDate = winForm.week_date || new Date().toISOString().slice(0, 10);
     const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
 
-    // שמור ב-Supabase
-    const { data: winRow, error: insertError } = await supabase.from('sunday_wins').insert({
+    const body = {
       user_id:         userId,
       user_name:       fullName,
-      wins:            winForm.win_1,
       win_1:           winForm.win_1,
       win_2:           winForm.win_2,
       win_3:           winForm.win_3,
       focus_next_week: winForm.focus_next_week,
       blocker:         winForm.blocker,
       week_date:       weekDate,
-      submitted_at:    submittedAt,
-    }).select('id').single();
+      submitted_at:    new Date().toISOString(),
+    };
 
-    if (insertError) {
-      console.error('[submitWin] Supabase insert failed:', insertError.message);
-      alert('שגיאה בשמירת הנצחונות. אנא נסה שוב.');
-      return;
-    }
+    // שמור גיבוי לפני שליחה
+    const lsKey = `pending_win_${Date.now()}`;
+    localStorage.setItem(lsKey, JSON.stringify({ type: 'wins', data: body }));
 
-    // שלח לסלאק
     try {
-      const slackRes = await fetch('/api/slack/wins', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name:            fullName,
-          win_1:           winForm.win_1,
-          win_2:           winForm.win_2,
-          win_3:           winForm.win_3,
-          focus_next_week: winForm.focus_next_week,
-          blocker:         winForm.blocker,
-          date:            weekDate,
-        }),
-      });
-      const slackData = await slackRes.json();
-      if (slackData.ok && winRow?.id) {
-        await supabase.from('sunday_wins').update({ slack_posted_at: new Date().toISOString() }).eq('id', winRow.id);
-      }
+      const res = await fetch('/api/submit/wins', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const d   = await res.json();
+      if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+      localStorage.removeItem(lsKey);
     } catch (e) {
-      console.error('Slack wins error:', e);
+      console.error('[submitWin] שגיאה:', e.message);
+      alert('שגיאה בשמירת הנצחונות. הנתונים נשמרו מקומית וינסו להישלח שוב בפעם הבאה. (' + e.message + ')');
+      return;
     }
 
     setWinForm({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '', week_date: new Date().toISOString().slice(0,10), _datePicker: false });
@@ -1549,29 +1544,36 @@ export default function Dashboard() {
       program_feedback:     monthlyForm.program_feedback || null,
     };
 
+    // ── שמור גיבוי לפני שליחה ────────────────────────────────────
+    let existing_id = null;
     if (editingSubmission) {
-      const { error } = await supabase.from('monthly_submissions').update(payload).eq('id', editingSubmission.id);
-      if (error) { await dialog.alert('שגיאה בשמירה: ' + error.message); return; }
-      setEditingSubmission(null);
+      existing_id = editingSubmission.id;
     } else {
       // Check for duplicate month
       const exists = monthlyData.some(m => m.month?.slice(0, 7) === fullDate.slice(0, 7));
       if (exists) {
         const ok = await dialog.confirm(`כבר קיים דיווח לחודש ${monthlyForm.report_month}. האם לעדכן אותו?`, { title: 'דיווח קיים', confirmText: 'עדכן', cancelText: 'ביטול', danger: false });
         if (!ok) return;
-        const existing = monthlyData.find(m => m.month?.slice(0, 7) === fullDate.slice(0, 7));
-        const { error } = await supabase.from('monthly_submissions').update(payload).eq('id', existing.id);
-        if (error) { await dialog.alert('שגיאה בעדכון: ' + error.message); return; }
-      } else {
-        const { error } = await supabase.from('monthly_submissions').insert(payload);
-        if (error) { await dialog.alert('שגיאה בשמירה: ' + error.message); return; }
+        existing_id = monthlyData.find(m => m.month?.slice(0, 7) === fullDate.slice(0, 7))?.id || null;
       }
     }
 
-    // Save pending request for admin approval
-    if (pendingUpgradeData) {
-      await supabase.from('rank_upgrade_requests').insert({ ...pendingUpgradeData, status: 'pending' });
+    const submitBody = { user_id: userId, payload, existing_id, pending_upgrade: pendingUpgradeData || null };
+    const lsKey      = `pending_monthly_${Date.now()}`;
+    localStorage.setItem(lsKey, JSON.stringify({ type: 'monthly', data: submitBody }));
+
+    try {
+      const res = await fetch('/api/submit/monthly', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(submitBody) });
+      const d   = await res.json();
+      if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
+      localStorage.removeItem(lsKey);
+    } catch (e) {
+      console.error('[submitMonthly] שגיאה:', e.message);
+      await dialog.alert('שגיאה בשמירה: ' + e.message + '\nהנתונים נשמרו מקומית וינסו להישלח שוב בפעם הבאה.');
+      return;
     }
+
+    if (editingSubmission) setEditingSubmission(null);
 
     setMonthlyStep(1);
     setMonthlyForm({

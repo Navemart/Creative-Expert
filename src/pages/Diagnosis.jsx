@@ -161,14 +161,14 @@ function AnswerRow({ question, value, onChange }) {
   ];
   return (
     <div className="rounded-xl p-4 space-y-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.07)' }}>
-      <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{question}</p>
+      <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.82)' }}>{question}</p>
       <div className="flex gap-2">
         {opts.map(opt => {
           const active = value === opt.v;
           const color = opt.v === 1 ? '#22c55e' : opt.v === 0.5 ? '#f59e0b' : '#ef4444';
           return (
             <button key={opt.v} onClick={() => onChange(opt.v)}
-              className="flex-1 rounded-lg py-2 text-sm font-semibold transition"
+              className="flex-1 rounded-lg py-2 text-base font-semibold transition"
               style={{
                 background: active ? color + '22' : 'rgba(255,255,255,0.05)',
                 border: `1px solid ${active ? color : 'rgba(255,255,255,0.1)'}`,
@@ -199,7 +199,7 @@ function StageCard({ stage, isCurrent, isSelected, hasResult, onClick }) {
       }}
     >
       <div className="flex items-center justify-between mb-2.5">
-        <span className="text-sm font-bold" style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.75)' }}>
+        <span className="text-base font-bold" style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.75)' }}>
           {stage.title}
         </span>
         {isCurrent && hasResult && (
@@ -265,7 +265,7 @@ function StageDetail({ stage, isCurrent }) {
     <div className="rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: `1px solid ${isCurrent ? hex + '55' : 'rgba(255,255,255,0.08)'}` }}>
       <div className="flex items-center gap-2.5 px-4 sm:px-5 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <span>{stage.dots}</span>
-        <span className="text-sm font-bold" style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.85)' }}>{stage.title}</span>
+        <span className="text-base font-bold" style={{ color: isCurrent ? hex : 'rgba(255,255,255,0.85)' }}>{stage.title}</span>
         <span className="text-xs hidden sm:inline" style={{ color: 'rgba(255,255,255,0.35)' }}>{stage.subtitle}</span>
         {isCurrent && (
           <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: `${hex}25`, color: hex }}>
@@ -276,10 +276,10 @@ function StageDetail({ stage, isCurrent }) {
 
       <div className="px-4 sm:px-5 py-5 space-y-4">
         <div>
-          <h4 className="text-sm font-semibold text-white mb-2">איך זה מרגיש</h4>
+          <h4 className="text-base font-semibold text-white mb-2">איך זה מרגיש</h4>
           <ul className="space-y-1.5">
             {stage.feels.map((f, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
+              <li key={i} className="flex items-start gap-2 text-base" style={{ color: 'rgba(255,255,255,0.65)' }}>
                 <span className="mt-1.5 h-1.5 w-1.5 flex-none rounded-full" style={{ background: hex }} />
                 {f}
               </li>
@@ -290,16 +290,16 @@ function StageDetail({ stage, isCurrent }) {
         <div className="rounded-xl p-4 flex items-start gap-3" style={{ background: 'rgba(255,255,255,0.04)' }}>
           <AlertCircle size={18} className="flex-none mt-0.5" style={{ color: '#fbbf24' }} />
           <div>
-            <h4 className="text-sm font-semibold mb-1" style={{ color: '#fbbf24' }}>הטעות הנפוצה בשלב הזה</h4>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>{stage.mistake}</p>
+            <h4 className="text-base font-semibold mb-1" style={{ color: '#fbbf24' }}>הטעות הנפוצה בשלב הזה</h4>
+            <p className="text-base" style={{ color: 'rgba(255,255,255,0.65)' }}>{stage.mistake}</p>
           </div>
         </div>
 
         <div>
-          <h4 className="text-sm font-semibold text-white mb-2">המוקד בשלב הזה</h4>
+          <h4 className="text-base font-semibold text-white mb-2">המוקד בשלב הזה</h4>
           <ol className="space-y-2">
             {stage.focus.map((f, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <li key={i} className="flex items-start gap-3 text-base" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 <span className="flex-none flex items-center justify-center h-6 w-6 rounded-full text-xs font-bold"
                   style={{ background: `${hex}25`, color: hex }}>
                   {i + 1}
@@ -311,8 +311,8 @@ function StageDetail({ stage, isCurrent }) {
         </div>
 
         <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.04)', borderRight: `3px solid ${hex}` }}>
-          <h4 className="text-sm font-semibold mb-1" style={{ color: hex }}>שאלה לסיום החודש</h4>
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{stage.question}</p>
+          <h4 className="text-base font-semibold mb-1" style={{ color: hex }}>שאלה לסיום החודש</h4>
+          <p className="text-base" style={{ color: 'rgba(255,255,255,0.7)' }}>{stage.question}</p>
         </div>
       </div>
     </div>
@@ -355,7 +355,7 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <h3 className="text-sm font-bold text-white">{stepTitles[step]}</h3>
+          <h3 className="text-base font-bold text-white">{stepTitles[step]}</h3>
           <button onClick={onClose} className="rounded-md p-1 hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.4)' }}>
             <X size={16} />
           </button>
@@ -374,13 +374,13 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
           {step === 'intro' && (
             <>
               <p className="text-2xl font-bold text-white leading-snug">לפני שאתה עובד על משהו — תדע על מה לעבוד</p>
-              <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <p className="text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 רוב המעצבים עובדים על הבעיה הלא נכונה. רצים אחרי לידים כשהבעיה האמיתית היא שאין להם הצעה שמוכרת — או להיפך.
                 <br /><br />
                 האבחון הזה לוקח 3 דקות. בסוף תדע בדיוק איפה אתה עומד ומה הדבר האחד שכדאי לך לעשות עכשיו.
               </p>
               <button onClick={() => setStep('offer')}
-                className="btn-yellow w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90"
+                className="btn-yellow w-full rounded-xl py-3 text-base font-bold transition hover:opacity-90"
                 style={{ background: '#F5C118' }}>
                 בוא נתחיל
               </button>
@@ -395,14 +395,14 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
               </p>
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>5 שאלות</span>
-                <span className="text-sm font-bold tabular-nums" style={{ color: offerScore >= 3 ? '#22c55e' : '#f59e0b' }}>{offerScore} / 5</span>
+                <span className="text-base font-bold tabular-nums" style={{ color: offerScore >= 3 ? '#22c55e' : '#f59e0b' }}>{offerScore} / 5</span>
               </div>
               {OFFER_QUESTIONS.map((q, i) => (
                 <AnswerRow key={i} question={q} value={offerScores[i]}
                   onChange={v => setOfferScores(prev => prev.map((x, idx) => idx === i ? v : x))} />
               ))}
               <button onClick={nextStep}
-                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground">
+                className="w-full rounded-xl py-3 text-base font-bold transition hover:opacity-90 bg-accent text-accent-foreground">
                 המשך לחלק ב׳
               </button>
             </>
@@ -416,7 +416,7 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
               </p>
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>5 שאלות</span>
-                <span className="text-sm font-bold tabular-nums" style={{ color: leadsScore >= 3 ? '#22c55e' : '#f59e0b' }}>{leadsScore} / 5</span>
+                <span className="text-base font-bold tabular-nums" style={{ color: leadsScore >= 3 ? '#22c55e' : '#f59e0b' }}>{leadsScore} / 5</span>
               </div>
               {LEADS_QUESTIONS.map((q, i) => (
                 <AnswerRow key={i} question={q} value={leadsScores[i]}
@@ -424,7 +424,7 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
               ))}
               {error && <p className="text-xs" style={{ color: '#fca5a5' }}>{error}</p>}
               <button onClick={nextStep} disabled={saving}
-                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground disabled:opacity-40">
+                className="w-full rounded-xl py-3 text-base font-bold transition hover:opacity-90 bg-accent text-accent-foreground disabled:opacity-40">
                 {saving ? 'שומר...' : showLeverage ? 'המשך לחלק ג׳' : 'סיים אבחון'}
               </button>
             </>
@@ -438,7 +438,7 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
               </p>
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>3 שאלות</span>
-                <span className="text-sm font-bold tabular-nums" style={{ color: leverageScore >= 2 ? '#22c55e' : '#f59e0b' }}>{leverageScore} / 3</span>
+                <span className="text-base font-bold tabular-nums" style={{ color: leverageScore >= 2 ? '#22c55e' : '#f59e0b' }}>{leverageScore} / 3</span>
               </div>
               {LEVERAGE_QUESTIONS.map((q, i) => (
                 <AnswerRow key={i} question={q} value={leverageScores[i]}
@@ -446,7 +446,7 @@ function DiagnosisModal({ initial, onClose, onSave, saving }) {
               ))}
               {error && <p className="text-xs" style={{ color: '#fca5a5' }}>{error}</p>}
               <button onClick={handleSave} disabled={saving}
-                className="w-full rounded-xl py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground disabled:opacity-40">
+                className="w-full rounded-xl py-3 text-base font-bold transition hover:opacity-90 bg-accent text-accent-foreground disabled:opacity-40">
                 {saving ? 'שומר...' : 'סיים אבחון'}
               </button>
             </>
@@ -507,7 +507,7 @@ function ContentEditorModal({ content, onClose, onSave, saving }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="mt-3 w-full rounded-lg py-2.5 text-sm font-semibold transition hover:opacity-90 disabled:opacity-40 bg-accent text-accent-foreground"
+          className="mt-3 w-full rounded-lg py-2.5 text-base font-semibold transition hover:opacity-90 disabled:opacity-40 bg-accent text-accent-foreground"
         >
           {saving ? 'שומר...' : 'שמור שינויים'}
         </button>
@@ -657,7 +657,7 @@ export default function Diagnosis() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl sm:text-4xl font-bold text-white">{content.pageTitle}</h1>
-          <p className="mt-2 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+          <p className="mt-2 text-base" style={{ color: 'rgba(255,255,255,0.45)' }}>
             {content.pageSubtitle}
           </p>
         </div>
@@ -688,7 +688,7 @@ export default function Diagnosis() {
                   {currentStage.dots} · שלב {currentIdx + 1} מתוך 4
                 </span>
               </div>
-              <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <p className="mt-1.5 text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 {currentStage.subtitle}. ההתמקדות שלך עכשיו: {currentStage.focus[0]}
               </p>
               <p className="mt-1 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
@@ -697,7 +697,7 @@ export default function Diagnosis() {
               </p>
               <button
                 onClick={() => setShowModal(true)}
-                className="mt-3 rounded-xl px-5 py-2 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground"
+                className="mt-3 rounded-xl px-5 py-2 text-base font-bold transition hover:opacity-90 bg-accent text-accent-foreground"
               >
                 {content.ctaLabelAgain}
               </button>
@@ -705,12 +705,12 @@ export default function Diagnosis() {
           ) : (
             <>
               <h2 className="text-xl sm:text-2xl font-bold text-white">{content.emptyTitle}</h2>
-              <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <p className="mt-1.5 text-base" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 {content.emptyPrompt}
               </p>
               <button
                 onClick={() => setShowModal(true)}
-                className="mt-3 rounded-xl px-6 py-3 text-sm font-bold transition hover:opacity-90 bg-accent text-accent-foreground"
+                className="mt-3 rounded-xl px-6 py-3 text-base font-bold transition hover:opacity-90 bg-accent text-accent-foreground"
               >
                 {content.ctaLabel}
               </button>
@@ -742,7 +742,7 @@ export default function Diagnosis() {
 
       {/* Reminder */}
       <div className="rounded-2xl px-5 py-4" style={{ background: 'rgba(245,193,24,0.06)', border: '1px solid rgba(245,193,24,0.2)' }}>
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
+        <p className="text-base" style={{ color: 'rgba(255,255,255,0.65)' }}>
           <b style={{ color: '#F5C118' }}>{content.reminderTitle}</b> {content.reminderText}
         </p>
       </div>

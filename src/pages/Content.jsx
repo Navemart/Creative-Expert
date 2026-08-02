@@ -38,7 +38,7 @@ function ConnectScreen({ userId, error }) {
 
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-white">חבר את האינסטגרם שלך</h2>
-        <p className="text-sm max-w-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        <p className="text-base max-w-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
           חבר חשבון Business או Creator כדי לראות עוקבים, reach, פוסטים
           ועוד — הכל בזמן אמת.
         </p>
@@ -46,7 +46,7 @@ function ConnectScreen({ userId, error }) {
 
       {error && (
         <div
-          className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+          className="flex items-center gap-2 rounded-xl px-4 py-3 text-base"
           style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}
         >
           <AlertCircle size={15} />
@@ -56,7 +56,7 @@ function ConnectScreen({ userId, error }) {
 
       <a
         href={connectUrl}
-        className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+        className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-base font-semibold text-white transition hover:opacity-90"
         style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)' }}
       >
         <Instagram size={17} />
@@ -317,7 +317,7 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
             </a>
           </div>
           {profile?.biography && (
-            <p className="text-sm mt-1 line-clamp-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
+            <p className="text-base mt-1 line-clamp-2" style={{ color: 'rgba(255,255,255,0.5)' }}>
               {profile.biography}
             </p>
           )}
@@ -403,7 +403,7 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
               <div className="mt-1 flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-white">{fmt(profile?.followers_count)}</span>
                 <span
-                  className="text-sm font-semibold"
+                  className="text-base font-semibold"
                   style={{ color: followerDelta >= 0 ? '#4ade80' : '#ef4444' }}
                 >
                   {followerDelta >= 0 ? '+' : ''}{fmt(followerDelta)} ב-{period}
@@ -427,12 +427,12 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: '0.6875rem' }}
+                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}
                   axisLine={false} tickLine={false}
                   interval="preserveStartEnd"
                 />
                 <YAxis
-                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: '0.6875rem' }}
+                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: '0.75rem' }}
                   axisLine={false} tickLine={false}
                   tickFormatter={fmtK}
                   width={48}
@@ -453,7 +453,7 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
           </div>
         ) : (
           <div
-            className="h-44 rounded-xl flex flex-col items-center justify-center gap-2 text-sm"
+            className="h-44 rounded-xl flex flex-col items-center justify-center gap-2 text-base"
             style={{ background: 'rgb(var(--bg-elevated))' }}
           >
             {insights?.insightsAvailable === false ? (
@@ -530,7 +530,7 @@ function InstagramDashboard({ userId, profile, media, insights, onDisconnect, on
               {pagedMedia.map(post => <PostCard key={post.id} post={post} />)}
             </div>
           ) : (
-            <div className="text-center py-8 text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>
+            <div className="text-center py-8 text-base" style={{ color: 'rgba(255,255,255,0.3)' }}>
               אין פוסטים בפילטר הנוכחי
             </div>
           )}
@@ -575,32 +575,32 @@ function ApifyConnectScreen({ onConnect, loading, error }) {
       </div>
       <div className="text-center space-y-2">
         <h2 className="text-2xl font-bold text-white">חבר את האינסטגרם שלך</h2>
-        <p className="text-sm max-w-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
+        <p className="text-base max-w-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>
           הכנס את שם המשתמש שלך באינסטגרם ונביא את הנתונים שלך.
         </p>
       </div>
       {error && (
-        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm"
+        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-base"
           style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.25)' }}>
           <AlertCircle size={15} />
           {error}
         </div>
       )}
       <div className="flex items-center gap-2 w-full max-w-sm">
-        <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>@</span>
+        <span className="text-base font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>@</span>
         <input
           value={username}
           onChange={e => setUsername(e.target.value.replace('@', '').trim())}
           onKeyDown={e => e.key === 'Enter' && username && onConnect(username)}
           placeholder="שם_משתמש"
           dir="ltr"
-          className="flex-1 rounded-xl px-4 py-3 text-sm text-white outline-none"
+          className="flex-1 rounded-xl px-4 py-3 text-base text-white outline-none"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.15)' }}
         />
         <button
           onClick={() => username && onConnect(username)}
           disabled={!username || loading}
-          className="rounded-xl px-5 py-3 text-sm font-bold transition hover:opacity-90 disabled:opacity-40"
+          className="rounded-xl px-5 py-3 text-base font-bold transition hover:opacity-90 disabled:opacity-40"
           style={{ background: 'linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045)', color: 'white' }}
         >
           {loading ? <RefreshCw size={15} className="animate-spin" /> : 'חבר'}
@@ -724,7 +724,7 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
         <div className="flex gap-1 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
           {METRICS.map(m => (
             <button key={m.key} onClick={() => setActiveMetric(m.key)}
-              className="rounded-lg px-4 py-1.5 text-sm font-semibold transition-all"
+              className="rounded-lg px-4 py-1.5 text-base font-semibold transition-all"
               style={{
                 background: activeMetric === m.key ? m.color + '22' : 'transparent',
                 color:      activeMetric === m.key ? m.color        : 'rgba(255,255,255,0.35)',
@@ -756,7 +756,7 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
           {metric.fmt(currentVal)}
         </p>
         {delta != null && (
-          <p className="text-sm mt-1.5 font-semibold" style={{ color: delta >= 0 ? '#4ade80' : '#ef4444' }}>
+          <p className="text-base mt-1.5 font-semibold" style={{ color: delta >= 0 ? '#4ade80' : '#ef4444' }}>
             {delta >= 0 ? '+' : ''}{metric.fmt(delta)} ב{range.label}
           </p>
         )}
@@ -774,8 +774,8 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.28)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false}
+              <XAxis dataKey="date" tick={{ fill: 'rgba(255,255,255,0.28)', fontSize: '0.75rem' }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
+              <YAxis tick={{ fill: 'rgba(255,255,255,0.22)', fontSize: '0.75rem' }} axisLine={false} tickLine={false}
                 tickFormatter={metric.fmt} width={48} domain={['auto', 'auto']} />
               <Tooltip
                 contentStyle={{ background: 'rgba(8,9,22,0.97)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: '0.75rem' }}
@@ -792,7 +792,7 @@ function MetricChart({ history, posts, curAvgViews, curAvgEng, followers }) {
       ) : (
         <div className="flex flex-col items-center justify-center gap-2" style={{ height: 200, color: 'rgba(255,255,255,0.18)' }}>
           <TrendingUp size={30} />
-          <p className="text-sm text-center">הגרף יתמלא לאחר מספר רענונים<br/>לחץ "רענן" מדי פעם</p>
+          <p className="text-base text-center">הגרף יתמלא לאחר מספר רענונים<br/>לחץ "רענן" מדי פעם</p>
         </div>
       )}
     </div>
@@ -946,7 +946,7 @@ function ApifyDashboard({ profile, history, onDisconnect }) {
         {/* ── Header: title left, filters right ── */}
         <div className="flex items-center justify-between px-5 pt-4 pb-3 flex-wrap gap-3">
           <div>
-            <p className="text-sm font-bold text-white">תוכן אחרון</p>
+            <p className="text-base font-bold text-white">תוכן אחרון</p>
             <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.28)' }}>
               {postPeriod === 'all' ? 'כל הזמן' : postPeriod === '30' ? 'חודש אחרון' : postPeriod === '90' ? '3 חודשים' : 'שנה אחרונה'} · {tableTotal} פוסטים
             </p>
@@ -1014,7 +1014,7 @@ function ApifyDashboard({ profile, history, onDisconnect }) {
 
         {/* ── Rows ── */}
         {pagedRows.length === 0 ? (
-          <div className="px-5 py-10 text-center text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פוסטים</div>
+          <div className="px-5 py-10 text-center text-base" style={{ color: 'rgba(255,255,255,0.25)' }}>אין פוסטים</div>
         ) : pagedRows.map((post, i) => {
           const rowId    = post.id || i;
           const isOpen   = expandedRows.has(rowId);
@@ -1039,18 +1039,18 @@ function ApifyDashboard({ profile, history, onDisconnect }) {
                 <p className="text-xs text-right" style={{ color: 'rgba(255,255,255,0.35)' }}>{postedLabel}</p>
 
                 {/* מעורבות */}
-                <p className="text-sm font-semibold text-right" style={{ color: eng ? '#4ade80' : 'rgba(255,255,255,0.2)' }}>
+                <p className="text-base font-semibold text-right" style={{ color: eng ? '#4ade80' : 'rgba(255,255,255,0.2)' }}>
                   {eng ? `${eng}%` : '—'}
                 </p>
 
                 {/* תגובות */}
-                <p className="text-sm font-semibold text-white text-right">{fmtK(post.comments)}</p>
+                <p className="text-base font-semibold text-white text-right">{fmtK(post.comments)}</p>
 
                 {/* לייקים */}
-                <p className="text-sm font-semibold text-white text-right">{fmtK(post.likes)}</p>
+                <p className="text-base font-semibold text-white text-right">{fmtK(post.likes)}</p>
 
                 {/* צפיות */}
-                <p className="text-sm font-semibold text-right" style={{ color: post.views > 0 ? 'white' : 'rgba(255,255,255,0.2)' }}>
+                <p className="text-base font-semibold text-right" style={{ color: post.views > 0 ? 'white' : 'rgba(255,255,255,0.2)' }}>
                   {post.views > 0 ? fmtK(post.views) : '—'}
                 </p>
 

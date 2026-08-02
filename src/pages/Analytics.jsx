@@ -56,7 +56,7 @@ function Tabs({ value, onChange }) {
     <div className="flex gap-1 border-b" style={{ borderColor:'rgba(255,255,255,0.08)' }}>
       {TABS.map(t => (
         <button key={t.k} onClick={() => onChange(t.k)}
-          className="pb-3 px-4 text-sm font-semibold transition-all relative"
+          className="pb-3 px-4 text-base font-semibold transition-all relative"
           style={{ color: value===t.k ? 'white' : 'rgba(255,255,255,0.35)' }}>
           {t.l}
           {value===t.k && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background:'#F5C118' }} />}
@@ -108,7 +108,7 @@ function Section({ title, sub, right, children, noPad }) {
     <div className="rounded-2xl" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.07)' }}>
       <div className={`flex items-center justify-between ${noPad ? 'px-5 pt-5' : 'px-5 pt-5'}`}>
         <div>
-          <h2 className="text-sm font-bold text-white">{title}</h2>
+          <h2 className="text-base font-bold text-white">{title}</h2>
           {sub && <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>{sub}</p>}
         </div>
         {right}
@@ -125,8 +125,8 @@ const TIP = {
 };
 const GRID = <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />;
 const XAXIS = <XAxis dataKey="month" tick={{ fill:'rgba(255,255,255,0.28)', fontSize:'0.6875rem' }} axisLine={false} tickLine={false} />;
-const YILS  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} tickFormatter={v=>v===0?'₪0':`₪${Math.round(v/1000)}K`} width={44} />;
-const YCNT  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />;
+const YILS  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.75rem' }} axisLine={false} tickLine={false} tickFormatter={v=>v===0?'₪0':`₪${Math.round(v/1000)}K`} width={44} />;
+const YCNT  = <YAxis tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.75rem' }} axisLine={false} tickLine={false} allowDecimals={false} width={24} />;
 
 // ── Funnel bar ──────────────────────────────────────────────────
 function FunnelRow({ label, value, total, color, sub }) {
@@ -137,7 +137,7 @@ function FunnelRow({ label, value, total, color, sub }) {
         <span className="text-xs font-medium" style={{ color:'rgba(255,255,255,0.65)' }}>{label}</span>
         <div className="flex items-center gap-2">
           <span className="text-xs" style={{ color:'rgba(255,255,255,0.35)' }}>{sub}</span>
-          <span className="text-sm font-bold text-white">{value}</span>
+          <span className="text-base font-bold text-white">{value}</span>
         </div>
       </div>
       <div className="rounded-full h-2" style={{ background:'rgba(255,255,255,0.06)' }}>
@@ -481,7 +481,7 @@ export default function Analytics() {
       <h1 className="text-3xl font-bold text-white">נתונים עסקיים</h1>
       <div className="rounded-2xl p-16 flex flex-col items-center gap-4" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.08)' }}>
         <BarChart3 size={40} style={{ color:'rgba(255,255,255,0.1)' }} />
-        <p className="text-sm font-semibold text-white">אין עדיין נתונים</p>
+        <p className="text-base font-semibold text-white">אין עדיין נתונים</p>
         <p className="text-xs text-center leading-relaxed" style={{ color:'rgba(255,255,255,0.32)' }}>מלא דוח חודשי בדשבורד כדי לראות את הנתונים שלך כאן</p>
       </div>
     </div>
@@ -510,7 +510,7 @@ export default function Analytics() {
           >
             <ChevronRight size={15} color="white" />
           </button>
-          <span className="text-sm font-bold text-white" style={{ minWidth: 100, textAlign:'center' }}>
+          <span className="text-base font-bold text-white" style={{ minWidth: 100, textAlign:'center' }}>
             {selMonth ? fmtMonth(selMonth.month) : '—'}
           </span>
           <button
@@ -583,7 +583,7 @@ export default function Analytics() {
                   <p className="text-4xl font-black text-white leading-none tracking-tight">
                     {fmtFull(ytdIncome)}
                   </p>
-                  <p className="text-sm mt-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
+                  <p className="text-base mt-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
                     רווח נטו {fmtILS(ytdNet)}
                     {ytdIncome > 0 && <span style={{ color:'rgba(255,255,255,0.22)' }}> · {Math.round(ytdNet/ytdIncome*100)}% מרווח</span>}
                   </p>
@@ -591,11 +591,11 @@ export default function Analytics() {
                 <div className="flex-none">
                   {editingGoal ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold" style={{ color:'rgba(255,255,255,0.5)' }}>₪</span>
+                      <span className="text-base font-bold" style={{ color:'rgba(255,255,255,0.5)' }}>₪</span>
                       <input ref={goalInputRef} type="number" min="0" value={goalDraft}
                         onChange={e => setGoalDraft(e.target.value)}
                         onKeyDown={e => { if (e.key==='Enter') saveGoal(); if (e.key==='Escape') setEditingGoal(false); }}
-                        className="rounded-lg px-3 py-1.5 text-sm font-bold text-white outline-none w-28"
+                        className="rounded-lg px-3 py-1.5 text-base font-bold text-white outline-none w-28"
                         style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(245,193,24,0.4)' }} placeholder="מטרה שנתית" />
                       <button onClick={saveGoal} className="p-1.5 rounded-lg hover:bg-white/10"><Check size={14} style={{ color:'#F5C118' }} /></button>
                       <button onClick={() => setEditingGoal(false)} className="p-1.5 rounded-lg hover:bg-white/10"><X size={14} style={{ color:'rgba(255,255,255,0.35)' }} /></button>
@@ -642,7 +642,7 @@ export default function Analytics() {
             <div className="rounded-2xl p-5" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
                 <div>
-                  <h2 className="text-sm font-bold text-white">מגמת הכנסות</h2>
+                  <h2 className="text-base font-bold text-white">מגמת הכנסות</h2>
                   <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.25)' }}>{rangeN} חודשים אחרונים</p>
                 </div>
                 <RangePicker value={range} onChange={setRange} />
@@ -691,7 +691,7 @@ export default function Analytics() {
               border: `1px solid ${totalOutstanding > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.07)'}`,
             }}>
               <div className="px-5 pt-5 pb-3">
-                <h2 className="text-sm font-bold text-white">תשלומים ממתינים</h2>
+                <h2 className="text-base font-bold text-white">תשלומים ממתינים</h2>
                 <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>
                   {totalOutstanding > 0 ? `סה״כ ${fmtFull(totalOutstanding)} · ${outstandingItems.length} תשלומים` : 'אין תשלומים פתוחים'}
                 </p>
@@ -699,7 +699,7 @@ export default function Analytics() {
               {outstandingItems.length === 0 ? (
                 <div className="px-5 pb-5 flex items-center gap-2">
                   <CheckCircle2 size={16} style={{ color:'#4ade80' }} />
-                  <span className="text-sm" style={{ color:'rgba(255,255,255,0.4)' }}>כל התשלומים הושלמו ✓</span>
+                  <span className="text-base" style={{ color:'rgba(255,255,255,0.4)' }}>כל התשלומים הושלמו ✓</span>
                 </div>
               ) : (
                 <>
@@ -713,10 +713,10 @@ export default function Analytics() {
                     return (
                       <div key={i} className="grid px-5 py-2.5 items-center" style={{ gridTemplateColumns:'1fr 80px 88px', borderTop:'1px solid rgba(255,255,255,0.04)', background: overdue ? 'rgba(239,68,68,0.05)' : 'transparent' }}>
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-white truncate">{item.clientName}</p>
+                          <p className="text-base font-semibold text-white truncate">{item.clientName}</p>
                           <p className="text-[11px]" style={{ color:'rgba(255,255,255,0.28)' }}>{item.label}</p>
                         </div>
-                        <p className="text-sm font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
+                        <p className="text-base font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
                         <div className="flex items-center gap-1">
                           {overdue ? <AlertCircle size={10} style={{ color:'#fca5a5' }} /> : <Clock size={10} style={{ color:'rgba(255,255,255,0.2)' }} />}
                           <span className="text-[11px]" style={{ color: overdue ? '#fca5a5' : 'rgba(255,255,255,0.38)' }}>
@@ -728,7 +728,7 @@ export default function Analytics() {
                   })}
                   <div className="flex justify-between px-5 py-2.5" style={{ borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(255,255,255,0.02)' }}>
                     <span className="text-xs" style={{ color:'rgba(255,255,255,0.3)' }}>סה״כ</span>
-                    <span className="text-sm font-black" style={{ color:'#fcd34d' }}>{fmtFull(totalOutstanding)}</span>
+                    <span className="text-base font-black" style={{ color:'#fcd34d' }}>{fmtFull(totalOutstanding)}</span>
                   </div>
                 </>
               )}
@@ -748,7 +748,7 @@ export default function Analytics() {
                 <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.07)' }}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-sm font-bold text-white">בריאות פיננסית</h2>
+                      <h2 className="text-base font-bold text-white">בריאות פיננסית</h2>
                       <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.25)' }}>
                         נתוני <span style={{ color:'rgba(255,255,255,0.45)', fontWeight:600 }}>{fmtMonth(latest?.month)}</span> — החודש האחרון במערכת
                       </p>
@@ -764,7 +764,7 @@ export default function Analytics() {
                     ].map(({ l, v, c }) => (
                       <div key={l} className="rounded-xl px-3 py-2.5 text-center" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)' }}>
                         <p className="text-[11px] mb-1" style={{ color:'rgba(255,255,255,0.3)' }}>{l}</p>
-                        <p className="text-sm font-black leading-none" style={{ color:c }}>{v}</p>
+                        <p className="text-base font-black leading-none" style={{ color:c }}>{v}</p>
                       </div>
                     ))}
                   </div>
@@ -812,7 +812,7 @@ export default function Analytics() {
                     {desiredSalary > 0 && (
                       <div className="flex items-center gap-1.5">
                         <span className="text-[11px]" style={{ color:'rgba(255,255,255,0.35)' }}>נשאר לעסק</span>
-                        <span className="text-sm font-black" style={{ color: businessProfit>=0?'#4fc38a':'#ff5a72' }}>{fmtFull(businessProfit)}</span>
+                        <span className="text-base font-black" style={{ color: businessProfit>=0?'#4fc38a':'#ff5a72' }}>{fmtFull(businessProfit)}</span>
                       </div>
                     )}
                   </div>
@@ -839,7 +839,7 @@ export default function Analytics() {
                 <span className="text-4xl font-black" style={{ color:'#818cf8' }}>
                   {convLeadToCall != null ? `${convLeadToCall}%` : '—'}
                 </span>
-                <span className="text-sm mb-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
+                <span className="text-base mb-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
                   {funnelTotals.calls_set} שיחות מתוך {funnelTotals.leads} לידים
                 </span>
               </div>
@@ -855,7 +855,7 @@ export default function Analytics() {
                 <span className="text-4xl font-black" style={{ color:'#4ade80' }}>
                   {convCallToClose != null ? `${convCallToClose}%` : '—'}
                 </span>
-                <span className="text-sm mb-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
+                <span className="text-base mb-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
                   {newClientsTotal} סגירות מתוך {funnelTotals.calls_showed} שיחות
                 </span>
               </div>
@@ -1034,10 +1034,10 @@ export default function Analytics() {
                         style={{ background: i===0?'rgba(245,193,24,0.15)':'rgba(255,255,255,0.06)', color: i===0?'#F5C118':'rgba(255,255,255,0.35)' }}>
                         {i+1}
                       </div>
-                      <p className="text-sm font-semibold text-white">{c.name}</p>
+                      <p className="text-base font-semibold text-white">{c.name}</p>
                     </div>
-                    <p className="text-sm font-bold" style={{ color:'#4fc38a' }}>{fmtFull(c.paid)}</p>
-                    <p className="text-sm" style={{ color:'rgba(255,255,255,0.45)' }}>{fmtFull(c.total)}</p>
+                    <p className="text-base font-bold" style={{ color:'#4fc38a' }}>{fmtFull(c.paid)}</p>
+                    <p className="text-base" style={{ color:'rgba(255,255,255,0.45)' }}>{fmtFull(c.total)}</p>
                   </div>
                 ))}
               </Section>
@@ -1052,7 +1052,7 @@ export default function Analytics() {
               {outstandingItems.length === 0 ? (
                 <div className="flex items-center gap-3 p-5">
                   <CheckCircle2 size={18} style={{ color:'#4ade80' }} />
-                  <span className="text-sm" style={{ color:'rgba(255,255,255,0.45)' }}>אין יתרות פתוחות</span>
+                  <span className="text-base" style={{ color:'rgba(255,255,255,0.45)' }}>אין יתרות פתוחות</span>
                 </div>
               ) : (
                 <div>
@@ -1067,10 +1067,10 @@ export default function Analytics() {
                       <div key={i} className="grid gap-3 px-5 py-3 items-center"
                         style={{ gridTemplateColumns:'1fr 80px 90px', borderTop:'1px solid rgba(255,255,255,0.04)', background: overdue?'rgba(239,68,68,0.04)':'transparent' }}>
                         <div>
-                          <p className="text-sm font-semibold text-white leading-tight">{item.clientName}</p>
+                          <p className="text-base font-semibold text-white leading-tight">{item.clientName}</p>
                           <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.32)' }}>{item.label}</p>
                         </div>
-                        <p className="text-sm font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
+                        <p className="text-base font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
                         <div className="flex items-center gap-1.5">
                           {overdue ? <AlertCircle size={11} style={{ color:'#fca5a5' }} /> : <Clock size={11} style={{ color:'rgba(255,255,255,0.25)' }} />}
                           <span className="text-xs" style={{ color: overdue?'#fca5a5':'rgba(255,255,255,0.42)' }}>
@@ -1107,9 +1107,9 @@ export default function Analytics() {
                     </linearGradient>
                   </defs>
                   {GRID}{XAXIS}
-                  <YAxis yAxisId="left" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false}
+                  <YAxis yAxisId="left" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.75rem' }} axisLine={false} tickLine={false}
                     tickFormatter={v=>v>=1000?`${Math.round(v/1000)}K`:v} width={40} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.6875rem' }}
+                  <YAxis yAxisId="right" orientation="right" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.75rem' }}
                     axisLine={false} tickLine={false} allowDecimals={false} width={24} />
                   <Tooltip {...TIP} formatter={(v,n)=>[n==='עוקבים'?v.toLocaleString('he-IL'):v, n]} />
                   <Area yAxisId="left" type="monotone" dataKey="עוקבים"

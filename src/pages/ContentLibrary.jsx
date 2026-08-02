@@ -364,7 +364,7 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
             <input autoFocus value={draftName} onChange={e => setDraftName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveEdit(e)}
               placeholder="שם השלב"
-              className="w-full rounded-lg px-3 py-1.5 text-sm font-bold text-white outline-none"
+              className="w-full rounded-lg px-3 py-1.5 text-base font-bold text-white outline-none"
               style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }} dir="rtl" />
             <input value={draftDesc} onChange={e => setDraftDesc(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && saveEdit(e)}
@@ -397,8 +397,8 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
                       {level.badge !== null && (
                         <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>Level {level.badge} —</span>
                       )}
-                      <span className="text-sm font-bold text-white">{displayName}</span>
-                      <span className="text-sm leading-none">{level.dot}</span>
+                      <span className="text-base font-bold text-white">{displayName}</span>
+                      <span className="text-base leading-none">{level.dot}</span>
                     </div>
                     <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>{displayDesc}</p>
                   </div>
@@ -417,8 +417,8 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
                       {level.badge !== null && (
                         <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>Level {level.badge} —</span>
                       )}
-                      <span className="text-sm font-bold text-white">{displayName}</span>
-                      <span className="text-sm leading-none">{level.dot}</span>
+                      <span className="text-base font-bold text-white">{displayName}</span>
+                      <span className="text-base leading-none">{level.dot}</span>
                     </div>
                     <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>{displayDesc}</p>
                   </div>
@@ -524,7 +524,7 @@ export default function ContentLibrary() {
     <div className="w-full space-y-6" dir="rtl">
       <div>
         <h1 className="text-2xl font-bold text-white">ספריית תכנים</h1>
-        <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <p className="text-base mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
           לחץ על שלב כדי לפתוח אותו בסקול
         </p>
       </div>

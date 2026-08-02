@@ -13,7 +13,7 @@ export default function StatCard({
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="text-sm font-medium text-slate-500">{label}</div>
+      <div className="text-base font-medium text-slate-500">{label}</div>
       <div className="mt-2 flex items-baseline gap-2">
         <div className="text-2xl font-semibold tracking-tight text-slate-900">
           {value}
