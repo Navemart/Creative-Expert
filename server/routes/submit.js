@@ -38,7 +38,7 @@ router.post('/wins', async (req, res) => {
   // 1. Save to Supabase
   const { data: row, error } = await db.from('sunday_wins').insert({
     user_id, user_name,
-    win_1, win_2, win_3,
+    wins: win_1, win_1, win_2, win_3,
     focus_next_week, blocker,
     week_date:    week_date    || new Date().toISOString().slice(0, 10),
     submitted_at: submitted_at || new Date().toISOString(),
