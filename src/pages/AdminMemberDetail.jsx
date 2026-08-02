@@ -454,10 +454,13 @@ function WinsTab({ student }) {
     return null;
   }
 
-  // Determine if a submission is late: submitted_at > Sunday 23:59
+  // Late = submitted from Monday of the FOLLOWING week onwards.
+  // בזמן: anywhere Sunday (week start) through Sunday of the next week at 23:59.
+  // איחר: Monday of the next week or later.
   function isLateSubmission(win, sundayKey) {
     if (!win?.submitted_at) return false;
     const deadline = new Date(sundayKey);
+    deadline.setDate(deadline.getDate() + 7); // next Sunday (last moment before Monday = "late")
     deadline.setHours(23, 59, 59, 999);
     return new Date(win.submitted_at) > deadline;
   }
