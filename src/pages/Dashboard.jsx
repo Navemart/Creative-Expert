@@ -1473,8 +1473,12 @@ export default function Dashboard() {
         const sorted = [...monthlyData].sort((a, b) => new Date(a.month) - new Date(b.month));
 
         const historicalBest   = calcBestHistoricalRank(sorted);
-        const currentRankLabel = historicalBest?.label || sorted[sorted.length - 1]?.current_rank || SEGMENTS[0].label;
-        const currentRankObj   = SEGMENTS.find(s => s.label === currentRankLabel) || SEGMENTS[0];
+        // Also respect admin-approved rank — never go below what admin already confirmed
+        const adminRankObj     = adminRankOverride ? SEGMENTS.find(s => s.label === adminRankOverride) : null;
+        const histRankObj      = historicalBest || SEGMENTS[0];
+        const effectiveBaseline = (adminRankObj && adminRankObj.min > histRankObj.min) ? adminRankObj : histRankObj;
+        const currentRankLabel = effectiveBaseline.label;
+        const currentRankObj   = effectiveBaseline;
 
         const lastSub    = sorted[sorted.length - 1];
         const lastIncome = lastSub?.total_income ?? lastSub?.amount ?? 0;
