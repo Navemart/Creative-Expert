@@ -1327,7 +1327,10 @@ export default function Dashboard() {
   }
 
   async function submitWin() {
-    if (!winForm.win_1.trim() || !winForm.win_2.trim() || !winForm.win_3.trim()) return;
+    if (!winForm.win_1.trim() || !winForm.win_2.trim() || !winForm.win_3.trim()) {
+      alert('יש למלא את שלושת הנצחונות לפני השליחה.');
+      return;
+    }
 
     const weekDate = winForm.week_date || new Date().toISOString().slice(0, 10);
     const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
