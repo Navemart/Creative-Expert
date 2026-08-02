@@ -192,12 +192,17 @@ const RANKS = [
   { label: 'EXPERT',         nextThreshold: Infinity },
 ];
 
-// Returns the auto-calculated rank based on 2 consecutive months above threshold
+// Returns the auto-calculated rank based on 2 CONSECUTIVE CALENDAR months both above threshold.
 function calcAutoRank(userSubs) {
   if (!userSubs.length) return 'TRAINEE';
   const sorted = [...userSubs].sort((a, b) => (a.month || '').localeCompare(b.month || ''));
   let currentRank = 'TRAINEE';
   for (let i = 1; i < sorted.length; i++) {
+    // Months must be exactly 1 calendar month apart
+    const pd = new Date(sorted[i - 1].month), cd = new Date(sorted[i].month);
+    const gap = (cd.getFullYear() - pd.getFullYear()) * 12 + (cd.getMonth() - pd.getMonth());
+    if (gap !== 1) continue;
+
     const rankIdx = RANKS.findIndex(r => r.label === currentRank);
     if (rankIdx === RANKS.length - 1) break;
     const threshold = RANKS[rankIdx].nextThreshold;
