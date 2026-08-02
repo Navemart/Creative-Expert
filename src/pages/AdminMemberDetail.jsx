@@ -205,8 +205,95 @@ function OverviewTab({ student, adminNotes, setAdminNotes, saveAdminNotes, savin
   );
 }
 
+// ── Monthly detail panel ───────────────────────────────────────
+function MonthlyDetail({ sub }) {
+  const income = num(sub.total_income || sub.amount);
+  const exp    = num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads);
+  const net    = income - exp;
+
+  const sections = [
+    { title: 'כספים', items: [
+      { label: 'הכנסה כוללת',       value: fmt(income) },
+      { label: 'הוצאות תוכנה',      value: fmt(sub.software_expenses) },
+      { label: 'הוצאות משתנות',     value: fmt(sub.variable_expenses) },
+      { label: 'פרסום ממומן',        value: fmt(sub.paid_ads) },
+      { label: 'רווח נטו',          value: fmt(net), highlight: net >= 0 ? '#4fc38a' : '#ff5a72' },
+    ]},
+    { title: 'מכירות', items: [
+      { label: 'לידים',              value: sub.leads ?? '—' },
+      { label: 'שיחות שנקבעו',      value: sub.sales_calls_set ?? '—' },
+      { label: 'שיחות שהגיעו',      value: sub.sales_calls_showed ?? '—' },
+      { label: 'שיחות אסטרטגיה',    value: sub.strategy_calls ?? '—' },
+      { label: 'הצעות מחיר שנשלחו', value: sub.price_quotes_sent ?? '—' },
+      { label: 'הצעות שאושרו',       value: sub.price_quotes_approved ?? '—' },
+      { label: 'סגירות',             value: sub.closings_count ?? '—' },
+      { label: 'לקוחות פעילים',     value: sub.active_clients ?? '—' },
+      { label: 'לקוחות חדשים',      value: sub.new_clients ?? '—' },
+      { label: 'ריטיינרים',          value: sub.retainers_count ?? '—' },
+    ]},
+    { title: 'תוכן', items: [
+      { label: 'עוקבים',             value: sub.followers != null ? Number(sub.followers).toLocaleString('he-IL') : '—' },
+      { label: 'חשיפה (reach)',      value: sub.reach != null ? Number(sub.reach).toLocaleString('he-IL') : '—' },
+      { label: 'פוסטים',            value: sub.posts_count ?? '—' },
+      { label: 'ממוצע צפיות',       value: sub.avg_views ?? '—' },
+      { label: 'engagement',         value: sub.engagement_rate != null ? `${sub.engagement_rate}%` : '—' },
+    ]},
+    { title: 'ביטחון', items: [
+      { label: 'ביטחון עסקי',       value: sub.business_confidence != null ? `${sub.business_confidence}/10` : '—' },
+      { label: 'ביטחון בתוכן',      value: sub.content_confidence  != null ? `${sub.content_confidence}/10`  : '—' },
+      { label: 'ביטחון במכירות',    value: sub.sales_confidence    != null ? `${sub.sales_confidence}/10`    : '—' },
+    ]},
+    { title: 'לקוחות', items: [
+      { label: 'שביעות רצון לקוחות', value: sub.client_satisfaction != null ? `${sub.client_satisfaction}/10` : '—' },
+      { label: 'עמידה בזמנים',       value: sub.on_time_delivery    != null ? `${sub.on_time_delivery}/10`    : '—' },
+      { label: 'המלצות',             value: sub.recommendation      != null ? `${sub.recommendation}/10`      : '—' },
+    ]},
+    { title: 'פרוגרם', items: [
+      { label: 'NPS',                value: sub.nps != null ? `${sub.nps}/10` : '—' },
+      { label: 'דרגה',               value: sub.current_rank || '—' },
+    ]},
+  ];
+
+  const textFields = [
+    { label: 'הנצחון הגדול של החודש', value: sub.biggest_win },
+    { label: 'פרויקט עיקרי',          value: sub.main_project },
+    { label: 'מה צריך לשפר',          value: sub.systems_needed },
+    { label: 'פידבק על התוכנית',      value: sub.program_feedback },
+    { label: 'פוקוס לחודש הבא',       value: sub.focus_next_month },
+  ].filter(f => f.value);
+
+  return (
+    <div style={{ padding: '20px 18px', background: 'rgba(245,193,24,0.03)', borderTop: '1px solid rgba(245,193,24,0.15)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20, marginBottom: textFields.length ? 20 : 0 }}>
+        {sections.map(sec => (
+          <div key={sec.title}>
+            <p style={{ margin: '0 0 8px', fontSize: '0.625rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{sec.title}</p>
+            {sec.items.map(item => (
+              <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 5 }}>
+                <span style={{ fontSize: '0.75rem', color: muted }}>{item.label}</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: item.highlight || dim }}>{item.value}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      {textFields.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, borderTop: border, paddingTop: 16 }}>
+          {textFields.map(f => (
+            <div key={f.label}>
+              <p style={{ margin: '0 0 3px', fontSize: '0.625rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{f.label}</p>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: dim, lineHeight: 1.6 }}>{f.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Tab: נתונים חודשיים ────────────────────────────────────────
 function MonthlyTab({ student }) {
+  const [expandedMonth, setExpandedMonth] = useState(null);
   const sorted = [...(student.monthly || [])].sort((a, b) => (b.month || '').localeCompare(a.month || ''));
 
   const subMap = useMemo(() => {
@@ -268,29 +355,41 @@ function MonthlyTab({ student }) {
         {COLS.map(c => <span key={c} style={{ fontSize: '0.625rem', fontWeight: 700, color: muted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c}</span>)}
       </div>
       {rows.map(({ key: m, hasSub, isOverdue }, i) => {
-        const sub    = subMap[m];
+        const sub     = subMap[m];
         const missing = !hasSub && isOverdue;
-        const income = sub ? num(sub.total_income || sub.amount) : 0;
-        const exp    = sub ? num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads) : 0;
-        const net    = income - exp;
-        const rc     = RANK_COLORS[sub?.current_rank] || muted;
+        const income  = sub ? num(sub.total_income || sub.amount) : 0;
+        const exp     = sub ? num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads) : 0;
+        const net     = income - exp;
+        const rc      = RANK_COLORS[sub?.current_rank] || muted;
+        const isOpen  = expandedMonth === m;
 
         return (
-          <div key={m} style={{ display: 'grid', gridTemplateColumns: '150px repeat(8, 1fr)', padding: '12px 18px', borderBottom: i < rows.length - 1 ? border : 'none', background: missing ? 'rgba(239,68,68,0.03)' : 'transparent', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: missing ? 'rgba(239,68,68,0.55)' : white }}>{fmtMonth(m)}</span>
-            {missing
-              ? <span style={{ fontSize: '0.75rem', color: 'rgba(239,68,68,0.4)', gridColumn: '2 / -1' }}>לא הוגש</span>
-              : <>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5C118' }}>{fmt(income)}</span>
-                  <span style={{ fontSize: '0.875rem', color: dim }}>{fmt(exp)}</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: net >= 0 ? '#4fc38a' : '#ff5a72' }}>{fmt(net)}</span>
-                  <span style={{ fontSize: '0.875rem', color: dim }}>{sub.leads ?? '—'}</span>
-                  <span style={{ fontSize: '0.875rem', color: dim }}>{sub.sales_calls_showed ?? '—'}</span>
-                  <span style={{ fontSize: '0.875rem', color: dim }}>{sub.closings_count ?? '—'}</span>
-                  <span style={{ fontSize: '0.875rem', color: dim }}>{sub.followers != null ? Number(sub.followers).toLocaleString('he-IL') : '—'}</span>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: rc }}>{sub.current_rank || '—'}</span>
-                </>
-            }
+          <div key={m} style={{ borderBottom: i < rows.length - 1 ? border : 'none' }}>
+            <div
+              onClick={() => hasSub && setExpandedMonth(isOpen ? null : m)}
+              style={{ display: 'grid', gridTemplateColumns: '150px repeat(8, 1fr)', padding: '12px 18px', background: isOpen ? 'rgba(245,193,24,0.05)' : missing ? 'rgba(239,68,68,0.03)' : 'transparent', alignItems: 'center', cursor: hasSub ? 'pointer' : 'default' }}
+              onMouseEnter={e => { if (hasSub) e.currentTarget.style.background = isOpen ? 'rgba(245,193,24,0.07)' : 'rgba(255,255,255,0.03)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = isOpen ? 'rgba(245,193,24,0.05)' : missing ? 'rgba(239,68,68,0.03)' : 'transparent'; }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.875rem', fontWeight: 600, color: missing ? 'rgba(239,68,68,0.55)' : white }}>
+                {hasSub && <ChevronRight size={13} style={{ transform: isOpen ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s', color: muted, flexShrink: 0 }} />}
+                {fmtMonth(m)}
+              </span>
+              {missing
+                ? <span style={{ fontSize: '0.75rem', color: 'rgba(239,68,68,0.4)', gridColumn: '2 / -1' }}>לא הוגש</span>
+                : <>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#F5C118' }}>{fmt(income)}</span>
+                    <span style={{ fontSize: '0.875rem', color: dim }}>{fmt(exp)}</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: net >= 0 ? '#4fc38a' : '#ff5a72' }}>{fmt(net)}</span>
+                    <span style={{ fontSize: '0.875rem', color: dim }}>{sub.leads ?? '—'}</span>
+                    <span style={{ fontSize: '0.875rem', color: dim }}>{sub.sales_calls_showed ?? '—'}</span>
+                    <span style={{ fontSize: '0.875rem', color: dim }}>{sub.closings_count ?? '—'}</span>
+                    <span style={{ fontSize: '0.875rem', color: dim }}>{sub.followers != null ? Number(sub.followers).toLocaleString('he-IL') : '—'}</span>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: rc }}>{sub.current_rank || '—'}</span>
+                  </>
+              }
+            </div>
+            {isOpen && sub && <MonthlyDetail sub={sub} />}
           </div>
         );
       })}
