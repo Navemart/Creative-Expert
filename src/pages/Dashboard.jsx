@@ -1322,7 +1322,7 @@ export default function Dashboard() {
     const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
 
     // שמור ב-Supabase
-    const { data: winRow } = await supabase.from('sunday_wins').insert({
+    const { data: winRow, error: insertError } = await supabase.from('sunday_wins').insert({
       user_id:         userId,
       user_name:       fullName,
       wins:            winForm.win_1,
@@ -1334,6 +1334,12 @@ export default function Dashboard() {
       week_date:       weekDate,
       submitted_at:    submittedAt,
     }).select('id').single();
+
+    if (insertError) {
+      console.error('[submitWin] Supabase insert failed:', insertError.message);
+      alert('שגיאה בשמירת הנצחונות. אנא נסה שוב.');
+      return;
+    }
 
     // שלח לסלאק
     try {
