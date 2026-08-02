@@ -57,19 +57,52 @@ function getRank(amount) {
 // מחשב את הדרגה הגבוהה ביותר שהושגה לאורך כל ההיסטוריה
 // לוגיקה: עובר על כל זוגות של חודשים עוקבים (החל מהשני),
 // מחשב ממוצע, ולוקח את הדרגה הגבוהה ביותר שנראתה — אף פעם לא יורד.
+// Returns the highest rank where 2 CONSECUTIVE calendar months both meet the threshold.
 function calcBestHistoricalRank(submissions) {
   const sorted = [...submissions].sort((a, b) => new Date(a.month) - new Date(b.month));
-  if (sorted.length < 2) return null; // צריך לפחות 2 חודשים
+  if (sorted.length < 2) return null;
   let bestMin = 0;
-  // מתחיל מאינדקס 1 (זוג עם הקודם לו)
   for (let i = 1; i < sorted.length; i++) {
-    const inc1 = sorted[i-1].total_income ?? sorted[i-1].amount ?? 0;
-    const inc2 = sorted[i].total_income   ?? sorted[i].amount   ?? 0;
-    const avg  = (inc1 + inc2) / 2;
-    const rankObj = getRank(avg);
-    if (rankObj.min > bestMin) bestMin = rankObj.min;
+    const prev = sorted[i - 1];
+    const curr = sorted[i];
+    // Must be exactly 1 calendar month apart
+    const pd = new Date(prev.month), cd = new Date(curr.month);
+    const gap = (cd.getFullYear() - pd.getFullYear()) * 12 + (cd.getMonth() - pd.getMonth());
+    if (gap !== 1) continue;
+    const inc1 = prev.total_income ?? prev.amount ?? 0;
+    const inc2 = curr.total_income ?? curr.amount ?? 0;
+    // Both months must individually meet the rank threshold
+    const qualifyingRank = [...SEGMENTS].reverse().find(s => inc1 >= s.min && inc2 >= s.min);
+    if (qualifyingRank && qualifyingRank.min > bestMin) bestMin = qualifyingRank.min;
   }
   return [...SEGMENTS].reverse().find(s => bestMin >= s.min) || SEGMENTS[0];
+}
+
+// Check if adding a new submission triggers a rank upgrade.
+// Returns { nextRank, month1, month2 } or null.
+function checkRankUpgrade(existingSubmissions, newMonth, newIncome, currentRankObj) {
+  const nextRank = SEGMENTS.find(s => s.min > currentRankObj.min);
+  if (!nextRank) return null; // already at max
+
+  // Build full list including the new submission
+  const all = [
+    ...existingSubmissions,
+    { month: newMonth, total_income: newIncome, amount: newIncome },
+  ].sort((a, b) => new Date(a.month) - new Date(b.month));
+
+  for (let i = 1; i < all.length; i++) {
+    const prev = all[i - 1];
+    const curr = all[i];
+    const pd = new Date(prev.month), cd = new Date(curr.month);
+    const gap = (cd.getFullYear() - pd.getFullYear()) * 12 + (cd.getMonth() - pd.getMonth());
+    if (gap !== 1) continue;
+    const inc1 = prev.total_income ?? prev.amount ?? 0;
+    const inc2 = curr.total_income ?? curr.amount ?? 0;
+    if (inc1 >= nextRank.min && inc2 >= nextRank.min) {
+      return { nextRank, month1: prev, month2: curr };
+    }
+  }
+  return null;
 }
 
 // מחזיר טקסט כהה או בהיר לפי בהירות הרקע
@@ -1472,34 +1505,28 @@ export default function Dashboard() {
         // ── New submission ──────────────────────────────────────
         const sorted = [...monthlyData].sort((a, b) => new Date(a.month) - new Date(b.month));
 
-        const historicalBest   = calcBestHistoricalRank(sorted);
-        // Also respect admin-approved rank — never go below what admin already confirmed
-        const adminRankObj     = adminRankOverride ? SEGMENTS.find(s => s.label === adminRankOverride) : null;
-        const histRankObj      = historicalBest || SEGMENTS[0];
-        const effectiveBaseline = (adminRankObj && adminRankObj.min > histRankObj.min) ? adminRankObj : histRankObj;
-        const currentRankLabel = effectiveBaseline.label;
-        const currentRankObj   = effectiveBaseline;
+        // Baseline = best of historical calculation and admin-approved rank
+        const historicalBest    = calcBestHistoricalRank(sorted);
+        const adminRankObj      = adminRankOverride ? SEGMENTS.find(s => s.label === adminRankOverride) : null;
+        const histRankObj       = historicalBest || SEGMENTS[0];
+        const currentRankObj    = (adminRankObj && adminRankObj.min > histRankObj.min) ? adminRankObj : histRankObj;
+        const currentRankLabel  = currentRankObj.label;
+        finalRank               = currentRankLabel;
 
-        const lastSub    = sorted[sorted.length - 1];
-        const lastIncome = lastSub?.total_income ?? lastSub?.amount ?? 0;
-        const avg        = (lastIncome + newIncome) / 2;
-        const newRankObj = getRank(avg);
-
-        if (newRankObj.min > currentRankObj.min) {
-          finalRank = currentRankLabel; // keep current rank until admin approves
+        // Check: do 2 consecutive calendar months (including this new one) both clear the next rank threshold?
+        const upgrade = checkRankUpgrade(sorted, fullDate, newIncome, currentRankObj);
+        if (upgrade) {
           pendingUpgradeData = {
             user_id:        userId,
             first_name:     user?.firstName || '',
             current_rank:   currentRankLabel,
-            proposed_rank:  newRankObj.label,
-            month_1:        lastSub.month,
-            month_1_income: lastIncome,
-            month_2:        fullDate,
-            month_2_income: newIncome,
-            avg_income:     avg,
+            proposed_rank:  upgrade.nextRank.label,
+            month_1:        upgrade.month1.month,
+            month_1_income: upgrade.month1.total_income ?? upgrade.month1.amount ?? 0,
+            month_2:        upgrade.month2.month,
+            month_2_income: upgrade.month2.total_income ?? upgrade.month2.amount ?? 0,
+            avg_income:     ((upgrade.month1.total_income ?? upgrade.month1.amount ?? 0) + (upgrade.month2.total_income ?? upgrade.month2.amount ?? 0)) / 2,
           };
-        } else {
-          finalRank = currentRankLabel;
         }
       }
     }
