@@ -71,9 +71,10 @@ export async function retrySlackPosts() {
   const dealsCh = 'cha-ching';
   if (!token) return { skipped: true };
 
-  // No time filter — retry ALL unposted rows (capped at 200 to avoid timeouts).
-  // created_at on deals is the deal date (user-supplied), not submission time,
-  // so a time filter would miss deals submitted for past dates.
+  // Retry unposted rows from the last 30 days only.
+  // For deals, created_at is the deal date (user-supplied) so we use a wide window
+  // instead of no filter — prevents re-posting ancient history on every run.
+  const since30 = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
   const clerkKey = process.env.CLERK_SECRET_KEY;
 
   async function getClerkName(userId) {
@@ -87,7 +88,7 @@ export async function retrySlackPosts() {
 
   let winsCount = 0, dealsCount = 0;
 
-  const { data: wins } = await db.from('sunday_wins').select('*').is('slack_posted_at', null).order('created_at', { ascending: false }).limit(200);
+  const { data: wins } = await db.from('sunday_wins').select('*').is('slack_posted_at', null).gte('created_at', since30).order('created_at', { ascending: false }).limit(50);
   for (const w of wins || []) {
     const name  = w.user_name || await getClerkName(w.user_id) || 'תלמיד';
     const lines = [
@@ -105,7 +106,7 @@ export async function retrySlackPosts() {
     if (d.ok) { await db.from('sunday_wins').update({ slack_posted_at: new Date().toISOString(), user_name: name }).eq('id', w.id); winsCount++; }
   }
 
-  const { data: deals } = await db.from('deals').select('*').is('slack_posted_at', null).order('created_at', { ascending: false }).limit(200);
+  const { data: deals } = await db.from('deals').select('*').is('slack_posted_at', null).gte('created_at', since30).order('created_at', { ascending: false }).limit(50);
   for (const deal of deals || []) {
     const name = deal.user_name || await getClerkName(deal.user_id) || 'תלמיד';
     const text = `🎉🏆 !!!אליפותתתתממממ\nהאגדה: ${name}\nסכום: ₪${Number(deal.total_amount || 0).toLocaleString()}\nדרגה: ${deal.next_rank || ''}`;
