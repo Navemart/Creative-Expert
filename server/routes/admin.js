@@ -455,6 +455,27 @@ router.post('/rank-upgrades/:id/reject', async (req, res) => {
   res.json({ ok: true });
 });
 
+// ── GET /api/admin/slack-failures ───────────────────────────────
+// Returns deals and wins where Slack posting failed — shown in admin bell.
+router.get('/slack-failures', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const since = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
+  const [{ data: deals }, { data: wins }] = await Promise.all([
+    supabase.from('deals').select('id, user_name, total_amount, created_at, slack_failed_at')
+      .is('slack_posted_at', null).not('slack_failed_at', 'is', null).gte('slack_failed_at', since),
+    supabase.from('sunday_wins').select('id, user_name, win_1, week_date, slack_failed_at')
+      .is('slack_posted_at', null).not('slack_failed_at', 'is', null).gte('slack_failed_at', since),
+  ]);
+  res.json({
+    deals: (deals || []).map(d => ({ ...d, type: 'deal' })),
+    wins:  (wins  || []).map(w => ({ ...w, type: 'win'  })),
+  });
+});
+
 // keep old route for backward compat
 router.patch('/students/:userId/health', async (req, res) => {
   req.url = req.url.replace('/health', '/profile');

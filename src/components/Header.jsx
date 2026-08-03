@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, ExternalLink, ChevronLeft, Plus, Trash2, Pencil, ToggleLeft, ToggleRight, Flame, TrendingUp } from 'lucide-react';
+import { Menu, PanelLeftClose, Bell, AlertCircle, Clock, X, Wrench, User, ExternalLink, ChevronLeft, Plus, Trash2, Pencil, ToggleLeft, ToggleRight, Flame, TrendingUp, Send } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useUser, SignedIn, SignedOut, SignInButton, useClerk } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
@@ -120,6 +120,42 @@ function RankUpgradeRow({ item, onApprove, onReject }) {
   );
 }
 
+// ── Slack failure row ─────────────────────────────────────────
+function SlackFailureRow({ item, onPost }) {
+  const [loading, setLoading] = useState(false);
+  const [done,    setDone]    = useState(false);
+
+  async function handlePost() {
+    setLoading(true);
+    const type = item.type === 'deal' ? 'deal' : 'wins';
+    try {
+      const res = await fetch(`/api/submit/${type}/${item.id}/post-slack`, { method: 'POST' });
+      if (res.ok) { setDone(true); onPost(item.id, item.type); }
+    } catch {}
+    setLoading(false);
+  }
+
+  const label = item.type === 'deal'
+    ? `עסקה — ${item.user_name} · ${item.total_amount ? '₪' + Number(item.total_amount).toLocaleString('he-IL') : ''}`
+    : `נצחונות — ${item.user_name}`;
+
+  if (done) return null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: '#f97316', boxShadow: '0 0 6px #f9731655' }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</p>
+        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)' }}>לא פורסם בסלאק</p>
+      </div>
+      <button onClick={handlePost} disabled={loading}
+        style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 11px', borderRadius: 8, border: 'none', background: '#f97316', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', flexShrink: 0, opacity: loading ? 0.6 : 1 }}>
+        <Send size={12} />
+        {loading ? '...' : 'שלח'}
+      </button>
+    </div>
+  );
+}
+
 // ── Attendance alert row ──────────────────────────────────────
 function AttendanceAlertRow({ item }) {
   const navigate = useNavigate();
@@ -176,9 +212,10 @@ function CheckinAlertRow({ student }) {
   );
 }
 
-function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming, rankUpgrades, onApproveRank, onRejectRank, attendanceAlerts }) {
+function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming, rankUpgrades, onApproveRank, onRejectRank, attendanceAlerts, slackFailures, onSlackPosted }) {
   const payTotal = upcoming.length + overdue.length;
-  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length + (attendanceAlerts?.length || 0);
+  const slackTotal = (slackFailures?.deals?.length || 0) + (slackFailures?.wins?.length || 0);
+  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length + (attendanceAlerts?.length || 0) + slackTotal;
   return (
     <div className="absolute left-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
       style={{ width: 340, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
@@ -193,6 +230,18 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
         </div>
       ) : (
         <div style={{ maxHeight: 420, overflowY: 'auto' }}>
+          {/* שגיאות סלאק */}
+          {slackTotal > 0 && (
+            <>
+              <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
+                style={{ background: 'rgba(249,115,22,0.08)', color: '#f97316' }}>
+                <AlertCircle size={11} /> שגיאות סלאק — {slackTotal}
+              </div>
+              {[...(slackFailures.deals || []), ...(slackFailures.wins || [])].map(item => (
+                <SlackFailureRow key={`${item.type}-${item.id}`} item={item} onPost={onSlackPosted} />
+              ))}
+            </>
+          )}
           {/* היעדרויות ברצף */}
           {attendanceAlerts?.length > 0 && (
             <>
@@ -575,7 +624,8 @@ export default function Header({ onOpenMobile }) {
   const { npsAlerts, dismissNps, npsTotal } = useNpsAlerts();
   const { checkinOverdue, checkinUpcoming, checkinTotal, reloadCheckins } = useCheckinAlerts();
   const { alerts: attendanceAlerts, reload: reloadAttendance } = useAttendanceAlerts();
-  const [rankUpgrades, setRankUpgrades] = useState([]);
+  const [rankUpgrades,   setRankUpgrades]   = useState([]);
+  const [slackFailures,  setSlackFailures]  = useState({ deals: [], wins: [] });
 
   const reloadRankUpgrades = useCallback(async () => {
     if (!isAdmin) return;
@@ -584,6 +634,21 @@ export default function Header({ onOpenMobile }) {
       if (res.ok) { const d = await res.json(); setRankUpgrades(d.requests || []); }
     } catch {}
   }, [isAdmin]);
+
+  const reloadSlackFailures = useCallback(async () => {
+    if (!isAdmin) return;
+    try {
+      const res = await fetch('/api/admin/slack-failures', { headers: { 'x-admin-id': ADMIN_ID || '' } });
+      if (res.ok) { const d = await res.json(); setSlackFailures({ deals: d.deals || [], wins: d.wins || [] }); }
+    } catch {}
+  }, [isAdmin]);
+
+  function handleSlackPosted(id, type) {
+    setSlackFailures(prev => ({
+      deals: type === 'deal' ? prev.deals.filter(d => d.id !== id) : prev.deals,
+      wins:  type === 'win'  ? prev.wins.filter(w => w.id !== id)  : prev.wins,
+    }));
+  }
 
   async function approveRank(id) {
     await fetch(`/api/admin/rank-upgrades/${id}/approve`, { method: 'POST', headers: { 'x-admin-id': ADMIN_ID || '' } });
@@ -595,11 +660,12 @@ export default function Header({ onOpenMobile }) {
   }
 
   const rankUpgradeTotal = rankUpgrades.length;
-  const total      = payTotal + npsTotal + checkinTotal + rankUpgradeTotal + attendanceAlerts.length;
+  const slackTotal = slackFailures.deals.length + slackFailures.wins.length;
+  const total      = payTotal + npsTotal + checkinTotal + rankUpgradeTotal + attendanceAlerts.length + slackTotal;
   const hasOverdue = overdue.length > 0 || npsTotal > 0 || checkinOverdue.length > 0;
-  const badgeColor = hasOverdue ? '#ef4444' : rankUpgradeTotal > 0 ? '#a855f7' : '#f97316';
+  const badgeColor = hasOverdue ? '#ef4444' : rankUpgradeTotal > 0 ? '#a855f7' : slackTotal > 0 ? '#f97316' : '#f97316';
 
-  useEffect(() => { if (bellOpen) { reload(); reloadCheckins(); reloadRankUpgrades(); reloadAttendance(); } }, [bellOpen]);
+  useEffect(() => { if (bellOpen) { reload(); reloadCheckins(); reloadRankUpgrades(); reloadAttendance(); reloadSlackFailures(); } }, [bellOpen]);
 
   useEffect(() => {
     function handle(e) {
@@ -641,7 +707,7 @@ export default function Header({ onOpenMobile }) {
               </span>
             )}
           </button>
-          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} checkinOverdue={checkinOverdue} checkinUpcoming={checkinUpcoming} rankUpgrades={rankUpgrades} onApproveRank={approveRank} onRejectRank={rejectRank} attendanceAlerts={attendanceAlerts} />}
+          {bellOpen && <NotificationPanel upcoming={upcoming} overdue={overdue} onDismiss={dismiss} npsAlerts={npsAlerts} dismissNps={dismissNps} checkinOverdue={checkinOverdue} checkinUpcoming={checkinUpcoming} rankUpgrades={rankUpgrades} onApproveRank={approveRank} onRejectRank={rejectRank} attendanceAlerts={attendanceAlerts} slackFailures={slackFailures} onSlackPosted={handleSlackPosted} />}
         </div>
 
         {/* ── Daily Standard (flame) ── */}

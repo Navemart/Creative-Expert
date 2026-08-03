@@ -64,59 +64,12 @@ router.get('/slack-retry', async (req, res) => {
   }
 });
 
+// Slack retry is intentionally disabled.
+// Deals and wins are posted once on submit via /api/submit/*.
+// If Slack fails → slack_failed_at is set → admin sees alert → manual post button.
+// The cron no longer touches Slack to prevent flooding.
 export async function retrySlackPosts() {
-  const db      = sb();
-  const token   = process.env.SLACK_BOT_TOKEN;
-  const winsCh  = process.env.SLACK_WINS_CHANNEL;
-  const dealsCh = 'cha-ching';
-  if (!token) return { skipped: true };
-
-  // Retry unposted rows from the last 30 days only.
-  // For deals, created_at is the deal date (user-supplied) so we use a wide window
-  // instead of no filter — prevents re-posting ancient history on every run.
-  const since30 = new Date(Date.now() - 30 * 24 * 3600000).toISOString();
-  const clerkKey = process.env.CLERK_SECRET_KEY;
-
-  async function getClerkName(userId) {
-    if (!clerkKey) return null;
-    try {
-      const r = await fetch(`https://api.clerk.com/v1/users/${userId}`, { headers: { Authorization: `Bearer ${clerkKey}` } });
-      const u = await r.json();
-      return [u.first_name, u.last_name].filter(Boolean).join(' ') || u.username || null;
-    } catch { return null; }
-  }
-
-  let winsCount = 0, dealsCount = 0;
-
-  const { data: wins } = await db.from('sunday_wins').select('*').is('slack_posted_at', null).gte('created_at', since30).order('created_at', { ascending: false }).limit(50);
-  for (const w of wins || []) {
-    const name  = w.user_name || await getClerkName(w.user_id) || 'תלמיד';
-    const lines = [
-      `*שם*\n${name}`,
-      w.win_1           ? `*הנצחון הכי משמעותי מהשבוע שעבר*\n${w.win_1}` : null,
-      w.win_2           ? `*הנצחון ה-2 הכי משמעותי*\n${w.win_2}` : null,
-      w.win_3           ? `*הנצחון ה-3 הכי משמעותי*\n${w.win_3}` : null,
-      w.focus_next_week ? `*מה הדבר האחד הבא שאני הולך להתמקד בו בשבוע הקרוב*\n${w.focus_next_week}` : null,
-      w.blocker         ? `*מה הדבר האחד שחוסם אותך כרגע*\n${w.blocker}` : null,
-      `*תאריך:*\n${w.week_date || ''}`,
-    ].filter(Boolean).join('\n\n');
-    const blocks = [{ type: 'section', text: { type: 'mrkdwn', text: lines } }];
-    const r = await fetch('https://slack.com/api/chat.postMessage', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ channel: winsCh, blocks, text: `נצחונות שבועיים — ${name}` }) });
-    const d = await r.json();
-    if (d.ok) { await db.from('sunday_wins').update({ slack_posted_at: new Date().toISOString(), user_name: name }).eq('id', w.id); winsCount++; }
-  }
-
-  const { data: deals } = await db.from('deals').select('*').is('slack_posted_at', null).gte('created_at', since30).order('created_at', { ascending: false }).limit(50);
-  for (const deal of deals || []) {
-    const name = deal.user_name || await getClerkName(deal.user_id) || 'תלמיד';
-    const text = `🎉🏆 !!!אליפותתתתממממ\nהאגדה: ${name}\nסכום: ₪${Number(deal.total_amount || 0).toLocaleString()}\nדרגה: ${deal.next_rank || ''}`;
-    const r = await fetch('https://slack.com/api/chat.postMessage', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ channel: dealsCh, text }) });
-    const rd = await r.json();
-    if (rd.ok) { await db.from('deals').update({ slack_posted_at: new Date().toISOString(), user_name: name }).eq('id', deal.id); dealsCount++; }
-  }
-
-  console.log(`[cron] Slack retry — ${winsCount} wins, ${dealsCount} deals posted`);
-  return { winsCount, dealsCount };
+  return { skipped: true, reason: 'manual-only mode' };
 }
 
 // ── Daily DB backup (04:00) ────────────────────────────────────

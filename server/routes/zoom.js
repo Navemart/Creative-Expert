@@ -606,7 +606,9 @@ async function estimateNextOccurrence(token, userId, meetingId) {
     // Find the next upcoming date that falls on dominantDay
     const next = new Date(now);
     next.setUTCHours(hours, minutes, 0, 0);
-    const daysUntil = (dominantDay - now.getUTCDay() + 7) % 7 || 7;
+    let daysUntil = (dominantDay - now.getUTCDay() + 7) % 7;
+    // If daysUntil=0 today is the meeting day — but only jump to next week if the slot already passed
+    if (daysUntil === 0 && next <= now) daysUntil = 7;
     next.setUTCDate(next.getUTCDate() + daysUntil);
 
     return next > now ? next.toISOString() : null;
@@ -633,7 +635,17 @@ router.get('/upcoming', async (req, res) => {
         const end = new Date(new Date(m.start_time).getTime() + (m.duration || 0) * 60000);
         return end >= now;
       });
-      if (valid.length) return res.json({ meetings: valid, cached: true });
+
+      // Check cache freshness — if newest row is older than 3 hours, refresh live
+      const newest = cached.reduce((a, b) =>
+        new Date(a.updated_at || 0) > new Date(b.updated_at || 0) ? a : b, cached[0]);
+      const cacheAge = now - new Date(newest?.updated_at || 0);
+      const CACHE_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
+
+      if (valid.length && cacheAge < CACHE_TTL_MS) {
+        return res.json({ meetings: valid, cached: true });
+      }
+      // Cache is stale — fall through to live fetch below
     }
 
     // Fallback: fetch live from Zoom (e.g. cache empty or first run)
@@ -668,6 +680,20 @@ router.get('/upcoming', async (req, res) => {
       if (a.start_time && b.start_time) return new Date(a.start_time) - new Date(b.start_time);
       return a.start_time ? -1 : 1;
     });
+
+    // Persist fresh results to cache so subsequent requests within 3h are fast
+    const validToCache = meetings.filter(m => {
+      if (!m.start_time) return false;
+      const end = new Date(new Date(m.start_time).getTime() + (m.duration || 0) * 60000);
+      return end >= now;
+    });
+    if (validToCache.length) {
+      const updatedAt = now.toISOString();
+      await supabase.from('zoom_upcoming_cache').delete().neq('id', '');
+      await supabase.from('zoom_upcoming_cache').insert(
+        validToCache.map(m => ({ ...m, id: String(m.id), updated_at: updatedAt }))
+      ).catch(() => {});
+    }
 
     res.json({ meetings });
   } catch (err) {
