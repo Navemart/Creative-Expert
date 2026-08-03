@@ -688,11 +688,15 @@ router.get('/upcoming', async (req, res) => {
       return end >= now;
     });
     if (validToCache.length) {
-      const updatedAt = now.toISOString();
-      await supabase.from('zoom_upcoming_cache').delete().neq('id', '');
-      await supabase.from('zoom_upcoming_cache').insert(
-        validToCache.map(m => ({ ...m, id: String(m.id), updated_at: updatedAt }))
-      ).catch(() => {});
+      try {
+        const updatedAt = now.toISOString();
+        await supabase.from('zoom_upcoming_cache').delete().neq('id', '');
+        await supabase.from('zoom_upcoming_cache').insert(
+          validToCache.map(m => ({ ...m, id: String(m.id), updated_at: updatedAt }))
+        );
+      } catch (cacheErr) {
+        console.warn('[zoom/upcoming] cache write failed:', cacheErr.message);
+      }
     }
 
     res.json({ meetings });
