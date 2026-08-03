@@ -454,10 +454,10 @@ export default function AdminMembersGrid() {
 
   useEffect(() => {
     fetchAll();
-    const since = new Date(Date.now() - 72 * 3600000).toISOString();
+    // Count only genuine Slack failures (slack_failed_at set, not yet posted)
     Promise.all([
-      supabase.from('sunday_wins').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
-      supabase.from('deals').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).gte('created_at', since),
+      supabase.from('sunday_wins').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).not('slack_failed_at', 'is', null),
+      supabase.from('deals').select('id', { count: 'exact', head: true }).is('slack_posted_at', null).not('slack_failed_at', 'is', null),
     ]).then(([wRes, dRes]) => setUnposted({ wins: wRes.count || 0, deals: dRes.count || 0 }));
   }, [location.key]);
 
