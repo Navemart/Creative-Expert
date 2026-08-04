@@ -1709,7 +1709,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-4 min-h-0" style={{ width: '37%', flexShrink: 0 }}>
 
           {/* הצעד הבא */}
-          <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', flex: 1, overflow: 'hidden' }}>
+          <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center justify-between">
               <span className="uppercase tracking-widest font-semibold" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>הצעד הבא</span>
               <span className="text-sm font-semibold text-white">היום</span>
@@ -1938,7 +1938,7 @@ export default function Dashboard() {
               כל הפגישות <ChevronLeft size={13} />
             </button>
           </div>
-          <div className="flex flex-col gap-2 flex-1 overflow-y-auto min-h-0">
+          <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: 92 }}>
             {upcomingMeetings === null && <div className="flex-1 flex items-center justify-center"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
             {upcomingMeetings?.length === 0 && <div className="flex-1 flex items-center justify-center"><p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p></div>}
             {upcomingMeetings?.map(m => {
