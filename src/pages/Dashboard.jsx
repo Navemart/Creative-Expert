@@ -1706,10 +1706,10 @@ export default function Dashboard() {
       <div className="flex gap-5 flex-1 min-h-0">
 
         {/* ימין: הצעד הבא + סטריק */}
-        <div className="flex flex-col gap-4" style={{ width: '37%', flexShrink: 0 }}>
+        <div className="flex flex-col gap-4 min-h-0" style={{ width: '37%', flexShrink: 0 }}>
 
           {/* הצעד הבא */}
-          <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', flex: 1, overflow: 'hidden' }}>
             <div className="flex items-center justify-between">
               <span className="uppercase tracking-widest font-semibold" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>הצעד הבא</span>
               <span className="text-sm font-semibold text-white">היום</span>
