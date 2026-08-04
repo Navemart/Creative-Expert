@@ -1662,7 +1662,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div dir="rtl" className="w-full h-full flex flex-col gap-4 overflow-hidden">
+    <div dir="rtl" className="w-full flex flex-col gap-4">
 
       {/* ── 1. Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1706,7 +1706,7 @@ export default function Dashboard() {
       <div className="flex gap-5 flex-1 min-h-0">
 
         {/* ימין: הצעד הבא + סטריק */}
-        <div className="flex flex-col gap-4 min-h-0" style={{ width: '37%', flexShrink: 0 }}>
+        <div className="flex flex-col gap-4" style={{ width: '37%', flexShrink: 0 }}>
 
           {/* הצעד הבא */}
           <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1928,17 +1928,17 @@ export default function Dashboard() {
       })()}
 
       {/* ── 6. פגישות קרובות (ימין) | מפת דרכים (שמאל) ── */}
-      <div className="flex gap-5 flex-1 min-h-0">
+      <div className="flex gap-5">
 
         {/* ימין: פגישות קרובות */}
-        <div className="rounded-2xl p-5 flex flex-col gap-4 min-h-0" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+        <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
             <button onClick={() => navigate('/zoom')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
               כל הפגישות <ChevronLeft size={13} />
             </button>
           </div>
-          <div className="flex flex-col gap-2 overflow-y-auto" style={{ maxHeight: 92 }}>
+          <div className="flex flex-col gap-2">
             {upcomingMeetings === null && <div className="flex-1 flex items-center justify-center"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
             {upcomingMeetings?.length === 0 && <div className="flex-1 flex items-center justify-center"><p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.2)' }}>אין פגישות קרובות</p></div>}
             {upcomingMeetings?.map(m => {
