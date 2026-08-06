@@ -151,7 +151,7 @@ function GPTCard({ tool, editMode, onEdit, onDelete }) {
         {tool.description || <span className="italic opacity-50">אין תיאור</span>}
       </p>
 
-      <div className="flex justify-end">
+      <div className="flex justify-start">
         <a
           href={hasUrl ? tool.url : undefined}
           target="_blank"
