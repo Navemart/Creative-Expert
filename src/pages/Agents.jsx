@@ -151,16 +151,18 @@ function GPTCard({ tool, editMode, onEdit, onDelete }) {
         {tool.description || <span className="italic opacity-50">אין תיאור</span>}
       </p>
 
-      <a
-        href={hasUrl ? tool.url : undefined}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={!hasUrl ? e => e.preventDefault() : undefined}
-        className={`self-start flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-sm font-bold transition ${hasUrl ? 'bg-accent' : ''}`}
-        style={!hasUrl ? { background: 'rgba(245,193,24,0.15)', color: 'rgba(245,193,24,0.4)', cursor: 'default' } : {}}>
-        {hasUrl ? 'פתח GPT' : 'בקרוב'}
-        {hasUrl && <ExternalLink size={12} />}
-      </a>
+      <div className="flex justify-end">
+        <a
+          href={hasUrl ? tool.url : undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={!hasUrl ? e => e.preventDefault() : undefined}
+          className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-sm font-bold transition ${hasUrl ? 'bg-accent' : ''}`}
+          style={!hasUrl ? { background: 'rgba(245,193,24,0.15)', color: 'rgba(245,193,24,0.4)', cursor: 'default' } : {}}>
+          {hasUrl ? 'פתח GPT' : 'בקרוב'}
+          {hasUrl && <ExternalLink size={12} />}
+        </a>
+      </div>
     </div>
   );
 }
