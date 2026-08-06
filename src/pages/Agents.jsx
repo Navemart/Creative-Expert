@@ -157,10 +157,10 @@ function GPTCard({ tool, editMode, onEdit, onDelete }) {
           target="_blank"
           rel="noopener noreferrer"
           onClick={!hasUrl ? e => e.preventDefault() : undefined}
-          className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-1.5 text-sm font-bold transition ${hasUrl ? 'bg-accent' : ''}`}
-          style={!hasUrl ? { background: 'rgba(245,193,24,0.15)', color: 'rgba(245,193,24,0.4)', cursor: 'default' } : {}}>
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80 transition ${hasUrl ? 'bg-accent text-accent-foreground' : ''}`}
+          style={!hasUrl ? { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)', cursor: 'default' } : {}}>
           {hasUrl ? 'פתח GPT' : 'בקרוב'}
-          {hasUrl && <ExternalLink size={12} />}
+          {hasUrl && <ExternalLink size={11} />}
         </a>
       </div>
     </div>
