@@ -65,12 +65,21 @@ router.post('/wins', async (req, res) => {
   const { user_id, user_name, win_1, win_2, win_3, focus_next_week, blocker, week_date, submitted_at } = req.body;
   if (!user_id || !win_1) return res.status(400).json({ error: 'חסרים שדות חובה' });
 
+  // 0. Guard: reject if this user already submitted for this week_date
+  const wDate = week_date || new Date().toISOString().slice(0, 10);
+  const { data: existing } = await db.from('sunday_wins')
+    .select('id').eq('user_id', user_id).eq('week_date', wDate).maybeSingle();
+  if (existing) {
+    console.warn(`[submit/wins] duplicate blocked — user ${user_id} already submitted for ${wDate}`);
+    return res.status(409).json({ error: 'כבר שלחת נצחונות לשבוע הזה', duplicate: true });
+  }
+
   // 1. Save to DB
   const { data: row, error } = await db.from('sunday_wins').insert({
     user_id, user_name,
     wins: win_1, win_1, win_2, win_3,
     focus_next_week, blocker,
-    week_date:    week_date    || new Date().toISOString().slice(0, 10),
+    week_date:    wDate,
     submitted_at: submitted_at || new Date().toISOString(),
   }).select('id').single();
 

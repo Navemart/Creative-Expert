@@ -20,6 +20,7 @@ import instagramApifyRouter  from './routes/instagram-apify.js';
 import cronRouter            from './routes/cron.js';
 import eventsRouter          from './routes/events.js';
 import submitRouter          from './routes/submit.js';
+import pipelineRouter        from './routes/pipeline.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +49,7 @@ app.use('/api/instagram-apify', instagramApifyRouter);
 app.use('/api/cron',          cronRouter);
 app.use('/api/events',        eventsRouter);
 app.use('/api/submit',        submitRouter);
+app.use('/api/pipeline',      pipelineRouter);
 
 // -----------------------------------------------------------------------------
 // In production, serve the built frontend from /dist so everything runs on one

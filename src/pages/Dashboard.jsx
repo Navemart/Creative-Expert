@@ -955,6 +955,7 @@ export default function Dashboard() {
 
   const [modal, setModal]               = useState(null);
   const [winStep, setWinStep]           = useState(1);
+  const [winSubmitting, setWinSubmitting] = useState(false);
   const [monthlyStep, setMonthlyStep]   = useState(1);
   const [monthlySubmitting, setMonthlySubmitting] = useState(false);
   const [showFormEditor,  setShowFormEditor]  = useState(false);
@@ -1360,10 +1361,12 @@ export default function Dashboard() {
   }
 
   async function submitWin() {
+    if (winSubmitting) return;
     if (!winForm.win_1.trim() || !winForm.win_2.trim() || !winForm.win_3.trim()) {
       alert('יש למלא את שלושת הנצחונות לפני השליחה.');
       return;
     }
+    setWinSubmitting(true);
 
     const weekDate = winForm.week_date || new Date().toISOString().slice(0, 10);
     const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
@@ -1392,9 +1395,11 @@ export default function Dashboard() {
     } catch (e) {
       console.error('[submitWin] שגיאה:', e.message);
       alert('שגיאה בשמירת הנצחונות. הנתונים נשמרו מקומית וינסו להישלח שוב בפעם הבאה. (' + e.message + ')');
+      setWinSubmitting(false);
       return;
     }
 
+    setWinSubmitting(false);
     setWinForm({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '', week_date: new Date().toISOString().slice(0,10), _datePicker: false });
     setModal(null);
     setWinStep(1);
@@ -2374,7 +2379,7 @@ export default function Dashboard() {
                     הבא — השבוע הקרוב <ChevronLeft size={15} />
                   </button>
                 ) : (
-                  <button onClick={submitWin} disabled={!winForm.focus_next_week.trim()}
+                  <button onClick={submitWin} disabled={!winForm.focus_next_week.trim() || winSubmitting}
                     style={{ background: accent, color: '#1e3a8a', border: 'none', borderRadius: 8, padding: '9px 20px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, justifySelf: 'end', opacity: winForm.focus_next_week.trim() ? 1 : 0.4 }}
                     className="transition hover:opacity-90">
                     שלח נצחונות ✓

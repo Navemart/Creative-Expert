@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Briefcase,
   Filter,
+  Kanban,
   FileText,
   BarChart3,
   Bot,
@@ -61,9 +62,10 @@ const TOOLS_ITEMS = [
 ];
 
 const ADMIN_ITEMS = [
-  { to: '/admin/members',  label: 'תלמידים',         icon: ShieldCheck },
-  { to: '/admin/checkins', label: "Check-In's",          icon: ClipboardCheck },
-  { to: '/admin/events',   label: 'אירועי משתמשים',  icon: Activity },
+  { to: '/admin/members',        label: 'תלמידים',         icon: ShieldCheck },
+  { to: '/admin/checkins',       label: "Check-In's",      icon: ClipboardCheck },
+  { to: '/admin/events',         label: 'אירועי משתמשים',  icon: Activity },
+  { to: '/admin/sales-pipeline', label: 'צינור מכירות',    icon: Kanban },
 ];
 
 
