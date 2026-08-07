@@ -641,11 +641,11 @@ export default function Analytics() {
             {/* Revenue trend chart */}
             <div className="rounded-2xl p-5" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.07)' }}>
               <div className="flex items-start justify-between mb-4 flex-wrap gap-2">
+                <RangePicker value={range} onChange={setRange} />
                 <div>
                   <h2 className="text-base font-bold text-white">מגמת הכנסות</h2>
                   <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.25)' }}>{rangeN} חודשים אחרונים</p>
                 </div>
-                <RangePicker value={range} onChange={setRange} />
               </div>
 
               {/* Chart */}
