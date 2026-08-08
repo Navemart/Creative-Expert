@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Check, RefreshCw, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, RefreshCw, GripVertical, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
 const COLUMNS = [
-  { key: 'overdue',  label: 'איחור',   dot: '#ef4444', desc: 'עבר מועד הצ׳קאין' },
   { key: 'upcoming', label: 'בקרוב',   dot: '#f59e0b', desc: 'מועד הצ׳קאין מתקרב' },
   { key: 'done',     label: 'בוצע',    dot: '#22c55e', desc: 'צ׳קאין ב-7 הימים האחרונים' },
+  { key: 'overdue',  label: 'איחור',   dot: '#ef4444', desc: 'עבר מועד הצ׳קאין' },
 ];
+
+const TRAFFIC_COLOR = { green: '#22c55e', orange: '#f97316', red: '#ef4444' };
+const TRAFFIC_LABEL = { green: 'ירוק', orange: 'כתום', red: 'אדום' };
 
 function fmtDays(n) {
   if (n === null) return 'מעולם לא';
@@ -47,6 +50,82 @@ const inputStyle = {
   outline: 'none', resize: 'vertical', fontFamily: 'inherit',
 };
 
+// ── Cadence modal ────────────────────────────────────────────────
+function CadenceModal({ onClose }) {
+  const [vals, setVals] = useState({ green_days: 14, orange_days: 7, red_days: 4 });
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/traffic-cadence', { headers: { 'x-admin-id': ADMIN_ID || '' } })
+      .then(r => r.json())
+      .then(d => { setVals({ green_days: d.green_days, orange_days: d.orange_days, red_days: d.red_days }); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, []);
+
+  async function save() {
+    setSaving(true);
+    await fetch('/api/admin/traffic-cadence', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'x-admin-id': ADMIN_ID || '' },
+      body: JSON.stringify(vals),
+    });
+    setSaving(false);
+    onClose(true);
+  }
+
+  const rows = [
+    { key: 'green_days',  label: 'ירוק',  emoji: '🟢', color: '#22c55e', note: 'רץ' },
+    { key: 'orange_days', label: 'כתום', emoji: '🟠', color: '#f97316', note: 'צריך תשומת לב' },
+    { key: 'red_days',    label: 'אדום',  emoji: '🔴', color: '#ef4444', note: 'נעלם' },
+  ];
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} onClick={() => onClose(false)} />
+      <div style={{ position: 'relative', background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.12)',
+        borderRadius: 20, padding: '28px 28px 24px', width: 380, zIndex: 1 }}>
+        <button onClick={() => onClose(false)} style={{ position: 'absolute', top: 16, left: 16, background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.35)', fontSize: 18, lineHeight: 1 }}>✕</button>
+        <h2 style={{ margin: '0 0 4px', fontSize: '1.1rem', fontWeight: 800, color: 'white', textAlign: 'right' }}>תדירות צ׳ק-אין</h2>
+        <p style={{ margin: '0 0 20px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'right' }}>כמה ימים בין צ׳ק-אין לפי צבע רמזור</p>
+
+        {!loaded ? (
+          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '0.85rem', padding: '20px 0' }}>טוען...</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {rows.map(r => (
+              <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ flex: 1, textAlign: 'right' }}>
+                  <span style={{ fontSize: 14, marginLeft: 6 }}>{r.emoji}</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: r.color }}>{r.label}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', marginRight: 6 }}> · {r.note}</span>
+                </div>
+                <input
+                  type="number" min={1} max={90} value={vals[r.key]}
+                  onChange={e => setVals(prev => ({ ...prev, [r.key]: Number(e.target.value) }))}
+                  style={{ width: 60, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8,
+                    padding: '6px 8px', fontSize: '0.875rem', color: 'white', outline: 'none', textAlign: 'center' }}
+                />
+                <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', width: 32 }}>
+                  ימים · {Math.round(vals[r.key] / 7 * 10) / 10} שב׳
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
+          <button onClick={() => onClose(false)} style={{ padding: '8px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>ביטול</button>
+          <button onClick={save} disabled={saving} style={{ padding: '8px 22px', borderRadius: 10, border: 'none', background: '#F5C118', color: '#000', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+            💾 שמור תדירות
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── ExpandedCard ─────────────────────────────────────────────────
 function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
   const [history, setHistory]       = useState(null);
   const [loadingH, setLoadingH]     = useState(true);
@@ -55,6 +134,8 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
   const [notes, setNotes]           = useState('');
   const [date, setDate]             = useState(todayISO());
   const [saving, setSaving]         = useState(false);
+
+  const trafficColor = TRAFFIC_COLOR[student.traffic_status] || '#22c55e';
 
   useEffect(() => {
     fetch(`/api/admin/checkins/${student.id}/history`, { headers: { 'x-admin-id': ADMIN_ID || '' } })
@@ -82,12 +163,13 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
   }
 
   const cadence = student.checkin_cadence_days || 14;
-  const cycleLabel = cadence === 7 ? 'שבועי' : cadence === 14 ? '2 שבועות' : `${cadence} ימים`;
+  const cycleLabel = cadence === 4 ? 'פעמיים בשבוע' : cadence === 7 ? 'שבועי' : cadence === 14 ? '2 שבועות' : `${cadence} ימים`;
 
   return (
     <div style={{
       background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.12)',
       borderRadius: 12, overflow: 'hidden',
+      borderRight: `3px solid ${trafficColor}`,
     }}>
       {/* Top summary row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }} onClick={onClose}>
@@ -101,6 +183,10 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
             {student.last_checkin ? fmtDays(student.days_since) : 'אין צ׳קאין'}
           </p>
         </div>
+        <span style={{ fontSize: '0.6rem', fontWeight: 700, padding: '2px 7px', borderRadius: 20,
+          background: trafficColor + '22', color: trafficColor }}>
+          {TRAFFIC_LABEL[student.traffic_status] || 'ירוק'}
+        </span>
         <ChevronUp size={15} style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
       </div>
 
@@ -174,7 +260,10 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
   );
 }
 
+// ── StudentCard ──────────────────────────────────────────────────
 function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onToggle, onSaved }) {
+  const trafficColor = TRAFFIC_COLOR[student.traffic_status] || '#22c55e';
+
   if (expanded) {
     return (
       <ExpandedCard
@@ -194,11 +283,12 @@ function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onTo
       style={{
         display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
         background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.07)',
+        borderRight: `3px solid ${trafficColor}`,
         borderRadius: 10, cursor: 'grab', userSelect: 'none',
         transition: 'border-color 0.12s, background 0.12s',
       }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.borderRightColor = trafficColor; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.borderRightColor = trafficColor; }}
     >
       <GripVertical size={13} style={{ color: 'rgba(255,255,255,0.15)', flexShrink: 0 }} />
 
@@ -248,14 +338,16 @@ function StudentCard({ student, onCheckin, checking, onDragStart, expanded, onTo
   );
 }
 
+// ── Main page ────────────────────────────────────────────────────
 export default function AdminCheckins() {
   const { user } = useUser();
-  const [students, setStudents]   = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [checking, setChecking]   = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [dragOver, setDragOver]   = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
+  const [students, setStudents]       = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [checking, setChecking]       = useState(null);
+  const [refreshing, setRefreshing]   = useState(false);
+  const [dragOver, setDragOver]       = useState(null);
+  const [expandedId, setExpandedId]   = useState(null);
+  const [showCadence, setShowCadence] = useState(false);
   const dragId = useRef(null);
 
   const isUnauthorized = user && user.id !== ADMIN_ID;
@@ -295,7 +387,7 @@ export default function AdminCheckins() {
     }
   }
 
-  function handleSaved(userId, checkedDate) {
+  function handleSaved(userId) {
     setStudents(prev => prev.map(s =>
       s.id === userId
         ? { ...s, column: 'done', last_checkin: new Date().toISOString(), days_since: 0, checkin_count: (s.checkin_count || 0) + 1 }
@@ -333,24 +425,49 @@ export default function AdminCheckins() {
   const counts = Object.fromEntries(COLUMNS.map(c => [c.key, students.filter(s => s.column === c.key).length]));
   const border = '1px solid rgba(255,255,255,0.08)';
 
+  // Legend: count per traffic status
+  const trafficCounts = { green: 0, orange: 0, red: 0 };
+  students.forEach(s => { if (trafficCounts[s.traffic_status] !== undefined) trafficCounts[s.traffic_status]++; });
+
   return (
     <div dir="rtl" style={{ padding: '28px 24px' }}>
+      {showCadence && <CadenceModal onClose={(saved) => { setShowCadence(false); if (saved) fetchAll(); }} />}
+
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'white', margin: 0 }}>צ׳קאינס</h1>
             <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>מעקב אחר פנייה לתלמידים פעילים</p>
           </div>
-          <button
-            onClick={() => { setRefreshing(true); fetchAll().then(() => setRefreshing(false)); }}
-            disabled={refreshing}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border, cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}
-          >
-            <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none', color: 'rgba(255,255,255,0.3)' }} />
-            רענן
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {/* Traffic legend */}
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[['green','🟢'],['orange','🟠'],['red','🔴']].map(([k, e]) => (
+                <span key={k} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20,
+                  background: TRAFFIC_COLOR[k] + '15', color: TRAFFIC_COLOR[k], fontWeight: 700,
+                  border: `1px solid ${TRAFFIC_COLOR[k]}33` }}>
+                  {e} {trafficCounts[k]}
+                </span>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowCadence(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border, cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}
+            >
+              <Settings2 size={14} style={{ color: 'rgba(255,255,255,0.3)' }} />
+              תדירות
+            </button>
+            <button
+              onClick={() => { setRefreshing(true); fetchAll().then(() => setRefreshing(false)); }}
+              disabled={refreshing}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgb(var(--bg-surface))', border, cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 600 }}
+            >
+              <RefreshCw size={14} style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none', color: 'rgba(255,255,255,0.3)' }} />
+              רענן
+            </button>
+          </div>
         </div>
 
         {loading ? (

@@ -274,12 +274,14 @@ router.get('/checkins', async (req, res) => {
     process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
   );
 
-  const [clerkRes, { data: profiles }, { data: checkins }] = await Promise.all([
+  const [clerkRes, { data: profiles }, { data: checkins }, { data: trafficStatuses }, { data: cadenceRow }] = await Promise.all([
     fetch('https://api.clerk.com/v1/users?limit=200&order_by=-created_at', {
       headers: { Authorization: `Bearer ${clerkKey}` },
     }),
     supabase.from('student_profiles').select('user_id, checkin_cadence_days, member_status, enrolled_at'),
     supabase.from('student_checkins').select('user_id, checked_at').order('checked_at', { ascending: true }),
+    supabase.from('traffic_light_status').select('user_id, status'),
+    supabase.from('traffic_light_cadence').select('*').eq('id', 1).maybeSingle(),
   ]);
 
   if (!clerkRes.ok) return res.status(502).json({ error: 'Clerk API error' });
@@ -287,6 +289,13 @@ router.get('/checkins', async (req, res) => {
   const adminId    = process.env.VITE_ADMIN_USER_ID;
   const nowMs      = Date.now();
   const DAY        = 86400000;
+
+  const trafficMap = Object.fromEntries((trafficStatuses || []).map(t => [t.user_id, t.status]));
+  const cadence = {
+    green:  cadenceRow?.green_days  ?? 14,
+    orange: cadenceRow?.orange_days ?? 7,
+    red:    cadenceRow?.red_days    ?? 4,
+  };
 
   // Group checkins by user
   const checkinsByUser = {};
@@ -307,26 +316,26 @@ router.get('/checkins', async (req, res) => {
   const students = clerkUsers
     .filter(u => u.id !== adminId)
     .map(u => {
-      const email      = u.email_addresses?.[0]?.email_address || '';
-      const name       = [u.first_name, u.last_name].filter(Boolean).join(' ') || email || u.id;
-      const profile    = (profiles || []).find(p => p.user_id === u.id);
-      const status     = profile?.member_status || 'active';
-      const enrolledAt = profile?.enrolled_at   || null;
+      const email        = u.email_addresses?.[0]?.email_address || '';
+      const name         = [u.first_name, u.last_name].filter(Boolean).join(' ') || email || u.id;
+      const profile      = (profiles || []).find(p => p.user_id === u.id);
+      const status       = profile?.member_status || 'active';
+      const enrolledAt   = profile?.enrolled_at   || null;
+      const trafficStatus = trafficMap[u.id] || 'green';
+      const trafficCadenceDays = cadence[trafficStatus];
       const userCheckins = checkinsByUser[u.id] || [];
-      const lastAt     = userCheckins.length ? userCheckins[userCheckins.length - 1].checked_at : null;
-      const lastMs     = lastAt ? new Date(lastAt).getTime() : null;
-      const daysSince  = lastMs ? Math.floor((nowMs - lastMs) / DAY) : null;
-      const nextDueMs  = calcNextDue(enrolledAt, userCheckins);
+      const lastAt       = userCheckins.length ? userCheckins[userCheckins.length - 1].checked_at : null;
+      const lastMs       = lastAt ? new Date(lastAt).getTime() : null;
+      const daysSince    = lastMs ? Math.floor((nowMs - lastMs) / DAY) : null;
 
-      // Column logic:
-      // DONE     = last check-in within 3 days (tight window for onboarding phase)
-      // UPCOMING = next due is in the future
-      // OVERDUE  = next due is in the past (or no check-in and enrolled)
+      // Column logic based on traffic light cadence
       let column;
-      const recentWindow = enrolledAt && (nowMs - new Date(enrolledAt).getTime()) < 30 * DAY ? 2 * DAY : 7 * DAY;
-      if (lastMs && (nowMs - lastMs) < recentWindow) column = 'done';
-      else if (nextDueMs && nextDueMs > nowMs)        column = 'upcoming';
-      else                                            column = 'overdue';
+      const recentMs = trafficCadenceDays * DAY;
+      if (lastMs && (nowMs - lastMs) < recentMs)      column = 'done';
+      else if (lastMs && (nowMs - lastMs) < recentMs * 1.5) column = 'upcoming';
+      else                                             column = 'overdue';
+
+      const nextDueMs = lastMs ? lastMs + recentMs : null;
 
       return {
         id: u.id, name, email, image_url: u.image_url || null,
@@ -335,12 +344,41 @@ router.get('/checkins', async (req, res) => {
         next_due: nextDueMs ? new Date(nextDueMs).toISOString() : null,
         phase: phaseLabel(enrolledAt),
         checkin_count: userCheckins.length,
+        checkin_cadence_days: trafficCadenceDays,
+        traffic_status: trafficStatus,
         column,
       };
     })
     .filter(s => s.status === 'active');
 
-  res.json({ students });
+  res.json({ students, cadence });
+});
+
+// ── GET /api/admin/traffic-cadence ──────────────────────────────
+router.get('/traffic-cadence', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { data } = await supabase.from('traffic_light_cadence').select('*').eq('id', 1).maybeSingle();
+  res.json({ green_days: data?.green_days ?? 14, orange_days: data?.orange_days ?? 7, red_days: data?.red_days ?? 4 });
+});
+
+// ── PUT /api/admin/traffic-cadence ──────────────────────────────
+router.put('/traffic-cadence', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+  const { green_days, orange_days, red_days } = req.body;
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  const { error } = await supabase.from('traffic_light_cadence').upsert(
+    { id: 1, green_days: Number(green_days), orange_days: Number(orange_days), red_days: Number(red_days), updated_at: new Date().toISOString() },
+    { onConflict: 'id' }
+  );
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
 });
 
 // ── POST /api/admin/checkins ─────────────────────────────────

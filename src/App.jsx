@@ -26,6 +26,7 @@ import AdminMemberDetail from './pages/AdminMemberDetail.jsx';
 import AdminEvents from './pages/AdminEvents.jsx';
 import AdminCheckins from './pages/AdminCheckins.jsx';
 import AdminSalesPipeline from './pages/AdminSalesPipeline.jsx';
+import AdminTrafficLights from './pages/AdminTrafficLights.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -113,6 +114,14 @@ export default function App() {
               element={
                 <AdminRoute>
                   <AdminSalesPipeline />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="admin/traffic-lights"
+              element={
+                <AdminRoute>
+                  <AdminTrafficLights />
                 </AdminRoute>
               }
             />

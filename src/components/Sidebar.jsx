@@ -25,6 +25,7 @@ import {
   PanelLeftOpen,
   Activity,
   ClipboardCheck,
+  TrafficCone,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -65,7 +66,8 @@ const ADMIN_ITEMS = [
   { to: '/admin/members',        label: 'תלמידים',         icon: ShieldCheck },
   { to: '/admin/checkins',       label: "Check-In's",      icon: ClipboardCheck },
   { to: '/admin/events',         label: 'אירועי משתמשים',  icon: Activity },
-  { to: '/admin/sales-pipeline', label: 'צינור מכירות',    icon: Kanban },
+  { to: '/admin/sales-pipeline',  label: 'צינור מכירות',    icon: Kanban },
+  { to: '/admin/traffic-lights', label: 'רמזור תנועה',     icon: TrafficCone },
 ];
 
 
