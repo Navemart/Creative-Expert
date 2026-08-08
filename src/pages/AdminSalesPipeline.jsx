@@ -10,7 +10,7 @@ const STAGES = [
   { key: 'qualified',   label: 'מתאים',          color: '#06b6d4', bg: 'rgba(6,182,212,0.15)'  },
   { key: 'offer_made',  label: 'הצעה נשלחה',    color: '#a855f7', bg: 'rgba(168,85,247,0.15)' },
   { key: 'won',         label: 'נסגר',           color: '#22c55e', bg: 'rgba(34,197,94,0.15)'  },
-  { key: 'lost',        label: 'לא נסגר',        color: '#ef4444', bg: 'rgba(239,68,68,0.15)'  },
+  { key: 'lost',        label: 'פולואפ',          color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
   { key: 'unqualified', label: 'לא מתאים',       color: '#6b7280', bg: 'rgba(107,114,128,0.15)'},
 ];
 
@@ -322,7 +322,7 @@ function KanbanColumn({ stage, leads, onClick, onDragStart, onDrop }) {
   const totalVal = leads.reduce((s, l) => s + (Number(l.deal_value) || 0), 0);
 
   return (
-    <div className="flex flex-col rounded-2xl" style={{ flex: 1, minWidth: 160 }}>
+    <div className="flex flex-col rounded-2xl" style={{ flex: '1 0 230px', maxWidth: 320 }}>
       <div className="flex items-center justify-between px-3 py-2.5 rounded-t-2xl mb-2"
         style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
         <div className="flex items-center gap-2">
@@ -398,7 +398,7 @@ export default function AdminSalesPipeline() {
   );
 
   const now = new Date();
-  const activeLeads  = leads.filter(l => l.stage !== 'lost' && l.stage !== 'unqualified');
+  const activeLeads  = leads.filter(l => l.stage !== 'unqualified');
   const wonLeads     = leads.filter(l => l.stage === 'won');
   const wonThisMonth = wonLeads.filter(l => { const d = new Date(l.created_at); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); });
   const pipelineVal  = activeLeads.reduce((s, l) => s + (Number(l.deal_value) || 0), 0);
@@ -425,7 +425,7 @@ export default function AdminSalesPipeline() {
       </div>
 
       {/* סטטיסטיקות */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
         {[
           { icon: <DollarSign size={14} />, label: 'שווי הצינור',                                value: fmtILS(pipelineVal), color: '#F5C118' },
           { icon: <Trophy size={14} />,     label: 'דילים שנסגרו',                               value: wonLeads.length,     color: '#34d399' },
@@ -465,47 +465,106 @@ export default function AdminSalesPipeline() {
 
       {/* ── תצוגת קנבן ── */}
       {!loading && view === 'kanban' && (
-        <div className="flex gap-3 w-full">
-          {STAGES.map(stage => (
-            <KanbanColumn key={stage.key} stage={stage}
-              leads={filtered.filter(l => l.stage === stage.key)}
-              onClick={setSelected}
-              onDragStart={onDragStart}
-              onDrop={onDrop}
-            />
-          ))}
+        <div style={{ overflowX: 'auto', paddingBottom: 8 }}>
+          <div style={{ display: 'flex', gap: 12, minWidth: STAGES.length * 240 + 'px' }}>
+            {STAGES.map(stage => (
+              <KanbanColumn key={stage.key} stage={stage}
+                leads={filtered.filter(l => l.stage === stage.key)}
+                onClick={setSelected}
+                onDragStart={onDragStart}
+                onDrop={onDrop}
+              />
+            ))}
+          </div>
         </div>
       )}
 
       {/* ── תצוגת רשימה ── */}
       {!loading && view === 'list' && (
         <div className="rounded-2xl overflow-hidden" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.07)' }}>
-          <div className="grid text-[11px] font-bold tracking-widest px-4 py-3" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr auto', color: 'rgba(255,255,255,0.35)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-            <span>פרופיל</span><span>עוקבים</span><span>שלב</span><span>תחום</span><span>דירוג</span><span>מקור</span><span>נוסף</span>
-          </div>
-          {filtered.length === 0 && <p className="text-center py-10 text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>לא נמצאו לידים</p>}
-          {filtered.map(lead => (
-            <div key={lead.id} onClick={() => setSelected(lead)}
-              className="grid items-center px-4 py-3 cursor-pointer hover:bg-white/[0.03] transition-colors"
-              style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr auto', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-              <div className="flex items-center gap-2.5">
-                {lead.profile_image_url
-                  ? <img src={lead.profile_image_url} alt="" className="rounded-full flex-none" style={{ width: 30, height: 30, objectFit: 'cover' }} />
-                  : <div className="rounded-full flex-none flex items-center justify-center text-xs font-bold" style={{ width: 30, height: 30, background: 'rgba(245,193,24,0.12)', color: '#F5C118' }}>{(lead.name||'?')[0].toUpperCase()}</div>
-                }
-                <div>
-                  <p className="text-sm font-semibold text-white leading-tight">{lead.name}</p>
-                  {lead.instagram_handle && <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.35)' }}>@{lead.instagram_handle.replace('@','')}</p>}
+          <div style={{ overflowX: 'auto' }}>
+            {/* Header */}
+            <div className="flex items-center px-4 py-2.5 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.3)', borderBottom: '1px solid rgba(255,255,255,0.07)', minWidth: 900 }}>
+              <span style={{ width: 220, flexShrink: 0 }}>פרופיל</span>
+              <span style={{ width: 80,  flexShrink: 0 }}>עוקבים</span>
+              <span style={{ width: 130, flexShrink: 0 }}>שלב</span>
+              <span style={{ width: 110, flexShrink: 0 }}>תחום</span>
+              <span style={{ width: 90,  flexShrink: 0 }}>דירוג</span>
+              <span style={{ width: 90,  flexShrink: 0 }}>מקור</span>
+              <span style={{ width: 70,  flexShrink: 0 }}>נוסף</span>
+              <span style={{ width: 56,  flexShrink: 0 }}></span>
+            </div>
+
+            {filtered.length === 0 && (
+              <p className="text-center py-10 text-sm" style={{ color: 'rgba(255,255,255,0.25)' }}>לא נמצאו לידים</p>
+            )}
+
+            {filtered.map(lead => (
+              <div key={lead.id}
+                className="flex items-center px-4 py-3 cursor-pointer hover:bg-white/[0.03] transition-colors whitespace-nowrap"
+                style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', minWidth: 900 }}>
+
+                {/* פרופיל */}
+                <div className="flex items-center gap-2.5" style={{ width: 220, flexShrink: 0, minWidth: 0 }} onClick={() => setSelected(lead)}>
+                  {lead.profile_image_url
+                    ? <img src={lead.profile_image_url} alt="" className="rounded-full flex-none" style={{ width: 32, height: 32, objectFit: 'cover' }} />
+                    : <div className="rounded-full flex-none flex items-center justify-center text-xs font-bold" style={{ width: 32, height: 32, background: 'rgba(245,193,24,0.12)', color: '#F5C118' }}>{(lead.name||'?')[0].toUpperCase()}</div>
+                  }
+                  <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                    <p className="text-sm font-semibold text-white truncate">{lead.name}</p>
+                    {lead.instagram_handle && (
+                      <p className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>@{lead.instagram_handle.replace('@','')}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* עוקבים */}
+                <span className="text-sm" style={{ width: 80, flexShrink: 0, color: 'rgba(255,255,255,0.55)' }} onClick={() => setSelected(lead)}>
+                  {fmtNum(lead.followers_count)}
+                </span>
+
+                {/* שלב */}
+                <div style={{ width: 130, flexShrink: 0 }} onClick={() => setSelected(lead)}>
+                  <StagePill stage={lead.stage} />
+                </div>
+
+                {/* תחום */}
+                <span className="text-xs" style={{ width: 110, flexShrink: 0, color: 'rgba(255,255,255,0.5)', overflow: 'hidden', textOverflow: 'ellipsis' }} onClick={() => setSelected(lead)}>
+                  {lead.niche && lead.niche !== 'ללא' ? lead.niche : '—'}
+                </span>
+
+                {/* דירוג */}
+                <div style={{ width: 90, flexShrink: 0 }} onClick={() => setSelected(lead)}>
+                  <Stars value={lead.rating || 0} />
+                </div>
+
+                {/* מקור */}
+                <div style={{ width: 90, flexShrink: 0 }} onClick={() => setSelected(lead)}>
+                  <SourceBadge source={lead.source} />
+                </div>
+
+                {/* נוסף */}
+                <span className="text-xs" style={{ width: 70, flexShrink: 0, color: 'rgba(255,255,255,0.3)' }} onClick={() => setSelected(lead)}>
+                  {timeAgo(lead.created_at)}
+                </span>
+
+                {/* פעולות */}
+                <div className="flex items-center gap-2" style={{ width: 56, flexShrink: 0 }}>
+                  {lead.instagram_handle && (
+                    <a href={`https://instagram.com/${lead.instagram_handle.replace('@','')}`} target="_blank" rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      className="hover:opacity-80 transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      <ExternalLink size={13} />
+                    </a>
+                  )}
+                  <button onClick={e => { e.stopPropagation(); if (confirm('למחוק?')) deleteLead(lead.id); }}
+                    className="hover:opacity-80 transition" style={{ color: 'rgba(239,68,68,0.5)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                    <Trash2 size={13} />
+                  </button>
                 </div>
               </div>
-              <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>{fmtNum(lead.followers_count)}</span>
-              <StagePill stage={lead.stage} />
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{lead.niche || '—'}</span>
-              <Stars value={lead.rating || 0} />
-              <SourceBadge source={lead.source} />
-              <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{timeAgo(lead.created_at)}</span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
