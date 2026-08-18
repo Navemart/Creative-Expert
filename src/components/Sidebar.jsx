@@ -9,6 +9,7 @@ import {
   FileText,
   BarChart3,
   Bot,
+  Sparkles,
   ShieldCheck,
   Calculator,
   Map as MapIcon,
@@ -56,6 +57,7 @@ const SELF_AUDIT_ITEMS = {
 };
 
 const TOOLS_ITEMS = [
+  { to: '/nave-ai',         label: 'NaveAI',          icon: Sparkles, beta: true },
   { to: '/tasks',           label: 'מארגן משימות',   icon: ListTodo, soon: true },
   { to: '/agents',          label: 'AI ScaleKit',    icon: Bot },
   { to: '/calculator',      label: 'מחשבון תמחור',   icon: Calculator },
@@ -143,7 +145,7 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
   );
 }
 
-function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon }) {
+function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon, beta }) {
   if (soon) {
     return (
       <li>
@@ -178,7 +180,15 @@ function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon })
         style={({ isActive }) => isActive ? {} : { color: 'rgba(255,255,255,0.75)' }}
       >
         <Icon size={18} className="flex-none" />
-        <span className={collapsed ? 'md:hidden' : ''}>{label}</span>
+        {!collapsed && (
+          <>
+            <span className="flex-1">{label}</span>
+            {beta && (
+              <span style={{ fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px', borderRadius: 5, background: 'rgba(99,102,241,0.25)', color: 'rgb(165,168,255)', letterSpacing: '0.05em' }}>בטא</span>
+            )}
+          </>
+        )}
+        {collapsed && <span className="md:hidden">{label}</span>}
       </NavLink>
     </li>
   );

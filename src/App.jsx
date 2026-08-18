@@ -27,6 +27,7 @@ import AdminEvents from './pages/AdminEvents.jsx';
 import AdminCheckins from './pages/AdminCheckins.jsx';
 import AdminSalesPipeline from './pages/AdminSalesPipeline.jsx';
 import AdminTrafficLights from './pages/AdminTrafficLights.jsx';
+import NaveAI from './pages/NaveAI.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="diagnosis"       element={<Diagnosis />} />
             <Route path="content-library" element={<ContentLibrary />} />
             <Route path="agents"          element={<Agents />} />
+            <Route path="nave-ai"         element={<NaveAI />} />
             <Route path="calculator"      element={<PricingCalculator />} />
             <Route path="transcriptions"  element={<Transcriptions />} />
             <Route path="tasks"           element={<TaskManager />} />

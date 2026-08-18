@@ -14,6 +14,7 @@
     "start": "node server/index.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.117.1",
     "@clerk/clerk-react": "^5.61.8",
     "@supabase/supabase-js": "^2.106.1",
     "canvas-confetti": "^1.9.4",
@@ -26,8 +27,11 @@
     "openai": "^6.39.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.26.2",
     "recharts": "^3.8.1",
+    "remark-breaks": "^4.0.0",
+    "remark-gfm": "^4.0.1",
     "youtube-transcript": "^1.3.1"
   },
   "devDependencies": {
