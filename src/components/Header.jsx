@@ -218,7 +218,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
   const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length + (attendanceAlerts?.length || 0) + slackTotal;
   return (
     <div className="absolute left-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
-      style={{ width: 340, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
+      style={{ width: 340, maxWidth: 'calc(100vw - 0.5rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <span className="text-base font-bold text-white">התראות</span>
         <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>{total === 0 ? 'הכל תקין ✓' : `${total} התראות`}</span>
@@ -385,7 +385,7 @@ function DailyPanel({ onClose }) {
 
   return (
     <div className="absolute left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" dir="rtl"
-      style={{ width: 270, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
+      style={{ width: 270, maxWidth: 'calc(100vw - 0.5rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -488,7 +488,7 @@ function ToolsPanel({ onClose, isAdmin }) {
 
   return (
     <div className="absolute left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
-      style={{ width: 280, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.12)', boxShadow:'0 20px 60px rgba(0,0,0,0.65)' }}>
+      style={{ width: 280, maxWidth: 'calc(100vw - 0.5rem)', background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.12)', boxShadow:'0 20px 60px rgba(0,0,0,0.65)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom:'1px solid rgba(255,255,255,0.08)' }}>

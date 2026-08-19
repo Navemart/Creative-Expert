@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTrackPage } from '../hooks/useTrack.js';
 import { useDialog } from '../components/Dialog.jsx';
 import { useUser } from '@clerk/clerk-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
 import { useIsAdmin } from '../hooks/useIsAdmin.js';
 import confettiLib from 'canvas-confetti';
@@ -282,7 +282,8 @@ function MSection({ icon, label, color = '#F5C118', children }) {
 
 function MGrid({ cols = 2, children }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12, alignItems: 'end' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 12, alignItems: 'end' }}
+      className="max-sm:!grid-cols-1">
       {children}
     </div>
   );
@@ -319,7 +320,7 @@ function MInputC({ value, onChange, placeholder, type = 'text' }) {
 
 function MRow({ label, hint, required, children }) {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 128px', alignItems: 'center', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr minmax(80px, 128px)', alignItems: 'center', gap: 12 }}>
       <div>
         <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
           {label}{required && <span style={{ color: '#f87171', marginRight: 3 }}>*</span>}
@@ -980,6 +981,7 @@ export default function Dashboard() {
   const [diagnosisContent, setDiagnosisContent] = useState(null);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [dealForm,    setDealForm]    = useState({ total_amount: '', received_amount: '', next_rank: '', deal_date: new Date().toISOString().slice(0,10) });
   const [winForm,     setWinForm]     = useState({ win_1: '', win_2: '', win_3: '', focus_next_week: '', blocker: '', week_date: new Date().toISOString().slice(0,10), _datePicker: false });
@@ -1117,6 +1119,21 @@ export default function Dashboard() {
       .from('diagnosis_content').select('data').eq('id', 'default').maybeSingle();
     if (dcData?.data?.stages) setDiagnosisContent(dcData.data.stages);
   }
+
+  // Open monthly form when navigated from Analytics with ?openMonthly=YYYY-MM or ?openMonthly=1
+  useEffect(() => {
+    const param = searchParams.get('openMonthly');
+    if (!param) return;
+    const existing = monthlyData.find(m => m.month?.slice(0, 7) === param);
+    if (existing) {
+      openEditMonth(existing);
+    } else {
+      const draft = param !== '1' ? param : '';
+      setMonthlyForm(f => ({ ...f, report_month: draft }));
+      setEditingSubmission(null);
+      setModal('monthly');
+    }
+  }, [searchParams, monthlyData]);
 
   // Derived
   const currentMonth = new Date().toISOString().slice(0, 7); // "2026-06" — used only for deal filtering
@@ -2163,7 +2180,7 @@ export default function Dashboard() {
               {/* Right — form */}
               <div style={{ flex: 1, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 18 }}>
                 {/* שווי העסקה */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 128px', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr minmax(80px, 128px)', alignItems: 'center', gap: 12 }}>
                   <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
                     סה״כ שווי העסקה <span style={{ color: '#f87171' }}>*</span>
                   </p>
@@ -2178,7 +2195,7 @@ export default function Dashboard() {
                 <div style={{ height: 1, background: 'rgba(255,255,255,0.06)' }} />
 
                 {/* כסף שנכנס */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 128px', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr minmax(80px, 128px)', alignItems: 'center', gap: 12 }}>
                   <p style={{ fontSize: '1rem', fontWeight: 400, color: 'rgba(255,255,255,0.82)', margin: 0 }}>
                     כסף שנכנס בפועל <span style={{ color: '#f87171' }}>*</span>
                   </p>

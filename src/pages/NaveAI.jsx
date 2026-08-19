@@ -46,7 +46,6 @@ function ChatMessage({ msg }) {
     <div className={`flex mb-3 ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
         className="max-w-[88%] px-5 py-4"
-        style={{ fontSize: '1rem' }}
         style={isUser
           ? { background: 'rgba(255,255,255,0.12)', color: 'white', borderRadius: '18px 4px 18px 18px' }
           : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.88)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px 18px 18px 18px' }
@@ -70,6 +69,7 @@ export default function NaveAI() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -176,14 +176,21 @@ export default function NaveAI() {
   return (
     <div className="flex h-full overflow-hidden">
 
+      {/* ── Mobile history drawer backdrop ── */}
+      {mobileHistoryOpen && (
+        <div className="fixed inset-0 z-40 md:hidden" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setMobileHistoryOpen(false)} />
+      )}
+
       {/* ── History sidebar ── */}
       <div
-        className="hidden md:flex flex-col flex-none border-l overflow-hidden"
-        style={{ width: 220, borderColor: 'rgba(255,255,255,0.07)', background: 'rgba(0,0,0,0.18)' }}
+        className={`flex flex-col flex-none border-l overflow-hidden transition-all duration-200
+          fixed inset-y-0 right-0 z-50 md:static md:z-auto
+          ${mobileHistoryOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}
+        style={{ width: 220, borderColor: 'rgba(255,255,255,0.07)', background: 'rgb(var(--bg-chrome))' }}
       >
         <div className="p-3 border-b flex-none" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
           <button
-            onClick={startNewChat}
+            onClick={() => { startNewChat(); setMobileHistoryOpen(false); }}
             className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10"
             style={{ color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.12)' }}
           >
@@ -198,7 +205,7 @@ export default function NaveAI() {
           {sessions.map(s => (
             <button
               key={s.id}
-              onClick={() => openSession(s.id)}
+              onClick={() => { openSession(s.id); setMobileHistoryOpen(false); }}
               className="w-full text-right rounded-lg px-3 py-2 text-xs truncate transition-colors hover:bg-white/10 flex items-center gap-2"
               style={{
                 color: s.id === currentSessionId ? 'white' : 'rgba(255,255,255,0.5)',
@@ -257,6 +264,11 @@ export default function NaveAI() {
             <div className="flex-none px-4 pb-4 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
               <div className="max-w-2xl mx-auto">
                 <form onSubmit={handleSubmit} className="flex gap-2">
+                  <button type="button" onClick={() => setMobileHistoryOpen(true)}
+                    className="md:hidden flex-none rounded-xl px-3 py-3 transition-colors hover:bg-white/10"
+                    style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <MessageSquare size={16} />
+                  </button>
                   <input
                     ref={inputRef}
                     type="text"
