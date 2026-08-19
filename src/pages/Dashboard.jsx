@@ -1727,8 +1727,11 @@ export default function Dashboard() {
       {/* ── 3. Focus + Streak (ימין) | גרף הכנסות (שמאל) ── */}
       <div className="flex gap-5 flex-1 min-h-0 max-sm:flex-col">
 
-        {/* ימין: הצעד הבא + סטריק */}
-        <div className="flex flex-col gap-4 w-full sm:w-[37%] sm:flex-none">
+        {/* שמאל: גרף הכנסות — ראשון ב-DOM כדי לעלות למעלה במובייל */}
+        {/* (ב-RTL דסקטופ: flex-row → ה-flex-1 יופיע בצד שמאל כרגיל) */}
+
+        {/* ימין: הצעד הבא + סטריק — order-last במובייל */}
+        <div className="flex flex-col gap-4 w-full sm:w-[37%] sm:flex-none order-2 sm:order-1">
 
           {/* הצעד הבא */}
           <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1788,7 +1791,7 @@ export default function Dashboard() {
         </div>
 
         {/* שמאל: גרף הכנסות */}
-        <div className="flex-1 rounded-2xl p-6 flex flex-col min-h-0" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex-1 rounded-2xl p-6 flex flex-col order-1 sm:order-2" style={{ minHeight: 280, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
           {(() => {
             const rangeTotal = chartData.reduce((s, d) => s + (d.revenue || 0), 0);
             const rangeLabel = chartRange === 'all' ? 'כל הזמן' : chartRange === '1M' ? 'חודש אחרון' : chartRange === '3M' ? '3 חודשים' : '6 חודשים';
@@ -1810,8 +1813,8 @@ export default function Dashboard() {
             );
           })()}
           {chartData.length > 0 ? (
-            <div dir="ltr" style={{ flex: 1, minHeight: 200 }}>
-              <ResponsiveContainer width="100%" height="100%">
+            <div dir="ltr" style={{ flex: 1, minHeight: 180 }}>
+              <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
