@@ -518,7 +518,7 @@ export default function ZoomRecordings() {
       <h1 className="text-2xl sm:text-3xl font-bold text-white">הקלטות ופגישות</h1>
 
       {/* ── 2 Upcoming featured cards ── */}
-      <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
         {upcoming === null ? (
           [0,1].map(i => (
             <div key={i} className="rounded-2xl p-6 flex flex-col gap-4 animate-pulse"
@@ -566,37 +566,39 @@ export default function ZoomRecordings() {
       </div>
 
       {/* ── Tabs + Search ── */}
-      <div className="flex items-center justify-between gap-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        <div className="flex gap-0">
-          {[
-            { k: 'recordings', l: 'הקלטות',       count: meetings.length },
-            { k: 'upcoming',   l: 'פגישות קרובות', count: upcoming?.length ?? null },
-            { k: 'starred',    l: 'שמורות',        count: starred.size || null, icon: true },
-          ].map(t => {
-            const active = activeTab === t.k;
-            return (
-              <button key={t.k} onClick={() => setActiveTab(t.k)}
-                className="pb-3 px-4 text-base font-semibold transition-all relative flex items-center gap-2"
-                style={{ color: active ? 'white' : 'rgba(255,255,255,0.38)' }}>
-                {t.icon && <Star size={12} fill={active ? '#F5C118' : 'none'} style={{ color: active ? '#F5C118' : 'rgba(255,255,255,0.35)' }} />}
-                {t.l}
-                {t.count !== null && t.count > 0 && (
-                  <span className="rounded-full px-1.5 py-0.5 text-[11px] font-bold leading-none"
-                    style={{ background: active ? '#F5C118' : 'rgba(255,255,255,0.1)', color: active ? '#13152A' : 'rgba(255,255,255,0.5)' }}>
-                    {t.count}
-                  </span>
-                )}
-                {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: '#F5C118' }} />}
-              </button>
-            );
-          })}
+      <div className="flex flex-col gap-2 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-0 overflow-x-auto flex-1">
+            {[
+              { k: 'recordings', l: 'הקלטות',       count: meetings.length },
+              { k: 'upcoming',   l: 'פגישות קרובות', count: upcoming?.length ?? null },
+              { k: 'starred',    l: 'שמורות',        count: starred.size || null, icon: true },
+            ].map(t => {
+              const active = activeTab === t.k;
+              return (
+                <button key={t.k} onClick={() => setActiveTab(t.k)}
+                  className="pb-3 px-3 sm:px-4 text-sm sm:text-base font-semibold transition-all relative flex items-center gap-1.5 flex-none whitespace-nowrap"
+                  style={{ color: active ? 'white' : 'rgba(255,255,255,0.38)' }}>
+                  {t.icon && <Star size={12} fill={active ? '#F5C118' : 'none'} style={{ color: active ? '#F5C118' : 'rgba(255,255,255,0.35)' }} />}
+                  {t.l}
+                  {t.count !== null && t.count > 0 && (
+                    <span className="rounded-full px-1.5 py-0.5 text-[11px] font-bold leading-none"
+                      style={{ background: active ? '#F5C118' : 'rgba(255,255,255,0.1)', color: active ? '#13152A' : 'rgba(255,255,255,0.5)' }}>
+                      {t.count}
+                    </span>
+                  )}
+                  {active && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full" style={{ background: '#F5C118' }} />}
+                </button>
+              );
+            })}
+          </div>
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="חיפוש..."
+            dir="rtl"
+            className="rounded-xl px-3 py-1.5 text-sm outline-none mb-2 flex-none"
+            style={{ width: 120, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)' }}
+          />
         </div>
-        <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="חיפוש..."
-          dir="rtl"
-          className="rounded-xl px-4 py-1.5 text-base outline-none mb-2 flex-none"
-          style={{ width: 200, background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.85)' }}
-        />
       </div>
 
       {/* ── Upcoming tab ── */}
@@ -633,8 +635,8 @@ export default function ZoomRecordings() {
                       <div key={m.id} className="flex items-center gap-0"
                         style={{ borderTop: idx > 0 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                         {/* Day number */}
-                        <div className="flex-none flex items-center justify-center" style={{ width: 80, padding: '16px 0' }}>
-                          <span className="text-5xl font-black leading-none select-none" style={{ color: 'rgba(255,255,255,0.15)' }}>
+                        <div className="flex-none flex items-center justify-center" style={{ width: 52, padding: '16px 0' }}>
+                          <span className="text-3xl font-black leading-none select-none" style={{ color: 'rgba(255,255,255,0.15)' }}>
                             {start?.getDate()}
                           </span>
                         </div>
@@ -725,11 +727,11 @@ export default function ZoomRecordings() {
                     >
                       {/* Large day number */}
                       <div
-                        className="flex-none flex items-center pl-6 pr-3"
-                        style={{ width: 96 }}
+                        className="flex-none flex items-center pl-3 pr-2"
+                        style={{ width: 52 }}
                       >
                         <span
-                          className="text-5xl font-bold leading-none select-none"
+                          className="text-3xl font-bold leading-none select-none"
                           style={{ color: 'rgba(255,255,255,0.15)' }}
                         >
                           {day}
