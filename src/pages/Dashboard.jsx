@@ -1728,7 +1728,7 @@ export default function Dashboard() {
       <div className="flex gap-5 flex-1 min-h-0 max-sm:flex-col">
 
         {/* ימין: הצעד הבא + סטריק */}
-        <div className="flex flex-col gap-4 max-sm:w-full" style={{ width: '37%', flexShrink: 0 }}>
+        <div className="flex flex-col gap-4 w-full sm:w-[37%] sm:flex-none">
 
           {/* הצעד הבא */}
           <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1810,7 +1810,7 @@ export default function Dashboard() {
             );
           })()}
           {chartData.length > 0 ? (
-            <div dir="ltr" style={{ flex: 1, minHeight: 0 }}>
+            <div dir="ltr" style={{ flex: 1, minHeight: 200 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                   <defs>
@@ -1953,7 +1953,7 @@ export default function Dashboard() {
       <div className="flex gap-5 max-sm:flex-col">
 
         {/* ימין: פגישות קרובות */}
-        <div className="rounded-2xl p-5 flex flex-col gap-4 max-sm:w-full" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="rounded-2xl p-5 flex flex-col gap-4 w-full sm:w-[37%] sm:flex-none" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
             <button onClick={() => navigate('/zoom')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
