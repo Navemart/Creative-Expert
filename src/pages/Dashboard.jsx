@@ -1725,10 +1725,10 @@ export default function Dashboard() {
       />
 
       {/* ── 3. Focus + Streak (ימין) | גרף הכנסות (שמאל) ── */}
-      <div className="flex gap-5 flex-1 min-h-0">
+      <div className="flex gap-5 flex-1 min-h-0 max-sm:flex-col">
 
         {/* ימין: הצעד הבא + סטריק */}
-        <div className="flex flex-col gap-4" style={{ width: '37%', flexShrink: 0 }}>
+        <div className="flex flex-col gap-4 max-sm:w-full" style={{ width: '37%', flexShrink: 0 }}>
 
           {/* הצעד הבא */}
           <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1891,7 +1891,7 @@ export default function Dashboard() {
             </div>
 
             {/* 4 individual cards */}
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {mergedStages.map(stage => {
                 const isCurrent = diagnosisStatus === stage.key;
                 return (
@@ -1950,10 +1950,10 @@ export default function Dashboard() {
       })()}
 
       {/* ── 6. פגישות קרובות (ימין) | מפת דרכים (שמאל) ── */}
-      <div className="flex gap-5">
+      <div className="flex gap-5 max-sm:flex-col">
 
         {/* ימין: פגישות קרובות */}
-        <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="rounded-2xl p-5 flex flex-col gap-4 max-sm:w-full" style={{ width: '37%', flexShrink: 0, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center justify-between">
             <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>הפגישות הבאות</span>
             <button onClick={() => navigate('/zoom')} className="flex items-center gap-1 text-xs font-medium hover:text-white transition" style={{ color: 'rgba(255,255,255,0.3)' }}>
