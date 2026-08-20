@@ -1308,29 +1308,19 @@ export default function Dashboard() {
   const reminderCount   = (isSunday ? 1 : 0) + (isMonthStart ? 1 : 0);
   const showRoadmapTask = nextTask != null && reminderCount < 2;
 
-  // ── Pending-submission retry on mount ───────────────────────────
+  // ── Clean up any stale pending keys (retry removed — caused duplicate deals) ──
   useEffect(() => {
-    const pending = Object.keys(localStorage).filter(k => k.startsWith('pending_win_') || k.startsWith('pending_deal_') || k.startsWith('pending_monthly_'));
-    if (!pending.length) return;
-    console.log(`[retry] Found ${pending.length} pending submission(s) — retrying…`);
-    pending.forEach(async key => {
-      try {
-        const { type, data } = JSON.parse(localStorage.getItem(key));
-        const res = await fetch(`/api/submit/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (res.ok) {
-          localStorage.removeItem(key);
-          console.log(`[retry] Retried and cleared: ${key}`);
-        }
-      } catch (e) {
-        console.warn(`[retry] Could not retry ${key}:`, e.message);
-      }
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('pending_win_') || k.startsWith('pending_deal_') || k.startsWith('pending_monthly_'))
+      .forEach(k => localStorage.removeItem(k));
   }, []);
+
+  const [dealSubmitting, setDealSubmitting] = useState(false);
 
   // Submit handlers
   async function submitDeal() {
-    if (!dealForm.total_amount) return;
+    if (!dealForm.total_amount || dealSubmitting) return;
+    setDealSubmitting(true);
 
     const date     = dealForm.deal_date || new Date().toISOString().slice(0, 10);
     const dealName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
@@ -1345,26 +1335,23 @@ export default function Dashboard() {
       deal_date:        date,
     };
 
-    // שמור גיבוי לפני שליחה
-    const lsKey = `pending_deal_${Date.now()}`;
-    localStorage.setItem(lsKey, JSON.stringify({ type: 'deal', data: body }));
-
     let ok = false;
     try {
       const res = await fetch('/api/submit/deal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const d   = await res.json();
       if (!res.ok) throw new Error(d.error || `HTTP ${res.status}`);
       ok = true;
-      localStorage.removeItem(lsKey);
     } catch (e) {
       console.error('[submitDeal] שגיאה:', e.message);
-      alert('שגיאה בשמירת העסקה. הנתונים נשמרו מקומית וינסו להישלח שוב בפעם הבאה. (' + e.message + ')');
+      alert('שגיאה בשמירת העסקה. נסה שוב. (' + e.message + ')');
+      setDealSubmitting(false);
       return;
     }
 
     const submittedAmount   = dealForm.total_amount;
     const submittedReceived = dealForm.received_amount;
     setDealForm({ total_amount: '', received_amount: '', next_rank: '', deal_date: new Date().toISOString().slice(0,10) });
+    setDealSubmitting(false);
     setModal(null);
     fetchAll();
 
@@ -2248,9 +2235,9 @@ export default function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <button onClick={() => setModal(null)} style={{ color: 'rgba(255,255,255,0.55)', background: 'transparent', border: 'none', cursor: 'pointer', borderRadius: 8, padding: '8px 16px' }}
                 className="hover:bg-white/10 transition">ביטול</button>
-              <button onClick={submitDeal} disabled={!dealForm.total_amount}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#22c55e', color: '#0f2d0f', border: 'none', borderRadius: 8, padding: '9px 20px', fontWeight: 700, cursor: 'pointer', opacity: dealForm.total_amount ? 1 : 0.4 }}
-                className="transition hover:opacity-90">שלח עסקה ✓</button>
+              <button onClick={submitDeal} disabled={!dealForm.total_amount || dealSubmitting}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#22c55e', color: '#0f2d0f', border: 'none', borderRadius: 8, padding: '9px 20px', fontWeight: 700, cursor: (dealForm.total_amount && !dealSubmitting) ? 'pointer' : 'not-allowed', opacity: (dealForm.total_amount && !dealSubmitting) ? 1 : 0.4 }}
+                className="transition hover:opacity-90">{dealSubmitting ? 'שולח...' : 'שלח עסקה ✓'}</button>
             </div>
           </div>
         </div>
