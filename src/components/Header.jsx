@@ -217,7 +217,7 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
   const slackTotal = (slackFailures?.deals?.length || 0) + (slackFailures?.wins?.length || 0);
   const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length + (attendanceAlerts?.length || 0) + slackTotal;
   return (
-    <div className="absolute right-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
+    <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 overflow-hidden rounded-2xl"
       style={{ width: 340, maxWidth: 'calc(100vw - 0.5rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <span className="text-base font-bold text-white">התראות</span>
@@ -384,7 +384,7 @@ function DailyPanel({ onClose }) {
   const barColor    = pct >= 100 ? '#4ade80' : pct >= 60 ? '#F5C118' : '#f97316';
 
   return (
-    <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" dir="rtl"
+    <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden" dir="rtl"
       style={{ width: 270, maxWidth: 'calc(100vw - 0.5rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
 
       {/* Header */}
@@ -487,7 +487,7 @@ function ToolsPanel({ onClose, isAdmin }) {
   const inp = { background:'rgba(255,255,255,0.08)', border:'1px solid rgba(245,193,24,0.4)', borderRadius:6, padding:'3px 8px', fontSize:'0.75rem', color:'white', outline:'none', fontFamily:'inherit', width:'100%' };
 
   return (
-    <div className="absolute right-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
+    <div className="absolute right-0 sm:right-auto sm:left-0 top-full mt-2 z-50 rounded-2xl overflow-hidden"
       style={{ width: 280, maxWidth: 'calc(100vw - 0.5rem)', background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.12)', boxShadow:'0 20px 60px rgba(0,0,0,0.65)' }}>
 
       {/* Header */}
