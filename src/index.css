@@ -96,11 +96,12 @@ body {
 }
 
 /* ── כפתורים צהובים — טקסט כהה תמיד, ללא יוצא מן הכלל ──── */
-.btn-yellow, .btn-yellow *,
+/* ספציפיות גבוהה כדי לנצח את כלל font-bold */
+.btn-yellow.btn-yellow, .btn-yellow *, .btn-yellow.btn-yellow *,
 a.btn-recording, a.btn-recording *,
-.bg-accent, .bg-accent *,
-[style*="F5C118"], [style*="F5C118"] *,
-[style*="#F5C11"] *, [style*="245, 193"] {
+.bg-accent.bg-accent, .bg-accent *,
+.font-bold.btn-yellow, .font-semibold.btn-yellow,
+.font-bold.bg-accent, .font-semibold.bg-accent {
   color: #13152A !important;
 }
 

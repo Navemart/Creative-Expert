@@ -2758,7 +2758,7 @@ export default function Dashboard() {
             <div dir="rtl" className="rounded-2xl p-6 max-w-sm w-full" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
               <p className="text-white font-bold mb-2">שגיאה בטעינת הטופס</p>
               <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>{e?.message}</p>
-              <button onClick={() => setModal(null)} className="rounded-lg px-4 py-2 text-sm" style={{ background: '#F5C118', color: '#0f172a', fontWeight: 700 }}>סגור</button>
+              <button onClick={() => setModal(null)} className="rounded-lg px-4 py-2 text-sm" style={{ background: '#F5C118', color: '#13152A', fontWeight: 700 }}>סגור</button>
             </div>
           </div>;
         }

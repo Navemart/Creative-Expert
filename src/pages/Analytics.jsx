@@ -445,7 +445,7 @@ export default function Analytics() {
         <BarChart3 size={40} style={{ color:'rgba(255,255,255,0.1)' }} />
         <p className="text-base font-semibold text-white">אין עדיין נתונים</p>
         <p className="text-xs text-center leading-relaxed" style={{ color:'rgba(255,255,255,0.32)' }}>מלא דוח חודשי בדשבורד כדי לראות את הנתונים שלך כאן</p>
-        <button onClick={() => navigate('/?openMonthly=1')} className="rounded-xl px-5 py-2.5 text-sm font-bold transition-all hover:opacity-90" style={{ background:'#F5C118', color:'#13152A' }}>עדכן נתוני החודש</button>
+        <button onClick={() => navigate('/?openMonthly=1')} className="btn-yellow rounded-xl px-5 py-2.5 text-sm font-bold transition-all hover:opacity-90" style={{ background:'#F5C118', color:'#13152A' }}>עדכן נתוני החודש</button>
       </div>
     </div>
   );
@@ -487,7 +487,7 @@ export default function Analytics() {
           {/* Submit button */}
           <button
             onClick={() => navigate('/?openMonthly=1')}
-            className="rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:opacity-90 whitespace-nowrap"
+            className="btn-yellow rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:opacity-90 whitespace-nowrap"
             style={{ background:'#F5C118', color:'#13152A' }}
           >
             הגשת נתוני חודש

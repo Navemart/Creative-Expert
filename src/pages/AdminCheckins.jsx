@@ -116,7 +116,7 @@ function CadenceModal({ onClose }) {
 
         <div style={{ display: 'flex', gap: 10, marginTop: 24, justifyContent: 'flex-end' }}>
           <button onClick={() => onClose(false)} style={{ padding: '8px 18px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}>ביטול</button>
-          <button onClick={save} disabled={saving} style={{ padding: '8px 22px', borderRadius: 10, border: 'none', background: '#F5C118', color: '#000', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button onClick={save} disabled={saving} style={{ padding: '8px 22px', borderRadius: 10, border: 'none', background: '#F5C118', color: '#13152A', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
             💾 שמור תדירות
           </button>
         </div>
@@ -228,7 +228,7 @@ function ExpandedCard({ student, onCheckin, checking, onClose, onSaved }) {
           disabled={saving}
           style={{
             width: '100%', padding: '9px 0', borderRadius: 8, border: 'none', cursor: saving ? 'default' : 'pointer',
-            background: saving ? 'rgba(245,193,24,0.3)' : 'rgba(245,193,24,0.85)', color: '#000', fontWeight: 700, fontSize: '0.875rem',
+            background: saving ? 'rgba(245,193,24,0.3)' : 'rgba(245,193,24,0.85)', color: '#13152A', fontWeight: 700, fontSize: '0.875rem',
             transition: 'background 0.12s', marginBottom: 14,
           }}
         >

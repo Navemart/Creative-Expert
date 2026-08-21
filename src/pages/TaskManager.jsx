@@ -745,7 +745,7 @@ export default function TaskManager() {
                     onKeyDown={e => { if (e.key==='Enter') addRoutineTask(); if (e.key==='Escape') { setRoutineAdding(false); setRoutineNewTitle(''); } }}
                     placeholder="שם משימה קבועה..."
                     style={{ flex:1, background:'rgb(var(--bg-elevated))', border:'1px solid rgba(255,255,255,0.15)', borderRadius:7, padding:'5px 9px', color:'inherit', fontSize:'0.75rem', outline:'none', fontFamily:'inherit' }} />
-                  <button onClick={addRoutineTask} style={{ background:'#F5C118', border:'none', borderRadius:7, padding:'5px 9px', fontWeight:700, cursor:'pointer', fontSize:'0.6875rem' }}>שמור</button>
+                  <button onClick={addRoutineTask} style={{ background:'#F5C118', border:'none', borderRadius:7, padding:'5px 9px', fontWeight:700, cursor:'pointer', fontSize:'0.6875rem', color:'#13152A' }}>שמור</button>
                   <button onClick={() => { setRoutineAdding(false); setRoutineNewTitle(''); }} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:7, padding:'5px 8px', color:'inherit', cursor:'pointer', fontSize:'0.6875rem' }}>ביטול</button>
                 </div>
               ) : (
@@ -875,7 +875,7 @@ export default function TaskManager() {
               const { data } = await supabase.from('tasks').insert(payload).select().single();
               if (data) setTasks(prev => [data, ...prev]);
               setPendingRoutineDrop(null);
-            }} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:'0.8125rem', opacity: pendingRoutineDrop.slot ? 1 : 0.4 }}>הוסף ללוח</button>
+            }} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:'0.8125rem', opacity: pendingRoutineDrop.slot ? 1 : 0.4, color:'#13152A' }}>הוסף ללוח</button>
             <button onClick={() => setPendingRoutineDrop(null)} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:'0.8125rem' }}>ביטול</button>
           </div>
         </Modal>
@@ -1082,7 +1082,7 @@ function TaskModal({ data, isEdit, preSlot, onChange, onSave, onClose }) {
       <input type="date" value={data.due_date} onChange={e => set('due_date', e.target.value)} style={{ ...S.input, width:'100%' }} />
 
       <div style={{ display:'flex', gap:8, marginTop:6 }}>
-        <button onClick={onSave} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:'0.875rem' }}>{isEdit ? 'עדכן' : 'שמור'}</button>
+        <button onClick={onSave} style={{ flex:1, background:'#F5C118', border:'none', borderRadius:8, padding:'9px', fontWeight:700, cursor:'pointer', fontSize:'0.875rem', color:'#13152A' }}>{isEdit ? 'עדכן' : 'שמור'}</button>
         <button onClick={onClose} style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'9px 14px', color:'inherit', cursor:'pointer', fontSize:'0.8125rem' }}>ביטול</button>
       </div>
     </Modal>
