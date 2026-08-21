@@ -98,7 +98,9 @@ body {
 /* ── כפתורים צהובים — טקסט כהה תמיד, ללא יוצא מן הכלל ──── */
 .btn-yellow, .btn-yellow *,
 a.btn-recording, a.btn-recording *,
-.bg-accent, .bg-accent * {
+.bg-accent, .bg-accent *,
+[style*="F5C118"], [style*="F5C118"] *,
+[style*="#F5C11"] *, [style*="245, 193"] {
   color: #13152A !important;
 }
 

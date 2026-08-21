@@ -445,7 +445,7 @@ export default function Analytics() {
         <BarChart3 size={40} style={{ color:'rgba(255,255,255,0.1)' }} />
         <p className="text-base font-semibold text-white">אין עדיין נתונים</p>
         <p className="text-xs text-center leading-relaxed" style={{ color:'rgba(255,255,255,0.32)' }}>מלא דוח חודשי בדשבורד כדי לראות את הנתונים שלך כאן</p>
-        <button onClick={() => navigate('/?openMonthly=1')} className="rounded-xl px-5 py-2.5 text-sm font-bold transition-all hover:opacity-90" style={{ background:'#F5C118', color:'#000' }}>עדכן נתוני החודש</button>
+        <button onClick={() => navigate('/?openMonthly=1')} className="rounded-xl px-5 py-2.5 text-sm font-bold transition-all hover:opacity-90" style={{ background:'#F5C118', color:'#13152A' }}>עדכן נתוני החודש</button>
       </div>
     </div>
   );
@@ -488,7 +488,7 @@ export default function Analytics() {
           <button
             onClick={() => navigate('/?openMonthly=1')}
             className="rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:opacity-90 whitespace-nowrap"
-            style={{ background:'#F5C118', color:'#000' }}
+            style={{ background:'#F5C118', color:'#13152A' }}
           >
             הגשת נתוני חודש
           </button>
@@ -532,7 +532,7 @@ export default function Analytics() {
                             style={{ color: active ? 'white' : 'rgba(255,255,255,0.45)' }}>
                             <div className="w-3.5 h-3.5 rounded flex items-center justify-center flex-none"
                               style={{ background: active ? m.color : 'transparent', border: `1.5px solid ${active ? m.color : 'rgba(255,255,255,0.2)'}` }}>
-                              {active && <Check size={9} strokeWidth={3.5} style={{ color:'#000' }} />}
+                              {active && <Check size={9} strokeWidth={3.5} style={{ color:'#13152A' }} />}
                             </div>
                             <div className="w-2 h-2 rounded-full flex-none" style={{ background: m.color }} />
                             {m.label}

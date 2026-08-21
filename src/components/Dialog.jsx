@@ -127,7 +127,7 @@ function DialogModal({ dialog, onClose }) {
                 className={`flex-1 py-2 rounded-xl text-base font-medium transition-all
                   ${dialog.danger
                     ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-accent hover:opacity-90 text-white'
+                    : 'bg-accent hover:opacity-90'
                   }`}
               >
                 {dialog.confirmText}
