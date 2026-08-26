@@ -7,7 +7,7 @@ import {
   Loader2, TrendingUp, Users, Target, FileText, DollarSign,
   BarChart3, AlertCircle, CheckCircle2, Clock, Smartphone,
   ArrowUpRight, ArrowDownRight, Minus, Pencil, Check, X,
-  ChevronLeft, ChevronRight, ChevronDown,
+  ChevronLeft, ChevronRight, ChevronDown, Sparkles,
 } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, ComposedChart, AreaChart, Area,
@@ -30,7 +30,7 @@ function computeClientPaid(c) {
   return c.paid_amount || 0;
 }
 
-// ── Metrics config ───────────────────────────────────────────────
+// ── Metrics config (overview chart) ─────────────────────────────
 const METRICS = [
   { key: 'deals',         label: 'כסף בעסקאות חדשות', color: '#F5C118',  format: 'ils' },
   { key: 'income',        label: 'הכנסה בפועל',        color: '#4ade80',  format: 'ils' },
@@ -41,19 +41,39 @@ const METRICS = [
 ];
 
 // ── Chart shared ────────────────────────────────────────────────
-const GRID   = <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />;
-const XAXIS  = (data) => <XAxis dataKey="month" tick={{ fill:'rgba(255,255,255,0.28)', fontSize:'0.6875rem' }} axisLine={false} tickLine={false} />;
+const GRID = <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />;
+
+// ── Stage metrics config ─────────────────────────────────────────
+const STAGE_METRICS = {
+  highlight: [
+    { key:'חשיפה',   label:'חשיפה',           color:'#38bdf8' },
+    { key:'עוקבים',  label:'עוקבים',           color:'#e1306c' },
+    { key:'פוסטים',  label:'פוסטים שפורסמו',  color:'#F5C118' },
+  ],
+  lead: [
+    { key:'הצעות',          label:'הצעות',          color:'#F5C118' },
+    { key:'שיחות',          label:'שיחות שנקבעו',   color:'rgb(99,102,241)' },
+    { key:'הגיעו לשיחות',  label:'הגיעו לשיחות',  color:'#a78bfa' },
+    { key:'עסקאות שנסגרו', label:'עסקאות שנסגרו', color:'#4ade80' },
+  ],
+  control: [
+    { key:'עסקאות חדשות', label:'עסקאות חדשות', color:'#F5C118', format:'ils' },
+    { key:'הכנסה בפועל',  label:'הכנסה בפועל',  color:'#4ade80', format:'ils' },
+  ],
+};
 
 // ── Tabs ────────────────────────────────────────────────────────
 const TABS = [
   { k:'overview',  l:'סקירה כללית' },
-  { k:'sales',     l:'מכירות' },
-  { k:'clients',   l:'לקוחות ופרויקטים' },
-  { k:'content',   l:'תוכן' },
+  { k:'highlight', l:'לבלוט' },
+  { k:'lead',      l:'להוביל' },
+  { k:'control',   l:'לשלוט' },
+  { k:'deliver',   l:'לספק' },
 ];
+
 function TabsBar({ value, onChange }) {
   return (
-    <div className="flex gap-1 border-b overflow-x-auto" style={{ borderColor:'rgba(255,255,255,0.08)', scrollbarWidth:'none' }}>
+    <div className="flex gap-1 overflow-x-auto" style={{ borderBottom:'1px solid rgba(255,255,255,0.08)', scrollbarWidth:'none' }}>
       {TABS.map(t => (
         <button key={t.k} onClick={() => onChange(t.k)}
           className="pb-3 px-3 sm:px-4 text-sm sm:text-base font-semibold transition-all relative flex-none"
@@ -66,7 +86,17 @@ function TabsBar({ value, onChange }) {
   );
 }
 
-// ── Range picker (for sales/clients/content tabs) ───────────────
+// ── Stage header ────────────────────────────────────────────────
+function StageHeader({ title, sub }) {
+  return (
+    <div>
+      <h2 className="text-xl font-bold text-white">{title}</h2>
+      {sub && <p className="text-sm mt-1 leading-relaxed" style={{ color:'rgba(255,255,255,0.38)' }}>{sub}</p>}
+    </div>
+  );
+}
+
+// ── Range picker ────────────────────────────────────────────────
 const RANGES = [{ k:'3m', l:'3M' }, { k:'6m', l:'6M' }, { k:'12m', l:'12M' }];
 function RangePicker({ value, onChange }) {
   return (
@@ -98,6 +128,41 @@ function Section({ title, sub, right, children, noPad }) {
   );
 }
 
+// ── Metric card (secondary KPI) ─────────────────────────────────
+function MetricCard({ label, value, sub, color }) {
+  return (
+    <div className="rounded-xl p-4 text-center" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
+      <p className="text-[11px] uppercase tracking-widest mb-2" style={{ color:'rgba(255,255,255,0.28)' }}>{label}</p>
+      <p className="text-2xl font-black leading-none" style={{ color: color || 'white' }}>{value}</p>
+      {sub && <p className="text-[11px] mt-1.5" style={{ color:'rgba(255,255,255,0.28)' }}>{sub}</p>}
+    </div>
+  );
+}
+
+// ── Coming soon state ────────────────────────────────────────────
+function ComingSoonState({ title, message }) {
+  return (
+    <div className="rounded-2xl p-16 flex flex-col items-center gap-4 text-center" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(255,255,255,0.07)' }}>
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background:'rgba(245,193,24,0.08)', border:'1px solid rgba(245,193,24,0.15)' }}>
+        <Sparkles size={24} style={{ color:'rgba(245,193,24,0.6)' }} />
+      </div>
+      <div>
+        <p className="text-base font-bold text-white mb-1.5">{title}</p>
+        <p className="text-sm leading-relaxed max-w-xs" style={{ color:'rgba(255,255,255,0.35)' }}>{message}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── Empty chart state ────────────────────────────────────────────
+function EmptyChartState({ message }) {
+  return (
+    <div className="flex items-center justify-center" style={{ height:300 }}>
+      <p className="text-sm" style={{ color:'rgba(255,255,255,0.22)' }}>{message}</p>
+    </div>
+  );
+}
+
 // ── Funnel bar ──────────────────────────────────────────────────
 function FunnelRow({ label, value, total, color, sub }) {
   const pct = total > 0 ? Math.min(100, Math.round(value/total*100)) : (value > 0 ? 100 : 0);
@@ -117,7 +182,7 @@ function FunnelRow({ label, value, total, color, sub }) {
   );
 }
 
-// ── Main Chart Tooltip ───────────────────────────────────────────
+// ── Main Chart Tooltip (overview) ────────────────────────────────
 function MainChartTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload;
@@ -135,6 +200,67 @@ function MainChartTooltip({ active, payload, label }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ── Generic stage chart tooltip ──────────────────────────────────
+function StageTooltip({ active, payload, ilsFormat }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0]?.payload;
+  return (
+    <div className="rounded-xl px-4 py-3 shadow-xl" style={{ background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', minWidth:160, direction:'rtl' }}>
+      <p className="text-xs font-bold mb-2" style={{ color:'rgba(255,255,255,0.55)' }}>{d?.fullMonth}</p>
+      {payload.map(p => {
+        if (p.value == null) return null;
+        const val = ilsFormat ? fmtFull(p.value) : (typeof p.value === 'number' ? p.value.toLocaleString('he-IL') : p.value);
+        return (
+          <div key={p.dataKey} className="flex items-center justify-between gap-4 mb-1">
+            <span className="text-[11px]" style={{ color:'rgba(255,255,255,0.45)' }}>{p.dataKey}</span>
+            <span className="text-xs font-bold" style={{ color: p.color }}>{val}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Stage metrics dropdown ───────────────────────────────────
+function StageMetricsDropdown({ stageKey, active, setActive, open, setOpen, refProp }) {
+  const metrics = STAGE_METRICS[stageKey] || [];
+  function toggle(key) {
+    setActive(prev => prev.includes(key) ? (prev.length > 1 ? prev.filter(k => k !== key) : prev) : [...prev, key]);
+  }
+  return (
+    <div className="relative" ref={refProp}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-sm font-semibold transition-all"
+        style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.12)', color:'white' }}
+      >
+        מדדים {active.length}
+        <ChevronDown size={13} style={{ color:'rgba(255,255,255,0.4)', transform: open ? 'rotate(180deg)' : 'none', transition:'transform 0.15s' }} />
+      </button>
+      {open && (
+        <div className="absolute top-full right-0 mt-1.5 rounded-2xl shadow-2xl z-50 py-1.5 min-w-[200px]"
+          style={{ background:'rgba(10,12,26,0.98)', border:'1px solid rgba(255,255,255,0.12)', direction:'rtl' }}>
+          {metrics.map(m => {
+            const isActive = active.includes(m.key);
+            return (
+              <button key={m.key} onClick={() => toggle(m.key)}
+                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-right transition-all hover:bg-white/5"
+                style={{ color: isActive ? 'white' : 'rgba(255,255,255,0.45)' }}>
+                <div className="w-3.5 h-3.5 rounded flex items-center justify-center flex-none"
+                  style={{ background: isActive ? m.color : 'transparent', border: `1.5px solid ${isActive ? m.color : 'rgba(255,255,255,0.2)'}` }}>
+                  {isActive && <Check size={9} strokeWidth={3.5} style={{ color:'#13152A' }} />}
+                </div>
+                <div className="w-2 h-2 rounded-full flex-none" style={{ background: m.color }} />
+                {m.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -163,10 +289,20 @@ export default function Analytics() {
   const [metricsOpen,         setMetricsOpen]         = useState(false);
   const metricsRef = useRef(null);
 
-  // Sales/clients/content range pickers
-  const [range,      setRange]      = useState('6m');
-  const [salesRange, setSalesRange] = useState('6m');
-  const [tab,        setTab]        = useState('overview');
+  // Stage metrics selection
+  const [activeHighlight, setActiveHighlight] = useState(['חשיפה','עוקבים']);
+  const [activeLead,      setActiveLead]      = useState(['הצעות','שיחות']);
+  const [activeControl,   setActiveControl]   = useState(['עסקאות חדשות','הכנסה בפועל']);
+  const [highlightOpen,   setHighlightOpen]   = useState(false);
+  const [leadOpen,        setLeadOpen]        = useState(false);
+  const [controlOpen,     setControlOpen]     = useState(false);
+  const highlightRef = useRef(null);
+  const leadRef      = useRef(null);
+  const controlRef   = useRef(null);
+
+  // Shared range picker (all non-overview tabs)
+  const [range, setRange] = useState('6m');
+  const [tab,   setTab]   = useState('overview');
 
   // Desired salary (localStorage)
   const salaryKey = userId ? `desired_salary_${userId}` : null;
@@ -195,7 +331,7 @@ export default function Analytics() {
       supabase.from('monthly_submissions').select('*').eq('user_id', userId).order('month'),
       supabase.from('clients').select('*').eq('user_id', userId),
       supabase.from('projects').select('*').eq('user_id', userId),
-      supabase.from('leads').select('call_status, created_at').eq('user_id', userId),
+      supabase.from('leads').select('call_status, created_at, call_date').eq('user_id', userId),
     ]).then(([{ data:m }, { data:c }, { data:p }, { data:l }]) => {
       setMonths(m || []);
       setClients(c || []);
@@ -207,7 +343,7 @@ export default function Analytics() {
   // Sorted submissions
   const sorted = useMemo(() => [...months].sort((a,b) => new Date(a.month)-new Date(b.month)), [months]);
 
-  // Available header month options (newest first, from earliest submission to now)
+  // Available header month options (newest first)
   const availableMonthOptions = useMemo(() => {
     const now = new Date();
     const earliest = sorted[0]?.month?.slice(0, 7);
@@ -223,7 +359,7 @@ export default function Analytics() {
     return opts;
   }, [sorted]);
 
-  // Init: header month = latest submitted, chart range = first → latest submitted
+  // Init: header month + chart range
   useEffect(() => {
     if (!months.length) return;
     const earliest = sorted[0]?.month?.slice(0, 7);
@@ -243,14 +379,35 @@ export default function Analytics() {
     return () => document.removeEventListener('mousedown', handler);
   }, [metricsOpen]);
 
-  // Fast lookup: "YYYY-MM" → submission object
+  useEffect(() => {
+    if (!highlightOpen) return;
+    function handler(e) { if (highlightRef.current && !highlightRef.current.contains(e.target)) setHighlightOpen(false); }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [highlightOpen]);
+
+  useEffect(() => {
+    if (!leadOpen) return;
+    function handler(e) { if (leadRef.current && !leadRef.current.contains(e.target)) setLeadOpen(false); }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [leadOpen]);
+
+  useEffect(() => {
+    if (!controlOpen) return;
+    function handler(e) { if (controlRef.current && !controlRef.current.contains(e.target)) setControlOpen(false); }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [controlOpen]);
+
+  // Fast lookup: "YYYY-MM" → submission
   const subMap = useMemo(() => {
     const map = {};
     sorted.forEach(s => { if (s.month) map[s.month.slice(0, 7)] = s; });
     return map;
   }, [sorted]);
 
-  // All months from first to last submission (oldest→newest), used for chart
+  // Reporting range keys (for overview chart)
   const reportingRangeKeys = useMemo(() => {
     if (!sorted.length) return [];
     const firstKey = sorted[0].month?.slice(0, 7);
@@ -267,40 +424,24 @@ export default function Analytics() {
     return keys;
   }, [sorted]);
 
-  // Main chart data: one entry per month in reporting range
-  // undefined metric values = not submitted (gap in line); numeric 0 = real submitted zero
+  // Overview main chart data
   const mainChartData = useMemo(() => reportingRangeKeys.map(key => {
     const [ky, km] = key.split('-').map(Number);
     const sub = subMap[key] ?? null;
-    const base = {
-      month:     MONTH_HE[km - 1].slice(0, 3),
-      fullMonth: `${MONTH_HE[km - 1]} ${ky}`,
-      monthKey:  key,
-      hasData:   sub !== null,
-    };
+    const base = { month: MONTH_HE[km - 1].slice(0, 3), fullMonth: `${MONTH_HE[km - 1]} ${ky}`, monthKey: key, hasData: sub !== null };
     if (sub === null) return base;
     const income   = num(sub.total_income || sub.amount);
     const expenses = num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads);
-    return {
-      ...base,
-      deals:         num(sub.total_new_deals),
-      income,
-      expenses,
-      netProfit:     income - expenses,
-      newClients:    num(sub.new_clients),
-      activeClients: num(sub.active_clients),
-      _sub: sub,
-    };
+    return { ...base, deals: num(sub.total_new_deals), income, expenses, netProfit: income - expenses, newClients: num(sub.new_clients), activeClients: num(sub.active_clients), _sub: sub };
   }), [reportingRangeKeys, subMap]);
 
-  // Chart display data filtered by user's chosen range
   const chartDisplayData = useMemo(() =>
     chartStartMonth && chartEndMonth
       ? mainChartData.filter(r => r.monthKey >= chartStartMonth && r.monthKey <= chartEndMonth)
       : mainChartData,
   [mainChartData, chartStartMonth, chartEndMonth]);
 
-  // ── Table rows: full history from first submission to latest, newest first ──
+  // Table rows (overview)
   const tableRows = useMemo(() => {
     if (!sorted.length) return [];
     const firstKey = sorted[0].month?.slice(0, 7);
@@ -317,12 +458,9 @@ export default function Analytics() {
     return rows;
   }, [sorted, subMap]);
 
-  // Current month key
   const nowDate  = new Date();
   const curKey   = `${nowDate.getFullYear()}-${String(nowDate.getMonth() + 1).padStart(2, '0')}`;
-
-  // Latest month (global, for financial health)
-  const latest = sorted[sorted.length - 1] ?? null;
+  const latest   = sorted[sorted.length - 1] ?? null;
   const curIncome  = num(latest?.total_income || latest?.amount);
   const curExp     = num(latest?.software_expenses) + num(latest?.variable_expenses) + num(latest?.paid_ads);
   const curNet     = curIncome - curExp;
@@ -362,18 +500,65 @@ export default function Analytics() {
   }, [clients, projects]);
   const totalOutstanding = outstandingItems.reduce((s,i)=>s+i.amount,0);
 
-  // ── Sales/clients/content tab data (unchanged logic) ────────
-  const rangeN      = range==='3m' ? 3 : range==='6m' ? 6 : 12;
-  const slice       = useMemo(() => [...sorted].slice(-rangeN).reverse(), [sorted, rangeN]);
-  const salesN      = salesRange==='1m' ? 1 : salesRange==='3m' ? 3 : salesRange==='6m' ? 6 : 12;
-  const salesSlice  = useMemo(() => [...sorted].slice(-salesN).reverse(), [sorted, salesN]);
+  // ── Shared slice (range picker) ──────────────────────────────
+  const rangeN = range==='3m' ? 3 : range==='6m' ? 6 : 12;
+  const slice  = useMemo(() => [...sorted].slice(-rangeN).reverse(), [sorted, rangeN]);
 
-  const currentYear  = new Date().getFullYear();
-  const ytdSubs      = sorted.filter(m => new Date(m.month).getUTCFullYear() === currentYear);
-  const ytdIncome    = ytdSubs.reduce((s,m) => s + num(m.total_income||m.amount), 0);
-  const ytdExp       = ytdSubs.reduce((s,m) => s + num(m.software_expenses) + num(m.variable_expenses) + num(m.paid_ads), 0);
-  const ytdNet       = ytdIncome - ytdExp;
+  const currentYear = new Date().getFullYear();
+  const ytdSubs     = sorted.filter(m => new Date(m.month).getUTCFullYear() === currentYear);
+  const ytdIncome   = ytdSubs.reduce((s,m) => s + num(m.total_income||m.amount), 0);
+  const ytdExp      = ytdSubs.reduce((s,m) => s + num(m.software_expenses) + num(m.variable_expenses) + num(m.paid_ads), 0);
+  const ytdNet      = ytdIncome - ytdExp;
 
+  // ── לבלוט (highlight) data — כל ההיסטוריה, ישן→חדש ──────────
+  const highlightData = useMemo(() => sorted.map(m => ({
+    month:    shortMonth(m.month),
+    fullMonth: fmtMonth(m.month),
+    חשיפה:   num(m.reach),
+    עוקבים:  num(m.followers),
+    פוסטים:  num(m.posts_count),
+  })), [sorted]);
+
+  const postsInRange = useMemo(() => sorted.reduce((s,m)=>s+num(m.posts_count),0), [sorted]);
+  const postsAvg     = useMemo(() => sorted.length>0 ? Math.round(postsInRange/sorted.length) : 0, [postsInRange, sorted]);
+  const postsData    = useMemo(() => sorted.map(m => ({ month: shortMonth(m.month), fullMonth: fmtMonth(m.month), פוסטים: num(m.posts_count) })), [sorted]);
+  const hasReachData = useMemo(() => sorted.some(m => num(m.reach) > 0), [sorted]);
+
+  // ── להוביל (lead) data — כל ההיסטוריה ──────────────────────
+  const leadData = useMemo(() => sorted.map(m => ({
+    month:           shortMonth(m.month),
+    fullMonth:       fmtMonth(m.month),
+    הצעות:          num(m.proposals),
+    שיחות:          num(m.sales_calls_set),
+    'הגיעו לשיחות':  num(m.sales_calls_showed),
+    'עסקאות שנסגרו': num(m.closings_count),
+  })), [sorted]);
+
+  const leadTotals = useMemo(() => ({
+    proposals:    sorted.reduce((s,m)=>s+num(m.proposals),0),
+    calls_set:    sorted.reduce((s,m)=>s+num(m.sales_calls_set),0),
+    calls_showed: sorted.reduce((s,m)=>s+num(m.sales_calls_showed),0),
+  }), [sorted]);
+
+  const { closingRate, newClientsTotal } = useMemo(() => {
+    const hasMonthlyData = sorted.some(m => m.closings_count != null);
+    const totalClosings = hasMonthlyData
+      ? sorted.reduce((s,m) => s + num(m.closings_count), 0)
+      : pipelineLeads.filter(l => l.call_status === 'נסגר').length;
+    const totalCalls = sorted.reduce((s,m) => s + num(m.sales_calls_showed), 0);
+    const rate = totalCalls > 0 ? Math.min(100, Math.round(totalClosings / totalCalls * 100)) : null;
+    return { closingRate: rate, newClientsTotal: totalClosings };
+  }, [sorted, pipelineLeads]);
+
+  // ── לשלוט (control) data — כל ההיסטוריה ────────────────────
+  const controlData = useMemo(() => sorted.map(m => ({
+    month:          shortMonth(m.month),
+    fullMonth:      fmtMonth(m.month),
+    'עסקאות חדשות': num(m.total_new_deals),
+    'הכנסה בפועל':  num(m.total_income || m.amount),
+  })), [sorted]);
+
+  // ── Clients tab (preserved) ──────────────────────────────────
   const funnelTotals = useMemo(() => ({
     leads:           slice.reduce((s,m)=>s+num(m.leads),0),
     calls_set:       slice.reduce((s,m)=>s+num(m.sales_calls_set),0),
@@ -382,20 +567,6 @@ export default function Analytics() {
     quotes_sent:     slice.reduce((s,m)=>s+num(m.price_quotes_sent),0),
     quotes_approved: slice.reduce((s,m)=>s+num(m.price_quotes_approved),0),
   }), [slice]);
-
-  const { closingRate, newClientsTotal } = useMemo(() => {
-    const hasMonthlyData = slice.some(m => m.closings_count != null);
-    let totalClosings = hasMonthlyData
-      ? slice.reduce((s,m) => s + num(m.closings_count), 0)
-      : pipelineLeads.filter(l => l.call_status === 'נסגר').length;
-    const totalCalls = slice.reduce((s,m) => s + num(m.sales_calls_showed), 0);
-    const rate = totalCalls > 0 ? Math.min(100, Math.round(totalClosings / totalCalls * 100)) : null;
-    return { closingRate: rate, newClientsTotal: totalClosings };
-  }, [sorted, slice, pipelineLeads]);
-
-  const convLeadToCall   = funnelTotals.leads > 0 ? Math.round(funnelTotals.calls_set / funnelTotals.leads * 100) : null;
-  const convCallToClose  = funnelTotals.calls_showed > 0 ? Math.round(newClientsTotal / funnelTotals.calls_showed * 100) : null;
-  const convQuoteToClose = funnelTotals.quotes_sent > 0 ? Math.round(funnelTotals.quotes_approved / funnelTotals.quotes_sent * 100) : null;
 
   const activeClients = latest ? num(latest.active_clients) : null;
 
@@ -406,28 +577,13 @@ export default function Analytics() {
     return Math.round(totalRevenue / clients.length);
   }, [clients]);
 
-  const salesData = useMemo(() => {
-    const pipelineByMonth = {};
-    pipelineLeads.filter(l => l.call_status === 'נסגר' && l.call_date)
-      .forEach(l => { const key = String(l.call_date).substring(0, 7); pipelineByMonth[key] = (pipelineByMonth[key] || 0) + 1; });
-    return salesSlice.map(m => {
-      const monthKey = m.month ? String(m.month).substring(0, 7) : '';
-      const closings = m.closings_count != null ? num(m.closings_count) : (pipelineByMonth[monthKey] || 0);
-      return { month: shortMonth(m.month), fullMonth: fmtMonth(m.month), הצעות: num(m.proposals), לידים: num(m.leads), שיחות: num(m.sales_calls_set), סגירות: closings };
-    });
-  }, [salesSlice, pipelineLeads]);
-
-  const clientData = useMemo(() => slice.map(m => ({ month: shortMonth(m.month), 'לקוחות פעילים': num(m.active_clients) })), [slice]);
-
-  const igData = useMemo(() => slice.map(m => ({ month: shortMonth(m.month), fullLabel: fmtMonth(m.month), עוקבים: num(m.followers), פוסטים: num(m.posts_count) })), [slice]);
-
   const avgProjectValue = useMemo(() => {
     const p = projects.filter(p => num(p.total_amount) > 0);
     if (!p.length) return null;
     return Math.round(p.reduce((s,p) => s + num(p.total_amount), 0) / p.length);
   }, [projects]);
 
-  // ── Metric toggle ────────────────────────────────────────────
+  // Metric toggle (overview)
   function toggleMetric(key) {
     setActiveMetrics(prev =>
       prev.includes(key)
@@ -465,26 +621,30 @@ export default function Analytics() {
   return (
     <div className="w-full space-y-5" dir="rtl">
 
-      {/* ── Header ─────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4">
+      {/* ── Page header ─────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl sm:text-3xl font-bold text-white">נתונים עסקיים</h1>
-        <div className="flex items-center gap-2 flex-none">
-          {/* Month+year selector */}
-          <div className="relative">
-            <select
-              value={selectedHeaderMonth}
-              onChange={e => setSelectedHeaderMonth(e.target.value)}
-              className="appearance-none rounded-xl px-4 py-2.5 text-sm font-semibold text-white outline-none cursor-pointer"
-              style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', direction:'rtl', minWidth:140, paddingLeft:28 }}
-            >
-              {availableMonthOptions.map(key => {
-                const [y, m] = key.split('-').map(Number);
-                return <option key={key} value={key}>{MONTH_HE[m-1]} {y}</option>;
-              })}
-            </select>
-            <ChevronDown size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color:'rgba(255,255,255,0.3)' }} />
-          </div>
-          {/* Submit button */}
+        <div className="flex items-center gap-2 flex-none flex-wrap justify-end">
+
+          {/* Month selector — overview only */}
+          {tab === 'overview' && (
+            <div className="relative">
+              <select
+                value={selectedHeaderMonth}
+                onChange={e => setSelectedHeaderMonth(e.target.value)}
+                className="appearance-none rounded-xl px-4 py-2.5 text-sm font-semibold text-white outline-none cursor-pointer"
+                style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', direction:'rtl', minWidth:140, paddingLeft:28 }}
+              >
+                {availableMonthOptions.map(key => {
+                  const [y, m] = key.split('-').map(Number);
+                  return <option key={key} value={key}>{MONTH_HE[m-1]} {y}</option>;
+                })}
+              </select>
+              <ChevronDown size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color:'rgba(255,255,255,0.3)' }} />
+            </div>
+          )}
+
+          {/* Submit button — always */}
           <button
             onClick={() => navigate('/?openMonthly=1')}
             className="btn-yellow rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:opacity-90 whitespace-nowrap"
@@ -508,7 +668,6 @@ export default function Analytics() {
             {/* Toolbar */}
             <div className="flex items-center justify-between px-5 gap-3 flex-wrap sm:flex-nowrap" style={{ borderBottom:'1px solid rgba(255,255,255,0.08)', minHeight:60 }}>
 
-              {/* RIGHT: Metrics dropdown + date range */}
               <div className="flex items-center gap-2 flex-wrap py-3 sm:py-0">
 
                 {/* Metrics multi-select */}
@@ -565,7 +724,7 @@ export default function Analytics() {
                 </div>
               </div>
 
-              {/* LEFT: Line / Bar segmented toggle */}
+              {/* Line / Bar toggle */}
               <div className="flex rounded-xl overflow-hidden flex-none" style={{ border:'1px solid rgba(255,255,255,0.1)' }}>
                 {[{ k:'line', l:'קו' }, { k:'bar', l:'עמודות' }].map((t, ti) => (
                   <button key={t.k} onClick={() => setChartType(t.k)}
@@ -631,7 +790,7 @@ export default function Analytics() {
               </ResponsiveContainer>
             </div>
 
-            {/* Legend — centered below chart */}
+            {/* Legend */}
             <div className="flex justify-center gap-6 px-5 pb-5 pt-1 flex-wrap" dir="rtl">
               {activeMetrics.map(key => {
                 const m = METRICS.find(x => x.key === key);
@@ -645,9 +804,8 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* ② MONTHLY TOTALS TABLE — full history, newest first */}
+          {/* ② MONTHLY HISTORY TABLE */}
           <div className="rounded-2xl overflow-hidden" style={{ background:'rgb(var(--bg-surface))', border }}>
-            {/* Table header */}
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
               <div>
                 <h2 className="text-base font-bold text-white">היסטוריית דיווחים</h2>
@@ -657,18 +815,12 @@ export default function Analytics() {
                 {sorted.length}/{tableRows.length} הוגשו
               </span>
             </div>
-
-            {/* Table — overflow-x for small screens */}
             <div style={{ overflowX:'auto' }}>
               <table style={{ width:'100%', borderCollapse:'collapse', minWidth:640 }}>
                 <thead>
                   <tr style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
                     {['חודש','כסף בעסקאות חדשות','הכנסה בפועל','הוצאות','רווח נטו','לקוחות חדשים','לקוחות פעילים'].map(h => (
-                      <th key={h} style={{
-                        padding:'8px 16px', textAlign:'right',
-                        fontSize:'0.6875rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em',
-                        color:'rgba(255,255,255,0.25)', whiteSpace:'nowrap',
-                      }}>{h}</th>
+                      <th key={h} style={{ padding:'8px 16px', textAlign:'right', fontSize:'0.6875rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'rgba(255,255,255,0.25)', whiteSpace:'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -679,84 +831,30 @@ export default function Analytics() {
                     const isMissing  = !row.hasData;
                     const isLatest   = row.monthKey === tableRows[0]?.monthKey;
                     const isCurMonth = row.monthKey === curKey;
-
-                    // Compute values only when sub exists — 0 is a real value, null means missing
-                    const income   = sub !== null ? num(sub.total_income || sub.amount) : null;
-                    const expenses = sub !== null ? num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads) : null;
-                    const netProfit = (income !== null && expenses !== null) ? income - expenses : null;
-
-                    const rowBg = isCurMonth
-                      ? 'rgba(245,193,24,0.04)'
-                      : isLatest
-                        ? 'rgba(255,255,255,0.02)'
-                        : 'transparent';
-
+                    const income     = sub !== null ? num(sub.total_income || sub.amount) : null;
+                    const expenses   = sub !== null ? num(sub.software_expenses) + num(sub.variable_expenses) + num(sub.paid_ads) : null;
+                    const netProfit  = (income !== null && expenses !== null) ? income - expenses : null;
+                    const rowBg = isCurMonth ? 'rgba(245,193,24,0.04)' : isLatest ? 'rgba(255,255,255,0.02)' : 'transparent';
                     return (
                       <tr key={row.monthKey}
                         onClick={() => navigate(`/?openMonthly=${row.monthKey}`)}
-                        style={{
-                          borderBottom:'1px solid rgba(255,255,255,0.04)',
-                          background: rowBg,
-                          cursor:'pointer',
-                          transition:'background 0.12s',
-                          opacity: isMissing ? 0.5 : 1,
-                        }}
+                        style={{ borderBottom:'1px solid rgba(255,255,255,0.04)', background: rowBg, cursor:'pointer', transition:'background 0.12s', opacity: isMissing ? 0.5 : 1 }}
                         onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = rowBg; }}
                       >
-                        {/* Month label */}
                         <td style={{ padding:'12px 16px', whiteSpace:'nowrap' }}>
                           <div className="flex items-center gap-2">
                             {isCurMonth && <span style={{ width:6, height:6, borderRadius:'50%', background:'#F5C118', display:'inline-block', flexShrink:0 }} />}
-                            <span style={{ fontWeight:600, fontSize:'0.875rem', color: isCurMonth ? '#F5C118' : isMissing ? 'rgba(255,255,255,0.45)' : 'white' }}>
-                              {MONTH_HE[rm - 1]} {ry}
-                            </span>
-                            {isMissing && (
-                              <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium"
-                                style={{ background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.3)' }}>
-                                לא הוגש
-                              </span>
-                            )}
+                            <span style={{ fontWeight:600, fontSize:'0.875rem', color: isCurMonth ? '#F5C118' : isMissing ? 'rgba(255,255,255,0.45)' : 'white' }}>{MONTH_HE[rm - 1]} {ry}</span>
+                            {isMissing && <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.3)' }}>לא הוגש</span>}
                           </div>
                         </td>
-                        {/* Deals — show ₪0 for submitted zero, — for missing */}
-                        <td style={{ padding:'12px 16px', textAlign:'right' }}>
-                          <span style={{ fontSize:'0.875rem', fontWeight:600, color: sub ? '#F5C118' : 'rgba(255,255,255,0.15)' }}>
-                            {sub !== null ? fmtFullZero(num(sub.total_new_deals)) : '—'}
-                          </span>
-                        </td>
-                        {/* Income */}
-                        <td style={{ padding:'12px 16px', textAlign:'right' }}>
-                          <span style={{ fontSize:'0.875rem', fontWeight:600, color: sub ? '#4ade80' : 'rgba(255,255,255,0.15)' }}>
-                            {sub !== null ? fmtFullZero(income) : '—'}
-                          </span>
-                        </td>
-                        {/* Expenses */}
-                        <td style={{ padding:'12px 16px', textAlign:'right' }}>
-                          <span style={{ fontSize:'0.875rem', color: sub && expenses > 0 ? '#f87171' : sub ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>
-                            {sub !== null ? fmtFullZero(expenses) : '—'}
-                          </span>
-                        </td>
-                        {/* Net profit */}
-                        <td style={{ padding:'12px 16px', textAlign:'right' }}>
-                          {sub !== null ? (
-                            <span style={{ fontSize:'0.875rem', fontWeight:700, color: netProfit > 0 ? '#34d399' : netProfit < 0 ? '#f87171' : 'rgba(255,255,255,0.35)' }}>
-                              {fmtFullZero(netProfit)}
-                            </span>
-                          ) : <span style={{ color:'rgba(255,255,255,0.15)' }}>—</span>}
-                        </td>
-                        {/* New clients */}
-                        <td style={{ padding:'12px 16px', textAlign:'right' }}>
-                          <span style={{ fontSize:'0.875rem', color: sub && num(sub.new_clients) > 0 ? '#818cf8' : sub ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>
-                            {sub !== null ? num(sub.new_clients) : '—'}
-                          </span>
-                        </td>
-                        {/* Active clients */}
-                        <td style={{ padding:'12px 16px', textAlign:'right' }}>
-                          <span style={{ fontSize:'0.875rem', color: sub && num(sub.active_clients) > 0 ? '#38bdf8' : sub ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>
-                            {sub !== null ? num(sub.active_clients) : '—'}
-                          </span>
-                        </td>
+                        <td style={{ padding:'12px 16px', textAlign:'right' }}><span style={{ fontSize:'0.875rem', fontWeight:600, color: sub ? '#F5C118' : 'rgba(255,255,255,0.15)' }}>{sub !== null ? fmtFullZero(num(sub.total_new_deals)) : '—'}</span></td>
+                        <td style={{ padding:'12px 16px', textAlign:'right' }}><span style={{ fontSize:'0.875rem', fontWeight:600, color: sub ? '#4ade80' : 'rgba(255,255,255,0.15)' }}>{sub !== null ? fmtFullZero(income) : '—'}</span></td>
+                        <td style={{ padding:'12px 16px', textAlign:'right' }}><span style={{ fontSize:'0.875rem', color: sub && expenses > 0 ? '#f87171' : sub ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>{sub !== null ? fmtFullZero(expenses) : '—'}</span></td>
+                        <td style={{ padding:'12px 16px', textAlign:'right' }}>{sub !== null ? (<span style={{ fontSize:'0.875rem', fontWeight:700, color: netProfit > 0 ? '#34d399' : netProfit < 0 ? '#f87171' : 'rgba(255,255,255,0.35)' }}>{fmtFullZero(netProfit)}</span>) : <span style={{ color:'rgba(255,255,255,0.15)' }}>—</span>}</td>
+                        <td style={{ padding:'12px 16px', textAlign:'right' }}><span style={{ fontSize:'0.875rem', color: sub && num(sub.new_clients) > 0 ? '#818cf8' : sub ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>{sub !== null ? num(sub.new_clients) : '—'}</span></td>
+                        <td style={{ padding:'12px 16px', textAlign:'right' }}><span style={{ fontSize:'0.875rem', color: sub && num(sub.active_clients) > 0 ? '#38bdf8' : sub ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.15)' }}>{sub !== null ? num(sub.active_clients) : '—'}</span></td>
                       </tr>
                     );
                   })}
@@ -765,7 +863,7 @@ export default function Analytics() {
             </div>
           </div>
 
-          {/* ③ FINANCIAL HEALTH + OUTSTANDING PAYMENTS */}
+          {/* ③ FINANCIAL HEALTH + OUTSTANDING */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
             {/* Financial health */}
@@ -773,15 +871,10 @@ export default function Analytics() {
               const businessProfit = curNet - desiredSalary;
               return (
                 <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ background:'rgb(var(--bg-surface))', border }}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-base font-bold text-white">בריאות פיננסית</h2>
-                      <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.25)' }}>
-                        נתוני <span style={{ color:'rgba(255,255,255,0.45)', fontWeight:600 }}>{fmtMonth(latest?.month)}</span> — החודש האחרון במערכת
-                      </p>
-                    </div>
+                  <div>
+                    <h2 className="text-base font-bold text-white">בריאות פיננסית</h2>
+                    <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.25)' }}>נתוני <span style={{ color:'rgba(255,255,255,0.45)', fontWeight:600 }}>{fmtMonth(latest?.month)}</span> — החודש האחרון במערכת</p>
                   </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {[
                       { l:'הכנסה',    v:fmtFull(curIncome), c:'#F5C118' },
@@ -794,7 +887,6 @@ export default function Analytics() {
                       </div>
                     ))}
                   </div>
-
                   {curIncome > 0 && (
                     <div className="rounded-full h-3 overflow-hidden flex gap-px" style={{ background:'rgba(255,255,255,0.06)' }}>
                       <div style={{ width:`${Math.min(100,Math.round(curExp/curIncome*100))}%`, background:'#ff5a72' }} />
@@ -802,15 +894,12 @@ export default function Analytics() {
                       <div style={{ flex:1, background:'#4fc38a' }} />
                     </div>
                   )}
-
                   <div className="flex items-center justify-between gap-3 pt-1" style={{ borderTop:'1px solid rgba(255,255,255,0.06)' }}>
                     <div className="flex items-center gap-2 flex-none">
                       <span className="text-xs" style={{ color:'rgba(255,255,255,0.38)' }}>משכורת חודשית לבית</span>
                       <div className="relative group">
-                        <span className="flex items-center justify-center w-4 h-4 rounded-full text-[11px] font-bold cursor-help"
-                          style={{ background:'rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.4)' }}>?</span>
-                        <div className="absolute bottom-full right-0 mb-2 w-56 rounded-xl px-3 py-2.5 text-[11px] leading-relaxed z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.7)' }} dir="rtl">
+                        <span className="flex items-center justify-center w-4 h-4 rounded-full text-[11px] font-bold cursor-help" style={{ background:'rgba(255,255,255,0.1)', color:'rgba(255,255,255,0.4)' }}>?</span>
+                        <div className="absolute bottom-full right-0 mb-2 w-56 rounded-xl px-3 py-2.5 text-[11px] leading-relaxed z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" style={{ background:'rgba(8,9,22,0.97)', border:'1px solid rgba(255,255,255,0.12)', color:'rgba(255,255,255,0.7)' }} dir="rtl">
                           הסכום שאתה רוצה לקחת הביתה מהעסק כל חודש — כמה אתה צריך כדי לכסות את ההוצאות האישיות שלך.
                         </div>
                       </div>
@@ -878,9 +967,7 @@ export default function Analytics() {
                         <p className="text-base font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
                         <div className="flex items-center gap-1">
                           {overdue ? <AlertCircle size={10} style={{ color:'#fca5a5' }} /> : <Clock size={10} style={{ color:'rgba(255,255,255,0.2)' }} />}
-                          <span className="text-[11px]" style={{ color: overdue ? '#fca5a5' : 'rgba(255,255,255,0.38)' }}>
-                            {item.date ? fmtDate(item.date) : '—'}
-                          </span>
+                          <span className="text-[11px]" style={{ color: overdue ? '#fca5a5' : 'rgba(255,255,255,0.38)' }}>{item.date ? fmtDate(item.date) : '—'}</span>
                         </div>
                       </div>
                     );
@@ -893,294 +980,341 @@ export default function Analytics() {
               )}
             </div>
           </div>
-
         </div>
       )}
 
-      {/* ══════════════ TAB: SALES ══════════════════════ */}
-      {tab === 'sales' && (
+      {/* ══════════════ TAB: לבלוט ══════════════════════ */}
+      {tab === 'highlight' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="rounded-2xl p-5" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(129,140,248,0.25)' }}>
-              <p className="text-[11px] uppercase tracking-widest font-semibold mb-3" style={{ color:'rgba(255,255,255,0.35)' }}>המרה: לידים → שיחות מכירה</p>
-              <div className="flex items-end gap-3 mb-3">
-                <span className="text-4xl font-black" style={{ color:'#818cf8' }}>
-                  {convLeadToCall != null ? `${convLeadToCall}%` : '—'}
-                </span>
-                <span className="text-base mb-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
-                  {funnelTotals.calls_set} שיחות מתוך {funnelTotals.leads} לידים
-                </span>
-              </div>
-              <div className="rounded-full h-2 overflow-hidden" style={{ background:'rgba(255,255,255,0.06)' }}>
-                <div className="h-2 rounded-full transition-all duration-500" style={{ width:`${convLeadToCall ?? 0}%`, background:'#818cf8' }} />
+          <StageHeader
+            title="לבלוט"
+            sub="להגדיל את החשיפה ולהפוך את התוכן למנוע שמביא יותר אנשים לעסק."
+          />
+
+          {/* Main chart: חשיפה + עוקבים */}
+          <div className="rounded-2xl overflow-hidden" style={{ background:'rgb(var(--bg-surface))', border }}>
+            <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-bold text-white">חשיפה ועוקבים לאורך זמן</h2>
+                  <StageMetricsDropdown stageKey="highlight" active={activeHighlight} setActive={setActiveHighlight}
+                    open={highlightOpen} setOpen={setHighlightOpen} refProp={highlightRef} />
+                </div>
+                <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>מספרים מוחלטים לפי חודש</p>
               </div>
             </div>
-            <div className="rounded-2xl p-5" style={{ background:'rgb(var(--bg-surface))', border:'1px solid rgba(74,222,128,0.25)' }}>
-              <p className="text-[11px] uppercase tracking-widest font-semibold mb-3" style={{ color:'rgba(255,255,255,0.35)' }}>המרה: שיחות → סגירות</p>
-              <div className="flex items-end gap-3 mb-3">
-                <span className="text-4xl font-black" style={{ color:'#4ade80' }}>
-                  {convCallToClose != null ? `${convCallToClose}%` : '—'}
-                </span>
-                <span className="text-base mb-1.5" style={{ color:'rgba(255,255,255,0.35)' }}>
-                  {newClientsTotal} סגירות מתוך {funnelTotals.calls_showed} שיחות
-                </span>
-              </div>
-              <div className="rounded-full h-2 overflow-hidden" style={{ background:'rgba(255,255,255,0.06)' }}>
-                <div className="h-2 rounded-full transition-all duration-500" style={{ width:`${convCallToClose ?? 0}%`, background:'#4ade80' }} />
-              </div>
+            <div className="p-5 pt-4" dir="ltr">
+              {highlightData.length === 0 ? (
+                <EmptyChartState message="אין נתונים עדיין" />
+              ) : (
+                <>
+                  {(() => {
+                    // dual Y-axis only when חשיפה is selected together with another metric (חשיפה scale ~50K vs others ~3K)
+                    const hasReach = activeHighlight.includes('חשיפה');
+                    const useDual  = hasReach && activeHighlight.length > 1;
+                    const getAxisId = key => (!useDual || key === 'חשיפה') ? 'left' : 'right';
+                    return (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={highlightData} margin={{ top:8, right: useDual ? 44 : 12, left:0, bottom:0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                          <XAxis {...XAXIS_PROPS} />
+                          <YAxis yAxisId="left"
+                            tick={{ fill:'rgba(255,255,255,0.22)', fontSize:'0.75rem' }}
+                            axisLine={false} tickLine={false} width={44}
+                            tickFormatter={v => v >= 1000 ? `${Math.round(v/1000)}K` : v}
+                          />
+                          {useDual && (
+                            <YAxis yAxisId="right" orientation="right"
+                              tick={{ fill:'rgba(255,255,255,0.22)', fontSize:'0.75rem' }}
+                              axisLine={false} tickLine={false} width={44}
+                              tickFormatter={v => v >= 1000 ? `${Math.round(v/1000)}K` : v}
+                            />
+                          )}
+                          <Tooltip content={<StageTooltip ilsFormat={false} />} />
+                          {activeHighlight.map(key => {
+                            const m = STAGE_METRICS.highlight.find(x => x.key === key);
+                            if (!m) return null;
+                            return (
+                              <Line key={key} yAxisId={getAxisId(key)} dataKey={key} stroke={m.color} strokeWidth={2.5}
+                                type="monotone" connectNulls={false}
+                                dot={{ r:4, fill:m.color, stroke:'rgb(var(--bg-surface))', strokeWidth:2 }} activeDot={{ r:5.5 }} />
+                            );
+                          })}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
+                  <div className="flex gap-6 mt-3 flex-wrap" dir="rtl">
+                    {activeHighlight.map(key => {
+                      const m = STAGE_METRICS.highlight.find(x => x.key === key);
+                      return m ? (
+                        <div key={key} className="flex items-center gap-1.5">
+                          <div className="h-0.5 w-5 rounded-full" style={{ background:m.color }} />
+                          <span className="text-xs" style={{ color:'rgba(255,255,255,0.45)' }}>{m.label}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                  {!hasReachData && (
+                    <p className="text-xs mt-3 text-center" style={{ color:'rgba(255,255,255,0.22)' }}>
+                      שדה החשיפה לא מולא עדיין — מלא בדוח החודשי
+                    </p>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
-          <Section
-            title="פאנל מכירות"
-            sub="ככל שמציעים יותר — מקבלים יותר לידים, שיחות וסגירות"
-            right={
-              <div className="flex gap-0.5 rounded-lg p-0.5" style={{ background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)' }}>
-                {[{k:'1m',l:'חודש'},{k:'3m',l:'3M'},{k:'6m',l:'6M'},{k:'12m',l:'12M'}].map(r => (
-                  <button key={r.k} onClick={() => setSalesRange(r.k)}
-                    className="rounded-md px-3 py-1 text-xs font-bold transition-all"
-                    style={{ background: salesRange===r.k ? 'rgba(255,255,255,0.12)' : 'transparent', color: salesRange===r.k ? 'white' : 'rgba(255,255,255,0.32)' }}>
-                    {r.l}
-                  </button>
-                ))}
+          {/* Secondary: פוסטים שפורסמו */}
+          <div className="rounded-2xl overflow-hidden" style={{ background:'rgb(var(--bg-surface))', border }}>
+            <div className="px-5 py-4" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <h2 className="text-base font-bold text-white">פוסטים שפורסמו</h2>
+              <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>כמה תוכן יצרת — הקשר להגדלת החשיפה</p>
+            </div>
+            <div className="p-5 pt-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+                <MetricCard label="פוסטים בתקופה" value={postsInRange || '—'} color="#F5C118" sub={`${rangeN} חודשים`} />
+                <MetricCard label="ממוצע חודשי" value={postsAvg || '—'} color="#a78bfa" sub="פוסטים לחודש" />
+                <MetricCard label="עוקבים נוכחיים" value={latest?.followers ? num(latest.followers).toLocaleString('he-IL') : '—'} color="#e1306c" sub={fmtMonth(latest?.month)} />
               </div>
-            }
-          >
-            <div dir="ltr">
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={salesData} barGap={2} barCategoryGap="25%" margin={{ top:8, right:4, left:0, bottom:0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis {...XAXIS_PROPS} />
-                  <YAxis {...YCNT_PROPS} />
-                  <Tooltip contentStyle={TIP.contentStyle} cursor={{ fill:'rgba(30,58,120,0.35)' }} formatter={(v, name) => [v, name]} />
-                  <Bar dataKey="הצעות" fill="#F5C118" radius={[3,3,0,0]} />
-                  <Bar dataKey="לידים" fill="rgba(167,139,250,0.75)" radius={[3,3,0,0]} />
-                  <Bar dataKey="שיחות" fill="rgba(99,102,241,0.75)" radius={[3,3,0,0]} />
-                  <Bar dataKey="סגירות" fill="#4ade80" radius={[3,3,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex gap-5 mt-2 flex-wrap" dir="rtl">
-              {[{c:'#F5C118',l:'הצעות'},{c:'rgba(167,139,250,0.9)',l:'לידים'},{c:'rgba(99,102,241,0.9)',l:'שיחות'},{c:'#4ade80',l:'סגירות'}].map(x => (
-                <div key={x.l} className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-sm" style={{ background:x.c }} />
-                  <span className="text-[11px]" style={{ color:'rgba(255,255,255,0.38)' }}>{x.l}</span>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <Section title="הצעות מחיר" sub="הצעות מחיר פורמליות שנשלחו ונסגרו">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-              {[
-                { l:'נשלחו', v:funnelTotals.quotes_sent, c:'#38bdf8' },
-                { l:'אושרו / נסגרו', v:funnelTotals.quotes_approved, c:'#4ade80' },
-                { l:'אחוז סגירה', v:convQuoteToClose!=null ? `${convQuoteToClose}%` : '—', c:'#f472b6' },
-              ].map(({l,v,c}) => (
-                <div key={l} className="rounded-xl p-4 text-center" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>
-                  <p className="text-[11px] uppercase tracking-wider mb-2" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
-                  <p className="text-2xl font-black" style={{ color:c }}>{v}</p>
-                </div>
-              ))}
-            </div>
-            {funnelTotals.quotes_sent > 0 && (
-              <div className="rounded-full h-2 overflow-hidden" style={{ background:'rgba(255,255,255,0.06)' }}>
-                <div className="h-2 rounded-full transition-all" style={{ width:`${convQuoteToClose ?? 0}%`, background:'linear-gradient(90deg,#38bdf8,#4ade80)' }} />
-              </div>
-            )}
-            {funnelTotals.quotes_sent === 0 && (
-              <p className="text-xs text-center py-2" style={{ color:'rgba(255,255,255,0.22)' }}>אין נתוני הצעות מחיר עדיין — מלא בדוח החודשי</p>
-            )}
-          </Section>
-        </div>
-      )}
-
-      {/* ══════════════ TAB: CLIENTS ═══════════════════ */}
-      {tab === 'clients' && (() => {
-        const clientsRanked = [...clients]
-          .map(c => ({ name: c.name || 'לא ידוע', paid: computeClientPaid(c), total: num(c.deal_amount), outstanding: Math.max(0, num(c.deal_amount) - computeClientPaid(c)) }))
-          .filter(c => c.total > 0).sort((a, b) => b.paid - a.paid);
-        const topClient = clientsRanked[0] ?? null;
-        const newClientsData = slice.map((m, i) => ({
-          month: shortMonth(m.month),
-          חדשים: i === 0 ? 0 : Math.max(0, num(m.active_clients) - num(slice[i-1]?.active_clients)),
-        }));
-        const debtClients = clientsRanked.filter(c => c.outstanding > 0);
-
-        return (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { l:'לקוחות פעילים', v: activeClients ?? '—', c:'#34d399', sub:'לפי דיווח אחרון' },
-                { l:'לקוחות חדשים', v: newClientsTotal > 0 ? `+${newClientsTotal}` : '—', c:'#F5C118', sub:`${rangeN} חודשים` },
-                { l:'LTV ממוצע', v: ltv ? fmtILS(ltv) : '—', c:'#a78bfa', sub:`${clients.length} לקוחות` },
-                { l:'הכי רווחי', v: topClient ? fmtILS(topClient.paid) : '—', c:'#38bdf8', sub: topClient?.name ?? '' },
-              ].map(({ l, v, c, sub }) => (
-                <div key={l} className="rounded-2xl p-4" style={{ background:'rgb(var(--bg-surface))', border }}>
-                  <p className="text-[11px] uppercase tracking-wider mb-1.5" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
-                  <p className="text-xl font-black leading-none" style={{ color:c }}>{v}</p>
-                  {sub && <p className="text-[11px] mt-1" style={{ color:'rgba(255,255,255,0.28)' }}>{sub}</p>}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <Section title="לקוחות פעילים לאורך זמן">
+              {postsData.length > 0 && (
                 <div dir="ltr">
-                  <ResponsiveContainer width="100%" height={170}>
-                    <AreaChart data={clientData} margin={{ top:6, right:4, left:0, bottom:0 }}>
-                      <defs>
-                        <linearGradient id="clG" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#34d399" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="#34d399" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
+                  <ResponsiveContainer width="100%" height={140}>
+                    <BarChart data={postsData} barSize={18} margin={{ top:4, right:4, left:0, bottom:0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
                       <XAxis {...XAXIS_PROPS} />
                       <YAxis {...YCNT_PROPS} />
-                      <Tooltip {...TIP} formatter={v=>[v,'פעילים']} />
-                      <Area type="monotone" dataKey="לקוחות פעילים" stroke="#34d399" strokeWidth={2} fill="url(#clG)"
-                        dot={{ r:3, fill:'#34d399', stroke:'rgb(var(--bg-surface))', strokeWidth:1.5 }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </Section>
-
-              <Section title="לקוחות חדשים לפי חודש">
-                <div dir="ltr">
-                  <ResponsiveContainer width="100%" height={170}>
-                    <BarChart data={newClientsData} barSize={20} margin={{ top:6, right:4, left:0, bottom:0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                      <XAxis {...XAXIS_PROPS} />
-                      <YAxis {...YCNT_PROPS} />
-                      <Tooltip {...TIP} formatter={v=>[v,'לקוחות חדשים']} cursor={{ fill:'rgba(30,58,120,0.35)' }} />
-                      <Bar dataKey="חדשים" fill="#F5C118" radius={[4,4,0,0]} />
+                      <Tooltip {...TIP} formatter={v=>[v,'פוסטים']} cursor={{ fill:'rgba(255,255,255,0.04)' }} />
+                      <Bar dataKey="פוסטים" fill="rgba(245,193,24,0.55)" radius={[4,4,0,0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
-              </Section>
+              )}
+              {postsInRange === 0 && (
+                <p className="text-xs text-center mt-2" style={{ color:'rgba(255,255,255,0.22)' }}>אין נתוני פוסטים לתקופה — מלא בדוח החודשי</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ TAB: להוביל ══════════════════════ */}
+      {tab === 'lead' && (
+        <div className="space-y-4">
+          <StageHeader
+            title="להוביל"
+            sub="להפוך עניין ופניות לשיחות ולהזדמנויות אמיתיות."
+          />
+
+          {/* Main chart: מדדי מכירות לאורך זמן */}
+          <div className="rounded-2xl overflow-hidden" style={{ background:'rgb(var(--bg-surface))', border }}>
+            <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-bold text-white">מדדי מכירות לאורך זמן</h2>
+                  <StageMetricsDropdown stageKey="lead" active={activeLead} setActive={setActiveLead}
+                    open={leadOpen} setOpen={setLeadOpen} refProp={leadRef} />
+                </div>
+                <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>ככל שמציעים יותר — מגיעים ליותר שיחות</p>
+              </div>
+            </div>
+            <div className="p-5 pt-4" dir="ltr">
+              {leadData.length === 0 ? (
+                <EmptyChartState message="אין נתונים עדיין" />
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={leadData} margin={{ top:8, right:12, left:0, bottom:0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                      <XAxis {...XAXIS_PROPS} />
+                      <YAxis {...YCNT_PROPS} />
+                      <Tooltip content={<StageTooltip ilsFormat={false} />} />
+                      {activeLead.map(key => {
+                        const m = STAGE_METRICS.lead.find(x => x.key === key);
+                        if (!m) return null;
+                        return (
+                          <Line key={key} dataKey={key} stroke={m.color} strokeWidth={2.5}
+                            type="monotone" connectNulls={false}
+                            dot={{ r:4, fill:m.color, stroke:'rgb(var(--bg-surface))', strokeWidth:2 }} activeDot={{ r:5.5 }} />
+                        );
+                      })}
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <div className="flex gap-6 mt-3 flex-wrap" dir="rtl">
+                    {activeLead.map(key => {
+                      const m = STAGE_METRICS.lead.find(x => x.key === key);
+                      return m ? (
+                        <div key={key} className="flex items-center gap-1.5">
+                          <div className="h-0.5 w-5 rounded-full" style={{ background:m.color }} />
+                          <span className="text-xs" style={{ color:'rgba(255,255,255,0.45)' }}>{m.label}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Secondary metrics */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MetricCard
+              label="הגיעו לשיחות"
+              value={leadTotals.calls_showed || '—'}
+              color="#818cf8"
+              sub={`${rangeN} חודשים`}
+            />
+            <MetricCard
+              label="עסקאות שנסגרו"
+              value={newClientsTotal || '—'}
+              color="#4ade80"
+              sub={`${rangeN} חודשים`}
+            />
+            <MetricCard
+              label="אחוז סגירה"
+              value={closingRate != null ? `${closingRate}%` : '—'}
+              color={closingRate != null && closingRate >= 30 ? '#4ade80' : closingRate != null ? '#fcd34d' : 'rgba(255,255,255,0.4)'}
+              sub="סגירות ÷ הגיעו לשיחה"
+            />
+            <MetricCard
+              label="הצעות שהוצעו"
+              value={leadTotals.proposals || '—'}
+              color="#F5C118"
+              sub={`${rangeN} חודשים`}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════ TAB: לשלוט ══════════════════════ */}
+      {tab === 'control' && (
+        <div className="space-y-4">
+          <StageHeader
+            title="לשלוט"
+            sub="לראות מה העסק מוכר, מה באמת נכנס ומה עדיין נשאר פתוח."
+          />
+
+          {/* Main chart: עסקאות חדשות vs הכנסה בפועל */}
+          <div className="rounded-2xl overflow-hidden" style={{ background:'rgb(var(--bg-surface))', border }}>
+            <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-bold text-white">עסקאות שנסגרו מול הכנסה בפועל</h2>
+                  <StageMetricsDropdown stageKey="control" active={activeControl} setActive={setActiveControl}
+                    open={controlOpen} setOpen={setControlOpen} refProp={controlRef} />
+                </div>
+                <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>הפרש בין מה שנמכר לבין מה שנכנס לחשבון</p>
+              </div>
+            </div>
+            <div className="p-5 pt-4" dir="ltr">
+              {controlData.length === 0 ? (
+                <EmptyChartState message="אין נתונים לתקופה שנבחרה" />
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={controlData} margin={{ top:8, right:12, left:0, bottom:0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                      <XAxis {...XAXIS_PROPS} />
+                      <YAxis
+                        tick={{ fill:'rgba(255,255,255,0.22)', fontSize:'0.75rem' }}
+                        axisLine={false} tickLine={false} width={52}
+                        tickFormatter={v => v === 0 ? '₪0' : `₪${Math.round(v/1000)}K`}
+                      />
+                      <Tooltip content={<StageTooltip ilsFormat={true} />} />
+                      {activeControl.map(key => {
+                        const m = STAGE_METRICS.control.find(x => x.key === key);
+                        if (!m) return null;
+                        return (
+                          <Line key={key} dataKey={key} stroke={m.color} strokeWidth={2.5}
+                            type="monotone" connectNulls={false}
+                            dot={{ r:4, fill:m.color, stroke:'rgb(var(--bg-surface))', strokeWidth:2 }} activeDot={{ r:5.5 }} />
+                        );
+                      })}
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <div className="flex gap-6 mt-3 flex-wrap" dir="rtl">
+                    {activeControl.map(key => {
+                      const m = STAGE_METRICS.control.find(x => x.key === key);
+                      return m ? (
+                        <div key={key} className="flex items-center gap-1.5">
+                          <div className="h-0.5 w-5 rounded-full" style={{ background:m.color }} />
+                          <span className="text-xs" style={{ color:'rgba(255,255,255,0.45)' }}>{m.label}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Secondary: תשלומים פתוחים */}
+          <div className="rounded-2xl overflow-hidden" style={{
+            background: totalOutstanding > 0 ? 'rgba(239,68,68,0.04)' : 'rgb(var(--bg-surface))',
+            border: `1px solid ${totalOutstanding > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(255,255,255,0.07)'}`,
+          }}>
+            <div className="px-5 py-4" style={{ borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-white">תשלומים פתוחים</h2>
+                  <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.28)' }}>
+                    {totalOutstanding > 0
+                      ? `${fmtFull(totalOutstanding)} · ${outstandingItems.length} תשלומים ממתינים`
+                      : 'אין תשלומים פתוחים'}
+                  </p>
+                </div>
+                {totalOutstanding > 0 && (
+                  <span className="text-xl font-black" style={{ color:'#fcd34d' }}>{fmtFull(totalOutstanding)}</span>
+                )}
+              </div>
             </div>
 
-            {clientsRanked.length > 0 && (
-              <Section title="לקוחות לפי רווחיות" sub="לפי סכום ששולם בפועל" noPad>
-                <div className="grid px-5 pb-2 mt-4" style={{ gridTemplateColumns:'1fr minmax(65px,90px) minmax(65px,90px)' }}>
-                  {['לקוח','שולם','שווי עסקה'].map(h=>(
-                    <span key={h} className="text-[11px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.2)' }}>{h}</span>
+            {outstandingItems.length === 0 ? (
+              <div className="px-5 py-5 flex items-center gap-3">
+                <CheckCircle2 size={18} style={{ color:'#4ade80' }} />
+                <span className="text-base" style={{ color:'rgba(255,255,255,0.45)' }}>כל התשלומים הושלמו ✓</span>
+              </div>
+            ) : (
+              <>
+                <div className="grid px-5 py-2 mt-1" style={{ gridTemplateColumns:'1fr minmax(60px,80px) minmax(70px,88px)' }}>
+                  {['לקוח','סכום','תאריך'].map(h => (
+                    <span key={h} className="text-[11px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.18)' }}>{h}</span>
                   ))}
                 </div>
-                {clientsRanked.slice(0, 5).map((c, i) => (
-                  <div key={i} className="grid px-5 py-3 items-center" style={{ gridTemplateColumns:'1fr 90px 90px', borderTop:'1px solid rgba(255,255,255,0.04)' }}>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black flex-none"
-                        style={{ background: i===0?'rgba(245,193,24,0.15)':'rgba(255,255,255,0.06)', color: i===0?'#F5C118':'rgba(255,255,255,0.35)' }}>
-                        {i+1}
+                {outstandingItems.map((item, i) => {
+                  const overdue = item.date && new Date(item.date) < new Date();
+                  return (
+                    <div key={i} className="grid px-5 py-2.5 items-center" style={{ gridTemplateColumns:'1fr 80px 88px', borderTop:'1px solid rgba(255,255,255,0.04)', background: overdue ? 'rgba(239,68,68,0.05)' : 'transparent' }}>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{item.clientName}</p>
+                        <p className="text-[11px]" style={{ color:'rgba(255,255,255,0.28)' }}>{item.label}</p>
                       </div>
-                      <p className="text-base font-semibold text-white">{c.name}</p>
+                      <p className="text-sm font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
+                      <div className="flex items-center gap-1">
+                        {overdue ? <AlertCircle size={10} style={{ color:'#fca5a5' }} /> : <Clock size={10} style={{ color:'rgba(255,255,255,0.2)' }} />}
+                        <span className="text-[11px]" style={{ color: overdue ? '#fca5a5' : 'rgba(255,255,255,0.38)' }}>{item.date ? fmtDate(item.date) : '—'}</span>
+                      </div>
                     </div>
-                    <p className="text-base font-bold" style={{ color:'#4fc38a' }}>{fmtFull(c.paid)}</p>
-                    <p className="text-base" style={{ color:'rgba(255,255,255,0.45)' }}>{fmtFull(c.total)}</p>
-                  </div>
-                ))}
-              </Section>
+                  );
+                })}
+                <div className="flex justify-between px-5 py-3" style={{ borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(255,255,255,0.02)' }}>
+                  <span className="text-xs font-semibold" style={{ color:'rgba(255,255,255,0.3)' }}>סה״כ</span>
+                  <span className="text-base font-black" style={{ color:'#fcd34d' }}>{fmtFull(totalOutstanding)}</span>
+                </div>
+              </>
             )}
-
-            <Section
-              title="לקוחות עם יתרה לתשלום"
-              sub={debtClients.length > 0 ? `${debtClients.length} לקוחות · סה״כ ${fmtFull(totalOutstanding)}` : 'כל התשלומים הושלמו ✓'}
-              noPad
-            >
-              {outstandingItems.length === 0 ? (
-                <div className="flex items-center gap-3 p-5">
-                  <CheckCircle2 size={18} style={{ color:'#4ade80' }} />
-                  <span className="text-base" style={{ color:'rgba(255,255,255,0.45)' }}>אין יתרות פתוחות</span>
-                </div>
-              ) : (
-                <div>
-                  <div className="grid gap-3 px-5 pb-2 mt-4" style={{ gridTemplateColumns:'1fr minmax(60px,80px) minmax(65px,90px)' }}>
-                    {['לקוח / תיאור','סכום','תאריך'].map(h=>(
-                      <span key={h} className="text-[11px] font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,0.2)' }}>{h}</span>
-                    ))}
-                  </div>
-                  {outstandingItems.map((item, i) => {
-                    const overdue = item.date && new Date(item.date) < new Date();
-                    return (
-                      <div key={i} className="grid gap-3 px-5 py-3 items-center"
-                        style={{ gridTemplateColumns:'1fr 80px 90px', borderTop:'1px solid rgba(255,255,255,0.04)', background: overdue?'rgba(239,68,68,0.04)':'transparent' }}>
-                        <div>
-                          <p className="text-base font-semibold text-white leading-tight">{item.clientName}</p>
-                          <p className="text-[11px] mt-0.5" style={{ color:'rgba(255,255,255,0.32)' }}>{item.label}</p>
-                        </div>
-                        <p className="text-base font-bold" style={{ color:'#fcd34d' }}>{fmtFull(item.amount)}</p>
-                        <div className="flex items-center gap-1.5">
-                          {overdue ? <AlertCircle size={11} style={{ color:'#fca5a5' }} /> : <Clock size={11} style={{ color:'rgba(255,255,255,0.25)' }} />}
-                          <span className="text-xs" style={{ color: overdue?'#fca5a5':'rgba(255,255,255,0.42)' }}>
-                            {item.date ? fmtDate(item.date) : 'ללא תאריך'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div className="flex justify-between items-center px-5 py-3" style={{ borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(255,255,255,0.02)' }}>
-                    <span className="text-xs font-semibold" style={{ color:'rgba(255,255,255,0.35)' }}>סה״כ</span>
-                    <span className="text-base font-black" style={{ color:'#fcd34d' }}>{fmtFull(totalOutstanding)}</span>
-                  </div>
-                </div>
-              )}
-            </Section>
           </div>
-        );
-      })()}
+        </div>
+      )}
 
-      {/* ══════════════ TAB: CONTENT ════════════════════ */}
-      {tab === 'content' && (
+      {/* ══════════════ TAB: לספק ══════════════════════ */}
+      {tab === 'deliver' && (
         <div className="space-y-4">
-          <Section title="צמיחה ברשת החברתית" sub="עוקבים ופוסטים לאורך זמן">
-            <div dir="ltr">
-              <ResponsiveContainer width="100%" height={220}>
-                <ComposedChart data={igData} margin={{ top:8, right:4, left:0, bottom:0 }}>
-                  <defs>
-                    <linearGradient id="igG" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#e1306c" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="#e1306c" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis {...XAXIS_PROPS} />
-                  <YAxis yAxisId="left" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.75rem' }} axisLine={false} tickLine={false}
-                    tickFormatter={v=>v>=1000?`${Math.round(v/1000)}K`:v} width={40} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fill:'rgba(255,255,255,0.22)', fontSize: '0.75rem' }}
-                    axisLine={false} tickLine={false} allowDecimals={false} width={24} />
-                  <Tooltip {...TIP} formatter={(v,n)=>[n==='עוקבים'?v.toLocaleString('he-IL'):v, n]} />
-                  <Area yAxisId="left" type="monotone" dataKey="עוקבים"
-                    stroke="#e1306c" strokeWidth={2.5} fill="url(#igG)"
-                    dot={{ r:3.5, fill:'#e1306c', stroke:'rgb(var(--bg-surface))', strokeWidth:2 }} />
-                  <Bar yAxisId="right" dataKey="פוסטים" fill="rgba(245,193,24,0.5)" radius={[4,4,0,0]} barSize={14} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex gap-5 mt-1" dir="rtl">
-              {[{c:'#e1306c',l:'עוקבים',line:true},{c:'rgba(245,193,24,0.7)',l:'פוסטים',line:false}].map(x=>(
-                <div key={x.l} className="flex items-center gap-1.5">
-                  <div className={x.line?'h-0.5 w-4 rounded':'h-2.5 w-2.5 rounded-sm'} style={{ background:x.c }} />
-                  <span className="text-[11px]" style={{ color:'rgba(255,255,255,0.32)' }}>{x.l}</span>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {[
-              { l:'פוסטים בתקופה', v: slice.reduce((s,m)=>s+num(m.posts_count),0), c:'#fcd34d', sub:`${rangeN} חודשים` },
-              { l:'ממוצע חודשי', v: slice.length>0 ? Math.round(slice.reduce((s,m)=>s+num(m.posts_count),0)/slice.length) : 0, c:'#a78bfa', sub:'פוסטים לחודש' },
-              { l:'עוקבים נוכחיים', v: latest?.followers ? num(latest.followers).toLocaleString('he-IL') : '—', c:'#e1306c', sub:fmtMonth(latest?.month) },
-            ].map(({l,v,c,sub})=>(
-              <div key={l} className="rounded-xl p-4" style={{ background:'rgb(var(--bg-surface))', border }}>
-                <p className="text-[11px] uppercase tracking-wider mb-2" style={{ color:'rgba(255,255,255,0.28)' }}>{l}</p>
-                <p className="text-2xl font-black" style={{ color:c }}>{v}</p>
-                <p className="text-[11px] mt-1" style={{ color:'rgba(255,255,255,0.28)' }}>{sub}</p>
-              </div>
-            ))}
-          </div>
+          <StageHeader title="לספק" sub="" />
+          <ComingSoonState
+            title="בקרוב"
+            message="אנחנו בונים דרך טובה יותר למדוד את איכות התוצאות וה-delivery ללקוחות."
+          />
         </div>
       )}
 
