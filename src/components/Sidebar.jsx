@@ -113,7 +113,7 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
         <ul className="mt-0.5 mb-1 space-y-0.5" style={{ paddingRight: '0.75rem', borderRight: '2px solid rgba(255,255,255,0.07)', marginRight: '1rem' }}>
           {item.children.map(child => (
             <li key={child.to}>
-              {(child.disabled || child.soon) ? (
+              {(child.disabled || (child.soon && !import.meta.env.DEV)) ? (
                 <span
                   className="flex items-center justify-between rounded-md px-3 py-1.5 text-[13.5px] cursor-not-allowed select-none"
                   style={{ color: 'rgba(255,255,255,0.25)' }}
@@ -146,7 +146,7 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
 }
 
 function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon, beta }) {
-  if (soon) {
+  if (soon && !import.meta.env.DEV) {
     return (
       <li>
         <div
