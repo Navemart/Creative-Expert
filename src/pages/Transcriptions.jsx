@@ -25,7 +25,7 @@ function StatusBadge({ status }) {
   }[status] ?? { label: status, bg: 'rgba(255,255,255,0.07)', border: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.45)' };
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap"
+    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap"
       style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
       {status === 'complete' && <Check size={9} strokeWidth={3} />}
       {cfg.label}
@@ -51,11 +51,11 @@ function TranscriptCell({ text, status }) {
 
   return (
     <div className="space-y-1.5 max-w-md">
-      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+      <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
         {text.slice(0, PREVIEW)}{text.length > PREVIEW ? '…' : ''}
       </p>
       <button onClick={copy}
-        className="flex items-center gap-1 text-[11px] transition hover:opacity-70"
+        className="flex items-center gap-1 text-xs transition hover:opacity-70"
         style={{ color: copied ? '#86efac' : 'rgba(255,255,255,0.32)' }}>
         {copied
           ? <><Check size={11} /> הועתק</>
@@ -358,7 +358,7 @@ export default function Transcriptions() {
           style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <h2 className="text-base font-bold text-white">התמלולים שלך</h2>
           {rows.length > 0 && (
-            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.28)' }}>
+            <span className="text-sm" style={{ color: 'rgba(255,255,255,0.28)' }}>
               {rows.length} תמלולים
             </span>
           )}
@@ -382,7 +382,7 @@ export default function Transcriptions() {
                 <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   {['פלטפורמה', 'תאריך', 'קישור', 'סטטוס', 'תמלול', 'ניתוח', ''].map(h => (
                     <th key={h}
-                      className="px-5 py-3 text-right text-[11px] font-bold uppercase tracking-widest whitespace-nowrap"
+                      className="px-5 py-3 text-right text-xs font-bold uppercase tracking-widest whitespace-nowrap"
                       style={{ color: 'rgba(255,255,255,0.22)' }}>
                       {h}
                     </th>
@@ -399,7 +399,7 @@ export default function Transcriptions() {
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
                         <PlatformIcon platform={row.platform} />
-                        <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                        <span className="text-sm font-medium" style={{ color: 'rgba(255,255,255,0.55)' }}>
                           {PLATFORMS[row.platform]?.label ?? row.platform}
                         </span>
                       </div>
@@ -407,7 +407,7 @@ export default function Transcriptions() {
 
                     {/* Date */}
                     <td className="px-5 py-4 whitespace-nowrap">
-                      <span className="text-xs" style={{ color: 'rgba(255,255,255,0.38)' }}>
+                      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.38)' }}>
                         {fmtDate(row.created_at)}
                       </span>
                     </td>
@@ -415,7 +415,7 @@ export default function Transcriptions() {
                     {/* URL */}
                     <td className="px-5 py-4">
                       <a href={row.source_url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs font-medium transition hover:opacity-70 whitespace-nowrap"
+                        className="flex items-center gap-1 text-sm font-medium transition hover:opacity-70 whitespace-nowrap"
                         style={{ color: '#fcd34d' }}>
                         <ExternalLink size={11} />
                         צפה
@@ -438,7 +438,7 @@ export default function Transcriptions() {
                         <button
                           onClick={() => analyze(row)}
                           disabled={analyzingIds.has(row.id)}
-                          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition hover:opacity-80 disabled:opacity-40 whitespace-nowrap"
+                          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition hover:opacity-80 disabled:opacity-40 whitespace-nowrap"
                           style={{
                             background: row.analysis ? 'rgba(245,193,24,0.15)' : 'rgba(255,255,255,0.07)',
                             border: row.analysis ? '1px solid rgba(245,193,24,0.35)' : '1px solid rgba(255,255,255,0.1)',

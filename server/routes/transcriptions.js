@@ -21,17 +21,10 @@
  */
 
 import { Router }       from 'express';
-import { exec }         from 'child_process';
-import { promisify }    from 'util';
-import { createReadStream } from 'fs';
-import { unlink, access } from 'fs/promises';
-import os               from 'os';
-import path             from 'path';
 import { createClient } from '@supabase/supabase-js';
 import OpenAI           from 'openai';
 
-const router    = Router();
-const execAsync = promisify(exec);
+const router = Router();
 
 // ── Clients ───────────────────────────────────────────────────
 const supabase = process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY
@@ -41,8 +34,6 @@ const supabase = process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   : null;
-
-const YT_DLP = process.env.YT_DLP_PATH || 'yt-dlp';
 
 // ── Platform detection ────────────────────────────────────────
 function detectPlatform(url) {
@@ -105,41 +96,40 @@ async function transcribeYoutube(url) {
   throw new Error('לא נמצא טקסט בתגובה מ-Apify — ייתכן שלסרטון אין כתוביות');
 }
 
-// ── Instagram: download audio + Whisper ──────────────────────
-// No ffmpeg needed — download native format (m4a/webm), Whisper accepts both
-const AUDIO_EXTS = ['m4a', 'webm', 'mp4', 'opus', 'ogg', 'mp3'];
+// ── Instagram: Apify post-scraper → video URL → Whisper ──────
+const IG_POST_ACTOR = 'apify~instagram-post-scraper';
 
 async function transcribeInstagram(url) {
-  if (!openai) throw new Error('OPENAI_API_KEY חסר ב-.env');
+  if (!openai)      throw new Error('OPENAI_API_KEY חסר ב-.env');
+  if (!APIFY_TOKEN) throw new Error('APIFY_TOKEN חסר ב-.env');
 
-  const tmpBase = path.join(os.tmpdir(), `reel-${Date.now()}`);
-
-  try {
-    // 1. Download best audio in native format (no --audio-format = no ffmpeg needed)
-    await execAsync(
-      `"${YT_DLP}" -x -o "${tmpBase}.%(ext)s" "${url}"`,
-      { timeout: 90_000 }
-    );
-
-    // 2. Find whichever file was created
-    let audioPath = null;
-    for (const ext of AUDIO_EXTS) {
-      try { await access(`${tmpBase}.${ext}`); audioPath = `${tmpBase}.${ext}`; break; }
-      catch {}
+  // 1. Get video URL via Apify
+  const apifyRes = await fetch(
+    `${APIFY_BASE}/acts/${encodeURIComponent(IG_POST_ACTOR)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
+    {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ directUrls: [url], resultsType: 'posts' }),
     }
-    if (!audioPath) throw new Error('הקובץ לא הורד — ודא שהפרופיל פומבי ונסה שוב');
+  );
+  if (!apifyRes.ok) throw new Error(`Apify שגיאה ${apifyRes.status}: ${await apifyRes.text().catch(() => '')}`);
 
-    // 3. Transcribe with Whisper
-    const response = await openai.audio.transcriptions.create({
-      file:  createReadStream(audioPath),
-      model: 'whisper-1',
-    });
+  const items = await apifyRes.json();
+  const post  = Array.isArray(items) ? items[0] : null;
+  const videoUrl = post?.videoUrl || post?.video_url || post?.displayUrl;
+  if (!videoUrl) throw new Error('לא נמצא קישור וידאו — ודא שהפרופיל פומבי ושהקישור מצביע על Reel');
 
-    return response.text;
-  } finally {
-    // 4. Clean up all possible temp files
-    AUDIO_EXTS.forEach(ext => unlink(`${tmpBase}.${ext}`).catch(() => {}));
-  }
+  // 2. Download video buffer
+  const videoRes = await fetch(videoUrl, { headers: { 'Referer': 'https://www.instagram.com/' } });
+  if (!videoRes.ok) throw new Error(`הורדת הוידאו נכשלה: ${videoRes.status}`);
+  const buffer = Buffer.from(await videoRes.arrayBuffer());
+
+  // 3. Transcribe with Whisper (send as .mp4 blob)
+  const { toFile } = await import('openai');
+  const file = await toFile(buffer, 'reel.mp4', { type: 'video/mp4' });
+  const response = await openai.audio.transcriptions.create({ file, model: 'whisper-1' });
+
+  return response.text;
 }
 
 // ── Save to Supabase ──────────────────────────────────────────

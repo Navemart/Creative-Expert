@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
-import { Send, Plus, Bot, MessageSquare } from 'lucide-react';
+import { Send, Plus, Bot, MessageSquare, Paperclip, X as XIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 
 const STORAGE_KEY = 'nave-ai-history';
-const AGENT = { id: '0be4b5ea-3ae4-418f-b75e-b03cfbc041be', name: 'מאבחן התוכן' };
-const OPENING_MESSAGE = 'יאללה בוא נצא לדרך, תדביק פה את הסקיצה המבולגנת שלך, הסקריפט המלוטש שלך או כל דבר שרשמת בצד ואתה רוצה לבחון אותו יחד איתי!';
+
+const AGENT_ICONS = {
+  '0be4b5ea-3ae4-418f-b75e-b03cfbc041be': '🎬',
+  'c75373cc-18d4-4bab-b932-96605bacf5af': '💬',
+};
+const DEFAULT_ICON = '🤖';
 
 function loadHistory() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
@@ -64,36 +68,49 @@ export default function NaveAI() {
   const { user } = useUser();
   const firstName = user?.firstName || 'שלך';
 
+  const [agents, setAgents] = useState([]);
   const [sessions, setSessions] = useState(() => loadHistory());
   const [currentSessionId, setCurrentSessionId] = useState(null);
+  const [currentAgent, setCurrentAgent] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [homeInput, setHomeInput] = useState('');
+  const [attachments, setAttachments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/nave-ai/agents')
+      .then(r => r.json())
+      .then(data => setAgents(Array.isArray(data) ? data.filter(a => a.id in AGENT_ICONS) : []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  function startNewChat() {
+  function startNewChat(agent) {
     const id = Date.now().toString();
-    const opening = { role: 'assistant', content: OPENING_MESSAGE };
-    const newSession = { id, title: 'שיחה חדשה', messages: [opening], createdAt: Date.now() };
+    const opening = { role: 'assistant', content: agent.description || `שלום! אני ${agent.name}. במה אוכל לעזור?` };
+    const newSession = { id, title: 'שיחה חדשה', agentId: agent.id, agentName: agent.name, messages: [opening], createdAt: Date.now() };
     const next = [newSession, ...sessions];
     setSessions(next);
     saveHistory(next);
     setCurrentSessionId(id);
+    setCurrentAgent(agent);
     setMessages([opening]);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
 
-  function openSession(id) {
-    const s = sessions.find(s => s.id === id);
-    if (!s) return;
-    setCurrentSessionId(id);
+  function openSession(s) {
+    setCurrentSessionId(s.id);
+    setCurrentAgent(agents.find(a => a.id === s.agentId) || { id: s.agentId, name: s.agentName || 'NaveAI' });
     setMessages(s.messages);
   }
 
@@ -107,12 +124,69 @@ export default function NaveAI() {
     });
   }
 
-  async function sendMessage(text) {
-    if (!currentSessionId) return;
-    const userMsg = { role: 'user', content: text };
+  const NAVE_AI_AGENT_ID = 'c75373cc-18d4-4bab-b932-96605bacf5af';
+
+  async function startWithMessage(text) {
+    if (!text.trim()) return;
+    const agent = agents.find(a => a.id === NAVE_AI_AGENT_ID) || agents[0];
+    if (!agent) return;
+
+    const id = Date.now().toString();
+    const opening = { role: 'assistant', content: agent.description || `שלום! אני ${agent.name}. במה אוכל לעזור?` };
+    const userMsg = { role: 'user', content: text.trim() };
+    const initMessages = [opening, userMsg];
+    const newSession = { id, title: text.trim().slice(0, 30), agentId: agent.id, agentName: agent.name, messages: initMessages, createdAt: Date.now() };
+    const next = [newSession, ...sessions];
+    setSessions(next);
+    saveHistory(next);
+    setCurrentSessionId(id);
+    setCurrentAgent(agent);
+    setMessages([...initMessages, { role: 'assistant', content: '' }]);
+    setHomeInput('');
+    setLoading(true);
+
+    let accumulated = '';
+    try {
+      const res = await fetch('/api/nave-ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: initMessages, imageAttachments: [], lastUserText: text.trim(), agentId: agent.id, userId: user?.id ?? null }),
+      });
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split('\n')) {
+          if (!line.startsWith('data: ')) continue;
+          const raw = line.slice(6).trim();
+          if (raw === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.text) {
+              accumulated += parsed.text;
+              setMessages(prev => { const u = [...prev]; u[u.length - 1] = { role: 'assistant', content: accumulated }; return u; });
+            }
+          } catch {}
+        }
+      }
+    } catch {
+      accumulated = 'שגיאת רשת. נסה שוב.';
+      setMessages(prev => { const u = [...prev]; u[u.length - 1] = { role: 'assistant', content: accumulated }; return u; });
+    } finally {
+      setLoading(false);
+      const final = [...initMessages, { role: 'assistant', content: accumulated }];
+      setSessions(prev => { const n = prev.map(s => s.id === id ? { ...s, messages: final } : s); saveHistory(n); return n; });
+    }
+  }
+
+  async function sendMessage(text, imageAttachments = []) {
+    if (!currentSessionId || !currentAgent) return;
+    const displayContent = text || imageAttachments.map(a => `[תמונה: ${a.name}]`).join(' ');
+    const userMsg = { role: 'user', content: displayContent };
     const nextMessages = [...messages, userMsg];
     setMessages([...nextMessages, { role: 'assistant', content: '' }]);
-    setInput('');
     setLoading(true);
     updateSessionMessages(currentSessionId, nextMessages);
 
@@ -123,7 +197,9 @@ export default function NaveAI() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: nextMessages,
-          agentId: AGENT.id,
+          imageAttachments,
+          lastUserText: text,
+          agentId: currentAgent.id,
           userId: user?.id ?? null,
         }),
       });
@@ -165,10 +241,62 @@ export default function NaveAI() {
     }
   }
 
-  function handleSubmit(e) {
+  function handleFiles(newFiles) {
+    setAttachments(prev => [...prev, ...Array.from(newFiles)]);
+  }
+
+  function removeAttachment(idx) {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
+  }
+
+  function handleDrop(e) {
     e.preventDefault();
-    if (!input.trim() || loading) return;
-    sendMessage(input.trim());
+    setDragging(false);
+    handleFiles(e.dataTransfer.files);
+  }
+
+  async function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result.split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleSubmit(e) {
+    e?.preventDefault();
+    if ((!input.trim() && attachments.length === 0) || loading) return;
+    const text = input.trim();
+    const pendingAttachments = [...attachments];
+    setAttachments([]);
+    setInput('');
+
+    // Build content array for vision support
+    const imageAttachments = [];
+    const otherNames = [];
+    for (const file of pendingAttachments) {
+      if (file.type.startsWith('image/')) {
+        const data = await toBase64(file);
+        imageAttachments.push({ type: 'image', mediaType: file.type, data, name: file.name });
+      } else {
+        otherNames.push(file.name);
+      }
+    }
+
+    let finalText = text;
+    if (otherNames.length > 0) {
+      finalText += (finalText ? '\n\n' : '') + `[קבצים מצורפים: ${otherNames.join(', ')}]`;
+    }
+
+    sendMessage(finalText, imageAttachments);
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
+    }
   }
 
   const inChat = !!currentSessionId;
@@ -190,7 +318,7 @@ export default function NaveAI() {
       >
         <div className="p-3 border-b flex-none" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
           <button
-            onClick={() => { startNewChat(); setMobileHistoryOpen(false); }}
+            onClick={() => { setCurrentSessionId(null); setCurrentAgent(null); setMessages([]); setMobileHistoryOpen(false); }}
             className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-white/10"
             style={{ color: 'rgba(255,255,255,0.75)', border: '1px solid rgba(255,255,255,0.12)' }}
           >
@@ -205,14 +333,14 @@ export default function NaveAI() {
           {sessions.map(s => (
             <button
               key={s.id}
-              onClick={() => { openSession(s.id); setMobileHistoryOpen(false); }}
+              onClick={() => { openSession(s); setMobileHistoryOpen(false); }}
               className="w-full text-right rounded-lg px-3 py-2 text-xs truncate transition-colors hover:bg-white/10 flex items-center gap-2"
               style={{
                 color: s.id === currentSessionId ? 'white' : 'rgba(255,255,255,0.5)',
                 background: s.id === currentSessionId ? 'rgba(255,255,255,0.08)' : 'transparent',
               }}
             >
-              <MessageSquare size={12} className="flex-none opacity-40" />
+              <span className="flex-none">{AGENT_ICONS[s.agentId] || DEFAULT_ICON}</span>
               <span className="truncate">{s.title}</span>
             </button>
           ))}
@@ -231,17 +359,30 @@ export default function NaveAI() {
             <p className="text-sm mb-8 max-w-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
               NaveAI קורא את הנתונים שלך ועוזר לך להתקדם לפי ה-IP של Creative Expert.
             </p>
-            <button
-              onClick={startNewChat}
-              className="flex items-center gap-3 rounded-xl px-5 py-4 text-right transition-colors hover:bg-white/10 border w-full max-w-sm"
-              style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.1)' }}
-            >
-              <span className="text-xl">🎬</span>
-              <div>
-                <div className="font-semibold text-sm" style={{ color: 'white' }}>מאבחן התוכן</div>
-                <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>תדביק סקריפט — תקבל ציון, אבחון מלא וגרסה מתוקנת.</div>
-              </div>
-            </button>
+            <div className="w-full max-w-md rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)' }}>
+              {agents.map((agent, i) => (
+                <button
+                  key={agent.id}
+                  onClick={() => startNewChat(agent)}
+                  className="flex items-center gap-4 px-5 py-4 text-right transition-colors hover:bg-white/06 w-full group"
+                  style={{ borderTop: i > 0 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-none text-lg" style={{ background: 'rgba(255,255,255,0.07)' }}>
+                    {AGENT_ICONS[agent.id] || DEFAULT_ICON}
+                  </div>
+                  <div className="flex-1 min-w-0 text-right">
+                    <div className="font-semibold text-sm" style={{ color: 'white' }}>{agent.name}</div>
+                    {agent.description && (
+                      <div className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.38)' }}>{agent.description}</div>
+                    )}
+                  </div>
+                </button>
+              ))}
+              {agents.length === 0 && (
+                <div className="px-5 py-4 text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>טוען סוכנים...</div>
+              )}
+            </div>
+
           </div>
         ) : (
           <>
@@ -261,33 +402,116 @@ export default function NaveAI() {
             </div>
 
             {/* Input */}
-            <div className="flex-none px-4 pb-4 pt-2 border-t" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+            <div className="flex-none px-4 pb-5 pt-3">
               <div className="max-w-2xl mx-auto">
-                <form onSubmit={handleSubmit} className="flex gap-2">
-                  <button type="button" onClick={() => setMobileHistoryOpen(true)}
-                    className="md:hidden flex-none rounded-xl px-3 py-3 transition-colors hover:bg-white/10"
-                    style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                    <MessageSquare size={16} />
-                  </button>
-                  <input
+                <button type="button" onClick={() => setMobileHistoryOpen(true)}
+                  className="md:hidden mb-2 flex-none rounded-xl px-3 py-2 transition-colors hover:bg-white/10"
+                  style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <MessageSquare size={16} />
+                </button>
+
+                {/* Input box */}
+                <div
+                  onDrop={handleDrop}
+                  onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                  onDragLeave={() => setDragging(false)}
+                  style={{
+                    border: `1px solid ${dragging ? 'rgb(var(--accent))' : 'rgba(var(--accent), 0.55)'}`,
+                    borderRadius: 28,
+                    background: 'rgba(255,255,255,0.05)',
+                    padding: '14px 18px 12px',
+                    transition: 'border-color 0.15s',
+                  }}
+                >
+                  {/* File chips */}
+                  {attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-3 max-h-24 overflow-y-auto">
+                      {attachments.map((file, i) => (
+                        <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs"
+                          style={{ background: 'rgba(255,255,255,0.09)', color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                          <Paperclip size={10} className="flex-none" />
+                          <span className="max-w-[140px] truncate">{file.name}</span>
+                          <button onClick={() => removeAttachment(i)}
+                            className="flex-none hover:opacity-70 transition-opacity" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                            <XIcon size={11} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Textarea */}
+                  <textarea
                     ref={inputRef}
-                    type="text"
                     value={input}
-                    onChange={e => setInput(e.target.value)}
-                    placeholder={`שאל את ${AGENT.name}...`}
+                    onChange={e => {
+                      setInput(e.target.value);
+                      e.target.style.height = 'auto';
+                      e.target.style.height = Math.min(e.target.scrollHeight, 140) + 'px';
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="מה תרצו לשאול?"
                     disabled={loading}
-                    className="flex-1 rounded-xl px-4 py-3 text-sm outline-none"
-                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
+                    rows={2}
+                    dir="rtl"
+                    className="w-full outline-none"
+                    style={{
+                      color: 'white',
+                      fontSize: '17px',
+                      lineHeight: 1.6,
+                      resize: 'none',
+                      overflow: 'hidden',
+                      minHeight: '52px',
+                      maxHeight: '140px',
+                      display: 'block',
+                      background: 'transparent',
+                      border: 'none',
+                      boxShadow: 'none',
+                      WebkitAppearance: 'none',
+                    }}
                   />
-                  <button
-                    type="submit"
-                    disabled={!input.trim() || loading}
-                    className="rounded-xl px-4 py-3 transition-opacity disabled:opacity-40"
-                    style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--accent-foreground))' }}
-                  >
-                    <Send size={16} />
-                  </button>
-                </form>
+
+                  {/* Bottom action row */}
+                  <div className="flex items-center justify-between mt-3">
+                    {/* Paperclip — ימין */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex items-center justify-center transition-opacity hover:opacity-70 focus:outline-none focus-visible:ring-2"
+                      style={{ color: 'rgba(255,255,255,0.38)', width: 36, height: 36 }}
+                      title="הוסף קובץ"
+                    >
+                      <Paperclip size={18} />
+                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      className="hidden"
+                      onChange={e => { const files = Array.from(e.target.files); e.target.value = ''; setAttachments(prev => [...prev, ...files]); }}
+                    />
+
+                    {/* Send — שמאל */}
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={(!input.trim() && attachments.length === 0) || loading}
+                      className="flex items-center justify-center rounded-full transition-all focus:outline-none focus-visible:ring-2 disabled:opacity-35"
+                      style={{
+                        width: 48, height: 48,
+                        background: 'rgba(255,255,255,0.1)',
+                        color: 'rgba(255,255,255,0.65)',
+                      }}
+                    >
+                      <Send size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Disclaimer */}
+                <p className="text-center mt-3.5" style={{ color: 'rgba(255,255,255,0.22)', fontSize: '13px' }}>
+                  הסוכן עשוי לטעות. מומלץ לבדוק מידע חשוב.
+                </p>
               </div>
             </div>
           </>
