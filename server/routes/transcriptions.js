@@ -96,8 +96,8 @@ async function transcribeYoutube(url) {
   throw new Error('לא נמצא טקסט בתגובה מ-Apify — ייתכן שלסרטון אין כתוביות');
 }
 
-// ── Instagram: Apify post-scraper → video URL → Whisper ──────
-const IG_POST_ACTOR = 'apify~instagram-post-scraper';
+// ── Instagram: Apify reels-downloader → video URL → Whisper ──
+const IG_REEL_ACTOR = 'easyapi~instagram-reels-downloader';
 
 async function transcribeInstagram(url) {
   if (!openai)      throw new Error('OPENAI_API_KEY חסר ב-.env');
@@ -105,18 +105,20 @@ async function transcribeInstagram(url) {
 
   // 1. Get video URL via Apify
   const apifyRes = await fetch(
-    `${APIFY_BASE}/acts/${encodeURIComponent(IG_POST_ACTOR)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
+    `${APIFY_BASE}/acts/${encodeURIComponent(IG_REEL_ACTOR)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
     {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ directUrls: [url], resultsType: 'posts' }),
+      body:    JSON.stringify({ urls: [url] }),
     }
   );
   if (!apifyRes.ok) throw new Error(`Apify שגיאה ${apifyRes.status}: ${await apifyRes.text().catch(() => '')}`);
 
   const items = await apifyRes.json();
   const post  = Array.isArray(items) ? items[0] : null;
-  const videoUrl = post?.videoUrl || post?.video_url || post?.displayUrl;
+  const result = post?.result ?? post;
+  // result.medias[0].url = direct CDN video URL
+  const videoUrl = result?.medias?.[0]?.url || result?.videoUrl || result?.video_url;
   if (!videoUrl) throw new Error('לא נמצא קישור וידאו — ודא שהפרופיל פומבי ושהקישור מצביע על Reel');
 
   // 2. Download video buffer
