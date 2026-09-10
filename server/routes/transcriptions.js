@@ -96,16 +96,14 @@ async function transcribeYoutube(url) {
   throw new Error('לא נמצא טקסט בתגובה מ-Apify — ייתכן שלסרטון אין כתוביות');
 }
 
-// ── Instagram: Apify reels-downloader → video URL → Whisper ──
-const IG_REEL_ACTOR = 'easyapi~instagram-reels-downloader';
+// ── Instagram: Apify instagram-transcript-scraper (direct transcript) ──
+const IG_TRANSCRIPT_ACTOR = 'reapx~instagram-transcript-scraper';
 
 async function transcribeInstagram(url) {
-  if (!openai)      throw new Error('OPENAI_API_KEY חסר ב-.env');
   if (!APIFY_TOKEN) throw new Error('APIFY_TOKEN חסר ב-.env');
 
-  // 1. Get video URL via Apify
   const apifyRes = await fetch(
-    `${APIFY_BASE}/acts/${encodeURIComponent(IG_REEL_ACTOR)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
+    `${APIFY_BASE}/acts/${encodeURIComponent(IG_TRANSCRIPT_ACTOR)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
     {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,23 +113,11 @@ async function transcribeInstagram(url) {
   if (!apifyRes.ok) throw new Error(`Apify שגיאה ${apifyRes.status}: ${await apifyRes.text().catch(() => '')}`);
 
   const items = await apifyRes.json();
-  const post  = Array.isArray(items) ? items[0] : null;
-  const result = post?.result ?? post;
-  // result.medias[0].url = direct CDN video URL
-  const videoUrl = result?.medias?.[0]?.url || result?.videoUrl || result?.video_url;
-  if (!videoUrl) throw new Error('לא נמצא קישור וידאו — ודא שהפרופיל פומבי ושהקישור מצביע על Reel');
+  const item  = Array.isArray(items) ? items[0] : null;
+  const transcript = item?.transcriptText?.trim();
+  if (!transcript) throw new Error('לא נמצא תמלול — ודא שהפרופיל פומבי ושהקישור מצביע על Reel עם דיבור');
 
-  // 2. Download video buffer
-  const videoRes = await fetch(videoUrl, { headers: { 'Referer': 'https://www.instagram.com/' } });
-  if (!videoRes.ok) throw new Error(`הורדת הוידאו נכשלה: ${videoRes.status}`);
-  const buffer = Buffer.from(await videoRes.arrayBuffer());
-
-  // 3. Transcribe with Whisper (send as .mp4 blob)
-  const { toFile } = await import('openai');
-  const file = await toFile(buffer, 'reel.mp4', { type: 'video/mp4' });
-  const response = await openai.audio.transcriptions.create({ file, model: 'whisper-1' });
-
-  return response.text;
+  return transcript;
 }
 
 // ── Save to Supabase ──────────────────────────────────────────
