@@ -353,7 +353,7 @@ export default function Transcriptions() {
                   }}
                 />
                 <input
-                  type="url"
+                  type="text"
                   value={url}
                   onChange={e => { setUrl(e.target.value); setFormError(''); }}
                   placeholder={PLATFORMS[platform].placeholder}
