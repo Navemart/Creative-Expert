@@ -96,28 +96,50 @@ async function transcribeYoutube(url) {
   throw new Error('לא נמצא טקסט בתגובה מ-Apify — ייתכן שלסרטון אין כתוביות');
 }
 
-// ── Instagram: Apify instagram-transcript-scraper (direct transcript) ──
-const IG_TRANSCRIPT_ACTOR = 'reapx~instagram-transcript-scraper';
+// ── Instagram: primary + fallback actors ─────────────────────
+// Primary:  reapx~instagram-transcript-scraper  → transcriptText (no download needed)
+// Fallback: easyapi~instagram-reels-downloader  → mp4 URL → Whisper
+
+async function apifyPost(actor, body) {
+  const res = await fetch(
+    `${APIFY_BASE}/acts/${encodeURIComponent(actor)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  if (!res.ok) throw new Error(`Apify שגיאה ${res.status}`);
+  return res.json();
+}
 
 async function transcribeInstagram(url) {
   if (!APIFY_TOKEN) throw new Error('APIFY_TOKEN חסר ב-.env');
 
-  const apifyRes = await fetch(
-    `${APIFY_BASE}/acts/${encodeURIComponent(IG_TRANSCRIPT_ACTOR)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
-    {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ urls: [url] }),
-    }
-  );
-  if (!apifyRes.ok) throw new Error(`Apify שגיאה ${apifyRes.status}: ${await apifyRes.text().catch(() => '')}`);
+  // ── Primary: get transcript text directly ────────────────
+  try {
+    const items      = await apifyPost('reapx~instagram-transcript-scraper', { urls: [url] });
+    const transcript = Array.isArray(items) ? items[0]?.transcriptText?.trim() : null;
+    if (transcript) return transcript;
+    console.warn('[IG] Primary actor returned no transcript — trying fallback');
+  } catch (e) {
+    console.warn('[IG] Primary actor failed:', e.message, '— trying fallback');
+  }
 
-  const items = await apifyRes.json();
-  const item  = Array.isArray(items) ? items[0] : null;
-  const transcript = item?.transcriptText?.trim();
-  if (!transcript) throw new Error('לא נמצא תמלול — ודא שהפרופיל פומבי ושהקישור מצביע על Reel עם דיבור');
+  // ── Fallback: download mp4 → Whisper ─────────────────────
+  if (!openai) throw new Error('תמלול האינסטגרם נכשל — OPENAI_API_KEY נדרש לתמלול חלופי');
 
-  return transcript;
+  const items2   = await apifyPost('easyapi~instagram-reels-downloader', { urls: [url] });
+  const result   = Array.isArray(items2) ? (items2[0]?.result ?? items2[0]) : null;
+  const videoUrl = result?.medias?.[0]?.url || result?.videoUrl;
+  if (!videoUrl) throw new Error('לא נמצא קישור וידאו — ודא שהפרופיל פומבי ושהקישור מצביע על Reel עם דיבור');
+
+  const videoRes = await fetch(videoUrl, {
+    headers: { 'Referer': 'https://www.instagram.com/', 'User-Agent': 'Mozilla/5.0' },
+  });
+  if (!videoRes.ok) throw new Error(`הורדת הוידאו נכשלה: ${videoRes.status}`);
+  const buffer = Buffer.from(await videoRes.arrayBuffer());
+
+  const { toFile } = await import('openai');
+  const file       = await toFile(buffer, 'reel.mp4', { type: 'video/mp4' });
+  const response   = await openai.audio.transcriptions.create({ file, model: 'whisper-1' });
+  return response.text;
 }
 
 // ── Save to Supabase ──────────────────────────────────────────
