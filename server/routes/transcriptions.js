@@ -22,7 +22,15 @@
 
 import { Router }       from 'express';
 import { createClient } from '@supabase/supabase-js';
-import OpenAI           from 'openai';
+import OpenAI, { toFile } from 'openai';
+import { execFile }     from 'child_process';
+import { promisify }    from 'util';
+import { randomUUID }   from 'crypto';
+import { unlink, readFile } from 'fs/promises';
+import { tmpdir }       from 'os';
+import { join }         from 'path';
+
+const execFileAsync = promisify(execFile);
 
 const router = Router();
 
@@ -96,50 +104,50 @@ async function transcribeYoutube(url) {
   throw new Error('לא נמצא טקסט בתגובה מ-Apify — ייתכן שלסרטון אין כתוביות');
 }
 
-// ── Instagram: primary + fallback actors ─────────────────────
-// Primary:  reapx~instagram-transcript-scraper  → transcriptText (no download needed)
-// Fallback: easyapi~instagram-reels-downloader  → mp4 URL → Whisper
+// ── Instagram: yt-dlp → audio (m4a) → Whisper ────────────────
+// Uses Chrome cookies locally; set IG_COOKIES_FILE in .env for production.
 
-async function apifyPost(actor, body) {
-  const res = await fetch(
-    `${APIFY_BASE}/acts/${encodeURIComponent(actor)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-  );
-  if (!res.ok) throw new Error(`Apify שגיאה ${res.status}`);
-  return res.json();
-}
+const YTDLP = process.env.YTDLP_PATH || 'yt-dlp';
 
 async function transcribeInstagram(url) {
-  if (!APIFY_TOKEN) throw new Error('APIFY_TOKEN חסר ב-.env');
+  if (!openai) throw new Error('OPENAI_API_KEY חסר ב-.env — נדרש לתמלול אינסטגרם');
 
-  // ── Primary: get transcript text directly ────────────────
+  const tmpFile = join(tmpdir(), `ig_${randomUUID()}.m4a`);
+
+  // Build yt-dlp args
+  const cookiesArg = process.env.IG_COOKIES_FILE
+    ? ['--cookies', process.env.IG_COOKIES_FILE]
+    : ['--cookies-from-browser', 'chrome'];
+
+  const args = [
+    '--no-warnings',
+    ...cookiesArg,
+    '-f', 'bestaudio',
+    '-o', tmpFile,
+    '--no-playlist',
+    url,
+  ];
+
   try {
-    const items      = await apifyPost('reapx~instagram-transcript-scraper', { urls: [url] });
-    const transcript = Array.isArray(items) ? items[0]?.transcriptText?.trim() : null;
-    if (transcript) return transcript;
-    console.warn('[IG] Primary actor returned no transcript — trying fallback');
+    await execFileAsync(YTDLP, args, { timeout: 90_000 });
   } catch (e) {
-    console.warn('[IG] Primary actor failed:', e.message, '— trying fallback');
+    const raw = (e.stderr || e.message || '');
+    // Strip Python deprecation warnings, keep only ERROR lines
+    const errLines = raw.split('\n').filter(l => l.startsWith('ERROR:'));
+    const errMsg = errLines.length ? errLines[0].replace('ERROR: [Instagram] ', '').trim() : raw.slice(0, 200);
+    if (errMsg.includes('No video formats')) throw new Error('הקישור מצביע על פוסט תמונה — תמלול זמין רק לסרטונים ו-Reels');
+    if (errMsg.includes('login required') || errMsg.includes('rate-limit')) throw new Error('אינסטגרם דורשת התחברות — ודא שאתה מחובר לאינסטגרם בדפדפן Chrome');
+    throw new Error(`הורדת הרeel נכשלה: ${errMsg}`);
   }
 
-  // ── Fallback: download mp4 → Whisper ─────────────────────
-  if (!openai) throw new Error('תמלול האינסטגרם נכשל — OPENAI_API_KEY נדרש לתמלול חלופי');
-
-  const items2   = await apifyPost('easyapi~instagram-reels-downloader', { urls: [url] });
-  const result   = Array.isArray(items2) ? (items2[0]?.result ?? items2[0]) : null;
-  const videoUrl = result?.medias?.[0]?.url || result?.videoUrl;
-  if (!videoUrl) throw new Error('לא נמצא קישור וידאו — ודא שהפרופיל פומבי ושהקישור מצביע על Reel עם דיבור');
-
-  const videoRes = await fetch(videoUrl, {
-    headers: { 'Referer': 'https://www.instagram.com/', 'User-Agent': 'Mozilla/5.0' },
-  });
-  if (!videoRes.ok) throw new Error(`הורדת הוידאו נכשלה: ${videoRes.status}`);
-  const buffer = Buffer.from(await videoRes.arrayBuffer());
-
-  const { toFile } = await import('openai');
-  const file       = await toFile(buffer, 'reel.mp4', { type: 'video/mp4' });
-  const response   = await openai.audio.transcriptions.create({ file, model: 'whisper-1' });
-  return response.text;
+  try {
+    const buffer = await readFile(tmpFile);
+    const file = await toFile(buffer, 'reel.m4a', { type: 'audio/mp4' });
+    const response = await openai.audio.transcriptions.create({ file, model: 'whisper-1' });
+    return response.text;
+  } finally {
+    unlink(tmpFile).catch(() => {});
+  }
 }
 
 // ── Save to Supabase ──────────────────────────────────────────
