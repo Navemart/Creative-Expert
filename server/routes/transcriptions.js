@@ -82,10 +82,7 @@ async function transcribeYoutube(url) {
   }
 
   const raw = await res.json();
-  console.log('[YT-Apify] type:', typeof raw, 'isArray:', Array.isArray(raw), 'keys:', JSON.stringify(Object.keys(raw || {})).slice(0, 100));
-  console.log('[YT-Apify] first item:', JSON.stringify(Array.isArray(raw) ? raw[0] : raw).slice(0, 300));
 
-  // Recursively collect all string values of any "text" / "content" field
   function collectText(node) {
     if (!node) return [];
     if (typeof node === 'string') return node ? [node] : [];
