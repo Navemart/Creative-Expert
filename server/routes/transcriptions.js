@@ -101,47 +101,59 @@ async function transcribeYoutube(url) {
   throw new Error('לא נמצא טקסט בתגובה מ-Apify — ייתכן שלסרטון אין כתוביות');
 }
 
-// ── Instagram: yt-dlp → audio (m4a) → Whisper ────────────────
-// Uses Chrome cookies locally; set IG_COOKIES_FILE in .env for production.
+// ── Instagram: steadyfetch actor → transcript (primary) ──────
+// Fallback: yt-dlp → m4a → Whisper
 
-const YTDLP = process.env.YTDLP_PATH || 'yt-dlp';
+const IG_ACTOR = 'steadyfetch~instagram-reel-transcript-scraper';
+const YTDLP    = process.env.YTDLP_PATH || 'yt-dlp';
 
 async function transcribeInstagram(url) {
-  if (!openai) throw new Error('OPENAI_API_KEY חסר ב-.env — נדרש לתמלול אינסטגרם');
+  if (!APIFY_TOKEN) throw new Error('APIFY_TOKEN חסר ב-.env');
+
+  // ── Primary: Apify transcript actor ──────────────────────
+  try {
+    const res = await fetch(
+      `${APIFY_BASE}/acts/${encodeURIComponent(IG_ACTOR)}/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=60`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) }
+    );
+    if (res.ok) {
+      const items = await res.json();
+      const item  = Array.isArray(items) ? items[0] : null;
+      if (item?.status === 'no_video_in_post') throw new Error('הקישור מצביע על פוסט תמונה — תמלול זמין רק לסרטונים ו-Reels');
+      const transcript = item?.transcript?.trim();
+      if (transcript) return transcript;
+    }
+    console.warn('[IG] Primary actor returned no transcript — trying yt-dlp fallback');
+  } catch (e) {
+    if (e.message.includes('פוסט תמונה')) throw e;
+    console.warn('[IG] Primary actor failed:', e.message, '— trying yt-dlp fallback');
+  }
+
+  // ── Fallback: yt-dlp → m4a → Whisper ─────────────────────
+  if (!openai) throw new Error('תמלול אינסטגרם נכשל — OPENAI_API_KEY נדרש לתמלול חלופי');
 
   const tmpFile = join(tmpdir(), `ig_${randomUUID()}.m4a`);
-
-  // Build yt-dlp args
   const cookiesArg = process.env.IG_COOKIES_FILE
     ? ['--cookies', process.env.IG_COOKIES_FILE]
     : ['--cookies-from-browser', 'chrome'];
 
-  const args = [
-    '--no-warnings',
-    ...cookiesArg,
-    '-f', 'bestaudio',
-    '-o', tmpFile,
-    '--no-playlist',
-    url,
-  ];
-
   try {
-    await execFileAsync(YTDLP, args, { timeout: 90_000 });
+    await execFileAsync(YTDLP, [
+      '--no-warnings', ...cookiesArg, '-f', 'bestaudio', '-o', tmpFile, '--no-playlist', url,
+    ], { timeout: 90_000 });
   } catch (e) {
-    const raw = (e.stderr || e.message || '');
-    // Strip Python deprecation warnings, keep only ERROR lines
+    const raw = e.stderr || e.message || '';
     const errLines = raw.split('\n').filter(l => l.startsWith('ERROR:'));
     const errMsg = errLines.length ? errLines[0].replace('ERROR: [Instagram] ', '').trim() : raw.slice(0, 200);
     if (errMsg.includes('No video formats')) throw new Error('הקישור מצביע על פוסט תמונה — תמלול זמין רק לסרטונים ו-Reels');
-    if (errMsg.includes('login required') || errMsg.includes('rate-limit')) throw new Error('אינסטגרם דורשת התחברות — ודא שאתה מחובר לאינסטגרם בדפדפן Chrome');
     throw new Error(`הורדת הרeel נכשלה: ${errMsg}`);
   }
 
   try {
     const buffer = await readFile(tmpFile);
-    const file = await toFile(buffer, 'reel.m4a', { type: 'audio/mp4' });
-    const response = await openai.audio.transcriptions.create({ file, model: 'whisper-1' });
-    return response.text;
+    const file   = await toFile(buffer, 'reel.m4a', { type: 'audio/mp4' });
+    const resp   = await openai.audio.transcriptions.create({ file, model: 'whisper-1' });
+    return resp.text;
   } finally {
     unlink(tmpFile).catch(() => {});
   }
