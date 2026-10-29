@@ -423,7 +423,7 @@ export default function AdminMembersGrid() {
   const [slackPhotos,   setSlackPhotos]   = useState({});
   const [loading,       setLoading]       = useState(true);
   const [search,        setSearch]        = useState('');
-  const [filter,        setFilter]        = useState('all');
+  const [filter,        setFilter]        = useState('active');
   const [viewMode,      setViewMode]      = useState('grid');
   const [sortKey,       setSortKey]       = useState('income');
   const [sortDir,       setSortDir]       = useState(-1);
@@ -645,6 +645,7 @@ export default function AdminMembersGrid() {
                     const d = await r.json();
                     if (!r.ok) { setAddError(d.error || 'שגיאה'); return; }
                     setAddOpen(false);
+                    alert(`✅ הזמנה נשלחה ל-${addForm.email}`);
                     setRefreshing(true);
                     fetchAll().then(() => setRefreshing(false));
                   } catch (e) {

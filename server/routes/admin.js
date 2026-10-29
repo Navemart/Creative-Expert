@@ -150,28 +150,38 @@ router.post('/students', async (req, res) => {
   if (!clerkKey) return res.status(500).json({ error: 'CLERK_SECRET_KEY not configured' });
 
   try {
-    // 1. Create user in Clerk
-    const clerkRes = await fetch('https://api.clerk.com/v1/users', {
+    // 1. Send Clerk invitation (user gets email to set own password)
+    const inviteBody = { email_address: email, redirect_url: process.env.CLERK_INVITE_REDIRECT || 'https://creative-expert.app' };
+    if (first_name) inviteBody.public_metadata = { first_name, last_name };
+    const inviteRes = await fetch('https://api.clerk.com/v1/invitations', {
       method: 'POST',
       headers: { Authorization: `Bearer ${clerkKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email_address: [email], first_name: first_name || undefined, last_name: last_name || undefined }),
+      body: JSON.stringify(inviteBody),
     });
-    const clerkData = await clerkRes.json();
-    if (!clerkRes.ok) {
-      const msg = clerkData?.errors?.[0]?.long_message || clerkData?.message || 'Clerk error';
+    const inviteData = await inviteRes.json();
+    if (!inviteRes.ok) {
+      const msg = inviteData?.errors?.[0]?.long_message || inviteData?.message || 'Clerk error';
       return res.status(400).json({ error: msg });
     }
-    const userId = clerkData.id;
 
-    // 2. Insert into Supabase student_profiles
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-    const supabaseUrl = process.env.VITE_SUPABASE_URL;
-    if (supabaseUrl && supabaseKey) {
-      const sb = createClient(supabaseUrl, supabaseKey);
-      await sb.from('student_profiles').upsert({ user_id: userId, is_active: true, member_status: 'active' }, { onConflict: 'user_id' });
+    // 2. Try to find existing Clerk user by email to link Supabase row
+    const searchRes = await fetch(`https://api.clerk.com/v1/users?email_address=${encodeURIComponent(email)}&limit=1`, {
+      headers: { Authorization: `Bearer ${clerkKey}` },
+    });
+    const searchData = searchRes.ok ? await searchRes.json() : [];
+    const userId = searchData[0]?.id || null;
+
+    // 3. If user already exists in Clerk, upsert Supabase profile
+    if (userId) {
+      const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseUrl = process.env.VITE_SUPABASE_URL;
+      if (supabaseUrl && supabaseKey) {
+        const sb = createClient(supabaseUrl, supabaseKey);
+        await sb.from('student_profiles').upsert({ user_id: userId, is_active: true, member_status: 'active' }, { onConflict: 'user_id' });
+      }
     }
 
-    res.json({ success: true, userId, email });
+    res.json({ success: true, invited: true, userId, email, note: 'הזמנה נשלחה למייל' });
   } catch (err) {
     console.error('[admin/students POST]', err.message);
     res.status(500).json({ error: err.message });
