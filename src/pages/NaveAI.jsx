@@ -88,7 +88,7 @@ export default function NaveAI() {
   useEffect(() => {
     fetch('/api/nave-ai/agents')
       .then(r => r.json())
-      .then(data => setAgents(Array.isArray(data) ? data : []))
+      .then(data => setAgents(Array.isArray(data) ? data.filter(a => a.id in AGENT_ICONS) : []))
       .catch(() => {});
   }, []);
 
