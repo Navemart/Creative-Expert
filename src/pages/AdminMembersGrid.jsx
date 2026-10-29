@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Search, LayoutGrid, List, ChevronUp, ChevronDown, X, Eye, Share2, RefreshCw, TrendingUp, Users, Trophy, Star, UserPlus } from 'lucide-react';
+import Modal from '../components/Modal.jsx';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -121,12 +122,15 @@ function MemberCard({ student, photoSrc, onClick }) {
       textAlign: 'right',
       width: '100%',
       padding: 0,
-      transition: 'border-color 0.15s, transform 0.15s, box-shadow 0.15s',
+      boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+      transition: 'border-color 0.18s, transform 0.18s cubic-bezier(0.34,1.3,0.64,1), box-shadow 0.18s, background 0.18s',
       display: 'flex',
       flexDirection: 'column',
     }}
-      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.4)'; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)'; e.currentTarget.style.transform = 'translateY(-3px) scale(1.008)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.38), 0 1px 0 rgba(255,255,255,0.07) inset'; e.currentTarget.style.background = 'rgba(30,34,64,0.9)'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 1px 6px rgba(0,0,0,0.18)'; e.currentTarget.style.background = 'rgb(var(--bg-surface))'; }}
+      onMouseDown={e => { e.currentTarget.style.transform = 'translateY(-1px) scale(0.99)'; }}
+      onMouseUp={e => { e.currentTarget.style.transform = 'translateY(-4px) scale(1.01)'; }}
     >
       {/* Photo */}
       <div style={{ width: '100%', aspectRatio: '1', position: 'relative', overflow: 'hidden', background: 'rgba(255,255,255,0.04)' }}>
@@ -218,10 +222,8 @@ function StudentModal({ student, photoSrc, onClose }) {
   const h = student.health_status ? HEALTH[student.health_status] : null;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '32px 16px', overflowY: 'auto' }}
-      onClick={onClose}>
-      <div dir="rtl" style={{ background: 'rgb(var(--bg-surface))', borderRadius: 20, width: '100%', maxWidth: 840, border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 32px 100px rgba(0,0,0,0.8)', marginBottom: 40 }}
-        onClick={e => e.stopPropagation()}>
+    <Modal open={true} onClose={onClose} maxWidth={840} style={{ padding: 0, borderRadius: 20, background: 'rgb(var(--bg-surface))' }}>
+      <div dir="rtl" style={{ borderRadius: 20, overflow: 'hidden' }}>
 
         {/* Header with photo */}
         <div style={{ position: 'relative', height: 200, borderRadius: '20px 20px 0 0', overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
@@ -333,7 +335,7 @@ function StudentModal({ student, photoSrc, onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -607,9 +609,8 @@ export default function AdminMembersGrid() {
         </div>
 
         {/* ── ADD STUDENT MODAL ──────────────────────────────── */}
-        {addOpen && (
-          <div onClick={() => setAddOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a2e', border: '1px solid rgba(99,102,241,0.4)', borderRadius: 16, padding: 28, width: 380, maxWidth: '90vw' }}>
+        <Modal open={addOpen} onClose={() => setAddOpen(false)} maxWidth={400} style={{ border: '1px solid rgba(99,102,241,0.35)' }}>
+            <div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                 <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem', fontWeight: 700 }}>הוסף תלמיד חדש</h3>
                 <button onClick={() => setAddOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: 4 }}><X size={18} /></button>
@@ -658,8 +659,7 @@ export default function AdminMembersGrid() {
                 {addLoading ? 'מוסיף...' : 'הוסף תלמיד'}
               </button>
             </div>
-          </div>
-        )}
+        </Modal>
 
         {/* ── GRID / LIST ─────────────────────────────────── */}
         {loading ? (

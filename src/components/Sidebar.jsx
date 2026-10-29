@@ -52,7 +52,7 @@ const SELF_AUDIT_ITEMS = {
   icon:     ScanSearch,
   children: [
     { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
-    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap, soon: true },
+    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap },
   ],
 };
 

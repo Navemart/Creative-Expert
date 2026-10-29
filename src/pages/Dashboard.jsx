@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTrackPage } from '../hooks/useTrack.js';
 import { useDialog } from '../components/Dialog.jsx';
+import Modal from '../components/Modal.jsx';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase.js';
@@ -127,32 +128,6 @@ function getGreeting() {
   return 'ערב טוב';
 }
 
-// ── Modal wrapper ─────────────────────────────────────────────
-function Modal({ title, onClose, children }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(0,0,0,0.75)' }}
-    >
-      <div
-        className="w-full max-w-md rounded-2xl p-6"
-        style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', maxHeight: 'calc(100vh - 2rem)', overflowY: 'auto' }}
-      >
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-white">{title}</h3>
-          <button
-            onClick={onClose}
-            className="rounded-md p-1 hover:bg-white/10"
-            style={{ color: 'rgba(255,255,255,0.5)' }}
-          >
-            <X size={18} />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 // ── Progress bar ──────────────────────────────────────────────
 const BAR_GRADIENT = 'linear-gradient(to left, #ef4444, #f97316, #eab308, #22c55e, #06b6d4, #a855f7)';
@@ -1676,7 +1651,7 @@ export default function Dashboard() {
       {/* ── 1. Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="font-bold text-white" style={{ fontSize: '2.25rem' }}>{getGreeting()}, {firstName}.</h1>
+          <h1 className="font-bold text-white" style={{ fontSize: 'var(--t-hero)' }}>{getGreeting()}, {firstName}.</h1>
           {storedRank && (
             <span className="rounded-md px-2.5 py-1 text-xs font-bold whitespace-nowrap"
               style={{ border: `1.5px solid ${storedRank.color}`, color: storedRank.color, background: storedRank.color + '18' }}>
@@ -1723,34 +1698,34 @@ export default function Dashboard() {
           {/* הצעד הבא */}
           <div className="rounded-2xl p-5 flex flex-col gap-3 flex-1" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center justify-between">
-              <span className="uppercase tracking-widest font-semibold" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>הצעד הבא</span>
-              <span className="text-sm font-semibold text-white">היום</span>
+              <span className="eyebrow">הצעד הבא</span>
+              <span style={{ fontSize: 'var(--t-body)', fontWeight: 600, color: 'white' }}>היום</span>
             </div>
             <div className="flex flex-col gap-2">
               {isSunday && (
                 <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Trophy size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
-                  <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-white leading-tight">שלח נצחונות שבועיים</p><p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>שתף את הנצחונות שלך מהשבוע</p></div>
-                  <button onClick={() => { setWinStep(1); setModal('win'); }} className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
+                  <div className="flex-1 min-w-0"><p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }}>שלח נצחונות שבועיים</p><p style={{ fontSize: 'var(--t-caption)', marginTop: 3, color: 'rgba(255,255,255,0.38)' }}>שתף את הנצחונות שלך מהשבוע</p></div>
+                  <button onClick={() => { setWinStep(1); setModal('win'); }} className="flex-none rounded-lg px-3 py-1.5 font-semibold hover:opacity-80" style={{ fontSize: 'var(--t-caption)', background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
                 </div>
               )}
               {isMonthStart && (
                 <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Calendar size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
-                  <div className="flex-1 min-w-0"><p className="text-sm font-semibold text-white leading-tight">מלא נתונים חודשיים</p><p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>סיכום חודשי לחודש הנוכחי</p></div>
-                  <button onClick={() => { setMonthlyForm(f => ({ ...f, report_month: nextReportMonth(monthlyData) })); setEditingSubmission(null); setModal('monthly'); }} className="flex-none rounded-lg px-3 py-1.5 text-xs font-semibold hover:opacity-80" style={{ background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
+                  <div className="flex-1 min-w-0"><p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }}>מלא נתונים חודשיים</p><p style={{ fontSize: 'var(--t-caption)', marginTop: 3, color: 'rgba(255,255,255,0.38)' }}>סיכום חודשי לחודש הנוכחי</p></div>
+                  <button onClick={() => { setMonthlyForm(f => ({ ...f, report_month: nextReportMonth(monthlyData) })); setEditingSubmission(null); setModal('monthly'); }} className="flex-none rounded-lg px-3 py-1.5 font-semibold hover:opacity-80" style={{ fontSize: 'var(--t-caption)', background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
                 </div>
               )}
               {showRoadmapTask && (
                 <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><ListChecks size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white leading-tight line-clamp-1">{nextTask.title}</p>
-                    <p className="text-xs mt-0.5 truncate" style={{ color: 'rgba(255,255,255,0.38)' }}>{nextTask.phaseTitle}{nextTask.weekTitle ? ` · ${nextTask.weekTitle}` : ''}</p>
+                    <p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }} className="line-clamp-1">{nextTask.title}</p>
+                    <p style={{ fontSize: 'var(--t-caption)', marginTop: 3, color: 'rgba(255,255,255,0.38)' }} className="truncate">{nextTask.phaseTitle}{nextTask.weekTitle ? ` · ${nextTask.weekTitle}` : ''}</p>
                   </div>
                   {nextTask.link
-                    ? <a href={nextTask.link} target="_blank" rel="noopener noreferrer" className="flex-none flex items-center gap-0.5 text-xs font-semibold hover:text-white" style={{ color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></a>
-                    : <button onClick={() => navigate('/roadmap')} className="flex-none flex items-center gap-0.5 text-xs font-semibold hover:text-white" style={{ color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></button>}
+                    ? <a href={nextTask.link} target="_blank" rel="noopener noreferrer" className="flex-none flex items-center gap-0.5 font-semibold hover:text-white" style={{ fontSize: 'var(--t-caption)', color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></a>
+                    : <button onClick={() => navigate('/roadmap')} className="flex-none flex items-center gap-0.5 font-semibold hover:text-white" style={{ fontSize: 'var(--t-caption)', color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></button>}
                 </div>
               )}
               {nextTask === null && !isSunday && !isMonthStart && <div className="flex items-center justify-center py-3"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>כל המשימות הושלמו 🎉</p></div>}
@@ -1765,8 +1740,8 @@ export default function Dashboard() {
               <Trophy size={15} className="text-white/25" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl sm:text-4xl font-bold text-white">{currentStreak}</span>
-              <span className="text-xs text-white/40">שבועות · הארוך ביותר {longestStreak}</span>
+              <span style={{ fontSize: 'var(--t-data)', fontWeight: 900, color: 'white', lineHeight: 1 }}>{currentStreak}</span>
+              <span style={{ fontSize: 'var(--t-body)', color: 'rgba(255,255,255,0.4)' }}>שבועות · הארוך ביותר {longestStreak}</span>
             </div>
             <div dir="ltr" style={{ display: 'flex', gap: 4 }}>
               {weeklyHistory.map((hasWin, i) => (
@@ -1785,9 +1760,9 @@ export default function Dashboard() {
             return (
               <div className="flex items-start justify-between mb-5">
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.4)' }}>סה״כ הכנסות · {rangeLabel}</div>
-                  <div className="mt-1 flex items-baseline gap-3 flex-wrap">
-                    <span className="text-2xl sm:text-4xl font-bold text-white">₪{rangeTotal.toLocaleString()}</span>
+                  <div className="eyebrow">סה״כ הכנסות · {rangeLabel}</div>
+                  <div className="mt-2 flex items-baseline gap-3 flex-wrap">
+                    <span style={{ fontSize: 'var(--t-data)', fontWeight: 900, color: 'white', lineHeight: 1 }}>₪{rangeTotal.toLocaleString()}</span>
                   </div>
                 </div>
                 <div className="flex gap-1 rounded-lg p-1 flex-none" style={{ background: 'rgb(var(--bg-elevated))' }}>
@@ -1810,9 +1785,9 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: '0.6875rem' }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={48} />
-                  <Tooltip contentStyle={{ background: 'rgb(19,21,40)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: '0.8125rem' }} formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
+                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={52} />
+                  <Tooltip contentStyle={{ background: 'rgb(19,21,40)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 13 }} formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
                   <Area type="monotone" dataKey="revenue" stroke="#F5C118" strokeWidth={2.5} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 5, fill: '#F5C118', stroke: '#fff', strokeWidth: 2 }} />
                 </AreaChart>
               </ResponsiveContainer>
@@ -2120,9 +2095,8 @@ export default function Dashboard() {
 
       {/* ── Modals ── */}
 
-      {modal === 'deal' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
-          <div dir="rtl" className="w-full rounded-2xl overflow-hidden flex flex-col" style={{ maxWidth: 760, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
+      <Modal open={modal === 'deal'} onClose={() => setModal(null)} maxWidth={760} style={{ padding: 0, background: 'rgb(var(--bg-surface))' }}>
+          <div dir="rtl" className="w-full overflow-hidden flex flex-col">
 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
@@ -2240,8 +2214,7 @@ export default function Dashboard() {
                 className="transition hover:opacity-90">{dealSubmitting ? 'שולח...' : 'שלח עסקה ✓'}</button>
             </div>
           </div>
-        </div>
-      )}
+      </Modal>
 
       {modal === 'win' && (() => {
         const STEP_COLORS = { 1: '#F5C118', 2: '#f97316' };
@@ -2250,8 +2223,8 @@ export default function Dashboard() {
         const fieldBorder = '1px solid rgba(255,255,255,0.1)';
         const fBg2 = fieldBg; const fBorder2 = fieldBorder;
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}>
-            <div dir="rtl" className="w-full rounded-2xl overflow-hidden flex flex-col" style={{ maxWidth: 760, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <Modal open={modal === 'win'} onClose={() => { setModal(null); setWinStep(1); }} maxWidth={760} style={{ padding: 0, background: 'rgb(var(--bg-surface))' }}>
+            <div dir="rtl" className="w-full overflow-hidden flex flex-col">
 
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
@@ -2394,7 +2367,7 @@ export default function Dashboard() {
                 )}
               </div>
             </div>
-          </div>
+          </Modal>
         );
       })()}
 
@@ -2599,8 +2572,8 @@ export default function Dashboard() {
         })();
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(3px)' }}>
-            <div dir="rtl" style={{ width: '100%', maxWidth: 760, background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, maxHeight: 'calc(100vh - 2rem)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <Modal open={modal === 'monthly'} onClose={() => setModal(null)} maxWidth={760} style={{ padding: 0, background: 'rgb(var(--bg-surface))' }}>
+            <div dir="rtl" style={{ width: '100%', maxHeight: 'calc(100vh - 2rem)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -2750,22 +2723,21 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
+          </Modal>
         );
         } catch(e) {
           console.error('Monthly modal render error:', e);
-          return <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
-            <div dir="rtl" className="rounded-2xl p-6 max-w-sm w-full" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.1)' }}>
+          return <Modal open={true} onClose={() => setModal(null)} maxWidth={400}>
+            <div dir="rtl" className="p-2">
               <p className="text-white font-bold mb-2">שגיאה בטעינת הטופס</p>
               <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>{e?.message}</p>
               <button onClick={() => setModal(null)} className="rounded-lg px-4 py-2 text-sm" style={{ background: '#F5C118', color: '#13152A', fontWeight: 700 }}>סגור</button>
             </div>
-          </div>;
+          </Modal>;
         }
       })()}
 
-      {modal === 'edit' && (
-        <Modal title="" onClose={() => { setModal(null); setEditSelectedId(''); }}>
+      <Modal open={modal === 'edit'} onClose={() => { setModal(null); setEditSelectedId(''); }}>
           <h2 className="text-lg font-bold text-white mb-1">עריכת הגשות</h2>
           <p className="text-sm text-white/45 mb-5">בחר חודש לעריכת הנתונים שלך.</p>
 
@@ -2815,8 +2787,7 @@ export default function Dashboard() {
               </div>
             </>
           )}
-        </Modal>
-      )}
+      </Modal>
 
       {/* ── Confetti + Rank-up celebration ── */}
       <Confetti active={confetti} onDone={() => setConfetti(false)} />
