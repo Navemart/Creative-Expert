@@ -1,6 +1,11 @@
 import { Router } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const router = Router();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -80,6 +85,21 @@ async function getStudentContext(userId) {
 
   return ctx;
 }
+
+// ── Content Creator skill ─────────────────────────────────────
+const CONTENT_CREATOR_AGENT_ID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+const CONTENT_CREATOR_SYSTEM_PROMPT = readFileSync(
+  join(__dirname, '../skills/content-creator.md'),
+  'utf-8',
+).replace(/^---[\s\S]*?---\n/, ''); // strip frontmatter
+
+const CONTENT_CREATOR_META = {
+  id: CONTENT_CREATOR_AGENT_ID,
+  name: 'סטודיו תוכן — ריילס וקרוסלים',
+  description: 'כותב, עורך ומייעץ לך ליצור ריילס וקרוסלים שמושכים לקוחות — בקולך, עם הסיפורים שלך.',
+  category: 'content',
+  sort_order: 2,
+};
 
 // ── System prompt מלא לסוכן נווה AI ──────────────────────────
 const NAVE_AI_AGENT_ID = 'c75373cc-18d4-4bab-b932-96605bacf5af';
@@ -214,10 +234,14 @@ router.post('/chat', async (req, res) => {
   let agentSystemPrompt = '';
   let agentName = 'NaveAI';
   const isNaveAI = agentId === NAVE_AI_AGENT_ID;
+  const isContentCreator = agentId === CONTENT_CREATOR_AGENT_ID;
 
   if (isNaveAI) {
     agentName = 'נווה AI';
     agentSystemPrompt = NAVE_AI_SYSTEM_PROMPT;
+  } else if (isContentCreator) {
+    agentName = CONTENT_CREATOR_META.name;
+    agentSystemPrompt = CONTENT_CREATOR_SYSTEM_PROMPT;
   } else if (agentId) {
     const { data } = await supabase
       .from('gpt_tools')
@@ -236,7 +260,7 @@ router.post('/chat', async (req, res) => {
   const systemPromptParts = [
     agentSystemPrompt || `אתה NaveAI — עוזר חכם של Nave Branding. אתה עונה בעברית, מקצועי, ישיר ותמציתי.`,
     // Skip BASE_AGENT_RULES for Nave AI — it has its own complete instructions
-    isNaveAI ? null : BASE_AGENT_RULES,
+    (isNaveAI || isContentCreator) ? null : BASE_AGENT_RULES,
     studentContext ? `\n## הנתונים של התלמיד\n${studentContext}` : '',
   ];
 
@@ -287,14 +311,18 @@ router.post('/chat', async (req, res) => {
   }
 });
 
-// GET /api/nave-ai/agents — return agents from gpt_tools
+// GET /api/nave-ai/agents — return agents (hardcoded + gpt_tools)
 router.get('/agents', async (_req, res) => {
   const { data, error } = await supabase
     .from('gpt_tools')
     .select('id, name, description, category, category_label, sort_order')
     .order('sort_order', { ascending: true });
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data || []);
+  const dbAgents = data || [];
+  // Inject content creator skill if not already in DB
+  const alreadyInDb = dbAgents.some(a => a.id === CONTENT_CREATOR_AGENT_ID);
+  const allAgents = alreadyInDb ? dbAgents : [...dbAgents, CONTENT_CREATOR_META];
+  res.json(allAgents);
 });
 
 export default router;

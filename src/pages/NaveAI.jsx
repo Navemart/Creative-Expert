@@ -10,6 +10,7 @@ const STORAGE_KEY = 'nave-ai-history';
 const AGENT_ICONS = {
   '0be4b5ea-3ae4-418f-b75e-b03cfbc041be': '🎬',
   'c75373cc-18d4-4bab-b932-96605bacf5af': '💬',
+  'a1b2c3d4-e5f6-7890-abcd-ef1234567890': '✍️',
 };
 const DEFAULT_ICON = '🤖';
 
@@ -87,7 +88,7 @@ export default function NaveAI() {
   useEffect(() => {
     fetch('/api/nave-ai/agents')
       .then(r => r.json())
-      .then(data => setAgents(Array.isArray(data) ? data.filter(a => a.id in AGENT_ICONS) : []))
+      .then(data => setAgents(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 
