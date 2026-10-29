@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Search, LayoutGrid, List, ChevronUp, ChevronDown, X, Eye, Share2, RefreshCw, TrendingUp, Users, Trophy, Star } from 'lucide-react';
+import { Search, LayoutGrid, List, ChevronUp, ChevronDown, X, Eye, Share2, RefreshCw, TrendingUp, Users, Trophy, Star, UserPlus } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -429,6 +429,10 @@ export default function AdminMembersGrid() {
   const [sortDir,       setSortDir]       = useState(-1);
   const [refreshing,    setRefreshing]    = useState(false);
   const [unposted,      setUnposted]      = useState({ wins: 0, deals: 0 });
+  const [addOpen,       setAddOpen]       = useState(false);
+  const [addForm,       setAddForm]       = useState({ email: '', first_name: '', last_name: '' });
+  const [addLoading,    setAddLoading]    = useState(false);
+  const [addError,      setAddError]      = useState('');
 
   const isUnauthorized = user && user.id !== ADMIN_ID;
 
@@ -593,7 +597,68 @@ export default function AdminMembersGrid() {
             רענן
           </button>
 
+          {/* Add student */}
+          <button onClick={() => { setAddOpen(true); setAddForm({ email: '', first_name: '', last_name: '' }); setAddError(''); }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.5)', cursor: 'pointer', fontSize: '0.875rem', color: 'rgba(199,200,255,0.9)', fontWeight: 600 }}>
+            <UserPlus size={14} />
+            הוסף תלמיד
+          </button>
+
         </div>
+
+        {/* ── ADD STUDENT MODAL ──────────────────────────────── */}
+        {addOpen && (
+          <div onClick={() => setAddOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div onClick={e => e.stopPropagation()} style={{ background: '#1a1a2e', border: '1px solid rgba(99,102,241,0.4)', borderRadius: 16, padding: 28, width: 380, maxWidth: '90vw' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem', fontWeight: 700 }}>הוסף תלמיד חדש</h3>
+                <button onClick={() => setAddOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: 4 }}><X size={18} /></button>
+              </div>
+
+              {[{ key: 'email', label: 'מייל *', placeholder: 'student@example.com', type: 'email' },
+                { key: 'first_name', label: 'שם פרטי', placeholder: 'ישראל', type: 'text' },
+                { key: 'last_name', label: 'שם משפחה', placeholder: 'ישראלי', type: 'text' }].map(({ key, label, placeholder, type }) => (
+                <div key={key} style={{ marginBottom: 14 }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>{label}</label>
+                  <input
+                    type={type}
+                    value={addForm[key]}
+                    onChange={e => setAddForm(f => ({ ...f, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              ))}
+
+              {addError && <p style={{ color: '#ff7b8a', fontSize: '0.83rem', margin: '0 0 14px' }}>{addError}</p>}
+
+              <button
+                disabled={addLoading || !addForm.email.trim()}
+                onClick={async () => {
+                  setAddLoading(true); setAddError('');
+                  try {
+                    const r = await fetch('/api/admin/students', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'x-admin-id': ADMIN_ID || '' },
+                      body: JSON.stringify(addForm),
+                    });
+                    const d = await r.json();
+                    if (!r.ok) { setAddError(d.error || 'שגיאה'); return; }
+                    setAddOpen(false);
+                    setRefreshing(true);
+                    fetchAll().then(() => setRefreshing(false));
+                  } catch (e) {
+                    setAddError(e.message);
+                  } finally {
+                    setAddLoading(false);
+                  }
+                }}
+                style={{ width: '100%', padding: '10px 0', borderRadius: 8, background: addLoading || !addForm.email.trim() ? 'rgba(99,102,241,0.3)' : 'rgba(99,102,241,0.8)', border: 'none', color: 'white', fontSize: '0.95rem', fontWeight: 700, cursor: addLoading || !addForm.email.trim() ? 'not-allowed' : 'pointer', transition: 'background 0.15s' }}>
+                {addLoading ? 'מוסיף...' : 'הוסף תלמיד'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── GRID / LIST ─────────────────────────────────── */}
         {loading ? (

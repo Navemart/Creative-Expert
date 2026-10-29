@@ -133,6 +133,51 @@ router.get('/students', async (req, res) => {
   }
 });
 
+// ── POST /api/admin/students ─────────────────────────────────
+// Create a new student in Clerk + Supabase student_profiles
+router.post('/students', async (req, res) => {
+  if (!isAdmin(req)) return res.status(403).json({ error: 'Forbidden' });
+
+  let body = req.body;
+  if (!body || typeof body !== 'object') {
+    try { body = JSON.parse(await new Promise(r => { let d = ''; req.on('data', c => d += c); req.on('end', () => r(d)); })); } catch { body = {}; }
+  }
+
+  const { email, first_name = '', last_name = '' } = body;
+  if (!email) return res.status(400).json({ error: 'email is required' });
+
+  const clerkKey = process.env.CLERK_SECRET_KEY;
+  if (!clerkKey) return res.status(500).json({ error: 'CLERK_SECRET_KEY not configured' });
+
+  try {
+    // 1. Create user in Clerk
+    const clerkRes = await fetch('https://api.clerk.com/v1/users', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${clerkKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email_address: [email], first_name: first_name || undefined, last_name: last_name || undefined }),
+    });
+    const clerkData = await clerkRes.json();
+    if (!clerkRes.ok) {
+      const msg = clerkData?.errors?.[0]?.long_message || clerkData?.message || 'Clerk error';
+      return res.status(400).json({ error: msg });
+    }
+    const userId = clerkData.id;
+
+    // 2. Insert into Supabase student_profiles
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    if (supabaseUrl && supabaseKey) {
+      const sb = createClient(supabaseUrl, supabaseKey);
+      await sb.from('student_profiles').upsert({ user_id: userId, is_active: true, member_status: 'active' }, { onConflict: 'user_id' });
+    }
+
+    res.json({ success: true, userId, email });
+  } catch (err) {
+    console.error('[admin/students POST]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── PATCH /api/admin/students/:userId/profile ────────────────
 // Update any profile fields: health_status, enrolled_at, total_paid
 router.patch('/students/:userId/profile', async (req, res) => {
