@@ -27,6 +27,7 @@ import {
   Activity,
   ClipboardCheck,
   TrafficCone,
+  Newspaper,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -70,6 +71,7 @@ const ADMIN_ITEMS = [
   { to: '/admin/events',         label: 'אירועי משתמשים',  icon: Activity },
   { to: '/admin/sales-pipeline',  label: 'צינור מכירות',    icon: Kanban },
   { to: '/admin/traffic-lights', label: 'רמזור תנועה',     icon: TrafficCone },
+  { to: '/admin/news',           label: 'חדשות ועדכונים',  icon: Newspaper },
 ];
 
 

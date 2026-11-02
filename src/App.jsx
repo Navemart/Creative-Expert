@@ -27,6 +27,7 @@ import AdminEvents from './pages/AdminEvents.jsx';
 import AdminCheckins from './pages/AdminCheckins.jsx';
 import AdminSalesPipeline from './pages/AdminSalesPipeline.jsx';
 import AdminTrafficLights from './pages/AdminTrafficLights.jsx';
+import AdminNews from './pages/AdminNews.jsx';
 import NaveAI from './pages/NaveAI.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -124,6 +125,14 @@ export default function App() {
               element={
                 <AdminRoute>
                   <AdminTrafficLights />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="admin/news"
+              element={
+                <AdminRoute>
+                  <AdminNews />
                 </AdminRoute>
               }
             />

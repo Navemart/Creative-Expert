@@ -23,6 +23,7 @@ import submitRouter          from './routes/submit.js';
 import pipelineRouter        from './routes/pipeline.js';
 import trafficLightsRouter   from './routes/trafficLights.js';
 import naveAiRouter          from './routes/nave-ai.js';
+import newsRouter            from './routes/news.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,6 +55,7 @@ app.use('/api/submit',        submitRouter);
 app.use('/api/pipeline',       pipelineRouter);
 app.use('/api/traffic-lights', trafficLightsRouter);
 app.use('/api/nave-ai',       naveAiRouter);
+app.use('/api/news',          newsRouter);
 
 // -----------------------------------------------------------------------------
 // In production, serve the built frontend from /dist so everything runs on one

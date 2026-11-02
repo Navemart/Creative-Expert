@@ -954,6 +954,7 @@ export default function Dashboard() {
   const [diagnosisStatus,  setDiagnosisStatus]  = useState(null);
   const [adminRankOverride, setAdminRankOverride] = useState(null);
   const [diagnosisContent, setDiagnosisContent] = useState(null);
+  const [newsItems,        setNewsItems]        = useState([]);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -997,6 +998,13 @@ export default function Dashboard() {
     setLabels(prev => ({ ...prev, [key]: value }));
     await supabase.from('dashboard_labels').upsert({ id: key, value, updated_at: new Date().toISOString() });
   }
+
+  useEffect(() => {
+    fetch('/api/news')
+      .then(r => r.json())
+      .then(d => Array.isArray(d) && setNewsItems(d))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!userId) return;
@@ -1727,41 +1735,27 @@ export default function Dashboard() {
         {/* ימין: הצעד הבא + סטריק — order-last במובייל */}
         <div className="flex flex-col gap-4 w-full sm:w-[37%] sm:flex-none order-2 sm:order-1">
 
-          {/* הצעד הבא */}
+          {/* חדשות ועדכונים */}
           <div className="rounded-2xl p-5 flex flex-col gap-3 flex-1" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
             <div className="flex items-center justify-between">
-              <span className="eyebrow">הצעד הבא</span>
-              <span style={{ fontSize: 'var(--t-body)', fontWeight: 600, color: 'white' }}>היום</span>
+              <span className="eyebrow">חדשות ועדכונים</span>
             </div>
             <div className="flex flex-col gap-2">
-              {isSunday && (
-                <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Trophy size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
-                  <div className="flex-1 min-w-0"><p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }}>שלח נצחונות שבועיים</p><p style={{ fontSize: 'var(--t-caption)', marginTop: 3, color: 'rgba(255,255,255,0.38)' }}>שתף את הנצחונות שלך מהשבוע</p></div>
-                  <button onClick={() => { setWinForm(f => ({ ...f, week_date: new Date().toISOString().slice(0,10) })); setWinStep(1); setModal('win'); }} className="flex-none rounded-lg px-3 py-1.5 font-semibold hover:opacity-80" style={{ fontSize: 'var(--t-caption)', background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
+              {newsItems.length === 0 && (
+                <div className="flex items-center justify-center py-4">
+                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>אין עדכונים כרגע</p>
                 </div>
               )}
-              {isMonthStart && (
-                <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Calendar size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
-                  <div className="flex-1 min-w-0"><p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }}>מלא נתונים חודשיים</p><p style={{ fontSize: 'var(--t-caption)', marginTop: 3, color: 'rgba(255,255,255,0.38)' }}>סיכום חודשי לחודש הנוכחי</p></div>
-                  <button onClick={() => { setMonthlyForm(f => ({ ...f, report_month: nextReportMonth(monthlyData) })); setEditingSubmission(null); setModal('monthly'); }} className="flex-none rounded-lg px-3 py-1.5 font-semibold hover:opacity-80" style={{ fontSize: 'var(--t-caption)', background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
-                </div>
-              )}
-              {showRoadmapTask && (
-                <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><ListChecks size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
+              {newsItems.map(item => (
+                <div key={item.id} className="flex items-start gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: item.pinned ? '1px solid rgba(245,193,24,0.25)' : '1px solid rgba(255,255,255,0.06)' }}>
+                  <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center text-lg" style={{ background: 'rgba(255,255,255,0.07)' }}>{item.emoji || '📢'}</div>
                   <div className="flex-1 min-w-0">
-                    <p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }} className="line-clamp-1">{nextTask.title}</p>
-                    <p style={{ fontSize: 'var(--t-caption)', marginTop: 3, color: 'rgba(255,255,255,0.38)' }} className="truncate">{nextTask.phaseTitle}{nextTask.weekTitle ? ` · ${nextTask.weekTitle}` : ''}</p>
+                    <p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }}>{item.title}</p>
+                    {item.body && <p style={{ fontSize: 'var(--t-caption)', marginTop: 4, color: 'rgba(255,255,255,0.45)', lineHeight: 1.5 }}>{item.body}</p>}
                   </div>
-                  {nextTask.link
-                    ? <a href={nextTask.link} target="_blank" rel="noopener noreferrer" className="flex-none flex items-center gap-0.5 font-semibold hover:text-white" style={{ fontSize: 'var(--t-caption)', color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></a>
-                    : <button onClick={() => navigate('/roadmap')} className="flex-none flex items-center gap-0.5 font-semibold hover:text-white" style={{ fontSize: 'var(--t-caption)', color: 'rgba(255,255,255,0.45)' }}>פתח <ChevronLeft size={13} /></button>}
+                  {item.pinned && <div className="flex-none mt-0.5" style={{ fontSize: 10, color: '#F5C118', fontWeight: 700, letterSpacing: '0.05em' }}>PIN</div>}
                 </div>
-              )}
-              {nextTask === null && !isSunday && !isMonthStart && <div className="flex items-center justify-center py-3"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>כל המשימות הושלמו 🎉</p></div>}
-              {nextTask === undefined && !isSunday && !isMonthStart && <div className="flex items-center justify-center py-3"><p className="text-xs" style={{ color: 'rgba(255,255,255,0.18)' }}>טוען...</p></div>}
+              ))}
             </div>
           </div>
 
