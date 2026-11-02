@@ -1127,7 +1127,9 @@ export default function Dashboard() {
     : 0;
   const bestAmount = Math.max(0, ...monthlyData.map(m => m.total_income ?? m.amount ?? 0));
   // ── Streak calculations ──────────────────────────────────────────────────
-  const { currentStreak, longestStreak, weeklyHistory } = useMemo(() => {
+  const [streakCelebration, setStreakCelebration] = useState(false);
+
+  const { currentStreak, longestStreak, weeklyHistory, cycleProgress, cyclesCompleted, cycleDots } = useMemo(() => {
     const NUM_WEEKS = 16;
     const empty = { currentStreak: 0, longestStreak: 0, weeklyHistory: Array(NUM_WEEKS).fill(false) };
     if (!wins.length) return empty;
@@ -1137,22 +1139,27 @@ export default function Dashboard() {
     // Streak rule: submitted on Thu(4), Fri(5), Sat(6), or Sun(0) before 23:59 → counts
     function isOnTime(win) {
       const t = win.submitted_at ? new Date(win.submitted_at) : new Date(win.week_date);
-      const day = t.getDay(); // 0=Sun,1=Mon,2=Tue,3=Wed,4=Thu,5=Fri,6=Sat
-      if (day === 1 || day === 2 || day === 3) return false; // Mon/Tue/Wed = late
-      if (day === 0) {
-        // Sunday — only before 23:59:59
-        return t.getHours() < 24; // effectively always, but cut at midnight
-      }
-      return true; // Thu, Fri, Sat always OK
+      // Use Israel timezone so 21:00 IST (= 19:00 UTC) stays Sunday, not flips to Monday.
+      const ilParts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Jerusalem',
+        weekday: 'short', hour: 'numeric', hour12: false,
+      }).formatToParts(t);
+      const day = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[
+        ilParts.find(p => p.type === 'weekday')?.value
+      ] ?? t.getDay();
+      // Valid window: Fri(5), Sat(6), Sun(0) — Mon/Tue/Wed/Thu = too late
+      return day === 5 || day === 6 || day === 0;
     }
 
-    // Get the ISO week number of a date (Sun-based: Sunday starts the week)
+    // Maps a date string to the Sunday that STARTED its reporting week.
+    // Sunday itself counts as the LAST day of the previous week's window,
+    // so it maps back to the previous Sunday (adjustedDay = 7, not 0).
     function isoWeekKey(dateStr) {
       const d = new Date(dateStr + 'T12:00:00');
-      // Shift so Sunday=0 is week start
       const day = d.getDay();
+      const adjustedDay = day === 0 ? 7 : day; // Sun → end of prev week
       const sunday = new Date(d);
-      sunday.setDate(d.getDate() - day);
+      sunday.setDate(d.getDate() - adjustedDay);
       return sunday.toISOString().slice(0, 10);
     }
 
@@ -1183,7 +1190,7 @@ export default function Dashboard() {
     let current = 0;
     if (lastOnTime) {
       const daysSince = (Date.now() - new Date(lastOnTime._weekKey)) / 86400000;
-      if (daysSince <= 13) { // allow up to 13 days (current + last week grace)
+      if (daysSince <= 14) { // 14 days: Sun submission maps to prev Sunday (+7 days), so allow up to next Sun
         current = 1;
         const idx = sorted.indexOf(lastOnTime);
         for (let i = idx - 1; i >= 0; i--) {
@@ -1196,17 +1203,40 @@ export default function Dashboard() {
     }
 
     // Weekly history grid — last NUM_WEEKS weeks (on-time wins only)
+    // Uses the same Sunday-shift logic as isoWeekKey: Sunday = end of prev week.
     const today = new Date();
     const fmtLocal = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const todayAdjustedDay = today.getDay() === 0 ? 7 : today.getDay();
     const history = Array.from({ length: NUM_WEEKS }, (_, i) => {
       const sunday = new Date(today);
-      sunday.setDate(today.getDate() - today.getDay() - i * 7); // go back i sundays
-      const key = fmtLocal(sunday); // use LOCAL date to match isoWeekKey
+      sunday.setDate(today.getDate() - todayAdjustedDay - i * 7);
+      const key = fmtLocal(sunday);
       return !!weekMap[key]?._onTime;
     }).reverse();
 
-    return { currentStreak: current, longestStreak: Math.max(longest, current), weeklyHistory: history };
+    // Cycle: every 10 on-time weeks = one milestone. cycleProgress resets to 0 after each 10.
+    const CYCLE = 10;
+    const cycleProgress = current % CYCLE; // 0–9 within current cycle
+    const cyclesCompleted = Math.floor(current / CYCLE); // full completed cycles
+
+    // 10 cycle dots: filled = cycleProgress
+    const cycleDots = Array.from({ length: CYCLE }, (_, i) => i < cycleProgress);
+
+    return { currentStreak: current, longestStreak: Math.max(longest, current), weeklyHistory: history, cycleProgress, cyclesCompleted, cycleDots };
   }, [wins]);
+
+  // הפעלת חגיגה כל 10 שבועות ברצף
+  useEffect(() => {
+    if (currentStreak > 0 && currentStreak % 10 === 0 && userId) {
+      const key = `streak_celebrated_${userId}_${currentStreak}`;
+      try {
+        if (!localStorage.getItem(key)) {
+          setStreakCelebration(true);
+          localStorage.setItem(key, '1');
+        }
+      } catch {}
+    }
+  }, [currentStreak, userId]);
 
   // חישוב דרגה לפי ממוצע 2 חודשים אחרונים ברצף (לבר בלבד)
   const last2 = sortedMonthly.slice(-2);
@@ -1347,7 +1377,9 @@ export default function Dashboard() {
     }
     setWinSubmitting(true);
 
-    const weekDate = winForm.week_date || new Date().toISOString().slice(0, 10);
+    // Always use the current date at submit time — the form's week_date can go stale
+    // if the page stays open across multiple days without a reload.
+    const weekDate = new Date().toISOString().slice(0, 10);
     const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'תלמיד';
 
     const body = {
@@ -1662,7 +1694,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-2">
           <SubmitDropdown
             onDeal={() => setModal('deal')}
-            onWin={() => { setWinStep(1); setModal('win'); }}
+            onWin={() => { setWinForm(f => ({ ...f, week_date: new Date().toISOString().slice(0,10) })); setWinStep(1); setModal('win'); }}
             onMonthly={() => {
               setMonthlyForm({ report_month: nextReportMonth(monthlyData), total_new_deals: '', retainers: '', total_income: '', software_expenses: '', variable_expenses: '', paid_ads: '', current_rank: '', achieved_next_rank: '', business_confidence: '', sales_calls_set: '', sales_calls_showed: '', closings_count: '', strategy_calls: '', leads: '', proposals: '', price_quotes_sent: '', price_quotes_approved: '', active_clients: '', followers: '', reach: '', posts_count: '', content_confidence: '', avg_views: '', engagement_rate: '', new_clients: '', client_satisfaction: '', on_time_delivery: '', biggest_win: '', main_project: '', systems_needed: '', recommendation: '', focus_next_month: '', nps: '', program_feedback: '' });
               setEditingSubmission(null); setModal('monthly');
@@ -1706,7 +1738,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="flex-none h-9 w-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.07)' }}><Trophy size={16} style={{ color: 'rgba(255,255,255,0.65)' }} /></div>
                   <div className="flex-1 min-w-0"><p style={{ fontSize: 'var(--t-card)', fontWeight: 700, color: 'white', lineHeight: 1.3 }}>שלח נצחונות שבועיים</p><p style={{ fontSize: 'var(--t-caption)', marginTop: 3, color: 'rgba(255,255,255,0.38)' }}>שתף את הנצחונות שלך מהשבוע</p></div>
-                  <button onClick={() => { setWinStep(1); setModal('win'); }} className="flex-none rounded-lg px-3 py-1.5 font-semibold hover:opacity-80" style={{ fontSize: 'var(--t-caption)', background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
+                  <button onClick={() => { setWinForm(f => ({ ...f, week_date: new Date().toISOString().slice(0,10) })); setWinStep(1); setModal('win'); }} className="flex-none rounded-lg px-3 py-1.5 font-semibold hover:opacity-80" style={{ fontSize: 'var(--t-caption)', background: 'rgba(255,255,255,0.12)', color: 'white' }}>שלח</button>
                 </div>
               )}
               {isMonthStart && (
@@ -1744,10 +1776,15 @@ export default function Dashboard() {
               <span style={{ fontSize: 'var(--t-body)', color: 'rgba(255,255,255,0.4)' }}>שבועות · הארוך ביותר {longestStreak}</span>
             </div>
             <div dir="ltr" style={{ display: 'flex', gap: 4 }}>
-              {weeklyHistory.map((hasWin, i) => (
+              {cycleDots.map((hasWin, i) => (
                 <div key={i} style={{ flex: 1, height: 8, borderRadius: 99, background: hasWin ? '#F5C118' : 'rgba(255,255,255,0.08)', transition: 'background 0.25s' }} />
               ))}
             </div>
+            {cyclesCompleted > 0 && (
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>
+                מחזור {cyclesCompleted + 1} · {cycleProgress}/10
+              </div>
+            )}
           </div>
 
         </div>
@@ -2792,6 +2829,41 @@ export default function Dashboard() {
       {/* ── Confetti + Rank-up celebration ── */}
       <Confetti active={confetti} onDone={() => setConfetti(false)} />
       <RankUpBanner rank={rankUpRank} onClose={() => setRankUpRank(null)} />
+
+      {/* ── חגיגת רצף 10 שבועות ── */}
+      {streakCelebration && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+          onClick={() => setStreakCelebration(false)}
+        >
+          <div
+            className="flex flex-col items-center gap-5 rounded-3xl p-10 text-center"
+            style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.12)', maxWidth: 360, boxShadow: '0 32px 80px rgba(0,0,0,0.5)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 64, lineHeight: 1 }}>🏆</div>
+            <div>
+              <div style={{ fontSize: 'var(--t-h2)', fontWeight: 900, color: 'white', lineHeight: 1.1 }}>
+                10 שבועות ברצף!
+              </div>
+              <div style={{ fontSize: 'var(--t-body)', color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>
+                מחזור {cyclesCompleted} הושלם — עכשיו מתחיל מחזור חדש. המשיכו כך!
+              </div>
+            </div>
+            <button
+              className="btn-primary"
+              style={{ width: '100%', padding: '12px 0', fontWeight: 700 }}
+              onClick={() => {
+                setStreakCelebration(false);
+                confettiLib({ particleCount: 150, spread: 80, origin: { x: 0.5, y: 0.5 }, colors: ['#F5C118', '#22c55e', '#60a5fa', '#f472b6', '#a78bfa'] });
+              }}
+            >
+              🎉 כן!
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
