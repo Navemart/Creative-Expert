@@ -1139,7 +1139,7 @@ export default function Dashboard() {
 
   const { currentStreak, longestStreak, weeklyHistory, cycleProgress, cyclesCompleted, cycleDots } = useMemo(() => {
     const NUM_WEEKS = 16;
-    const empty = { currentStreak: 0, longestStreak: 0, weeklyHistory: Array(NUM_WEEKS).fill(false) };
+    const empty = { currentStreak: 0, longestStreak: 0, weeklyHistory: Array(NUM_WEEKS).fill(false), cycleProgress: 0, cyclesCompleted: 0, cycleDots: Array(10).fill(false) };
     if (!wins.length) return empty;
 
     // submitted_at = actual submit time (for streak rules)
