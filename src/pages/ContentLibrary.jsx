@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useIsAdmin } from '../hooks/useIsAdmin.js';
 import { useDialog } from '../components/Dialog.jsx';
 import { supabase } from '../lib/supabase.js';
-import { ExternalLink, Camera, X, Move, Pencil, Check, Link, Loader } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
+import { Camera, X, Move, Pencil, Check, Link, Loader } from 'lucide-react';
 
 // ── Compress image file → JPEG Blob ───────────────────────────
 function compressImageToBlob(file, maxWidth = 1400, quality = 0.82) {
@@ -147,7 +149,8 @@ function GroundStrip({ grass, dirt }) {
 }
 
 // ── LevelCard ─────────────────────────────────────────────────
-function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveImage, onSaveImagePos }) {
+function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveImage, onSaveImagePos, lessonCount, completedCount }) {
+  const navigate   = useNavigate();
   const fileRef    = useRef(null);
   const imgAreaRef = useRef(null);
   const dragRef    = useRef(null);
@@ -248,13 +251,16 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
     await onRemoveImage(level.key);
   }
 
+  const pct = lessonCount > 0 ? Math.round((completedCount / lessonCount) * 100) : 0;
+
   return (
     <div className="group relative rounded-2xl overflow-hidden flex flex-col"
-      style={{ width: '100%', height: 400, boxShadow: '0 4px 24px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      onClick={() => !repoMode && !editMode && navigate(`/training/${level.key}`)}
+      style={{ width: '100%', aspectRatio: '4 / 3', boxShadow: '0 4px 24px rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', cursor: repoMode || editMode ? 'default' : 'pointer' }}>
 
       {/* ── Illustration area ── */}
-      <div ref={imgAreaRef} className="relative overflow-hidden"
-        style={{ height: 265, background: level.bg, cursor: repoMode ? (dragging ? 'grabbing' : 'grab') : 'default' }}
+      <div ref={imgAreaRef} className="relative overflow-hidden flex-1"
+        style={{ background: level.bg, cursor: repoMode ? (dragging ? 'grabbing' : 'grab') : 'pointer' }}
         onMouseDown={onMouseDown}>
 
         {uploading && (
@@ -356,8 +362,8 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
       </div>
 
       {/* ── Text area ── */}
-      <div className="relative flex-1"
-        style={{ background: 'rgb(var(--bg-surface))', overflowY: editMode ? 'auto' : 'hidden' }}>
+      <div className="relative flex-none"
+        style={{ height: 130, background: 'rgb(var(--bg-surface))', overflowY: editMode ? 'auto' : 'hidden' }}>
 
         {editMode ? (
           <div className="px-3 pt-2 pb-3 space-y-1.5" onClick={e => e.stopPropagation()}>
@@ -388,46 +394,39 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
           </div>
         ) : (
           <>
-            {displayUrl ? (
-              <a href={displayUrl} target="_blank" rel="noopener noreferrer"
-                className="block px-4 pt-3 pb-4 transition-colors hover:bg-white/[0.03]">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {level.badge !== null && (
-                        <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>Level {level.badge} —</span>
-                      )}
-                      <span className="text-base font-bold text-white">{displayName}</span>
-                      <span className="text-base leading-none">{level.dot}</span>
-                    </div>
-                    <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>{displayDesc}</p>
-                  </div>
-                  <ExternalLink size={13} className="flex-none mt-0.5 opacity-0 group-hover:opacity-50 transition-opacity"
-                    style={{ color: 'rgba(255,255,255,0.7)' }} />
+            <div className="px-4 pt-2.5 pb-3">
+              {/* Level label */}
+              {level.badge !== null && (
+                <span className="text-[11px] font-medium block mb-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  Level {level.badge}
+                </span>
+              )}
+              {/* Module name */}
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-bold text-white leading-tight">{displayName}</span>
+                <span className="text-lg leading-none">{level.dot}</span>
+              </div>
+              {/* Description */}
+              <p className="text-xs mt-1 leading-snug" style={{ color: 'rgba(255,255,255,0.4)' }}>{displayDesc}</p>
+
+              {/* Progress row */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    {lessonCount > 0 ? `${completedCount}/${lessonCount} שיעורים` : '—'}
+                  </span>
+                  {lessonCount > 0 && (
+                    <span className="text-xs font-semibold" style={{ color: pct > 0 ? 'rgb(var(--accent))' : 'rgba(255,255,255,0.25)' }}>
+                      {pct}%
+                    </span>
+                  )}
                 </div>
-                <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                  <div className="h-full w-0 rounded-full" />
-                </div>
-              </a>
-            ) : (
-              <div className="px-4 pt-3 pb-4">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {level.badge !== null && (
-                        <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>Level {level.badge} —</span>
-                      )}
-                      <span className="text-base font-bold text-white">{displayName}</span>
-                      <span className="text-base leading-none">{level.dot}</span>
-                    </div>
-                    <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>{displayDesc}</p>
-                  </div>
-                </div>
-                <div className="mt-3 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                  <div className="h-full w-0 rounded-full" />
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                  <div className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%`, background: 'rgb(var(--accent))' }} />
                 </div>
               </div>
-            )}
+            </div>
 
             {isAdmin && (
               <button onClick={startEdit}
@@ -447,19 +446,52 @@ function LevelCard({ level, isAdmin, data, onSaveText, onUploadImage, onRemoveIm
 export default function ContentLibrary() {
   const isAdmin = useIsAdmin();
   const dialog  = useDialog();
-  const [serverData, setServerData] = useState({});
-  const [loading,    setLoading]    = useState(true);
+  const { user } = useUser();
+  const [serverData,       setServerData]       = useState({});
+  const [lessonCounts,     setLessonCounts]     = useState({});
+  const [completionCounts, setCompletionCounts] = useState({});
+  const [loading,          setLoading]          = useState(true);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [user?.id]);
 
   async function loadData() {
-    const { data, error } = await supabase.from('content_library').select('*');
-    if (error) { console.error('content_library load error:', error); }
-    if (data) {
+    const userId = user?.id;
+
+    const [
+      { data: clData },
+      { data: lessons },
+      { data: completions },
+    ] = await Promise.all([
+      supabase.from('content_library').select('*'),
+      supabase.from('training_lessons').select('id, module_key'),
+      userId
+        ? supabase.from('lesson_completions').select('lesson_id').eq('user_id', userId)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    if (clData) {
       const map = {};
-      data.forEach(row => { map[row.key] = row; });
+      clData.forEach(row => { map[row.key] = row; });
       setServerData(map);
     }
+
+    if (lessons) {
+      const counts = {};
+      lessons.forEach(l => { counts[l.module_key] = (counts[l.module_key] || 0) + 1; });
+      setLessonCounts(counts);
+
+      if (completions?.length) {
+        const lessonModule = {};
+        lessons.forEach(l => { lessonModule[l.id] = l.module_key; });
+        const cc = {};
+        completions.forEach(c => {
+          const mk = lessonModule[c.lesson_id];
+          if (mk) cc[mk] = (cc[mk] || 0) + 1;
+        });
+        setCompletionCounts(cc);
+      }
+    }
+
     setLoading(false);
   }
 
@@ -525,7 +557,7 @@ export default function ContentLibrary() {
       <div>
         <h1 className="text-2xl font-bold text-white">ספריית תכנים</h1>
         <p className="text-base mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          לחץ על שלב כדי לפתוח אותו בסקול
+          בחר שלב כדי להיכנס לשיעורים
         </p>
       </div>
 
@@ -534,8 +566,7 @@ export default function ContentLibrary() {
           <Loader size={28} className="animate-spin" style={{ color: 'rgba(255,255,255,0.3)' }} />
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mx-auto" dir="ltr"
-          style={{ maxWidth: 1080 }}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full" dir="ltr">
           {LEVELS.map(level => (
             <LevelCard
               key={level.key}
@@ -546,6 +577,8 @@ export default function ContentLibrary() {
               onUploadImage={uploadImage}
               onRemoveImage={removeImage}
               onSaveImagePos={saveImagePos}
+              lessonCount={lessonCounts[level.key] || 0}
+              completedCount={completionCounts[level.key] || 0}
             />
           ))}
         </div>

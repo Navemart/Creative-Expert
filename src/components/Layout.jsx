@@ -5,7 +5,8 @@ import Sidebar from './Sidebar.jsx';
 import Header from './Header.jsx';
 import TopLoadingBar from './TopLoadingBar.jsx';
 
-const FULL_HEIGHT_ROUTES = ['/nave-ai'];
+const FULL_HEIGHT_ROUTES  = ['/nave-ai'];
+const WIDE_CONTENT_ROUTES = ['/content-library', '/training'];
 
 const pageVariants = {
   initial: { opacity: 0, y: 12 },
@@ -17,7 +18,8 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const isFullHeight = FULL_HEIGHT_ROUTES.includes(location.pathname);
+  const isFullHeight  = FULL_HEIGHT_ROUTES.includes(location.pathname);
+  const isWide        = WIDE_CONTENT_ROUTES.some(r => location.pathname.startsWith(r));
 
   return (
     <div className="flex h-full w-full bg-slate-50">
@@ -31,7 +33,7 @@ export default function Layout() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header onOpenMobile={() => setMobileOpen(true)} />
-        <main className={isFullHeight ? 'flex-1 overflow-hidden flex flex-col' : 'flex-1 overflow-y-auto px-3 py-4 sm:px-5 sm:py-6 lg:px-8'}>
+        <main className={isFullHeight ? 'flex-1 overflow-hidden flex flex-col' : isWide ? 'flex-1 overflow-y-auto px-3 py-4 sm:px-4' : 'flex-1 overflow-y-auto px-3 py-4 sm:px-5 sm:py-6 lg:px-8'}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={location.pathname}
