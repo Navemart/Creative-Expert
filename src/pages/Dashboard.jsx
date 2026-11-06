@@ -151,21 +151,37 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
         <RankInfoButton />
       </div>
 
-      {/* Pin labels — amount only, month in tooltip on dot hover */}
-      <div className="relative h-5 mb-1">
-        {current > 0 && (
-          <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}>
-            <span className="text-xs font-bold text-white leading-none">₪{(current / 1000).toFixed(1)}K</span>
-            <div className="h-2 w-px bg-white/50 mt-0.5" />
-          </div>
-        )}
-        {best > 0 && best !== current && (
-          <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${bestPct}%`, transform: 'translateX(-50%)' }}>
-            <span className="text-xs font-bold leading-none" style={{ color: '#F5C118' }}>₪{(best / 1000).toFixed(1)}K</span>
-            <div className="h-2 w-px mt-0.5" style={{ background: '#F5C118', opacity: 0.7 }} />
-          </div>
-        )}
-      </div>
+      {/* Pin labels — כשהנקודות קרובות (<8%) מורידים את הנוכחי מתחת לבר */}
+      {(() => {
+        const tooClose = best > 0 && best !== current && Math.abs(currentPct - bestPct) < 8;
+        return (
+          <>
+            <div className="relative h-5 mb-1">
+              {current > 0 && !tooClose && (
+                <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}>
+                  <span className="text-xs font-bold text-white leading-none">₪{(current / 1000).toFixed(1)}K</span>
+                  <div className="h-2 w-px bg-white/50 mt-0.5" />
+                </div>
+              )}
+              {best > 0 && best !== current && (
+                <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${bestPct}%`, transform: 'translateX(-50%)' }}>
+                  <span className="text-xs font-bold leading-none" style={{ color: '#F5C118' }}>₪{(best / 1000).toFixed(1)}K</span>
+                  <div className="h-2 w-px mt-0.5" style={{ background: '#F5C118', opacity: 0.7 }} />
+                </div>
+              )}
+            </div>
+            {/* תווית נוכחית מתחת לבר כשקרובה מדי לשיא */}
+            {tooClose && current > 0 && (
+              <div className="relative h-4 mt-1">
+                <div className="absolute top-0 flex flex-col items-center" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}>
+                  <div className="h-2 w-px bg-white/50" />
+                  <span className="text-xs font-bold text-white leading-none mt-0.5">₪{(current / 1000).toFixed(1)}K</span>
+                </div>
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* Bar + dots */}
       <div className="relative">
@@ -198,10 +214,10 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
         )}
       </div>
 
-      {/* Bottom labels */}
+      {/* Bottom labels — מסתיר שניות במובייל למניעת צפיפות */}
       <div className="mt-2 flex justify-between text-[11px] text-white/30">
-        {SEGMENTS.map(s => (
-          <span key={s.label}>{s.min === 0 ? '₪0' : `₪${s.min / 1000}K`}</span>
+        {SEGMENTS.map((s, i) => (
+          <span key={s.label} className={i > 0 && i % 2 !== 0 ? 'hidden sm:inline' : ''}>{s.min === 0 ? '₪0' : `₪${s.min / 1000}K`}</span>
         ))}
         <span>₪35K+</span>
       </div>
@@ -1693,8 +1709,8 @@ export default function Dashboard() {
     <div dir="rtl" className="w-full flex flex-col gap-4">
 
       {/* ── 1. Header ── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
           <h1 className="font-bold text-white" style={{ fontSize: 'var(--t-hero)' }}>{getGreeting()}, {firstName}.</h1>
           {storedRank && (
             <span className="rounded-md px-2.5 py-1 text-xs font-bold whitespace-nowrap"
@@ -1703,7 +1719,7 @@ export default function Dashboard() {
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2 flex-wrap">
           <SubmitDropdown
             onDeal={() => setModal('deal')}
             onWin={() => { setWinForm(f => ({ ...f, week_date: new Date().toISOString().slice(0,10) })); setWinStep(1); setModal('win'); }}
