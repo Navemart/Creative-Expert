@@ -151,35 +151,24 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
         <RankInfoButton />
       </div>
 
-      {/* Pin labels — כשהנקודות קרובות (<8%) מורידים את הנוכחי מתחת לבר */}
+      {/* Pin labels — כשקרובים מדי מציגים רק את השיא (הנקודה מראה מיקום נוכחי) */}
       {(() => {
         const tooClose = best > 0 && best !== current && Math.abs(currentPct - bestPct) < 15;
         return (
-          <>
-            <div className="relative h-5 mb-1">
-              {current > 0 && !tooClose && (
-                <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}>
-                  <span className="text-xs font-bold text-white leading-none">₪{(current / 1000).toFixed(1)}K</span>
-                  <div className="h-2 w-px bg-white/50 mt-0.5" />
-                </div>
-              )}
-              {best > 0 && best !== current && (
-                <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${bestPct}%`, transform: 'translateX(-50%)' }}>
-                  <span className="text-xs font-bold leading-none" style={{ color: '#F5C118' }}>₪{(best / 1000).toFixed(1)}K</span>
-                  <div className="h-2 w-px mt-0.5" style={{ background: '#F5C118', opacity: 0.7 }} />
-                </div>
-              )}
-            </div>
-            {/* תווית נוכחית מתחת לבר כשקרובה מדי לשיא */}
-            {tooClose && current > 0 && (
-              <div className="relative h-4 mt-1">
-                <div className="absolute top-0 flex flex-col items-center" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}>
-                  <div className="h-2 w-px bg-white/50" />
-                  <span className="text-xs font-bold text-white leading-none mt-0.5">₪{(current / 1000).toFixed(1)}K</span>
-                </div>
+          <div className="relative h-5 mb-1">
+            {current > 0 && !tooClose && (
+              <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${currentPct}%`, transform: 'translateX(-50%)' }}>
+                <span className="text-xs font-bold text-white leading-none">₪{(current / 1000).toFixed(1)}K</span>
+                <div className="h-2 w-px bg-white/50 mt-0.5" />
               </div>
             )}
-          </>
+            {best > 0 && best !== current && (
+              <div className="absolute bottom-0 flex flex-col items-center" style={{ left: `${bestPct}%`, transform: 'translateX(-50%)' }}>
+                <span className="text-xs font-bold leading-none" style={{ color: '#F5C118' }}>₪{(best / 1000).toFixed(1)}K</span>
+                <div className="h-2 w-px mt-0.5" style={{ background: '#F5C118', opacity: 0.7 }} />
+              </div>
+            )}
+          </div>
         );
       })()}
 
@@ -1822,7 +1811,7 @@ export default function Dashboard() {
           {chartData.length > 0 ? (
             <div dir="ltr" style={{ flex: 1, minHeight: 180 }}>
               <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 4, right: 4, left: 0, bottom: 4 }}>
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#F5C118" stopOpacity={0.25} />
@@ -1830,8 +1819,8 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
-                  <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={52} />
+                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 10 }} axisLine={false} tickLine={false} interval={0} padding={{ left: 8, right: 8 }} />
+                  <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={46} />
                   <Tooltip contentStyle={{ background: 'rgb(19,21,40)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 13 }} formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
                   <Area type="monotone" dataKey="revenue" stroke="#F5C118" strokeWidth={2.5} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 5, fill: '#F5C118', stroke: '#fff', strokeWidth: 2 }} />
                 </AreaChart>
