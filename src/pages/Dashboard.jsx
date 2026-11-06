@@ -153,7 +153,7 @@ function ProgressBar({ current, best, rankAmount, monthsCount, sectionLabel, cur
 
       {/* Pin labels — כשהנקודות קרובות (<8%) מורידים את הנוכחי מתחת לבר */}
       {(() => {
-        const tooClose = best > 0 && best !== current && Math.abs(currentPct - bestPct) < 8;
+        const tooClose = best > 0 && best !== current && Math.abs(currentPct - bestPct) < 15;
         return (
           <>
             <div className="relative h-5 mb-1">
@@ -1729,12 +1729,6 @@ export default function Dashboard() {
             }}
           />
           <button onClick={() => setModal('edit')} className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground hover:opacity-90 transition"><Edit2 size={15} /> עריכת נתונים</button>
-          {isAdmin && (
-            <button onClick={() => setLabelEditMode(m => !m)} className="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition hover:bg-white/10"
-              style={labelEditMode ? { borderColor: 'rgba(245,193,24,0.6)', color: '#F5C118' } : btnStyle}>
-              <Settings2 size={15} />{labelEditMode ? 'סיום עריכה' : 'עריכה'}
-            </button>
-          )}
         </div>
       </div>
 
@@ -1836,7 +1830,7 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 10 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
                   <YAxis tick={{ fill: 'rgba(255,255,255,0.30)', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={v => v === 0 ? '₪0' : `₪${v/1000}K`} width={52} />
                   <Tooltip contentStyle={{ background: 'rgb(19,21,40)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, color: 'white', fontSize: 13 }} formatter={v => [`₪${v.toLocaleString()}`, 'הכנסה']} cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }} />
                   <Area type="monotone" dataKey="revenue" stroke="#F5C118" strokeWidth={2.5} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 5, fill: '#F5C118', stroke: '#fff', strokeWidth: 2 }} />
@@ -2029,15 +2023,20 @@ export default function Dashboard() {
           const pct = allOrderedTasks.length > 0 ? Math.round(doneCount / allOrderedTasks.length * 100) : 0;
           return (
             <div className="flex-1 rounded-2xl p-5 flex flex-col gap-3 min-h-0" style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>מפת דרכים</span>
+              <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs uppercase tracking-widest font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>מפת דרכים</span>
+                    <button onClick={() => navigate('/roadmap')} className="flex items-center gap-1 text-xs font-semibold hover:opacity-100 transition flex-none px-3 py-1.5 rounded-lg sm:hidden" style={{ color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)' }}>
+                      מעבר <ChevronLeft size={13} />
+                    </button>
+                  </div>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <p className="text-sm font-bold text-white">{rdCurrentPhase?.title || '...'}</p>
-                    {rdPhases.length > 0 && <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש {rdCurrentPhaseIndex} מתוך {rdPhases.length}</span>}
+                    <p className="text-sm font-bold text-white leading-snug">{rdCurrentPhase?.title || '...'}</p>
+                    {rdPhases.length > 0 && <span className="text-xs whitespace-nowrap" style={{ color: 'rgba(255,255,255,0.3)' }}>חודש {rdCurrentPhaseIndex} מתוך {rdPhases.length}</span>}
                   </div>
                 </div>
-                <button onClick={() => navigate('/roadmap')} className="flex items-center gap-1 text-xs font-semibold hover:opacity-100 transition flex-none mt-1 px-3 py-1.5 rounded-lg" style={{ color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)' }}>
+                <button onClick={() => navigate('/roadmap')} className="hidden sm:flex items-center gap-1 text-xs font-semibold hover:opacity-100 transition flex-none mt-1 px-3 py-1.5 rounded-lg" style={{ color: 'rgba(255,255,255,0.65)', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)' }}>
                   מעבר למפת הדרכים <ChevronLeft size={13} />
                 </button>
               </div>
