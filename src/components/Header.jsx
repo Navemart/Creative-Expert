@@ -157,65 +157,104 @@ function SlackFailureRow({ item, onPost }) {
 }
 
 // ── Attendance alert row ──────────────────────────────────────
-function AttendanceAlertRow({ item }) {
+function AttendanceAlertRow({ item, onDismiss }) {
   const navigate = useNavigate();
   const fmtDate = d => d ? new Date(d).toLocaleDateString('he-IL', { day: 'numeric', month: 'short' }) : '';
   return (
-    <button
-      onClick={() => navigate(`/admin/students/${item.id}`)}
-      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
-    >
-      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
-        {item.image_url
-          ? <img src={item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : (item.name || '?')[0].toUpperCase()}
-      </div>
-      <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
-        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#ef4444' }}>
-          לא הגיע ל-3 פגישות ברצף {item.missed_since ? `· מ-${fmtDate(item.missed_since)}` : ''}
-        </p>
-      </div>
-    </button>
+    <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <button
+        onClick={() => navigate(`/admin/students/${item.id}`)}
+        style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right' }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+      >
+        <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+          {item.image_url
+            ? <img src={item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : (item.name || '?')[0].toUpperCase()}
+        </div>
+        <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+          <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#ef4444' }}>
+            לא הגיע ל-3 פגישות ברצף {item.missed_since ? `· מ-${fmtDate(item.missed_since)}` : ''}
+          </p>
+        </div>
+      </button>
+      <button onClick={e => { e.stopPropagation(); onDismiss('attendance', item.id); }}
+        className="flex-none rounded-full p-1 ml-2 mr-3 transition-all"
+        style={{ color: 'rgba(255,255,255,0.2)' }}
+        onMouseEnter={e => { e.currentTarget.style.color='rgba(255,255,255,0.7)'; e.currentTarget.style.background='rgba(255,255,255,0.08)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.2)'; e.currentTarget.style.background='transparent'; }}>
+        <X size={13} />
+      </button>
+    </div>
   );
 }
 
 // ── Notification panel ─────────────────────────────────────────
-function CheckinAlertRow({ student }) {
+function CheckinAlertRow({ student, onDismiss }) {
   const navigate = useNavigate();
   const isOverdue = student.column === 'overdue';
   return (
-    <button onClick={() => navigate('/admin/checkins')}
-      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right', borderBottom: '1px solid rgba(255,255,255,0.04)' }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
-    >
-      <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
-        {student.image_url
-          ? <img src={student.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : (student.name || '?')[0].toUpperCase()}
-      </div>
-      <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
-        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: isOverdue ? '#ef4444' : '#f59e0b' }}>
-          {isOverdue
-            ? student.days_since ? `פנייה לפני ${student.days_since} ימים` : 'מעולם לא נפנה'
-            : 'צ׳קאין בקרוב'}
-        </p>
-      </div>
-      {student.phase && (
-        <span style={{ fontSize: '0.625rem', fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,193,24,0.1)', color: 'rgba(245,193,24,0.6)', flexShrink: 0 }}>{student.phase}</span>
-      )}
-    </button>
+    <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <button onClick={() => navigate('/admin/checkins')}
+        style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'right' }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+      >
+        <div style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>
+          {student.image_url
+            ? <img src={student.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : (student.name || '?')[0].toUpperCase()}
+        </div>
+        <div style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+          <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.85)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{student.name}</p>
+          <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: isOverdue ? '#ef4444' : '#f59e0b' }}>
+            {isOverdue
+              ? student.days_since ? `פנייה לפני ${student.days_since} ימים` : 'מעולם לא נפנה'
+              : 'צ׳קאין בקרוב'}
+          </p>
+        </div>
+        {student.phase && (
+          <span style={{ fontSize: '0.625rem', fontWeight: 600, padding: '2px 7px', borderRadius: 20, background: 'rgba(245,193,24,0.1)', color: 'rgba(245,193,24,0.6)', flexShrink: 0 }}>{student.phase}</span>
+        )}
+      </button>
+      <button onClick={e => { e.stopPropagation(); onDismiss('checkin', student.id); }}
+        className="flex-none rounded-full p-1 ml-2 mr-3 transition-all"
+        style={{ color: 'rgba(255,255,255,0.2)' }}
+        onMouseEnter={e => { e.currentTarget.style.color='rgba(255,255,255,0.7)'; e.currentTarget.style.background='rgba(255,255,255,0.08)'; }}
+        onMouseLeave={e => { e.currentTarget.style.color='rgba(255,255,255,0.2)'; e.currentTarget.style.background='transparent'; }}>
+        <X size={13} />
+      </button>
+    </div>
   );
 }
 
+const DISMISSED_KEY = 'notif_dismissed_v1';
+function loadDismissed() {
+  try { return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY)) || []); } catch { return new Set(); }
+}
+
 function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps, checkinOverdue, checkinUpcoming, rankUpgrades, onApproveRank, onRejectRank, attendanceAlerts, slackFailures, onSlackPosted }) {
+  const [dismissed, setDismissed] = useState(loadDismissed);
+
+  function dismissLocal(type, id) {
+    const key = `${type}:${id}`;
+    setDismissed(prev => {
+      const next = new Set(prev);
+      next.add(key);
+      try { localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }
+
+  const visCheckinOverdue  = checkinOverdue.filter(s => !dismissed.has(`checkin:${s.id}`));
+  const visCheckinUpcoming = checkinUpcoming.filter(s => !dismissed.has(`checkin:${s.id}`));
+  const visAttendance      = (attendanceAlerts || []).filter(s => !dismissed.has(`attendance:${s.id}`));
+
   const payTotal = upcoming.length + overdue.length;
   const slackTotal = (slackFailures?.deals?.length || 0) + (slackFailures?.wins?.length || 0);
-  const total    = payTotal + npsAlerts.length + checkinOverdue.length + checkinUpcoming.length + rankUpgrades.length + (attendanceAlerts?.length || 0) + slackTotal;
+  const total    = payTotal + npsAlerts.length + visCheckinOverdue.length + visCheckinUpcoming.length + rankUpgrades.length + visAttendance.length + slackTotal;
   return (
     <div className="fixed inset-x-2 sm:inset-x-auto sm:absolute sm:left-0 top-16 sm:top-full sm:mt-2 z-50 overflow-hidden rounded-2xl"
       style={{ width: 340, maxWidth: 'calc(100vw - 1rem)', background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 20px 60px rgba(0,0,0,0.65)' }}>
@@ -243,13 +282,13 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
             </>
           )}
           {/* היעדרויות ברצף */}
-          {attendanceAlerts?.length > 0 && (
+          {visAttendance.length > 0 && (
             <>
               <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
                 style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
-                <AlertCircle size={11} /> היעדרויות ברצף — {attendanceAlerts.length}
+                <AlertCircle size={11} /> היעדרויות ברצף — {visAttendance.length}
               </div>
-              {attendanceAlerts.map(item => <AttendanceAlertRow key={item.id} item={item} />)}
+              {visAttendance.map(item => <AttendanceAlertRow key={item.id} item={item} onDismiss={dismissLocal} />)}
             </>
           )}
           {/* עליות דרגה ממתינות */}
@@ -267,23 +306,23 @@ function NotificationPanel({ upcoming, overdue, onDismiss, npsAlerts, dismissNps
             </>
           )}
           {/* צ'קאינס באיחור */}
-          {checkinOverdue.length > 0 && (
+          {visCheckinOverdue.length > 0 && (
             <>
               <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
                 style={{ background: 'rgba(239,68,68,0.07)', color: '#ef4444' }}>
-                <AlertCircle size={11} /> צ׳קאין באיחור — {checkinOverdue.length}
+                <AlertCircle size={11} /> צ׳קאין באיחור — {visCheckinOverdue.length}
               </div>
-              {checkinOverdue.map(s => <CheckinAlertRow key={s.id} student={s} />)}
+              {visCheckinOverdue.map(s => <CheckinAlertRow key={s.id} student={s} onDismiss={dismissLocal} />)}
             </>
           )}
           {/* צ'קאינס בקרוב */}
-          {checkinUpcoming.length > 0 && (
+          {visCheckinUpcoming.length > 0 && (
             <>
               <div className="flex items-center gap-1.5 px-4 py-2 text-[11px] font-bold uppercase tracking-widest"
                 style={{ background: 'rgba(245,193,24,0.06)', color: '#f59e0b' }}>
-                <Clock size={11} /> צ׳קאין בקרוב — {checkinUpcoming.length}
+                <Clock size={11} /> צ׳קאין בקרוב — {visCheckinUpcoming.length}
               </div>
-              {checkinUpcoming.map(s => <CheckinAlertRow key={s.id} student={s} />)}
+              {visCheckinUpcoming.map(s => <CheckinAlertRow key={s.id} student={s} onDismiss={dismissLocal} />)}
             </>
           )}
           {/* NPS נמוך */}
