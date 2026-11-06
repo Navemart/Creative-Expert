@@ -1020,23 +1020,42 @@ export default function Dashboard() {
   }, [userId]);
 
   async function fetchAll() {
-    // ── User data ─────────────────────────────────────────────────
-    try {
-      const [
-        { data: md },
-        { data: wd },
-        { data: dd },
-      ] = await Promise.all([
+    // הרץ הכל במקביל — batch אחד של setState בסוף למניעת קפיצות
+    const [
+      userResults,
+      roadmapResults,
+      dxResult,
+      dcResult,
+    ] = await Promise.allSettled([
+      // ── User data ──────────────────────────────────────────────
+      Promise.all([
         supabase.from('monthly_submissions').select('*').eq('user_id', userId).order('month'),
         supabase.from('sunday_wins').select('*').eq('user_id', userId).order('week_date', { ascending: false }),
         supabase.from('deals').select('total_amount, received_amount, created_at').eq('user_id', userId),
-      ]);
-      const submissions = md || [];
+      ]),
+      // ── Roadmap ────────────────────────────────────────────────
+      Promise.all([
+        supabase.from('roadmap_phases').select('id, title, sort_order').order('sort_order'),
+        supabase.from('roadmap_weeks').select('id, phase_id, title, sort_order').order('sort_order'),
+        supabase.from('roadmap_tasks').select('id, week_id, title, link, sort_order').order('sort_order'),
+        supabase.from('roadmap_completions').select('task_id').eq('user_id', userId),
+      ]),
+      // ── Diagnosis status ───────────────────────────────────────
+      supabase.from('diagnosis_results').select('status').eq('user_id', userId).maybeSingle(),
+      // ── Diagnosis content ──────────────────────────────────────
+      supabase.from('diagnosis_content').select('data').eq('id', 'default').maybeSingle(),
+    ]);
+
+    // ── עדכון כל ה-state בבת אחת ──────────────────────────────────
+    let submissions = [];
+    if (userResults.status === 'fulfilled') {
+      const [{ data: md }, { data: wd }, { data: dd }] = userResults.value;
+      submissions = md || [];
       setMonthlyData(submissions);
       setWins(wd || []);
       setDeals(dd || []);
 
-      // Fetch admin rank override
+      // Fetch admin rank override (fire-and-forget, לא חלק מה-batch)
       supabase.from('student_profiles').select('admin_rank').eq('user_id', userId).maybeSingle()
         .then(({ data }) => { if (data?.admin_rank) setAdminRankOverride(data.admin_rank); })
         .catch(() => {});
@@ -1052,32 +1071,21 @@ export default function Dashboard() {
             .then(() => { setMonthlyData(prev => prev.map(m => m.id === latestSub.id ? { ...m, current_rank: bestRank.label } : m)); });
         }
       }
-    } catch (e) { console.error('[fetchAll/user]', e); }
+    } else {
+      console.error('[fetchAll/user]', userResults.reason);
+    }
 
-    // ── Roadmap (separate so user-data errors can't block it) ────
-    try {
-      const [
-        { data: pData },
-        { data: wkData },
-        { data: tData },
-        { data: cData },
-      ] = await Promise.all([
-        supabase.from('roadmap_phases').select('id, title, sort_order').order('sort_order'),
-        supabase.from('roadmap_weeks').select('id, phase_id, title, sort_order').order('sort_order'),
-        supabase.from('roadmap_tasks').select('id, week_id, title, link, sort_order').order('sort_order'),
-        supabase.from('roadmap_completions').select('task_id').eq('user_id', userId),
-      ]);
+    if (roadmapResults.status === 'fulfilled') {
+      const [{ data: pData }, { data: wkData }, { data: tData }, { data: cData }] = roadmapResults.value;
       const completedIds = new Set((cData || []).map(c => c.task_id));
       const phases = (pData  || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
       const weeks  = (wkData || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
       const tasks  = (tData  || []).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
-
       let found = null;
       outer: for (const phase of phases) {
         const phaseWeeks = weeks.filter(w => w.phase_id === phase.id);
         for (const week of phaseWeeks) {
-          const weekTasks = tasks.filter(t => t.week_id === week.id);
-          for (const task of weekTasks) {
+          for (const task of tasks.filter(t => t.week_id === week.id)) {
             if (!completedIds.has(task.id)) {
               found = { ...task, weekTitle: week.title, phaseTitle: phase.title };
               break outer;
@@ -1087,19 +1095,15 @@ export default function Dashboard() {
       }
       setNextTask(found);
       setRoadmapAllData({ phases, weeks, tasks, completedIds });
-    } catch (e) {
-      console.error('[fetchAll/roadmap]', e);
+    } else {
+      console.error('[fetchAll/roadmap]', roadmapResults.reason);
       setRoadmapAllData({ phases: [], weeks: [], tasks: [], completedIds: new Set() });
     }
 
-    // Fetch diagnosis status
-    const { data: dxData } = await supabase
-      .from('diagnosis_results').select('status').eq('user_id', userId).maybeSingle();
+    const dxData = dxResult.status === 'fulfilled' ? dxResult.value?.data : null;
     setDiagnosisStatus(dxData?.status || null);
 
-    // Fetch diagnosis content (same source as Diagnosis page)
-    const { data: dcData } = await supabase
-      .from('diagnosis_content').select('data').eq('id', 'default').maybeSingle();
+    const dcData = dcResult.status === 'fulfilled' ? dcResult.value?.data : null;
     if (dcData?.data?.stages) setDiagnosisContent(dcData.data.stages);
   }
 
