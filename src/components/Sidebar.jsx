@@ -28,6 +28,8 @@ import {
   ClipboardCheck,
   TrafficCone,
   Newspaper,
+  BookOpen,
+  ChevronDown,
 } from 'lucide-react';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
@@ -44,7 +46,7 @@ const NAV_ITEMS = [
 const ENGINE_ITEMS = [
   { to: '/roadmap',         label: 'מפת דרכים',    icon: MapIcon },
   { to: '/diagnosis',       label: 'אבחון עסקי',   icon: Target },
-  { to: '/content-library', label: 'ספריית תכנים', icon: Library },
+  { to: '/content-library', label: 'ספריית תכנים', icon: Library, soon: true },
 ];
 
 const SELF_AUDIT_ITEMS = {
@@ -52,28 +54,49 @@ const SELF_AUDIT_ITEMS = {
   label:    'כלי אבחון עצמי',
   icon:     ScanSearch,
   children: [
-    { to: '/self-audit/quarterly',       label: 'כרטיסיית אבחון רבעוני',   icon: ClipboardList },
-    { to: '/self-audit/expertise-engine', label: 'אבחון מנוע המומחיות',      icon: Zap },
+    { to: '/self-audit/quarterly',        label: 'אבחון רבעוני',       icon: ClipboardList },
+    { to: '/self-audit/expertise-engine', label: 'מנוע המומחיות',       icon: Zap },
   ],
 };
 
 const TOOLS_ITEMS = [
-  { to: '/nave-ai',         label: 'NaveAI',          icon: Sparkles, beta: true },
-  { to: '/tasks',           label: 'מארגן משימות',   icon: ListTodo, soon: true },
-  { to: '/agents',          label: 'AI ScaleKit',    icon: Bot },
-  { to: '/calculator',      label: 'מחשבון תמחור',   icon: Calculator },
-  { to: '/transcriptions',  label: 'תמלול',           icon: Mic2 },
+  { to: '/nave-ai',        label: 'NaveAI',         icon: Sparkles, beta: true },
+  { to: '/tasks',          label: 'מארגן משימות',  icon: ListTodo, soon: true },
+  { to: '/agents',         label: 'AI ScaleKit',   icon: Bot },
+  { to: '/skills',         label: 'סקילים',         icon: BookOpen },
+  { to: '/calculator',     label: 'מחשבון תמחור',  icon: Calculator },
+  { to: '/transcriptions', label: 'תמלול',          icon: Mic2 },
 ];
 
 const ADMIN_ITEMS = [
-  { to: '/admin/members',        label: 'תלמידים',         icon: ShieldCheck },
-  { to: '/admin/checkins',       label: "Check-In's",      icon: ClipboardCheck },
-  { to: '/admin/events',         label: 'אירועי משתמשים',  icon: Activity },
-  { to: '/admin/sales-pipeline',  label: 'צינור מכירות',    icon: Kanban },
-  { to: '/admin/traffic-lights', label: 'רמזור תנועה',     icon: TrafficCone },
-  { to: '/admin/news',           label: 'חדשות ועדכונים',  icon: Newspaper },
+  { to: '/admin/members',         label: 'תלמידים',        icon: ShieldCheck },
+  { to: '/admin/checkins',        label: "Check-In's",     icon: ClipboardCheck },
+  { to: '/admin/events',          label: 'אירועי משתמשים', icon: Activity },
+  { to: '/admin/sales-pipeline',  label: 'צינור מכירות',   icon: Kanban },
+  { to: '/admin/traffic-lights',  label: 'רמזור תנועה',    icon: TrafficCone },
+  { to: '/admin/news',            label: 'חדשות ועדכונים', icon: Newspaper },
 ];
 
+/* ─── shared style values ─── */
+const S = {
+  item:   'flex items-center gap-2 rounded-lg px-2.5 text-[13.5px] font-medium transition-colors w-full text-right overflow-hidden leading-none',
+  icon:   'flex-none shrink-0',
+  label:  'flex-1 min-w-0 truncate',
+  active: { background: 'rgba(255,255,255,0.09)', color: 'white' },
+  hover:  'hover:bg-white/[0.055]',
+  muted:  { color: 'rgba(255,255,255,0.55)' },
+};
+
+function SectionLabel({ children, collapsed }) {
+  if (collapsed) return <div className="mx-2 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />;
+  return (
+    <div className="px-2.5 pb-1" style={{ paddingTop: 14 }}>
+      <span className="text-[10px] font-semibold tracking-wider uppercase" style={{ color: 'rgba(255,255,255,0.28)' }}>
+        {children}
+      </span>
+    </div>
+  );
+}
 
 function NavItemExpandable({ item, collapsed, onCloseMobile }) {
   const location  = useLocation();
@@ -81,47 +104,38 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
   const [open, setOpen] = useState(anyActive);
   const Icon = item.icon;
 
-  // Auto-open when navigating to a child route from outside
   useEffect(() => { if (anyActive) setOpen(true); }, [anyActive]);
 
   return (
     <li>
-      {/* Parent row — toggles dropdown, does not navigate */}
       <button
         onClick={() => setOpen(o => !o)}
-        className={[
-          'w-full flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors hover:bg-white/10',
-          collapsed ? 'md:justify-center md:px-2' : '',
-        ].join(' ')}
-        style={{ color: anyActive ? 'white' : 'rgba(255,255,255,0.75)' }}
+        className={[S.item, S.hover].join(' ')}
+        style={{ height: 34, fontSize: '13.5px', ...(anyActive ? S.active : S.muted) }}
       >
-        <Icon size={18} className="flex-none" />
+        <Icon size={15} className={S.icon} />
         {!collapsed && (
           <>
-            <span className="flex-1 text-right">{item.label}</span>
-            <svg
-              width="12" height="12" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-              style={{ flexShrink: 0, transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <span className={S.label}>{item.label}</span>
+            <ChevronDown
+              size={12}
+              className="flex-none transition-transform duration-200"
+              style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', color: 'rgba(255,255,255,0.3)', marginLeft: 2 }}
+            />
           </>
         )}
       </button>
 
-      {/* Sub-items */}
       {open && !collapsed && item.children && (
-        <ul className="mt-0.5 mb-1 space-y-0.5" style={{ paddingRight: '0.75rem', borderRight: '2px solid rgba(255,255,255,0.07)', marginRight: '1rem' }}>
+        <ul className="mt-0.5 space-y-0.5"
+          style={{ paddingRight: 10, marginRight: 8, borderRight: '1px solid rgba(255,255,255,0.09)' }}>
           {item.children.map(child => (
             <li key={child.to}>
-              {(child.disabled || (child.soon && !import.meta.env.DEV)) ? (
-                <span
-                  className="flex items-center justify-between rounded-md px-3 py-1.5 text-[13.5px] cursor-not-allowed select-none"
-                  style={{ color: 'rgba(255,255,255,0.25)' }}
-                >
-                  {child.label}
-                  {child.soon && <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.04em' }}>בקרוב</span>}
+              {child.disabled || (child.soon && !import.meta.env.DEV) ? (
+                <span className="flex items-center justify-between rounded-lg px-2.5 py-[6px] text-[12px] cursor-not-allowed select-none"
+                  style={{ color: 'rgba(255,255,255,0.22)' }}>
+                  <span className="truncate">{child.label}</span>
+                  {child.soon && <Badge>בקרוב</Badge>}
                 </span>
               ) : (
                 <NavLink
@@ -129,14 +143,13 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
                   end={child.end}
                   onClick={onCloseMobile}
                   className={({ isActive }) =>
-                    ['block rounded-md px-3 py-1.5 text-[13.5px] transition-colors', isActive ? 'font-semibold' : 'hover:bg-white/10'].join(' ')
+                    ['flex items-center justify-between rounded-lg px-2.5 py-[6px] text-[12px] transition-colors', isActive ? '' : S.hover].join(' ')
                   }
-                  style={({ isActive }) => ({
-                    color: isActive ? '#F5C118' : 'rgba(255,255,255,0.55)',
-                    background: isActive ? 'rgba(245,193,24,0.08)' : 'transparent',
-                  })}
+                  style={({ isActive }) => isActive
+                    ? { color: 'rgb(var(--accent))', background: 'rgba(var(--accent),0.1)', fontWeight: 600 }
+                    : { color: 'rgba(255,255,255,0.5)' }}
                 >
-                  {child.label}
+                  {({ isActive }) => <span className="truncate">{child.label}</span>}
                 </NavLink>
               )}
             </li>
@@ -147,19 +160,31 @@ function NavItemExpandable({ item, collapsed, onCloseMobile }) {
   );
 }
 
+function Badge({ children, accent }) {
+  return (
+    <span style={{
+      fontSize: '10px', fontWeight: 700, lineHeight: 1,
+      padding: '2px 6px', borderRadius: 5,
+      background: accent ? 'rgba(99,102,241,0.22)' : 'rgba(255,255,255,0.08)',
+      color:      accent ? 'rgb(165,168,255)'       : 'rgba(255,255,255,0.3)',
+      letterSpacing: '0.03em', flexShrink: 0,
+    }}>
+      {children}
+    </span>
+  );
+}
+
 function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon, beta }) {
   if (soon && !import.meta.env.DEV) {
     return (
       <li>
-        <div
-          className={['flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium cursor-not-allowed select-none', collapsed ? 'md:justify-center md:px-2' : ''].join(' ')}
-          style={{ color: 'rgba(255,255,255,0.28)' }}
-        >
-          <Icon size={18} className="flex-none" />
+        <div className={[S.item, collapsed ? 'md:justify-center' : ''].join(' ')}
+          style={{ height: 34, fontSize: '13.5px', color: 'rgba(255,255,255,0.22)', cursor: 'not-allowed', userSelect: 'none' }}>
+          <Icon size={15} className={S.icon} />
           {!collapsed && (
             <>
-              <span className="flex-1 text-right">{label}</span>
-              <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.28)', letterSpacing: '0.04em' }}>בקרוב</span>
+              <span className={S.label}>{label}</span>
+              <Badge>בקרוב</Badge>
             </>
           )}
         </div>
@@ -173,24 +198,22 @@ function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon, b
         end={end}
         onClick={onCloseMobile}
         className={({ isActive }) =>
-          [
-            'flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] font-medium transition-colors',
-            isActive ? 'bg-accent text-accent-foreground' : 'hover:bg-white/10',
-            collapsed ? 'md:justify-center md:px-2' : '',
-          ].join(' ')
+          [S.item, isActive ? '' : S.hover, collapsed ? 'md:justify-center' : ''].join(' ')
         }
-        style={({ isActive }) => isActive ? {} : { color: 'rgba(255,255,255,0.75)' }}
+        style={({ isActive }) => ({ height: 34, ...(isActive ? S.active : S.muted) })}
       >
-        <Icon size={18} className="flex-none" />
-        {!collapsed && (
+        {({ isActive }) => (
           <>
-            <span className="flex-1">{label}</span>
-            {beta && (
-              <span style={{ fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px', borderRadius: 5, background: 'rgba(99,102,241,0.25)', color: 'rgb(165,168,255)', letterSpacing: '0.05em' }}>בטא</span>
+            <Icon size={15} className={S.icon} style={isActive ? {} : { opacity: 0.7 }} />
+            {!collapsed && (
+              <>
+                <span className={S.label}>{label}</span>
+                {beta && <Badge accent>בטא</Badge>}
+              </>
             )}
+            {collapsed && <span className="md:hidden">{label}</span>}
           </>
         )}
-        {collapsed && <span className="md:hidden">{label}</span>}
       </NavLink>
     </li>
   );
@@ -199,15 +222,11 @@ function NavItem({ to, label, icon: Icon, end, collapsed, onCloseMobile, soon, b
 export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }) {
   const { user } = useUser();
   const isAdmin = user?.id === ADMIN_ID;
+
   return (
     <>
-      {/* Mobile backdrop */}
       {mobileOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
-          onClick={onCloseMobile}
-          aria-hidden="true"
-        />
+        <div className="fixed inset-0 z-30 bg-slate-900/40 md:hidden" onClick={onCloseMobile} aria-hidden="true" />
       )}
 
       <aside
@@ -215,113 +234,77 @@ export default function Sidebar({ collapsed, onToggleCollapse, mobileOpen, onClo
           'fixed inset-y-0 right-0 z-40 flex flex-col transition-all duration-200',
           mobileOpen ? 'translate-x-0' : 'translate-x-full',
           'md:static md:translate-x-0',
-          collapsed ? 'md:w-16' : 'md:w-64',
-          'w-64',
+          collapsed ? 'md:w-[52px]' : 'md:w-[250px]',
+          'w-[250px]',
         ].join(' ')}
-        style={{ background: 'rgb(var(--bg-chrome))', borderRight: '1px solid rgba(255,255,255,0.08)' }}
+        style={{ background: 'rgb(var(--bg-chrome))', borderLeft: '1px solid rgba(255,255,255,0.07)' }}
         aria-label="Primary"
       >
-        <div className="flex h-16 items-center justify-between px-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        {/* Logo row */}
+        <div className="flex h-[52px] items-center justify-between px-3 flex-none"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
           {!collapsed && (
-            <div className="flex items-center gap-2 overflow-hidden">
-              <img src="/logo.png" alt="Creative Expert 3.0" className="h-7 w-auto flex-none object-contain" />
-            </div>
+            <img src="/logo.png" alt="Creative Expert 3.0" className="h-6 w-auto flex-none object-contain" />
           )}
-          {/* Mobile close */}
-          <button
-            type="button"
-            onClick={onCloseMobile}
-            className="rounded-md p-1 md:hidden"
-            style={{ color: 'rgba(255,255,255,0.6)' }}
-            aria-label="Close navigation"
-          >
-            <X size={18} />
+          <button type="button" onClick={onCloseMobile} className="rounded-lg p-1 md:hidden"
+            style={{ color: 'rgba(255,255,255,0.5)' }} aria-label="Close navigation">
+            <X size={16} />
           </button>
-          {/* Desktop collapse toggle */}
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            className="hidden md:inline-flex rounded-md p-1.5 hover:bg-white/10 transition-colors"
-            style={{ color: 'rgba(255,255,255,0.5)' }}
-            aria-label="Toggle sidebar"
-          >
-            {collapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+          <button type="button" onClick={onToggleCollapse}
+            className="hidden md:inline-flex rounded-lg p-1 transition-colors hover:bg-white/[0.07]"
+            style={{ color: 'rgba(255,255,255,0.35)' }} aria-label="Toggle sidebar">
+            {collapsed ? <PanelLeftOpen size={14} /> : <PanelLeftClose size={14} />}
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 space-y-4">
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-0.5">
 
           {/* ניווט ראשי */}
-          <ul className="space-y-1">
-            {NAV_ITEMS.map((item) => (
+          <ul className="space-y-0.5">
+            {NAV_ITEMS.map(item => (
               <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
             ))}
           </ul>
 
           {/* המנוע */}
-          <div>
-            <div className="mb-2 px-3">
-              {collapsed ? (
-                <div className="h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              ) : (
-                <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                  המנוע
-                </span>
-              )}
-            </div>
-            <ul className="space-y-1">
-              <NavItemExpandable item={SELF_AUDIT_ITEMS} collapsed={collapsed} onCloseMobile={onCloseMobile} />
-              {ENGINE_ITEMS.map((item) => {
-                if (item.to === '/diagnosis' && import.meta.env.PROD) return null;
-                return <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />;
-              })}
-            </ul>
-          </div>
+          <SectionLabel collapsed={collapsed}>המנוע</SectionLabel>
+          <ul className="space-y-0.5">
+            <NavItemExpandable item={SELF_AUDIT_ITEMS} collapsed={collapsed} onCloseMobile={onCloseMobile} />
+            {ENGINE_ITEMS.map(item => {
+              if (item.to === '/diagnosis' && import.meta.env.PROD) return null;
+              return <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />;
+            })}
+          </ul>
 
           {/* כלים */}
-          <div>
-            <div className="mb-2 px-3">
-              {collapsed ? (
-                <div className="h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-              ) : (
-                <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                  כלים
-                </span>
-              )}
-            </div>
-            <ul className="space-y-1">
-              {TOOLS_ITEMS.map((item) => (
-                <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
-              ))}
-            </ul>
-          </div>
+          <SectionLabel collapsed={collapsed}>כלים</SectionLabel>
+          <ul className="space-y-0.5">
+            {TOOLS_ITEMS.map(item => (
+              <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
+            ))}
+          </ul>
 
-          {/* ניהול — רק למנהל */}
+          {/* ניהול */}
           {isAdmin && (
-            <div>
-              <div className="mb-2 px-3">
-                {collapsed ? (
-                  <div className="h-px" style={{ background: 'rgba(255,255,255,0.1)' }} />
-                ) : (
-                  <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                    ניהול
-                  </span>
-                )}
-              </div>
-              <ul className="space-y-1">
-                {ADMIN_ITEMS.map((item) => (
+            <>
+              <SectionLabel collapsed={collapsed}>ניהול</SectionLabel>
+              <ul className="space-y-0.5">
+                {ADMIN_ITEMS.map(item =>
                   item.children
                     ? <NavItemExpandable key={item.to} item={item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
                     : <NavItem key={item.to} {...item} collapsed={collapsed} onCloseMobile={onCloseMobile} />
-                ))}
+                )}
               </ul>
-            </div>
+            </>
           )}
-
         </nav>
 
-        <div className="p-3 text-xs" style={{ borderTop: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.35)' }}>
-          {!collapsed && <span>v0.1</span>}
+        {/* Footer */}
+        <div className="px-3 py-2 flex-none" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          {!collapsed && (
+            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.2)' }}>v0.1</span>
+          )}
         </div>
       </aside>
     </>

@@ -495,89 +495,81 @@ export default function Roadmap() {
 
   // ── Render ────────────────────────────────────────────────
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-4">
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl sm:text-4xl font-bold text-white">מפת דרכים</h1>
+        <h1 className="text-xl font-bold text-white">מפת דרכים</h1>
         {isAdmin && (
           <button
             onClick={() => setEditMode(m => !m)}
-            className="flex items-center gap-2 rounded-lg border px-4 py-2 text-base font-medium transition hover:bg-white/10"
+            className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-medium transition hover:bg-white/10"
             style={editMode
               ? { borderColor: 'rgba(245,193,24,0.6)', color: '#F5C118' }
               : { borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.7)' }
             }
           >
-            <Settings2 size={15} />
+            <Settings2 size={13} />
             {editMode ? 'סיום עריכה' : 'עריכה'}
           </button>
         )}
       </div>
 
-      {/* Overall progress */}
+      {/* Overall progress — compact horizontal card */}
       {totalTasks > 0 && (
         <div
-          className="rounded-2xl px-5 py-5 sm:px-8 sm:py-6"
+          className="rounded-lg px-5 py-3 flex items-center gap-6"
           style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
         >
-          <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-
-            {/* Left: numbers */}
+          {/* Count + pct */}
+          <div className="flex items-center gap-3 flex-none">
+            <span className="text-[36px] font-bold text-white leading-none tabular-nums">{completedCount}</span>
             <div>
-              <div className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                התקדמות כוללת
+              <div className="text-[13px] font-medium" style={{ color: 'rgba(255,255,255,0.35)' }}>/ {totalTasks} משימות</div>
+              <div className="text-[18px] font-bold leading-tight" style={{ color: '#F5C118' }}>{progressPct}%</div>
+            </div>
+          </div>
+
+          {/* Bar */}
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              התקדמות כללית
+            </div>
+            <div className="h-1.5 w-full rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
+              <div className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${progressPct}%`, background: '#F5C118' }} />
+            </div>
+          </div>
+
+          {/* Next task */}
+          {currentMilestone && (
+            <div className="flex-none max-w-[280px] hidden sm:block">
+              <div className="text-[10px] uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                המשימה הבאה
               </div>
-              <div className="flex items-baseline gap-3">
-                <span className="text-4xl sm:text-6xl font-bold text-white">{completedCount}</span>
-                <span className="text-2xl" style={{ color: 'rgba(255,255,255,0.25)' }}>/ {totalTasks}</span>
-                <span className="text-base mr-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{progressPct}% הושלם</span>
-              </div>
-              <div className="mt-4 h-1.5 w-full max-w-xs rounded-full" style={{ background: 'rgba(255,255,255,0.08)' }}>
-                <div
-                  className="h-full rounded-full transition-all duration-500"
-                  style={{ width: `${progressPct}%`, background: '#F5C118' }}
-                />
+              <div className="flex items-center gap-2 rounded-lg px-3 py-1.5"
+                style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.07)' }}>
+                <div className="h-1.5 w-1.5 rounded-full flex-none" style={{ background: '#F5C118' }} />
+                <p className="text-[13px] font-medium text-white truncate">{currentMilestone.title}</p>
+                {milestonePhase && (
+                  <p className="text-[11px] flex-none mr-1" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    ח׳{milestonePhase.month_number}
+                  </p>
+                )}
               </div>
             </div>
-
-            {/* Right: current milestone */}
-            {currentMilestone && (
-              <div className="sm:max-w-xs w-full">
-                <div className="text-[11px] font-semibold uppercase tracking-widest mb-2" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                  אבן דרך נוכחית
-                </div>
-                <div
-                  className="rounded-xl p-3 flex items-center gap-3"
-                  style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.07)' }}
-                >
-                  <div className="h-2 w-2 rounded-full flex-none" style={{ background: '#F5C118' }} />
-                  <div className="min-w-0">
-                    <p className="text-base font-semibold text-white truncate">{currentMilestone.title}</p>
-                    {milestonePhase && (
-                      <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.35)' }}>
-                        חודש {milestonePhase.month_number} · {milestonePhase.title}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-          </div>
+          )}
         </div>
       )}
 
       {/* Empty state */}
       {phases.length === 0 && !editMode && (
-        <div
-          className="rounded-2xl p-10 sm:p-16 flex flex-col items-center justify-center text-center"
-          style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <MapIcon size={44} style={{ color: 'rgba(255,255,255,0.12)', marginBottom: 16 }} />
-          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '1rem' }}>מפת הדרכים טרם הוגדרה</p>
+        <div className="rounded-xl p-10 flex flex-col items-center justify-center text-center"
+          style={{ background: 'rgb(var(--bg-surface))', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <MapIcon size={36} style={{ color: 'rgba(255,255,255,0.12)', marginBottom: 12 }} />
+          <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.875rem' }}>מפת הדרכים טרם הוגדרה</p>
           {isAdmin && (
-            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', marginTop: 6 }}>
+            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '0.75rem', marginTop: 4 }}>
               לחץ על "עריכה" כדי להתחיל לבנות
             </p>
           )}
@@ -585,76 +577,81 @@ export default function Roadmap() {
       )}
 
       {/* Phases */}
-      <div className="space-y-4">
+      <div className="space-y-1">
         {phases.map(phase => {
           const phaseTasks     = phase.weeks.flatMap(w => w.tasks);
           const phaseCompleted = phaseTasks.filter(t => completions.has(t.id)).length;
           const phaseTotal     = phaseTasks.length;
           const phasePct       = phaseTotal > 0 ? Math.round((phaseCompleted / phaseTotal) * 100) : 0;
           const isOpen         = expanded.has(phase.id);
-          const circleR        = 17;
+          const circleR        = 18;
           const circumference  = 2 * Math.PI * circleR;
 
           return (
             <div
               key={phase.id}
-              className="rounded-2xl overflow-hidden"
+              className="rounded-lg overflow-hidden"
               style={{
                 background: 'rgb(var(--bg-surface))',
-                border: `1px solid ${dragOverId === `phase-${phase.id}` && dragging?.type === 'week' ? 'rgba(245,193,24,0.5)' : 'rgba(255,255,255,0.08)'}`,
+                border: `1px solid ${dragOverId === `phase-${phase.id}` && dragging?.type === 'week' ? 'rgba(245,193,24,0.5)' : 'rgba(255,255,255,0.07)'}`,
                 transition: 'border-color 0.15s',
               }}
               onDragOver={editMode ? e => dndOver(e, `phase-${phase.id}`) : undefined}
               onDragLeave={editMode ? () => setDragOverId(null) : undefined}
               onDrop={editMode ? e => dropWeekOnPhase(e, phase.id) : undefined}
             >
-              {/* Phase header — Scale20 style */}
+              {/* Phase header */}
               <div
-                className="flex items-center justify-between px-6 py-5 cursor-pointer hover:bg-white/[0.03] transition select-none"
+                className="flex items-center gap-4 px-5 cursor-pointer hover:bg-white/[0.03] transition select-none"
+                style={{ minHeight: 56 }}
                 onClick={() => togglePhase(phase.id)}
               >
-                {/* Left: MONTH label + big number + title + progress text */}
-                <div className="flex items-center gap-5 flex-1 min-w-0">
-                  <div className="flex-none" onClick={e => editMode && e.stopPropagation()}>
-                    <div className="text-[11px] font-bold uppercase tracking-[0.18em] mb-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>MONTH</div>
-                    <InlineEdit
-                      value={String(phase.month_number)}
-                      onSave={v => updatePhaseMonth(phase.id, v)}
-                      active={editMode}
-                      className="text-5xl font-bold leading-none"
-                      style={{ color: 'white' }}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0" onClick={e => editMode && e.stopPropagation()}>
-                    <InlineEdit
-                      value={phase.title}
-                      onSave={t => updatePhaseTitle(phase.id, t)}
-                      active={editMode}
-                      className="text-lg font-bold"
-                      style={{ color: 'rgba(255,255,255,0.92)' }}
-                    />
-                    <div className="text-base mt-1" style={{ color: 'rgba(255,255,255,0.38)' }}>
-                      {phaseCompleted} of {phaseTotal} tasks complete: {phasePct}%
-                    </div>
+                {/* Month number + label */}
+                <div className="flex-none text-right w-[46px]" onClick={e => editMode && e.stopPropagation()}>
+                  <div className="text-[9px] font-bold uppercase tracking-[0.14em] leading-none mb-0.5"
+                    style={{ color: 'rgba(255,255,255,0.22)' }}>MONTH</div>
+                  <InlineEdit
+                    value={String(phase.month_number).padStart(2, '0')}
+                    onSave={v => updatePhaseMonth(phase.id, v)}
+                    active={editMode}
+                    className="text-[28px] font-bold leading-none"
+                    style={{ color: 'white' }}
+                  />
+                </div>
+
+                {/* Divider */}
+                <div className="flex-none w-px self-stretch my-3" style={{ background: 'rgba(255,255,255,0.08)' }} />
+
+                {/* Title + meta */}
+                <div className="flex-1 min-w-0 py-3" onClick={e => editMode && e.stopPropagation()}>
+                  <InlineEdit
+                    value={phase.title}
+                    onSave={t => updatePhaseTitle(phase.id, t)}
+                    active={editMode}
+                    className="text-[17px] font-semibold leading-snug"
+                    style={{ color: 'rgba(255,255,255,0.95)' }}
+                  />
+                  <div className="text-[12px] mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    {phaseCompleted} מתוך {phaseTotal} משימות · {phasePct}%
                   </div>
                 </div>
 
-                {/* Right: circular ring + delete + chevron */}
-                <div className="flex items-center gap-3 flex-none">
-                  <svg width="52" height="52">
-                    <circle cx="26" cy="26" r={circleR} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3.5" />
+                {/* Circle + delete + chevron */}
+                <div className="flex items-center gap-2 flex-none">
+                  <svg width="50" height="50">
+                    <circle cx="25" cy="25" r={circleR} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="3" />
                     <circle
-                      cx="26" cy="26" r={circleR} fill="none"
+                      cx="25" cy="25" r={circleR} fill="none"
                       stroke={phasePct === 100 ? '#22c55e' : '#F5C118'}
-                      strokeWidth="3.5"
+                      strokeWidth="3"
                       strokeDasharray={circumference}
                       strokeDashoffset={circumference * (1 - phasePct / 100)}
                       strokeLinecap="round"
-                      transform="rotate(-90 26 26)"
+                      transform="rotate(-90 25 25)"
                       style={{ transition: 'stroke-dashoffset 0.5s' }}
                     />
-                    <text x="26" y="30" textAnchor="middle" fontSize="10"
-                      fill={phasePct === 100 ? '#22c55e' : '#F5C118'} fontWeight="bold">
+                    <text x="25" y="30" textAnchor="middle" fontSize="12"
+                      fill={phasePct === 100 ? '#22c55e' : '#F5C118'} fontWeight="700">
                       {phasePct}%
                     </text>
                   </svg>
@@ -662,286 +659,280 @@ export default function Roadmap() {
                   {editMode && (
                     <button
                       onClick={e => { e.stopPropagation(); deletePhase(phase.id); }}
-                      className="rounded-md p-1.5 transition hover:bg-red-500/20"
+                      className="rounded-md p-1 transition hover:bg-red-500/20"
                       style={{ color: 'rgba(255,255,255,0.3)' }}
                     >
-                      <Trash2 size={15} />
+                      <Trash2 size={13} />
                     </button>
                   )}
 
-                  <ChevronDown size={18} className="transition-transform duration-200"
-                    style={{ color: 'rgba(255,255,255,0.4)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                  <ChevronDown size={15} className="transition-transform duration-200"
+                    style={{ color: 'rgba(255,255,255,0.35)', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
               </div>
 
-              {/* Phase content */}
-              {isOpen && (
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              {/* Phase content — animated */}
+              <div style={{
+                display: 'grid',
+                gridTemplateRows: isOpen ? '1fr' : '0fr',
+                transition: 'grid-template-rows 0.25s ease',
+              }}>
+              <div style={{ overflow: 'hidden', borderTop: isOpen ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                   {phase.weeks.map(week => {
                     const weekDone   = week.tasks.filter(t => completions.has(t.id)).length;
                     const weekTotal  = week.tasks.length;
                     const weekPct    = weekTotal > 0 ? Math.round(weekDone / weekTotal * 100) : 0;
                     const isWeekOpen = expandedWeeks.has(week.id);
                     const nextTaskId = week.tasks.find(t => !completions.has(t.id))?.id;
-                    // week is "active" if it has tasks and is not fully completed
-                    const weekActive = weekTotal > 0 && weekPct < 100;
 
                     return (
-                    <div key={week.id}
-                      draggable={editMode}
-                      onDragStart={editMode ? e => dndStart(e, { type: 'week', id: week.id, phaseId: phase.id }) : undefined}
-                      onDragEnd={editMode ? dndEnd : undefined}
-                      onDragOver={editMode ? e => dndOver(e, `week-${week.id}`) : undefined}
-                      onDragLeave={editMode ? () => setDragOverId(null) : undefined}
-                      onDrop={editMode ? e => dropWeekOnWeek(e, week.id, phase.id) : undefined}
-                      style={{
-                        borderBottom: '1px solid rgba(255,255,255,0.04)',
-                        borderRight: weekActive ? '3px solid rgba(245,193,24,0.55)' : '3px solid transparent',
-                        opacity: dragging?.type === 'week' && dragging?.id === week.id ? 0.4 : 1,
-                        outline: dragOverId === `week-${week.id}` && dragging?.type === 'week' && dragging?.id !== week.id
-                          ? '2px solid rgba(245,193,24,0.5)' : 'none',
-                        transition: 'opacity 0.15s, border-right-color 0.2s',
-                      }}>
+                      <div key={week.id}
+                        draggable={editMode}
+                        onDragStart={editMode ? e => dndStart(e, { type: 'week', id: week.id, phaseId: phase.id }) : undefined}
+                        onDragEnd={editMode ? dndEnd : undefined}
+                        onDragOver={editMode ? e => dndOver(e, `week-${week.id}`) : undefined}
+                        onDragLeave={editMode ? () => setDragOverId(null) : undefined}
+                        onDrop={editMode ? e => dropWeekOnWeek(e, week.id, phase.id) : undefined}
+                        style={{
+                          borderBottom: '1px solid rgba(255,255,255,0.04)',
+                          opacity: dragging?.type === 'week' && dragging?.id === week.id ? 0.4 : 1,
+                          outline: dragOverId === `week-${week.id}` && dragging?.type === 'week' && dragging?.id !== week.id
+                            ? '2px solid rgba(245,193,24,0.4)' : 'none',
+                          transition: 'opacity 0.15s',
+                        }}>
 
-                      {/* Week header — Scale20 style */}
-                      <div
-                        className="flex items-center justify-between px-6 py-3.5 cursor-pointer hover:bg-white/[0.03] transition select-none"
-                        style={{ background: weekActive ? 'rgba(245,193,24,0.03)' : 'transparent' }}
-                        onClick={() => toggleWeek(week.id)}
-                        onDrop={editMode ? e => dropTaskOnWeek(e, week.id) : undefined}
-                        onDragOver={editMode && dragging?.type === 'task' ? e => dndOver(e, `weekhdr-${week.id}`) : undefined}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          {editMode && (
-                            <GripVertical size={14} className="flex-none cursor-grab"
-                              style={{ color: 'rgba(255,255,255,0.2)' }} />
-                          )}
-                          {!editMode && (
-                            <ChevronDown size={15} className="flex-none transition-transform duration-200"
-                              style={{ color: 'rgba(255,255,255,0.35)', transform: isWeekOpen ? 'rotate(0deg)' : 'rotate(-90deg)' }} />
-                          )}
-                          <div className="flex items-center gap-2 flex-none" onClick={e => editMode && e.stopPropagation()}>
-                            <span className="text-[11px] font-bold uppercase tracking-[0.15em]"
-                              style={{ color: 'rgba(255,255,255,0.28)' }}>WEEK</span>
-                            <InlineEdit
-                              value={String(week.week_number)}
-                              onSave={v => updateWeekNumber(week.id, v)}
-                              active={editMode}
-                              className="text-[11px] font-bold"
-                              style={{ color: 'rgba(255,255,255,0.45)' }}
-                            />
+                        {/* Week header */}
+                        <div
+                          className="flex items-center justify-between px-5 cursor-pointer hover:bg-white/[0.04] transition select-none"
+                          style={{ minHeight: 42, background: 'rgba(255,255,255,0.03)' }}
+                          onClick={() => toggleWeek(week.id)}
+                          onDrop={editMode ? e => dropTaskOnWeek(e, week.id) : undefined}
+                          onDragOver={editMode && dragging?.type === 'task' ? e => dndOver(e, `weekhdr-${week.id}`) : undefined}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {editMode && (
+                              <GripVertical size={12} className="flex-none cursor-grab"
+                                style={{ color: 'rgba(255,255,255,0.2)' }} />
+                            )}
+                            {!editMode && (
+                              <ChevronRight size={13} className="flex-none transition-transform duration-200"
+                                style={{ color: 'rgba(255,255,255,0.35)', transform: isWeekOpen ? 'rotate(90deg)' : 'rotate(0deg)' }} />
+                            )}
+                            <div className="flex items-center gap-1 flex-none" onClick={e => editMode && e.stopPropagation()}>
+                              <span className="text-[11px] font-bold uppercase tracking-[0.08em]"
+                                style={{ color: 'rgba(255,255,255,0.35)' }}>WEEK</span>
+                              <InlineEdit
+                                value={String(week.week_number)}
+                                onSave={v => updateWeekNumber(week.id, v)}
+                                active={editMode}
+                                className="text-[11px] font-bold"
+                                style={{ color: 'rgba(255,255,255,0.5)' }}
+                              />
+                            </div>
+                            <div className="h-3 w-px flex-none" style={{ background: 'rgba(255,255,255,0.1)' }} />
+                            <div className="flex-1 min-w-0" onClick={e => editMode && e.stopPropagation()}>
+                              <InlineEdit
+                                value={week.title}
+                                onSave={t => updateWeekTitle(week.id, t)}
+                                active={editMode}
+                                className="text-[14px] font-semibold"
+                                style={{ color: 'rgba(255,255,255,0.85)' }}
+                              />
+                            </div>
                           </div>
-                          <div onClick={e => editMode && e.stopPropagation()}>
-                            <InlineEdit
-                              value={week.title}
-                              onSave={t => updateWeekTitle(week.id, t)}
-                              active={editMode}
-                              className="text-base font-bold"
-                              style={{ color: weekActive ? 'rgba(245,193,24,0.9)' : 'rgba(255,255,255,0.8)' }}
-                            />
+                          <div className="flex items-center gap-2 flex-none">
+                            <span className="text-[12px] tabular-nums"
+                              style={{ color: weekPct === 100 ? '#86efac' : 'rgba(255,255,255,0.4)' }}>
+                              {weekDone}/{weekTotal}
+                            </span>
+                            {editMode && (
+                              <>
+                                <button
+                                  onClick={e => { e.stopPropagation(); setTaskModal({ mode: 'add', weekId: week.id }); setTaskForm({ title: '', level_label: '', category_label: '', link: '' }); }}
+                                  className="rounded-md p-1 hover:bg-white/10 transition"
+                                  style={{ color: 'rgba(255,255,255,0.4)' }} title="הוסף משימה">
+                                  <Plus size={13} />
+                                </button>
+                                <button
+                                  onClick={e => { e.stopPropagation(); deleteWeek(phase.id, week.id); }}
+                                  className="rounded-md p-1 hover:bg-red-500/20 transition"
+                                  style={{ color: 'rgba(255,255,255,0.3)' }} title="מחק שבוע">
+                                  <Trash2 size={12} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 flex-none">
-                          {/* X/Y count */}
-                          <span className="text-base font-semibold tabular-nums"
-                            style={{ color: weekPct === 100 ? '#86efac' : 'rgba(255,255,255,0.35)' }}>
-                            {weekDone}/{weekTotal}
-                          </span>
-                          {editMode && (
-                            <>
-                              <button
-                                onClick={e => { e.stopPropagation(); setTaskModal({ mode: 'add', weekId: week.id }); setTaskForm({ title: '', level_label: '', category_label: '', link: '' }); }}
-                                className="rounded-md p-1 hover:bg-white/10 transition"
-                                style={{ color: 'rgba(255,255,255,0.4)' }} title="הוסף משימה">
-                                <Plus size={14} />
-                              </button>
-                              <button
-                                onClick={e => { e.stopPropagation(); deleteWeek(phase.id, week.id); }}
-                                className="rounded-md p-1 hover:bg-red-500/20 transition"
-                                style={{ color: 'rgba(255,255,255,0.3)' }} title="מחק שבוע">
-                                <Trash2 size={14} />
-                              </button>
-                            </>
-                          )}
+
+                        {/* Week progress bar — subtle divider only */}
+                        <div className="h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
+
+                        {/* Tasks — animated */}
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateRows: isWeekOpen ? '1fr' : '0fr',
+                          transition: 'grid-template-rows 0.22s ease',
+                        }}>
+                        <div style={{ overflow: 'hidden' }}>
+                        {week.tasks.map(task => {
+                          const done   = completions.has(task.id);
+                          const isDraggingThis = dragging?.type === 'task' && dragging?.id === task.id;
+                          const isDropTarget   = dragOverId === `task-${task.id}` && dragging?.type === 'task' && !isDraggingThis;
+                          return (
+                            <div
+                              key={task.id}
+                              draggable={editMode}
+                              onDragStart={editMode ? e => { e.stopPropagation(); dndStart(e, { type: 'task', id: task.id, weekId: week.id, phaseId: phase.id }); } : undefined}
+                              onDragEnd={editMode ? dndEnd : undefined}
+                              onDragOver={editMode ? e => dndOver(e, `task-${task.id}`) : undefined}
+                              onDragLeave={editMode ? () => setDragOverId(null) : undefined}
+                              onDrop={editMode ? e => dropTaskOnTask(e, task.id, week.id) : undefined}
+                              className="group hover:bg-white/[0.03] transition"
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: editMode
+                                  ? '16px 44px minmax(0,2fr) minmax(140px,1.4fr) minmax(130px,1.2fr) minmax(0,1fr) 52px'
+                                  : '44px minmax(0,2fr) minmax(140px,1.4fr) minmax(130px,1.2fr) minmax(0,1fr)',
+                                alignItems: 'center',
+                                columnGap: 12,
+                                padding: '0 20px',
+                                minHeight: 40,
+                                borderTop: isDropTarget ? '2px solid rgba(245,193,24,0.5)' : '1px solid rgba(255,255,255,0.04)',
+                                opacity: isDraggingThis ? 0.35 : 1,
+                                cursor: editMode ? 'grab' : 'default',
+                                direction: 'rtl',
+                              }}
+                            >
+                              {/* Col 0: Grip (edit only) */}
+                              {editMode && (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <GripVertical size={12} style={{ color: 'rgba(255,255,255,0.18)' }} />
+                                </div>
+                              )}
+
+                              {/* Col 1: Checkbox (44px) */}
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <button
+                                  onClick={() => toggleCompletion(task.id)}
+                                  className="h-5 w-5 rounded-full border-2 flex items-center justify-center transition flex-none"
+                                  style={{
+                                    borderColor: done ? '#22c55e' : 'rgba(255,255,255,0.22)',
+                                    background:  done ? '#22c55e' : 'transparent',
+                                  }}
+                                >
+                                  {done && <Check size={9} strokeWidth={3} color="#fff" />}
+                                </button>
+                              </div>
+
+                              {/* Col 2: Title (2fr) */}
+                              <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                                <span style={{
+                                  fontSize: '15px',
+                                  lineHeight: '1.3',
+                                  color: done ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.9)',
+                                  textDecoration: done ? 'line-through' : 'none',
+                                  display: 'block', overflow: 'hidden',
+                                  textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                }}>
+                                  {task.title}
+                                </span>
+                              </div>
+
+                              {/* Col 3: Category (1fr) */}
+                              <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                                {task.category_label ? (
+                                  <span style={{
+                                    fontSize: '13px', padding: '3px 9px', borderRadius: 6, fontWeight: 600,
+                                    whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden',
+                                    textOverflow: 'ellipsis', display: 'inline-block',
+                                    background: categoryStyle(task.category_label).bg,
+                                    color: categoryStyle(task.category_label).color,
+                                  }}>
+                                    {task.category_label}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              {/* Col 4: Level + Tag (1fr) */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                                {task.level_label ? (
+                                  <span style={{
+                                    fontSize: '13px', padding: '3px 9px', borderRadius: 6, fontWeight: 600,
+                                    whiteSpace: 'nowrap', display: 'inline-block',
+                                    background: levelStyle(task.level_label).bg,
+                                    color: levelStyle(task.level_label).color,
+                                  }}>
+                                    {task.level_label}
+                                  </span>
+                                ) : null}
+                                {task.tag ? (
+                                  <span style={{
+                                    fontSize: '13px', padding: '3px 8px', borderRadius: 6, fontWeight: 700,
+                                    fontFamily: 'monospace', display: 'inline-block',
+                                    background: 'rgba(245,193,24,0.12)', color: '#F5C118',
+                                    whiteSpace: 'nowrap',
+                                  }}>
+                                    {task.tag}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              {/* Col 5: Link (1.2fr) */}
+                              <div style={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+                                {task.link ? (
+                                  <a href={task.link} target="_blank" rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    className="flex items-center gap-1.5 hover:opacity-80 transition"
+                                    style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <ExternalLink size={12} style={{ flexShrink: 0 }} />
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>פתח קישור</span>
+                                  </a>
+                                ) : null}
+                              </div>
+
+                              {/* Edit/Delete (edit mode) */}
+                              {editMode && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}
+                                  className="opacity-0 group-hover:opacity-100 transition">
+                                  <button
+                                    onClick={() => { setTaskModal({ mode: 'edit', weekId: week.id, task }); setTaskForm({ title: task.title, level_label: task.level_label || '', category_label: task.category_label || '', tag: task.tag || '', link: task.link || '' }); }}
+                                    className="rounded-md p-1 hover:bg-white/10 transition"
+                                    style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                    <Edit2 size={12} />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteTask(week.id, task.id)}
+                                    className="rounded-md p-1 hover:bg-red-500/20 transition"
+                                    style={{ color: 'rgba(255,255,255,0.3)' }}>
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {week.tasks.length === 0 && (
+                          <div className="px-4 py-2 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                            {editMode ? 'אין משימות — לחץ + להוסיף' : 'אין משימות בשבוע זה'}
+                          </div>
+                        )}
+                        </div>
                         </div>
                       </div>
-
-                      {/* Week progress bar */}
-                      {weekTotal > 0 && (
-                        <div className="h-[2px]" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                          <div className="h-full transition-all duration-500"
-                            style={{ width: `${weekPct}%`, background: weekPct === 100 ? '#22c55e' : '#F5C118' }} />
-                        </div>
-                      )}
-
-                      {/* Tasks — shown only when week is expanded */}
-                      {isWeekOpen && week.tasks.map(task => {
-                        const done   = completions.has(task.id);
-                        const isNext = task.id === nextTaskId;
-                        const isDraggingThis = dragging?.type === 'task' && dragging?.id === task.id;
-                        const isDropTarget   = dragOverId === `task-${task.id}` && dragging?.type === 'task' && !isDraggingThis;
-                        return (
-                          <div
-                            key={task.id}
-                            draggable={editMode}
-                            onDragStart={editMode ? e => { e.stopPropagation(); dndStart(e, { type: 'task', id: task.id, weekId: week.id, phaseId: phase.id }); } : undefined}
-                            onDragEnd={editMode ? dndEnd : undefined}
-                            onDragOver={editMode ? e => dndOver(e, `task-${task.id}`) : undefined}
-                            onDragLeave={editMode ? () => setDragOverId(null) : undefined}
-                            onDrop={editMode ? e => dropTaskOnTask(e, task.id, week.id) : undefined}
-                            className="group hover:bg-white/[0.025] transition"
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: editMode
-                                ? '20px 36px 1fr 190px 160px 64px 44px 60px'
-                                : '36px 1fr 190px 160px 64px 44px',
-                              alignItems: 'center',
-                              padding: '10px 24px',
-                              borderTop: isDropTarget ? '2px solid rgba(245,193,24,0.5)' : '1px solid rgba(255,255,255,0.04)',
-                              opacity: isDraggingThis ? 0.35 : 1,
-                              cursor: editMode ? 'grab' : 'default',
-                              direction: 'rtl',
-                            }}
-                          >
-                            {/* Grip */}
-                            {editMode && (
-                              <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <GripVertical size={13} style={{ color: 'rgba(255,255,255,0.18)' }} />
-                              </div>
-                            )}
-
-                            {/* Checkbox */}
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                              <button
-                                onClick={() => toggleCompletion(task.id)}
-                                className="h-5 w-5 rounded-full border-2 flex items-center justify-center transition"
-                                style={{
-                                  borderColor: done ? '#22c55e' : 'rgba(255,255,255,0.2)',
-                                  background:  done ? '#22c55e' : 'transparent',
-                                }}
-                              >
-                                {done && <Check size={10} strokeWidth={3} color="#fff" />}
-                              </button>
-                            </div>
-
-                            {/* Title */}
-                            <div style={{ overflow: 'hidden', paddingLeft: 8, paddingRight: 8 }}>
-                              <span
-                                className="text-base"
-                                style={{
-                                  color: done ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)',
-                                  textDecoration: done ? 'line-through' : 'none',
-                                  direction: 'rtl',
-                                  display: 'block',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
-                                }}>
-                                {task.title}
-                              </span>
-                            </div>
-
-                            {/* Level badge */}
-                            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
-                              {task.level_label ? (
-                                <span style={{
-                                  fontSize: '0.75rem', lineHeight: '20px', height: 22, padding: '1px 8px',
-                                  borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
-                                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
-                                  background: levelStyle(task.level_label).bg,
-                                  color: levelStyle(task.level_label).color,
-                                  border: `1px solid ${levelStyle(task.level_label).color}40`,
-                                }}>
-                                  {task.level_label}
-                                </span>
-                              ) : null}
-                            </div>
-
-                            {/* Category badge */}
-                            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
-                              {task.category_label ? (
-                                <span style={{
-                                  fontSize: '0.75rem', lineHeight: '20px', height: 22, padding: '1px 8px',
-                                  borderRadius: 6, fontWeight: 600, whiteSpace: 'nowrap', display: 'inline-block',
-                                  maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis',
-                                  background: categoryStyle(task.category_label).bg,
-                                  color: categoryStyle(task.category_label).color,
-                                  border: `1px solid ${categoryStyle(task.category_label).color}40`,
-                                }}>
-                                  {task.category_label}
-                                </span>
-                              ) : null}
-                            </div>
-
-                            {/* Tag chip */}
-                            <div style={{ display: 'flex', alignItems: 'center', paddingLeft: 8 }}>
-                              {task.tag ? (
-                                <span style={{
-                                  fontSize: '0.75rem', lineHeight: '20px', height: 22, padding: '1px 8px',
-                                  borderRadius: 6, fontWeight: 700, fontFamily: 'monospace', display: 'inline-block',
-                                  background: 'rgba(245,193,24,0.12)',
-                                  color: '#F5C118',
-                                  border: '1px solid rgba(245,193,24,0.3)',
-                                }}>
-                                  {task.tag}
-                                </span>
-                              ) : null}
-                            </div>
-
-                            {/* Link */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              {task.link ? (
-                                <a href={task.link} target="_blank" rel="noopener noreferrer"
-                                  onClick={e => e.stopPropagation()}
-                                  className="hover:opacity-80 transition"
-                                  style={{ color: 'rgba(255,255,255,0.32)' }}>
-                                  <ExternalLink size={13} />
-                                </a>
-                              ) : null}
-                            </div>
-
-                            {/* Edit/Delete */}
-                            {editMode && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end' }}
-                                className="opacity-0 group-hover:opacity-100 transition">
-                                <button
-                                  onClick={() => { setTaskModal({ mode: 'edit', weekId: week.id, task }); setTaskForm({ title: task.title, level_label: task.level_label || '', category_label: task.category_label || '', tag: task.tag || '', link: task.link || '' }); }}
-                                  className="rounded-md p-1 hover:bg-white/10 transition"
-                                  style={{ color: 'rgba(255,255,255,0.4)' }}>
-                                  <Edit2 size={13} />
-                                </button>
-                                <button
-                                  onClick={() => deleteTask(week.id, task.id)}
-                                  className="rounded-md p-1 hover:bg-red-500/20 transition"
-                                  style={{ color: 'rgba(255,255,255,0.3)' }}>
-                                  <Trash2 size={13} />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* Empty week */}
-                      {isWeekOpen && week.tasks.length === 0 && (
-                        <div className="px-4 py-2 text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
-                          {editMode ? 'אין משימות — לחץ + להוסיף' : 'אין משימות בשבוע זה'}
-                        </div>
-                      )}
-                    </div>
                     );
                   })}
 
                   {/* Add week row */}
                   {editMode && (
-                    <div className="p-3" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div className="p-2.5" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                       {addWeekForPhase === phase.id ? (
                         <div className="flex gap-2">
                           <input
                             placeholder="שבוע #"
                             value={weekForm.week_number}
                             onChange={e => setWeekForm(f => ({ ...f, week_number: e.target.value }))}
-                            className="w-20 rounded-lg px-3 py-1.5 text-base outline-none"
+                            className="w-16 rounded-lg px-2.5 py-1.5 text-[13px] outline-none"
                             style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                           />
                           <input
@@ -949,26 +940,26 @@ export default function Roadmap() {
                             value={weekForm.title}
                             onChange={e => setWeekForm(f => ({ ...f, title: e.target.value }))}
                             onKeyDown={e => { if (e.key === 'Enter') addWeek(phase.id); if (e.key === 'Escape') setAddWeekForPhase(null); }}
-                            className="flex-1 rounded-lg px-3 py-1.5 text-base outline-none"
+                            className="flex-1 rounded-lg px-2.5 py-1.5 text-[13px] outline-none"
                             style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                             autoFocus
                           />
                           <button onClick={() => addWeek(phase.id)} className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-accent text-accent-foreground">הוסף</button>
-                          <button onClick={() => setAddWeekForPhase(null)} className="rounded-lg px-3 py-1.5 text-xs hover:text-white/70" style={{ color: 'rgba(255,255,255,0.4)' }}>ביטול</button>
+                          <button onClick={() => setAddWeekForPhase(null)} className="rounded-lg px-2.5 py-1.5 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>ביטול</button>
                         </div>
                       ) : (
                         <button
                           onClick={() => { setAddWeekForPhase(phase.id); setWeekForm({ title: '', week_number: '' }); }}
-                          className="flex items-center gap-1.5 text-xs hover:text-white/60 transition"
+                          className="flex items-center gap-1 text-[11px] hover:text-white/60 transition"
                           style={{ color: 'rgba(255,255,255,0.3)' }}
                         >
-                          <Plus size={13} /> הוסף שבוע
+                          <Plus size={11} /> הוסף שבוע
                         </button>
                       )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
@@ -976,7 +967,7 @@ export default function Roadmap() {
         {/* Add phase */}
         {editMode && (
           <div
-            className="rounded-2xl p-4"
+            className="rounded-xl p-3"
             style={{ background: 'rgb(var(--bg-surface))', border: '1px dashed rgba(255,255,255,0.1)' }}
           >
             {showAddPhase ? (
@@ -985,7 +976,7 @@ export default function Roadmap() {
                   placeholder="חודש #"
                   value={phaseForm.month_number}
                   onChange={e => setPhaseForm(f => ({ ...f, month_number: e.target.value }))}
-                  className="w-20 rounded-lg px-3 py-2 text-base outline-none"
+                  className="w-16 rounded-lg px-2.5 py-1.5 text-[13px] outline-none"
                   style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                 />
                 <input
@@ -993,20 +984,20 @@ export default function Roadmap() {
                   value={phaseForm.title}
                   onChange={e => setPhaseForm(f => ({ ...f, title: e.target.value }))}
                   onKeyDown={e => { if (e.key === 'Enter') addPhase(); if (e.key === 'Escape') setShowAddPhase(false); }}
-                  className="flex-1 rounded-lg px-3 py-2 text-base outline-none"
+                  className="flex-1 rounded-lg px-2.5 py-1.5 text-[13px] outline-none"
                   style={{ background: 'rgb(var(--bg-elevated))', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }}
                   autoFocus
                 />
-                <button onClick={addPhase} className="rounded-lg px-4 py-2 text-base font-semibold bg-accent text-accent-foreground">הוסף שלב</button>
-                <button onClick={() => setShowAddPhase(false)} className="rounded-lg px-3 py-2 text-base hover:text-white/70" style={{ color: 'rgba(255,255,255,0.4)' }}>ביטול</button>
+                <button onClick={addPhase} className="rounded-lg px-3 py-1.5 text-[13px] font-semibold bg-accent text-accent-foreground">הוסף שלב</button>
+                <button onClick={() => setShowAddPhase(false)} className="rounded-lg px-2.5 py-1.5 text-[13px]" style={{ color: 'rgba(255,255,255,0.4)' }}>ביטול</button>
               </div>
             ) : (
               <button
                 onClick={() => setShowAddPhase(true)}
-                className="w-full flex items-center justify-center gap-2 text-base py-1 hover:text-white/60 transition"
+                className="w-full flex items-center justify-center gap-1.5 text-[13px] py-0.5 hover:text-white/60 transition"
                 style={{ color: 'rgba(255,255,255,0.3)' }}
               >
-                <Plus size={15} /> הוסף שלב חדש
+                <Plus size={13} /> הוסף שלב חדש
               </button>
             )}
           </div>

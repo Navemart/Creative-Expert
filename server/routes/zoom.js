@@ -39,6 +39,9 @@ async function upsertMeta(uuid, updates) {
   return !error;
 }
 
+// ── Valid category slugs ──────────────────────────────────────
+const VALID_CATEGORIES = ['standout', 'lead', 'master', 'deliver', 'general', 'ai_systems'];
+
 // ── Zoom Server-to-Server OAuth token ────────────────────────
 async function getZoomToken() {
   const accountId    = process.env.ZOOM_ACCOUNT_ID;
@@ -194,16 +197,67 @@ router.put('/meta', async (req, res) => {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  const { uuid, custom_title, playbook_url, attachments } = req.body;
+  const { uuid, custom_title, playbook_url, attachments, category } = req.body;
   if (!uuid) return res.status(400).json({ error: 'uuid required' });
 
   const updates = {};
   if (custom_title  !== undefined) updates.custom_title  = custom_title  || null;
   if (playbook_url  !== undefined) updates.playbook_url  = playbook_url  || null;
   if (attachments   !== undefined) updates.attachments   = Array.isArray(attachments) && attachments.length ? attachments : [];
+  if (category      !== undefined) updates.category      = VALID_CATEGORIES.includes(category) ? category : 'general';
 
   const ok = await upsertMeta(uuid, updates);
   res.json({ ok, data: updates });
+});
+
+// ── GET /api/zoom/favorites ──────────────────────────────────
+// Returns the list of starred recording UUIDs for the requesting user.
+// Header: x-user-id (Clerk user ID)
+router.get('/favorites', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  if (!userId) return res.status(400).json({ error: 'x-user-id header required' });
+
+  const { data, error } = await supabase
+    .from('recording_favorites')
+    .select('uuid')
+    .eq('user_id', userId);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ favorites: (data || []).map(r => r.uuid) });
+});
+
+// ── POST /api/zoom/favorites ─────────────────────────────────
+// Add a recording to the user's favorites.
+// Body: { uuid }
+router.post('/favorites', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  const { uuid } = req.body;
+  if (!userId) return res.status(400).json({ error: 'x-user-id header required' });
+  if (!uuid)   return res.status(400).json({ error: 'uuid required' });
+
+  const { error } = await supabase
+    .from('recording_favorites')
+    .upsert({ user_id: userId, uuid }, { onConflict: 'user_id,uuid', ignoreDuplicates: true });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+// ── DELETE /api/zoom/favorites/:uuid ────────────────────────
+// Remove a recording from the user's favorites.
+router.delete('/favorites/:uuid', async (req, res) => {
+  const userId = req.headers['x-user-id'];
+  const { uuid } = req.params;
+  if (!userId) return res.status(400).json({ error: 'x-user-id header required' });
+
+  const { error } = await supabase
+    .from('recording_favorites')
+    .delete()
+    .eq('user_id', userId)
+    .eq('uuid', uuid);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
 });
 
 // ── Notion helpers ────────────────────────────────────────────

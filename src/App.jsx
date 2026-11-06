@@ -29,6 +29,10 @@ import AdminSalesPipeline from './pages/AdminSalesPipeline.jsx';
 import AdminTrafficLights from './pages/AdminTrafficLights.jsx';
 import AdminNews from './pages/AdminNews.jsx';
 import NaveAI from './pages/NaveAI.jsx';
+import AgentSkills from './pages/AgentSkills.jsx';
+import AgentSkillDetail from './pages/AgentSkillDetail.jsx';
+import TrainingModule from './pages/TrainingModule.jsx';
+import TrainingLesson from './pages/TrainingLesson.jsx';
 
 const ADMIN_ID = import.meta.env.VITE_ADMIN_USER_ID;
 
@@ -60,6 +64,8 @@ export default function App() {
             <Route path="roadmap"         element={<Roadmap />} />
             <Route path="diagnosis"       element={<Diagnosis />} />
             <Route path="content-library" element={<ContentLibrary />} />
+            <Route path="training/:moduleKey" element={<TrainingModule />} />
+            <Route path="training/:moduleKey/:lessonId" element={<TrainingLesson />} />
             <Route path="agents"          element={<Agents />} />
             <Route path="nave-ai"         element={<NaveAI />} />
             <Route path="calculator"      element={<PricingCalculator />} />
@@ -70,6 +76,8 @@ export default function App() {
             <Route path="members"         element={<Members />} />
             <Route path="members/:id"     element={<MemberDetail />} />
             <Route path="settings"        element={<Settings />} />
+            <Route path="skills"          element={<AgentSkills />} />
+            <Route path="skills/:id"      element={<AgentSkillDetail />} />
 
             {/* ── Admin-only routes ──────────────────────────── */}
             <Route
