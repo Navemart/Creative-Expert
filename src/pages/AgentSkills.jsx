@@ -2,6 +2,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+);
 import {
   Search, Plus, Download, ExternalLink, Star, Trash2,
   Edit2, X, Check, ChevronDown, BookOpen, Tag,
@@ -354,14 +360,27 @@ function SkillDialog({ skill, onClose, onSave }) {
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
 
-  function handleFileDrop(e) {
+  async function handleFileDrop(e) {
     e.preventDefault();
     setDragOver(false);
     const file = e.dataTransfer?.files?.[0] || e.target.files?.[0];
-    if (file) {
-      setFileName(file.name);
-      // store filename as placeholder URL — real upload would need storage
-      set('file_url', file.name);
+    if (!file) return;
+    setFileName(file.name);
+    setSaving(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `skills/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('skill-files')
+        .upload(path, file, { upsert: false });
+      if (upErr) throw upErr;
+      const { data } = supabase.storage.from('skill-files').getPublicUrl(path);
+      set('file_url', data.publicUrl);
+    } catch (err) {
+      alert('שגיאה בהעלאת הקובץ: ' + err.message);
+      setFileName('');
+    } finally {
+      setSaving(false);
     }
   }
 
