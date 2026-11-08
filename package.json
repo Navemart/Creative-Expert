@@ -23,6 +23,7 @@
     "express": "^4.19.2",
     "framer-motion": "^12.40.0",
     "lucide-react": "^0.441.0",
+    "multer": "^2.5.0",
     "node-cron": "^4.4.1",
     "openai": "^6.39.0",
     "react": "^18.3.1",

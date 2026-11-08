@@ -1,11 +1,26 @@
 import express from 'express';
+import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
 const db = createClient(
   process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
 );
+
+// POST /api/skills/upload — העלאת קובץ ל-Supabase Storage
+router.post('/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'קובץ חסר' });
+  const ext = req.file.originalname.split('.').pop();
+  const path = `skills/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await db.storage
+    .from('skill-files')
+    .upload(path, req.file.buffer, { contentType: req.file.mimetype, upsert: false });
+  if (error) return res.status(500).json({ error: error.message });
+  const { data } = db.storage.from('skill-files').getPublicUrl(path);
+  res.json({ url: data.publicUrl });
+});
 
 // GET /api/skills — פורסמו בלבד
 router.get('/', async (_req, res) => {

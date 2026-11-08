@@ -2,12 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
 import {
   Search, Plus, Download, ExternalLink, Star, Trash2,
   Edit2, X, Check, ChevronDown, BookOpen, Tag,
@@ -109,10 +103,10 @@ function FeaturedCard({ skill, isAdmin, onEdit, onDelete, onDownload, onPreview 
               </button>
             </>
           )}
-          {skill.file_url && (
+          {skill.file_url?.startsWith('http') && (
             <a
               href={skill.file_url}
-              target="_blank"
+              download
               rel="noreferrer"
               onClick={() => onDownload(skill.id)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-opacity hover:opacity-80"
@@ -288,10 +282,10 @@ function SkillPreviewModal({ skill, isAdmin, onClose, onEdit, onDelete, onDownlo
 
         {/* Actions */}
         <div className="flex items-center gap-2 px-6 pb-4">
-          {skill.file_url && (
+          {skill.file_url?.startsWith('http') && (
             <a
               href={skill.file_url}
-              target="_blank"
+              download
               rel="noreferrer"
               onClick={handleDownloadClick}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold btn-yellow"
@@ -368,14 +362,12 @@ function SkillDialog({ skill, onClose, onSave }) {
     setFileName(file.name);
     setSaving(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `skills/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('skill-files')
-        .upload(path, file, { upsert: false });
-      if (upErr) throw upErr;
-      const { data } = supabase.storage.from('skill-files').getPublicUrl(path);
-      set('file_url', data.publicUrl);
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/skills/upload', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'שגיאת שרת');
+      set('file_url', json.url);
     } catch (err) {
       alert('שגיאה בהעלאת הקובץ: ' + err.message);
       setFileName('');
