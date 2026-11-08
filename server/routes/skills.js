@@ -45,6 +45,28 @@ router.get('/all', async (_req, res) => {
   res.json(data);
 });
 
+// GET /api/skills/:id/download — proxy שמכריח הורדה
+router.get('/:id/download', async (req, res) => {
+  const { data: skill, error } = await db
+    .from('agent_skills')
+    .select('file_url, title')
+    .eq('id', req.params.id)
+    .single();
+  if (error || !skill?.file_url) return res.status(404).json({ error: 'קובץ לא נמצא' });
+
+  try {
+    const response = await fetch(skill.file_url);
+    if (!response.ok) return res.status(502).json({ error: 'שגיאה בהורדת הקובץ' });
+    const ext = skill.file_url.split('.').pop().split('?')[0] || 'bin';
+    const filename = `${skill.title.replace(/[^a-z0-9א-ת]/gi, '_')}.${ext}`;
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
+    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
+    response.body.pipe(res);
+  } catch {
+    res.status(500).json({ error: 'שגיאת שרת' });
+  }
+});
+
 // GET /api/skills/:id
 router.get('/:id', async (req, res) => {
   const { data, error } = await db

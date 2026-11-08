@@ -105,9 +105,7 @@ function FeaturedCard({ skill, isAdmin, onEdit, onDelete, onDownload, onPreview 
           )}
           {skill.file_url?.startsWith('http') && (
             <a
-              href={skill.file_url}
-              download
-              rel="noreferrer"
+              href={`/api/skills/${skill.id}/download`}
               onClick={() => onDownload(skill.id)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-opacity hover:opacity-80"
               style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.15)' }}
@@ -284,9 +282,7 @@ function SkillPreviewModal({ skill, isAdmin, onClose, onEdit, onDelete, onDownlo
         <div className="flex items-center gap-2 px-6 pb-4">
           {skill.file_url?.startsWith('http') && (
             <a
-              href={skill.file_url}
-              download
-              rel="noreferrer"
+              href={`/api/skills/${skill.id}/download`}
               onClick={handleDownloadClick}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold btn-yellow"
               style={{ background: 'rgb(var(--accent))', color: 'rgb(var(--accent-foreground))' }}
