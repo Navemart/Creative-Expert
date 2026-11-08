@@ -61,7 +61,8 @@ router.get('/:id/download', async (req, res) => {
     const filename = `${skill.title.replace(/[^a-z0-9א-ת]/gi, '_')}.${ext}`;
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`);
     res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
-    response.body.pipe(res);
+    const buffer = await response.arrayBuffer();
+    res.send(Buffer.from(buffer));
   } catch {
     res.status(500).json({ error: 'שגיאת שרת' });
   }
